@@ -227,6 +227,15 @@ td.num{font-variant-numeric:tabular-nums;color:var(--mute)}
 .calendar-note{margin-top:14px;font-size:12px;color:var(--mute)}
 .tz-cell{font-size:11px;line-height:1.6;white-space:nowrap;color:var(--mute)}
 
+/* token events type pills */
+.te-pill{display:inline-flex;align-items:center;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;letter-spacing:.3px}
+.te-pill.unlock{background:rgba(220,38,38,.15);color:#f87171;border:1px solid rgba(220,38,38,.35)}
+.te-pill.listing{background:rgba(212,168,67,.18);color:var(--gold2);border:1px solid rgba(212,168,67,.4)}
+.te-pill.airdrop{background:rgba(148,163,184,.15);color:#cbd5e1;border:1px solid rgba(148,163,184,.3)}
+.te-pill.major{background:transparent;color:var(--text);border:1px solid var(--line)}
+.te-token{display:inline-flex;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;background:rgba(212,168,67,.1);color:var(--gold2);border:1px solid rgba(212,168,67,.25)}
+.te-countdown{color:var(--mute);text-align:right}
+
 /* US midterm countdown */
 .midterm-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:28px}
 .midterm-card .fl-label{color:var(--gold);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;display:block;margin-bottom:12px}
@@ -275,6 +284,7 @@ footer{padding:40px 0 60px}
     <div class="brandname">TRADE THE MOVE<span>Markets Terminal</span></div>
     <nav class="site-nav">
       <a href="#calendar">Macro Watch</a>
+      <a href="#tokenevents">Token Events</a>
       <a href="#congress">Congress Watch</a>
       <a href="#library">Reports</a>
       <a href="#transparency">Transparency Watch</a>
@@ -401,11 +411,48 @@ footer{padding:40px 0 60px}
       <tbody id="calendarBody"></tbody>
     </table>
     <p id="calendarEmpty" class="calendar-note" style="display:none">No releases match this combination of filters.</p>
-    <p class="calendar-note">Sample release set for illustration — figures shown are indicative prints, not a live feed. Always confirm live figures and release times against the official BLS, BEA, ONS, ECB, Fed and BOJ calendars (or ForexFactory itself) before trading around them. Crypto Bias is TTM's own read of how a print is typically digested by risk assets, not a prediction.</p>
+    <p class="calendar-note">Historical prints are TTM's curated record, not a live feed — Upcoming releases refresh automatically from a live calendar source (see status line above). Always confirm live figures and release times against the official BLS, BEA, ONS, ECB, Fed and BOJ calendars (or ForexFactory itself) before trading around them. Crypto Bias is TTM's own read of how a print is typically digested by risk assets, not a prediction.</p>
   </div>
 </section>
 
-<section id="congress" class="alt">
+<section id="tokenevents" class="alt">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">Crypto Calendar</span>
+      <h2>Token unlocks &amp; crypto events</h2>
+      <p>Upcoming token unlocks, exchange listings, airdrops and other major crypto catalysts — filter by type. Refreshed roughly hourly.</p>
+      <p id="tokenEventsUpdated" class="calendar-note" style="margin-top:8px">Loading…</p>
+    </div>
+
+    <div class="filter-block">
+      <span class="fl-label">Type</span>
+      <div class="filter-row" id="teTypeRow">
+        <button class="filter-chip active" data-tetype="all">All</button>
+        <button class="filter-chip" data-tetype="unlock">Unlocks</button>
+        <button class="filter-chip" data-tetype="listing">Listings</button>
+        <button class="filter-chip" data-tetype="airdrop">Airdrops</button>
+        <button class="filter-chip" data-tetype="major">Major</button>
+      </div>
+    </div>
+
+    <table class="bwtbl">
+      <thead>
+        <tr>
+          <th>Date (UTC)</th>
+          <th>Type</th>
+          <th>Token</th>
+          <th>Name</th>
+          <th>Countdown</th>
+        </tr>
+      </thead>
+      <tbody id="tokenEventsBody"></tbody>
+    </table>
+    <p id="tokenEventsEmpty" class="calendar-note" style="display:none">No events match this filter.</p>
+    <p class="calendar-note">Source: <a href="https://cryptotldr.io/events" target="_blank" rel="noopener">cryptotldr.io/events</a> — a third-party event calendar, not TTM's own research. Dates and details can change at the issuing project's discretion; always verify directly with the project before acting on an unlock or listing date.</p>
+  </div>
+</section>
+
+<section id="congress">
   <div class="wrap">
     <div class="section-head">
       <span class="tag">Congressional Trading</span>
@@ -895,6 +942,69 @@ adjToggle.addEventListener('click', () => {
   adjToggle.classList.toggle('active', adjustmentsOnly);
   applyFilters();
 });
+
+// ---- Token Unlocks & Crypto Events (auto-updated from cryptotldr.io/events) ----
+const teBody = document.getElementById('tokenEventsBody');
+const teEmpty = document.getElementById('tokenEventsEmpty');
+let teActiveType = 'all';
+let TE_EVENTS = [];
+
+function liveCountdown(dtStr){
+  // dtStr is "YYYY-MM-DD" (UTC date of the event)
+  const target = new Date(dtStr + "T00:00:00Z").getTime();
+  const diffMs = target - Date.now();
+  const diffDays = Math.round(diffMs / 86400000);
+  if(diffDays < -1) return `${Math.abs(diffDays)} days ago`;
+  if(diffDays === -1 || diffDays === 0) return 'Today';
+  if(diffDays === 1) return 'Tomorrow';
+  if(diffDays < 31) return `in ${diffDays} days`;
+  const months = Math.round(diffDays / 30.44);
+  return months <= 1 ? 'in about 1 month' : `in about ${months} months`;
+}
+
+function renderTokenEvents(){
+  teBody.innerHTML = '';
+  const filtered = teActiveType === 'all' ? TE_EVENTS : TE_EVENTS.filter(e => e.type === teActiveType);
+  filtered.forEach(e => {
+    const tr = document.createElement('tr');
+    const nameCell = e.link
+      ? `<a href="${e.link}" target="_blank" rel="noopener noreferrer" style="color:var(--text);text-decoration:none;border-bottom:1px dotted var(--line)">${e.name}</a>`
+      : e.name;
+    tr.innerHTML = `
+      <td class="num">${e.date}</td>
+      <td><span class="te-pill ${e.type}">${e.type_label}</span></td>
+      <td><span class="te-token">${e.token}</span></td>
+      <td class="evt">${nameCell}</td>
+      <td class="te-countdown">${liveCountdown(e.dt)}</td>
+    `;
+    teBody.appendChild(tr);
+  });
+  teEmpty.style.display = filtered.length === 0 ? 'block' : 'none';
+}
+
+document.getElementById('teTypeRow').addEventListener('click', (e) => {
+  const chip = e.target.closest('.filter-chip');
+  if(!chip) return;
+  document.querySelectorAll('#teTypeRow .filter-chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  teActiveType = chip.dataset.tetype;
+  renderTokenEvents();
+});
+
+fetch('token_events_data.json', {cache:'no-store'})
+  .then(r => { if(!r.ok) throw new Error('bad status'); return r.json(); })
+  .then(data => {
+    TE_EVENTS = data.events;
+    renderTokenEvents();
+    const stamp = document.getElementById('tokenEventsUpdated');
+    if(stamp) stamp.textContent = 'Live — last updated ' + new Date(data.generated_at).toLocaleString();
+  })
+  .catch(() => {
+    const stamp = document.getElementById('tokenEventsUpdated');
+    if(stamp) stamp.textContent = 'Live feed unavailable right now — check back shortly.';
+    teEmpty.textContent = 'Unable to load event data.';
+    teEmpty.style.display = 'block';
+  });
 
 // ---- Blockworks Token Transparency panel ----
 const classLabel = {defi:"DeFi", infra:"Infrastructure", l1:"Layer 1 / Currency", other:"Other"};
