@@ -3,6 +3,9 @@ name: Debug - dump rendered cryptotldr.io events page
 on:
   workflow_dispatch: {}
 
+permissions:
+  contents: write
+
 jobs:
   dump:
     runs-on: ubuntu-latest
