@@ -1,0 +1,40 @@
+name: Update economic calendar
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-calendar
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch latest calendar data
+        run: python3 scripts/update_calendar.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "ttm-calendar-bot"
+          git config user.email "actions@users.noreply.github.com"
+          if git diff --quiet -- calendar_data.json; then
+            echo "No changes to calendar_data.json"
+          else
+            git add calendar_data.json
+            git commit -m "Auto-update economic calendar"
+            git push
+          fi

@@ -315,6 +315,7 @@ footer{padding:40px 0 60px}
       <span class="tag">Macro Watch</span>
       <h2>Key global economic data</h2>
       <p>A ForexFactory-style read of the releases that tend to move crypto. Folder colour marks expected impact, and the Bias column reads each print the way TTM reads it — filter by country, impact, time period or range.</p>
+      <p id="calendarUpdated" class="calendar-note" style="margin-top:8px">Loading live calendar…</p>
     </div>
 
     <div class="filter-block">
@@ -692,11 +693,11 @@ SERIES.forEach(s => {
 });
 
 // ---- Economic calendar ----
-// "today" reference point for this dataset
-const TODAY = new Date("2026-10-04T00:00:00");
+const TODAY = new Date();
 function d(s){ return new Date(s + "T00:00:00"); }
 
-const CALENDAR = [
+// Historical releases — curated by TTM, includes actual results (not auto-fetched).
+const CALENDAR_HISTORICAL = [
   {date:"03 Oct 2026", dt:d("2026-10-03"), country:"US", event:"Non-Farm Employment Change", impact:"high", actual:"22K", forecast:"50K", previous:"−4K", miss:true, bias:"down", revised:true, revisedFrom:"54K"},
   {date:"03 Oct 2026", dt:d("2026-10-03"), country:"US", event:"Unemployment Rate", impact:"high", actual:"4.3%", forecast:"4.3%", previous:"4.2%", miss:false, bias:"neutral"},
   {date:"03 Oct 2026", dt:d("2026-10-03"), country:"US", event:"Average Hourly Earnings m/m", impact:"medium", actual:"0.3%", forecast:"0.3%", previous:"0.3%", miss:false, bias:"neutral"},
@@ -717,7 +718,11 @@ const CALENDAR = [
   {date:"03 Sep 2026", dt:d("2026-09-03"), country:"US", event:"ISM Manufacturing PMI", impact:"low", actual:"48.9", forecast:"49.2", previous:"48.0", miss:true, bias:"down"},
   {date:"28 Aug 2026", dt:d("2026-08-28"), country:"UK", event:"Initial Jobless Claims (proxy)", impact:"low", actual:"231K", forecast:"235K", previous:"234K", miss:false, bias:"up"},
   {date:"20 Aug 2026", dt:d("2026-08-20"), country:"US", event:"Retail Sales m/m", impact:"medium", actual:"0.4%", forecast:"0.3%", previous:"0.5%", miss:false, bias:"up", revised:true, revisedFrom:"0.6%"},
-  // Upcoming / future-dated
+];
+
+// Static fallback for the upcoming calendar — used only if the live feed can't be reached
+// (e.g. viewing this file locally via file://, or the auto-updater hasn't run yet).
+const CALENDAR_UPCOMING_FALLBACK = [
   {date:"09 Oct 2026", dt:d("2026-10-09"), country:"US", event:"FOMC Meeting Minutes", impact:"medium", actual:"—", forecast:"—", previous:"—", miss:false, bias:"neutral", upcoming:true},
   {date:"10 Oct 2026", dt:d("2026-10-10"), country:"UK", event:"GDP m/m", impact:"medium", actual:"—", forecast:"0.2%", previous:"0.1%", miss:false, bias:"neutral", upcoming:true},
   {date:"14 Oct 2026", dt:d("2026-10-14"), country:"US", event:"Core CPI m/m", impact:"high", actual:"—", forecast:"0.3%", previous:"0.3%", miss:false, bias:"neutral", upcoming:true},
@@ -737,28 +742,53 @@ const biasLabel = {up:"Bullish ▲", down:"Bearish ▼", neutral:"Neutral —"};
 const biasClass = {up:"bias-up", down:"bias-down", neutral:"bias-neutral"};
 
 const calendarBody = document.getElementById('calendarBody');
-CALENDAR.forEach(row => {
-  const tr = document.createElement('tr');
-  tr.dataset.impact = row.impact;
-  tr.dataset.country = row.country;
-  tr.dataset.period = row.upcoming ? 'future' : 'past';
-  tr.dataset.dt = row.dt.getTime();
-  tr.dataset.revised = row.revised ? '1' : '0';
-  const prevCell = row.revised
-    ? `${row.previous} <span class="adj-badge" title="Originally reported as ${row.revisedFrom}">Adj</span>`
-    : row.previous;
-  tr.innerHTML = `
-    <td class="num">${row.date}</td>
-    <td class="num">${countryLabel[row.country]}</td>
-    <td class="evt">${row.event}</td>
-    <td><span class="impact-folder impact-${row.impact}">${folderSVG[row.impact]}${impactLabel[row.impact]}</span></td>
-    <td class="num" style="${row.miss ? 'color:var(--red);font-weight:700' : ''}">${row.actual}</td>
-    <td class="num">${row.forecast}</td>
-    <td class="num">${prevCell}</td>
-    <td class="${biasClass[row.bias]}">${biasLabel[row.bias]}</td>
-  `;
-  calendarBody.appendChild(tr);
-});
+function renderCalendarRows(list){
+  list.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.dataset.impact = row.impact;
+    tr.dataset.country = row.country;
+    tr.dataset.period = row.upcoming ? 'future' : 'past';
+    tr.dataset.dt = row.dt.getTime();
+    tr.dataset.revised = row.revised ? '1' : '0';
+    const prevCell = row.revised
+      ? `${row.previous} <span class="adj-badge" title="Originally reported as ${row.revisedFrom}">Adj</span>`
+      : row.previous;
+    tr.innerHTML = `
+      <td class="num">${row.date}</td>
+      <td class="num">${countryLabel[row.country]}</td>
+      <td class="evt">${row.event}</td>
+      <td><span class="impact-folder impact-${row.impact}">${folderSVG[row.impact]}${impactLabel[row.impact]}</span></td>
+      <td class="num" style="${row.miss ? 'color:var(--red);font-weight:700' : ''}">${row.actual}</td>
+      <td class="num">${row.forecast}</td>
+      <td class="num">${prevCell}</td>
+      <td class="${biasClass[row.bias]}">${biasLabel[row.bias]}</td>
+    `;
+    calendarBody.appendChild(tr);
+  });
+}
+
+// Historical rows render immediately so the page is never blank.
+renderCalendarRows(CALENDAR_HISTORICAL);
+
+// Upcoming rows: try the live, auto-updated feed first (refreshed every 5 min by a
+// GitHub Action in this repo); fall back to the static list if it can't be reached.
+fetch('calendar_data.json', {cache:'no-store'})
+  .then(r => { if(!r.ok) throw new Error('bad status'); return r.json(); })
+  .then(data => {
+    const live = data.events.map(e => ({...e, dt:d(e.dt)}));
+    calendarBody.innerHTML = '';
+    renderCalendarRows(CALENDAR_HISTORICAL);
+    renderCalendarRows(live);
+    applyFilters();
+    const stamp = document.getElementById('calendarUpdated');
+    if(stamp) stamp.textContent = 'Live feed — last updated ' + new Date(data.generated_at).toLocaleString();
+  })
+  .catch(() => {
+    renderCalendarRows(CALENDAR_UPCOMING_FALLBACK);
+    applyFilters();
+    const stamp = document.getElementById('calendarUpdated');
+    if(stamp) stamp.textContent = 'Showing a static snapshot — live feed unavailable.';
+  });
 
 // ---- Filter state ----
 const activeCountries = new Set(['US','UK','EU','JP']);
