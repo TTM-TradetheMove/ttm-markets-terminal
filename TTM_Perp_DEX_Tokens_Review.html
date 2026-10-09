@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TTM | Perp DEX Tokens Review</title>
+<style>
+:root{--bg:#0c0a06;--panel:#16130c;--line:#3a2f14;--gold:#d4a63c;--gold2:#f0cf7a;--text:#ece5d2;--mute:#a79f8a;--red:#c9694f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 Georgia,'Times New Roman',serif}
+.wrap{max-width:900px;margin:0 auto;padding:32px 20px 56px}
+header{border-bottom:2px solid var(--gold);padding-bottom:20px;margin-bottom:28px}
+.brand{font:700 15px/1 Arial,sans-serif;letter-spacing:.18em;color:var(--gold)}
+h1{font-size:34px;line-height:1.15;margin:14px 0 6px;color:var(--gold2)}
+.sub{color:var(--mute);font:14px Arial,sans-serif;margin:0}
+h2{font-size:22px;color:var(--gold);margin:38px 0 6px}
+.lead{color:var(--mute);margin:0 0 16px;font-size:15px}
+table{width:100%;border-collapse:collapse;font:14px Arial,sans-serif}
+.tw{overflow-x:auto}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--gold);font-weight:700;border-bottom:2px solid var(--gold)}
+.card{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--gold);padding:16px 18px;margin:14px 0}
+.card.hr{border-left-color:var(--red)}
+.card h3{margin:0 0 2px;font-size:19px;color:var(--gold2)}
+.tick{font:700 13px Arial,sans-serif;color:var(--gold)}
+.stars{float:right;color:var(--gold);font:16px Arial,sans-serif;letter-spacing:2px}
+.card p{margin:8px 0 0;font-size:15px}
+.card b{color:var(--gold)}
+.risk b{color:var(--red)}
+.note{background:var(--panel);border:1px solid var(--line);padding:14px 18px;font-size:14px;color:var(--mute);margin-top:14px}
+footer{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;font:13px/1.6 Arial,sans-serif;color:var(--mute)}
+a{color:var(--gold)}
+@media(max-width:560px){h1{font-size:27px}.stars{float:none;display:block}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<div class="brand">TTM | TRADE THE MOVE</div>
+<h1>Perp DEX Tokens: Sector Review</h1>
+<p class="sub">Educational research, 29 September 2026. Prices and market caps are a snapshot from that date and move fast, so re-check live figures on CoinGecko or CoinMarketCap.</p>
+</header>
+
+<h2>What a perp DEX token is</h2>
+<p class="lead">Perp DEXs let users trade leveraged perpetual futures from their own wallet with no exchange custody. The token is the equity-like claim on that activity, so the key question is how much trading fee revenue actually reaches token holders (buybacks, staking rewards or fee share) versus being paid out as emissions. The sector has also expanded beyond crypto: crude oil, gold and S&amp;P 500 perps now trade 24/7 on multiple platforms.</p>
+
+<h2>Summary table</h2>
+<div class="tw"><table>
+<tr><th>Token</th><th>Protocol</th><th>Model</th><th>Tier</th><th>TTM rating</th><th>Top 3 exchanges</th></tr>
+<tr><td>HYPE</td><td>Hyperliquid</td><td>Own L1, on-chain order book</td><td>Core</td><td>★★★★☆</td><td>Coinbase, Kraken, KuCoin (also Independent Reserve, AUD)</td></tr>
+<tr><td>ASTER</td><td>Aster</td><td>Multi-asset leverage, privacy-focused L1</td><td>Satellite</td><td>★★★☆☆</td><td>Coinbase, Binance, Bitget</td></tr>
+<tr><td>LIT</td><td>Lighter</td><td>Zero-fee zk perp DEX</td><td>Satellite</td><td>★★★☆☆</td><td>OKX, Gate, Lighter (spot)</td></tr>
+<tr><td>DYDX</td><td>dYdX</td><td>Own app-chain, order book</td><td>Satellite</td><td>★★★☆☆</td><td>Binance, Coinbase, Bybit*</td></tr>
+<tr><td>GMX</td><td>GMX</td><td>Oracle-priced liquidity pool</td><td>Satellite</td><td>★★★☆☆</td><td>Binance, Coinbase, Kraken*</td></tr>
+<tr><td>JUP</td><td>Jupiter (Perps)</td><td>Solana perps inside a wider ecosystem</td><td>Satellite</td><td>★★★☆☆</td><td>Binance, Coinbase, Bybit*</td></tr>
+<tr><td>APEX</td><td>ApeX</td><td>zkL2, tokenized stocks, fiat ramps</td><td>High risk</td><td>★★☆☆☆</td><td>Bybit, Ourbit, MEXC</td></tr>
+<tr><td>AEVO</td><td>Aevo</td><td>Options plus perps</td><td>High risk</td><td>★★☆☆☆</td><td>Binance, MEXC, Bitunix</td></tr>
+<tr><td>F</td><td>SynFutures</td><td>Multi-chain perps and futures</td><td>High risk</td><td>★★☆☆☆</td><td>Bybit, Bitvavo (EUR), third unverified</td></tr>
+<tr><td>BLUE</td><td>Bluefin</td><td>Perps with cross-margin</td><td>High risk</td><td>★★☆☆☆</td><td>Gate, MEXC, Bluefin (spot)</td></tr>
+<tr><td>DRIFT</td><td>Drift</td><td>Solana-based perps</td><td>High risk</td><td>★★☆☆☆</td><td>Coinbase, LBank, Bybit</td></tr>
+<tr><td>WOO</td><td>WOOFi / WOO X</td><td>CEX-DEX hybrid</td><td>High risk</td><td>★★☆☆☆</td><td>WOO X, Binance, Bybit*</td></tr>
+<tr><td>PERP</td><td>Perpetual Protocol</td><td>Legacy perp DEX</td><td>High risk</td><td>★☆☆☆☆</td><td>Thin liquidity; check CoinGecko markets tab</td></tr>
+</table></div>
+<div class="note">Exchanges are ranked by activity on CoinGecko where available, and the third place can change. * = not verified today, so check the markets tab on CoinGecko before depositing. Spot listings only; DEX-native tokens can also be traded on their own venues.</div>
+
+<h2>Market snapshot: price, market cap and distance from ATH</h2>
+<p class="lead">Live data as of 29 September 2026 (CoinGecko perpetuals category; ATH data from CoinGecko, CoinMarketCap, DefiLlama and The Block). The whole perp DEX category is about $26.5B, and HYPE alone is roughly three quarters of it.</p>
+<div class="tw"><table>
+<tr><th>Token</th><th>Price</th><th>Mkt cap</th><th>FDV</th><th>Circ / FDV</th><th>ATH</th><th>vs ATH</th><th>Mkt cap at ATH price</th><th>Multiple to ATH</th></tr>
+<tr><td>HYPE</td><td>$88.32</td><td>$19.66B</td><td>$84.4B</td><td>23%</td><td>~$88 (at ATH)</td><td>~0%</td><td>~$19.7B</td><td>~1x</td></tr>
+<tr><td>ASTER</td><td>$0.7222</td><td>$1.96B</td><td>$5.63B</td><td>35%</td><td>$2.41</td><td>-70%</td><td>$6.5B</td><td>3.3x</td></tr>
+<tr><td>LIT</td><td>$4.44</td><td>$1.11B</td><td>$4.44B</td><td>25%</td><td>$7.86</td><td>-43%</td><td>$1.97B</td><td>1.8x</td></tr>
+<tr><td>JUP</td><td>$0.3300</td><td>$1.10B</td><td>$2.26B</td><td>48%</td><td>~$2.0*</td><td>~-84%</td><td>~$6.6B</td><td>~6x</td></tr>
+<tr><td>DYDX</td><td>$0.1371</td><td>$116M</td><td>$131M</td><td>88%</td><td>~$4.5*</td><td>~-97%</td><td>~$3.8B</td><td>~33x</td></tr>
+<tr><td>GMX</td><td>$7.96</td><td>$83M</td><td>$83M</td><td>100%</td><td>~$91*</td><td>~-91%</td><td>~$0.95B</td><td>~11x</td></tr>
+<tr><td>APEX</td><td>$0.2891</td><td>$44.8M</td><td>$145M</td><td>31%</td><td>$3.83</td><td>-92%</td><td>$0.59B</td><td>13x</td></tr>
+<tr><td>WOO</td><td>$0.01353</td><td>$25.6M</td><td>$25.6M</td><td>100%</td><td>~$1.8*</td><td>~-99%</td><td>~$3.4B</td><td>~130x</td></tr>
+<tr><td>AEVO</td><td>$0.02559</td><td>$23.9M</td><td>$25.6M</td><td>93%</td><td>$3.76</td><td>-99%</td><td>$3.5B</td><td>147x</td></tr>
+<tr><td>F</td><td>$0.003509</td><td>$17.1M</td><td>$35.1M</td><td>49%</td><td>$0.19</td><td>-98%</td><td>$0.94B</td><td>55x</td></tr>
+<tr><td>DRIFT</td><td>$0.02055</td><td>$14.7M</td><td>$20.6M</td><td>72%</td><td>$2.60</td><td>-99%</td><td>$1.86B</td><td>127x</td></tr>
+<tr><td>BLUE</td><td>$0.01024</td><td>$6.2M</td><td>$10.2M</td><td>60%</td><td>$0.84</td><td>-99%</td><td>$0.51B</td><td>82x</td></tr>
+<tr><td>PERP</td><td>$0.02115</td><td>$2.8M</td><td>$3.2M</td><td>88%</td><td>~$28.7*</td><td>~-99.9%</td><td>~$3.8B</td><td>~1,350x</td></tr>
+</table></div>
+<div class="note">* ATH figure recalled from earlier data rather than confirmed today; verify before using. "Mkt cap at ATH price" holds today's circulating supply constant, so it is a reference point, not a forecast. HYPE's last confirmed ATH before today was $86.50 and it now trades above that, so check the live ATH.</div>
+
+<h2>Possible market cap: how to read the scenarios</h2>
+<div class="card">
+<h3>Two ceilings, not targets</h3>
+<p><b>Reclaiming the ATH:</b> The nearest realistic reclaim is <b>LIT</b>, which needs about 1.8x to return to a roughly $2B market cap. <b>ASTER</b> needs about 3.3x (roughly $6.5B) and <b>JUP</b> about 6x. HYPE is already at its highs, so upside from here depends on new price discovery, not recovery.</p>
+<p><b>Full dilution:</b> FDV shows the market cap if all supply were circulating at today's price. HYPE (23% circulating), LIT (25%), APEX (31%) and ASTER (35%) carry the most unlock overhang, so their market caps can only rise if demand absorbs new supply. About 14.17M HYPE (around $1.3B) is scheduled to unlock shortly.</p>
+<p class="risk"><b>Reality check:</b> AEVO, DRIFT, F, BLUE, WOO and PERP are down 98-99.9% from their peaks, often after long emission-driven declines. Returning to those highs would need 50x to 1,000x, which is not a useful planning scenario. For these tokens the question is survival and real fee income, not upside multiples. Check why DRIFT and AEVO collapsed before treating any bounce as a signal.</p>
+</div>
+
+<div class="card">
+<span class="stars">★★★★☆</span>
+<h3>Hyperliquid <span class="tick">HYPE</span></h3>
+<p><b>What it is:</b> The dominant perp DEX, running a fully on-chain order book on its own L1 (HyperCore plus HyperEVM) with 300+ markets. HIP-3 lets deployers launch markets for assets such as crude oil, gold, silver and the S&amp;P 500. Coinbase began routing Base App order flow into Hyperliquid liquidity in August 2026.</p>
+<p><b>Value capture:</b> Roughly 97% of protocol fees go to the Assistance Fund for automated HYPE buybacks. About 70% of the original supply went to users with no VC allocation.</p>
+<p class="risk"><b>Risks:</b> Concentration: the token is effectively a single-venue bet. Market share was around 80% in August 2025 and has grown competition since. Buyback treatment is a regulatory watch-point. Team and contributor unlock schedules add supply pressure. After fresh all-time highs, the price already reflects much of the success story.</p>
+</div>
+
+<h2>Satellites</h2>
+<div class="card">
+<span class="stars">★★★☆☆</span>
+<h3>Aster <span class="tick">ASTER</span></h3>
+<p><b>What it is:</b> A multi-asset perp DEX with up to 1001x leverage, positioned as a privacy-focused L1. The token launched on 17 September 2025, rose more than 500% in a day, and printed an all-time high of $2.41 a week later. It reached roughly 20% of perp DEX market share by the end of that month.</p>
+<p class="risk"><b>Risks:</b> Its rise was heavily incentive-driven, so volume quality matters. CZ described his link to the project as limited while the team includes former Binance staff, so verify governance and team transparency. See the standalone ASTER review.</p>
+</div>
+
+<div class="card">
+<span class="stars">★★★☆☆</span>
+<h3>Lighter <span class="tick">LIT</span></h3>
+<p><b>What it is:</b> A zero-fee zk perp DEX that powers trading natively inside Robinhood Wallet, which gives it retail distribution few competitors have.</p>
+<p class="risk"><b>Risks:</b> Zero trading fees means the case for LIT depends on how value reaches holders through other channels. Only about 25% of supply is circulating (FDV is 4x market cap), so unlocks are a key overhang. The token has already traded 43% below its $7.86 ATH.</p>
+</div>
+
+<div class="card">
+<span class="stars">★★★☆☆</span>
+<h3>dYdX <span class="tick">DYDX</span></h3>
+<p><b>What it is:</b> The longest-running onchain derivatives venue, on its own app-chain with an order book. It has brand recognition and battle-tested infrastructure.</p>
+<p class="risk"><b>Risks:</b> It has lost narrative dominance to Hyperliquid. The bull case needs volume to recover and traders to rotate back to established platforms.</p>
+</div>
+
+<div class="card">
+<span class="stars">★★★☆☆</span>
+<h3>GMX <span class="tick">GMX</span></h3>
+<p><b>What it is:</b> Popularized the liquidity-pool model for on-chain leverage, with oracle-priced trades and fees shared with liquidity providers.</p>
+<p class="risk"><b>Risks:</b> Liquidity providers act as counterparty to traders, and oracle pricing carries manipulation risk. Check the record of past exploits and how they were handled. Newer order-book venues have taken the momentum.</p>
+</div>
+
+<div class="card">
+<span class="stars">★★★☆☆</span>
+<h3>Jupiter <span class="tick">JUP</span></h3>
+<p><b>What it is:</b> Jupiter Perps is Solana's leading perp exchange, with 66% of Solana derivatives activity and over $294B in cumulative volume.</p>
+<p class="risk"><b>Risks:</b> JUP is an ecosystem token, so perps are only one part of the value story. The LIBRA memecoin scandal linking Jupiter and Meteora's founder is a governance and reputation flag. See the standalone JUP review.</p>
+</div>
+
+<h2>High risk</h2>
+<div class="card hr"><span class="stars">★★☆☆☆</span><h3>ApeX <span class="tick">APEX</span></h3>
+<p>Multi-asset zkL2 with tokenized stocks and fiat ramps. Broad product set, but a small share of a market where liquidity concentrates in a few venues.</p></div>
+<div class="card hr"><span class="stars">★★☆☆☆</span><h3>Aevo <span class="tick">AEVO</span></h3>
+<p>On-chain derivatives DEX combining options and perps. Niche positioning; token value depends on sustained pro-trader volume.</p></div>
+<div class="card hr"><span class="stars">★★☆☆☆</span><h3>SynFutures <span class="tick">F</span></h3>
+<p>Multi-chain perpetual and futures platform with governance and utility token. Fragmented liquidity is the core challenge.</p></div>
+<div class="card hr"><span class="stars">★★☆☆☆</span><h3>Bluefin <span class="tick">BLUE</span></h3>
+<p>Perp DEX with user-centric markets and cross-margin trading. Small ecosystem dependence and limited depth versus the majors.</p></div>
+<div class="card hr"><span class="stars">★★☆☆☆</span><h3>Drift <span class="tick">DRIFT</span></h3>
+<p>Solana-based perps, competing directly with Jupiter Perps. Verify current volume, security record and token utility before allocating attention.</p></div>
+<div class="card hr"><span class="stars">★★☆☆☆</span><h3>WOO <span class="tick">WOO</span></h3>
+<p>Token of WOOFi and WOO X, bridging centralized and decentralized perp trading. A hybrid, so it is less directly comparable to pure perp DEX tokens.</p></div>
+<div class="card hr"><span class="stars">★☆☆☆☆</span><h3>Perpetual Protocol <span class="tick">PERP</span></h3>
+<p>An early perp DEX whose token covers governance, staking and insurance fund contributions. Relevance has faded; confirm the protocol is still active before any exposure.</p></div>
+
+<h2>Watchlist, not yet reviewed</h2>
+<p class="lead">GNS (Gains Network), SNX (Synthetix), KWENTA, AVNT (Avantis), ORDER (Orderly) and MYX (MYX Finance) are perp-related tokens that need a proper check on activity, revenue and tokenomics before rating.</p>
+
+<h2>Key takeaways</h2>
+<div class="note">
+<b>Volume is concentrated.</b> Hyperliquid processes most on-chain perp volume; every other token is competing for the remainder.<br><br>
+<b>Revenue over emissions.</b> Platforms that grew by paying traders in tokens are seeing volume fall with their token price. Check DefiLlama fee and revenue data to see who earns real income.<br><br>
+<b>Product growth is not token value.</b> A busy platform only matters if fees flow to the token.<br><br>
+<b>Risks across the sector:</b> smart contract bugs, oracle manipulation, liquidation cascades and regulatory uncertainty.
+</div>
+
+<footer>
+<p><b>Methodology:</b> Star ratings are qualitative and based on narrative strength, liquidity, market share, value capture and market-cap tier. Sources include public research and market data, and details should be verified independently.</p>
+<p><b>Disclaimer:</b> This report is for educational purposes only and is not financial advice or a recommendation to buy or sell any asset. Crypto assets are highly volatile and leveraged derivatives carry risk of total loss. Do your own research.</p>
+<p>Join the community: <a href="https://t.me/+fxWM17n8TxE3ODc1">TTM on Telegram</a></p>
+</footer>
+</div>
+</body>
+</html>
