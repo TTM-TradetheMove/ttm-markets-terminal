@@ -225,6 +225,16 @@ table.calendar tr.hidden-row{display:none}
 td.evt{color:#fff;font-weight:500}
 td.num{font-variant-numeric:tabular-nums;color:var(--mute)}
 .calendar-note{margin-top:14px;font-size:12px;color:var(--mute)}
+.tz-cell{font-size:11px;line-height:1.6;white-space:nowrap;color:var(--mute)}
+
+/* US midterm countdown */
+.midterm-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:28px}
+.midterm-card .fl-label{color:var(--gold);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;display:block;margin-bottom:12px}
+.midterm-row{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:10px}
+.midterm-unit{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 18px;min-width:78px;text-align:center}
+.midterm-unit span{display:block;font-size:26px;font-weight:700;color:var(--gold2);font-variant-numeric:tabular-nums}
+.midterm-unit small{display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--mute);margin-top:2px}
+.midterm-note{color:var(--mute);font-size:12.5px;line-height:1.6;margin:0;max-width:720px}
 
 /* ---------- About ---------- */
 .about-grid{display:grid;grid-template-columns:1.1fr 0.9fr;gap:40px;align-items:center}
@@ -318,6 +328,17 @@ footer{padding:40px 0 60px}
       <p id="calendarUpdated" class="calendar-note" style="margin-top:8px">Loading live calendar…</p>
     </div>
 
+    <div class="midterm-card">
+      <span class="fl-label">US Midterm Elections</span>
+      <div class="midterm-row">
+        <div class="midterm-unit"><span id="mtDays">—</span><small>Days</small></div>
+        <div class="midterm-unit"><span id="mtHours">—</span><small>Hours</small></div>
+        <div class="midterm-unit"><span id="mtMins">—</span><small>Mins</small></div>
+        <div class="midterm-unit"><span id="mtSecs">—</span><small>Secs</small></div>
+      </div>
+      <p class="midterm-note">Until Election Day — Tuesday, 3 November 2026. All 435 House seats and 35 Senate seats are up; control of Congress for the back half of the cycle is on the line, a standard volatility catalyst for risk assets including crypto.</p>
+    </div>
+
     <div class="filter-block">
       <span class="fl-label">Country</span>
       <div class="filter-row" id="countryRow">
@@ -367,6 +388,7 @@ footer{padding:40px 0 60px}
       <thead>
         <tr>
           <th>Date</th>
+          <th>Time (MEL / NY / LDN / EU)</th>
           <th>Country</th>
           <th>Event</th>
           <th>Impact</th>
@@ -755,6 +777,7 @@ function renderCalendarRows(list){
       : row.previous;
     tr.innerHTML = `
       <td class="num">${row.date}</td>
+      <td class="num tz-cell">${row.time || '—'}</td>
       <td class="num">${countryLabel[row.country]}</td>
       <td class="evt">${row.event}</td>
       <td><span class="impact-folder impact-${row.impact}">${folderSVG[row.impact]}${impactLabel[row.impact]}</span></td>
@@ -1078,6 +1101,31 @@ cycleModalBackdrop.addEventListener('click', closeCycleModal);
 document.addEventListener('keydown', (e) => {
   if(e.key === 'Escape' && cycleModal.classList.contains('open')) closeCycleModal();
 });
+
+/* US midterm election countdown -- Tuesday 3 Nov 2026, polls open 7am ET (first polls close) used as the headline target */
+const MIDTERM_TARGET = new Date("2026-11-03T07:00:00-05:00").getTime();
+function updateMidtermCountdown(){
+  const diff = MIDTERM_TARGET - Date.now();
+  const elD = document.getElementById('mtDays');
+  const elH = document.getElementById('mtHours');
+  const elM = document.getElementById('mtMins');
+  const elS = document.getElementById('mtSecs');
+  if(!elD) return;
+  if(diff <= 0){
+    elD.textContent = '0'; elH.textContent = '0'; elM.textContent = '0'; elS.textContent = '0';
+    return;
+  }
+  const days = Math.floor(diff / 86400000);
+  const hours = Math.floor((diff % 86400000) / 3600000);
+  const mins = Math.floor((diff % 3600000) / 60000);
+  const secs = Math.floor((diff % 60000) / 1000);
+  elD.textContent = days;
+  elH.textContent = String(hours).padStart(2,'0');
+  elM.textContent = String(mins).padStart(2,'0');
+  elS.textContent = String(secs).padStart(2,'0');
+}
+updateMidtermCountdown();
+setInterval(updateMidtermCountdown, 1000);
 </script>
 
 </body>

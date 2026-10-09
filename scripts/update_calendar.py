@@ -13,8 +13,13 @@ keeps the forward-looking "Upcoming" schedule current.
 import json
 import urllib.request
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 FEED_URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
+MELBOURNE = ZoneInfo("Australia/Melbourne")
+NEW_YORK = ZoneInfo("America/New_York")
+LONDON = ZoneInfo("Europe/London")
+FRANKFURT = ZoneInfo("Europe/Berlin")  # ECB/Frankfurt -- most relevant EU financial-time zone
 
 CURRENCY_TO_COUNTRY = {
     "USD": "US",
@@ -46,17 +51,33 @@ def transform(raw_events):
 
         iso = e.get("date", "")
         try:
-            dt = datetime.fromisoformat(iso)
+            dt_source = datetime.fromisoformat(iso)
         except ValueError:
             continue
-        display_date = dt.strftime("%d %b %Y")
+
+        # Convert to Melbourne time -- this also decides the *displayed* date,
+        # since an event late in the US day can already be "tomorrow" in Melbourne.
+        dt_melb = dt_source.astimezone(MELBOURNE)
+        display_date = dt_melb.strftime("%d %b %Y")
+
+        def fmt(dt_zoned):
+            return dt_zoned.strftime("%I:%M%p").lstrip("0").lower() + " " + dt_zoned.tzname()
+
+        dt_ny = dt_source.astimezone(NEW_YORK)
+        dt_ldn = dt_source.astimezone(LONDON)
+        dt_eu = dt_source.astimezone(FRANKFURT)
+        display_time = (
+            f"MEL {fmt(dt_melb)} · NY {fmt(dt_ny)} · "
+            f"LDN {fmt(dt_ldn)} · EU {fmt(dt_eu)}"
+        )
 
         forecast = e.get("forecast") or "—"
         previous = e.get("previous") or "—"
 
         out.append({
             "date": display_date,
-            "dt": dt.strftime("%Y-%m-%d"),
+            "dt": dt_melb.strftime("%Y-%m-%d"),
+            "time": display_time,
             "country": country,
             "event": e.get("title", "").strip(),
             "impact": impact,

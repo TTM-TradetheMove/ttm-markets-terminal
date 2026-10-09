@@ -1,0 +1,41 @@
+name: Debug - dump rendered cryptotldr.io events page
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Playwright
+        run: |
+          pip install playwright
+          playwright install --with-deps chromium
+      - name: Dump rendered page
+        run: |
+          python3 - << 'PYEOF'
+          from playwright.sync_api import sync_playwright
+          with sync_playwright() as p:
+              browser = p.chromium.launch()
+              page = browser.new_page()
+              page.goto("https://cryptotldr.io/events", wait_until="networkidle", timeout=60000)
+              page.wait_for_timeout(3000)
+              html = page.content()
+              text = page.inner_text("body")
+              with open("debug_cryptotldr.html", "w") as f:
+                  f.write(html)
+              with open("debug_cryptotldr.txt", "w") as f:
+                  f.write(text)
+              browser.close()
+          PYEOF
+      - name: Commit debug output
+        run: |
+          git config user.name "ttm-calendar-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add debug_cryptotldr.html debug_cryptotldr.txt
+          git commit -m "Debug: dump rendered cryptotldr.io/events" || echo "nothing to commit"
+          git push
