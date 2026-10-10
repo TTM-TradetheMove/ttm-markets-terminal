@@ -266,6 +266,12 @@ td.num{font-variant-numeric:tabular-nums;color:var(--mute)}
 .th-status.open{background:rgba(74,222,128,.15);color:#4ade80;border-color:rgba(74,222,128,.35)}
 .th-clock{font-size:22px;font-weight:700;color:var(--gold2);font-variant-numeric:tabular-nums;margin-bottom:4px}
 .th-hours{font-size:11px;color:var(--mute)}
+.th-box-primary{margin-bottom:16px;border-color:rgba(212,168,67,.35);background:linear-gradient(180deg,rgba(212,168,67,.06),transparent)}
+.th-clock-primary{font-size:38px}
+.th-boxes-secondary{grid-template-columns:repeat(2,1fr);margin-top:0}
+@media(max-width:600px){.th-boxes-secondary{grid-template-columns:1fr}}
+.th-status.weekend{background:rgba(251,191,36,.15);color:#fbbf24;border-color:rgba(251,191,36,.35)}
+.th-box.weekend{border-color:rgba(251,191,36,.3)}
 
 /* ---------- About ---------- */
 .about-grid{display:grid;grid-template-columns:1.1fr 0.9fr;gap:40px;align-items:center}
@@ -306,6 +312,7 @@ footer{padding:40px 0 60px}
     <div class="brandname">TRADE THE MOVE<span>Markets Terminal</span></div>
     <nav class="site-nav">
       <a href="#calendar">Macro Watch</a>
+      <a href="#tradinghours">Trading Hours</a>
       <a href="#tokenevents">Token Events</a>
       <a href="#congress">Congress Watch</a>
       <a href="#library">Reports</a>
@@ -358,37 +365,6 @@ footer{padding:40px 0 60px}
       <h2>Key global economic data</h2>
       <p>A ForexFactory-style read of the releases that tend to move crypto. Folder colour marks expected impact, and the Bias column reads each print the way TTM reads it — filter by country, impact, time period or range.</p>
       <p id="calendarUpdated" class="calendar-note" style="margin-top:8px">Loading live calendar…</p>
-    </div>
-
-    <div class="th-card">
-      <span class="fl-label">Trading Hours &amp; Session Overlap</span>
-      <div id="thOverlapBanner" class="th-overlap">
-        <span id="thOverlapLabel">Loading…</span>
-        <div class="th-overlap-time">
-          <span id="thOverlapD" class="th-od">—</span>
-          <div class="th-overlap-unit"><span id="thOH">—</span><small>H</small></div>
-          <div class="th-overlap-unit"><span id="thOM">—</span><small>M</small></div>
-          <div class="th-overlap-unit"><span id="thOS">—</span><small>S</small></div>
-        </div>
-      </div>
-      <div class="th-boxes">
-        <div class="th-box" id="thBox-mel">
-          <div class="th-box-head"><span class="th-city">Melbourne</span><span class="th-status" id="thStatus-mel">—</span></div>
-          <div class="th-clock" id="thClock-mel">--:--</div>
-          <div class="th-hours" id="thHours-mel">Session 07:00–16:00 local</div>
-        </div>
-        <div class="th-box" id="thBox-ldn">
-          <div class="th-box-head"><span class="th-city">London</span><span class="th-status" id="thStatus-ldn">—</span></div>
-          <div class="th-clock" id="thClock-ldn">--:--</div>
-          <div class="th-hours" id="thHours-ldn">Session 08:00–17:00 local</div>
-        </div>
-        <div class="th-box" id="thBox-ny">
-          <div class="th-box-head"><span class="th-city">New York</span><span class="th-status" id="thStatus-ny">—</span></div>
-          <div class="th-clock" id="thClock-ny">--:--</div>
-          <div class="th-hours" id="thHours-ny">Session 08:00–17:00 local</div>
-        </div>
-      </div>
-      <p class="midterm-note">The London–New York overlap is historically the highest-liquidity, highest-volatility window for major pairs and correlates with heavier crypto volume too. Session hours are standard forex-market convention (local time, DST auto-adjusted) — not each city's full stock-exchange hours.</p>
     </div>
 
     <div class="midterm-card">
@@ -465,6 +441,49 @@ footer{padding:40px 0 60px}
     </table>
     <p id="calendarEmpty" class="calendar-note" style="display:none">No releases match this combination of filters.</p>
     <p class="calendar-note">Historical prints are TTM's curated record, not a live feed — Upcoming releases refresh automatically from a live calendar source (see status line above). Always confirm live figures and release times against the official BLS, BEA, ONS, ECB, Fed and BOJ calendars (or ForexFactory itself) before trading around them. Crypto Bias is TTM's own read of how a print is typically digested by risk assets, not a prediction.</p>
+  </div>
+</section>
+
+<section id="tradinghours">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">Session Clock</span>
+      <h2>Trading hours &amp; session overlap</h2>
+      <p>Built around Melbourne time — your local session, with London and New York underneath. Markets run Monday–Friday; the London–New York overlap is the highest-liquidity window of the day.</p>
+    </div>
+
+    <div class="th-card">
+      <div class="th-box th-box-primary" id="thBox-mel">
+        <div class="th-box-head"><span class="th-city">Melbourne (AEDT/AEST)</span><span class="th-status" id="thStatus-mel">—</span></div>
+        <div class="th-clock th-clock-primary" id="thClock-mel">--:--</div>
+        <div class="th-hours" id="thHours-mel">Session 07:00–16:00 local, Mon–Fri</div>
+      </div>
+
+      <div id="thOverlapBanner" class="th-overlap">
+        <span id="thOverlapLabel">Loading…</span>
+        <div class="th-overlap-time">
+          <span id="thOverlapD" class="th-od">—</span>
+          <div class="th-overlap-unit"><span id="thODays">—</span><small>D</small></div>
+          <div class="th-overlap-unit"><span id="thOH">—</span><small>H</small></div>
+          <div class="th-overlap-unit"><span id="thOM">—</span><small>M</small></div>
+          <div class="th-overlap-unit"><span id="thOS">—</span><small>S</small></div>
+        </div>
+      </div>
+
+      <div class="th-boxes th-boxes-secondary">
+        <div class="th-box" id="thBox-ldn">
+          <div class="th-box-head"><span class="th-city">London</span><span class="th-status" id="thStatus-ldn">—</span></div>
+          <div class="th-clock" id="thClock-ldn">--:--</div>
+          <div class="th-hours" id="thHours-ldn">Session 08:00–17:00 local, Mon–Fri</div>
+        </div>
+        <div class="th-box" id="thBox-ny">
+          <div class="th-box-head"><span class="th-city">New York</span><span class="th-status" id="thStatus-ny">—</span></div>
+          <div class="th-clock" id="thClock-ny">--:--</div>
+          <div class="th-hours" id="thHours-ny">Session 08:00–17:00 local, Mon–Fri</div>
+        </div>
+      </div>
+      <p class="midterm-note">The London–New York overlap is historically the highest-liquidity, highest-volatility window for major pairs and correlates with heavier crypto volume too. Session hours are standard forex-market convention (local time, DST auto-adjusted) — not each city's full stock-exchange hours. Outside Mon–Fri local time, a session shows as Weekend rather than Open/Closed.</p>
+    </div>
   </div>
 </section>
 
@@ -1335,15 +1354,27 @@ function zonedLocalToUTC(y, m, d, hh, mm, zone){
 
 // Returns {openUTC, closeUTC} for a session's window covering `now` (looks at
 // yesterday/today/tomorrow's local date so overnight-adjacent lookups work).
+function isWeekendLocal(now, zone){
+  const wd = new Intl.DateTimeFormat('en-US', {timeZone: zone, weekday:'short'}).format(now);
+  return wd === 'Sat' || wd === 'Sun';
+}
+
+// Session windows only exist Mon-Fri (local calendar date in that zone) -- a
+// Saturday/Sunday local date contributes no window, so isOpenNow is
+// automatically false across the whole weekend without extra logic.
+// Range is -1..+4 days so a Friday-evening check can still find Monday's
+// window for the overlap countdown.
 function sessionWindowsNear(now, session){
   const zone = session.zone;
   const fmt = new Intl.DateTimeFormat('en-US', {timeZone: zone, year:'numeric', month:'2-digit', day:'2-digit'});
   const parts = Object.fromEntries(fmt.formatToParts(now).map(p => [p.type, p.value]));
   const y = Number(parts.year), m = Number(parts.month), d = Number(parts.day);
   const windows = [];
-  for(const dayOffset of [-1, 0, 1]){
+  for(const dayOffset of [-1, 0, 1, 2, 3, 4]){
     const dt = new Date(Date.UTC(y, m-1, d + dayOffset));
     const yy = dt.getUTCFullYear(), mm = dt.getUTCMonth()+1, dd = dt.getUTCDate();
+    const dow = dt.getUTCDay(); // 0=Sun, 6=Sat -- the calendar date itself decides the weekday
+    if(dow === 0 || dow === 6) continue;
     const openUTC = zonedLocalToUTC(yy, mm, dd, session.open, 0, zone);
     const closeUTC = zonedLocalToUTC(yy, mm, dd, session.close, 0, zone);
     windows.push({openUTC, closeUTC});
@@ -1370,10 +1401,13 @@ function updateTradingHours(){
     }).format(now);
     clockEl.textContent = timeStr;
 
-    const open = isOpenNow(now, session);
-    statusEl.textContent = open ? 'Open' : 'Closed';
+    const weekend = isWeekendLocal(now, session.zone);
+    const open = !weekend && isOpenNow(now, session);
+    statusEl.textContent = weekend ? 'Weekend' : (open ? 'Open' : 'Closed');
     statusEl.classList.toggle('open', open);
+    statusEl.classList.toggle('weekend', weekend);
     boxEl.classList.toggle('open', open);
+    boxEl.classList.toggle('weekend', weekend);
   });
 
   // London–New York overlap -- the headline "best trading hours" window
@@ -1389,6 +1423,7 @@ function updateTradingHours(){
 
   const label = document.getElementById('thOverlapLabel');
   const odEl = document.getElementById('thOverlapD');
+  const dEl = document.getElementById('thODays');
   const hEl = document.getElementById('thOH');
   const mEl = document.getElementById('thOM');
   const sEl = document.getElementById('thOS');
@@ -1417,9 +1452,12 @@ function updateTradingHours(){
   banner.classList.toggle('live', isLive);
 
   const totalSecs = Math.max(0, Math.floor(diffMs / 1000));
-  const hh = Math.floor(totalSecs / 3600);
+  const days = Math.floor(totalSecs / 86400);
+  const hh = Math.floor((totalSecs % 86400) / 3600);
   const mm = Math.floor((totalSecs % 3600) / 60);
   const ss = totalSecs % 60;
+  dEl.textContent = String(days);
+  dEl.parentElement.style.display = days > 0 ? '' : 'none';
   hEl.textContent = String(hh).padStart(2,'0');
   mEl.textContent = String(mm).padStart(2,'0');
   sEl.textContent = String(ss).padStart(2,'0');
