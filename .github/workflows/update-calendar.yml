@@ -24,6 +24,11 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install Playwright
+        run: |
+          pip install playwright
+          playwright install --with-deps chromium
+
       - name: Fetch latest calendar data
         run: python3 scripts/update_calendar.py
 
