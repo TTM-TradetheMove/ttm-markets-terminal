@@ -24,6 +24,22 @@ TYPE_MAP = {
     "Major": "major",
 }
 
+debug_lines = []
+
+
+def dbg(msg):
+    debug_lines.append(msg)
+    print(msg)
+
+
+def write_debug():
+    try:
+        with open("token_events_debug.txt", "w") as f:
+            f.write(f"Run at {datetime.now(timezone.utc).isoformat()}\n\n")
+            f.write("\n".join(debug_lines))
+    except Exception:
+        pass
+
 
 def parse_date(date_str):
     """'Oct 11, 2026' -> datetime"""
@@ -34,36 +50,74 @@ def scrape():
     events = []
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        page = browser.new_page(user_agent="Mozilla/5.0 (compatible; TTMMarketsTerminalBot/1.0; +https://ttm-tradethemove.github.io/ttm-markets-terminal/)")
-        page.goto(SOURCE_URL, wait_until="networkidle", timeout=60000)
-        page.wait_for_selector("table tbody tr", timeout=20000)
+        page = browser.new_page(
+            user_agent="Mozilla/5.0 (compatible; TTMMarketsTerminalBot/1.0; "
+                       "+https://ttm-tradethemove.github.io/ttm-markets-terminal/)"
+        )
+        page.set_default_timeout(10000)
+        try:
+            # networkidle can hang indefinitely on SPAs with live polling --
+            # use domcontentloaded + an explicit wait instead, same fix as
+            # the calendar scraper needed.
+            page.goto(SOURCE_URL, wait_until="domcontentloaded", timeout=30000)
+        except Exception as exc:
+            dbg(f"page.goto error (continuing): {exc}")
+        page.wait_for_timeout(2500)
+
+        dbg(f"page title: {page.title()!r}")
+        dbg(f"page url after load: {page.url!r}")
+
+        try:
+            page.wait_for_selector("table tbody tr", timeout=15000)
+        except Exception as exc:
+            dbg(f"wait_for_selector('table tbody tr') failed: {exc}")
 
         rows = page.query_selector_all("table tbody tr")
+        dbg(f"rows found: {len(rows)}")
+
+        if not rows:
+            body_text = page.inner_text("body")[:1500]
+            dbg(f"no rows found -- body text snippet:\n{body_text}")
+
+        sample_logged = 0
+        skipped = 0
         for row in rows:
-            cells = row.query_selector_all("td")
-            if len(cells) < 5:
-                continue
-            date_text = cells[0].inner_text().strip()
-            type_text = cells[1].inner_text().strip()
-            token_text = cells[2].inner_text().strip()
-            name_el = cells[3].query_selector("a")
-            name_text = (name_el.inner_text() if name_el else cells[3].inner_text()).strip()
-            link = name_el.get_attribute("href") if name_el else None
-
             try:
-                dt = parse_date(date_text)
-            except ValueError:
+                cells = row.query_selector_all("td")
+                if sample_logged < 5:
+                    dbg(f"sample row: cells={len(cells)} raw_text={row.inner_text()[:120]!r}")
+                    sample_logged += 1
+                if len(cells) < 5:
+                    continue
+                date_text = cells[0].inner_text().strip()
+                type_text = cells[1].inner_text().strip()
+                token_text = cells[2].inner_text().strip()
+                name_el = cells[3].query_selector("a")
+                name_text = (name_el.inner_text() if name_el else cells[3].inner_text()).strip()
+                link = name_el.get_attribute("href") if name_el else None
+
+                try:
+                    dt = parse_date(date_text)
+                except ValueError:
+                    continue
+
+                events.append({
+                    "date": dt.strftime("%d %b %Y"),
+                    "dt": dt.strftime("%Y-%m-%d"),
+                    "type": TYPE_MAP.get(type_text, "other"),
+                    "type_label": type_text,
+                    "token": token_text,
+                    "name": name_text,
+                    "link": link,
+                })
+            except Exception as row_exc:
+                skipped += 1
+                if skipped <= 5:
+                    dbg(f"row error (skipped): {row_exc}")
                 continue
 
-            events.append({
-                "date": dt.strftime("%d %b %Y"),
-                "dt": dt.strftime("%Y-%m-%d"),
-                "type": TYPE_MAP.get(type_text, "other"),
-                "type_label": type_text,
-                "token": token_text,
-                "name": name_text,
-                "link": link,
-            })
+        if skipped:
+            dbg(f"total rows skipped due to errors: {skipped}")
 
         browser.close()
 
@@ -72,7 +126,16 @@ def scrape():
 
 
 def main():
-    events = scrape()
+    try:
+        events = scrape()
+    except Exception as exc:
+        dbg(f"scrape() failed entirely: {exc}")
+        write_debug()
+        raise SystemExit(f"Scrape failed -- not overwriting token_events_data.json. See token_events_debug.txt: {exc}")
+
+    dbg(f"Scraped {len(events)} events")
+    write_debug()
+
     if not events:
         # Don't overwrite good data with an empty result if the site's
         # structure changed and nothing was found -- fail loudly instead.
