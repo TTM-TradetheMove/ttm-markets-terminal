@@ -1,8 +1,4 @@
-Run at 2026-10-10T20:20:33.895107+00:00
-
-page.goto error (continuing): Page.goto: Timeout 60000ms exceeded.
-Call log:
-  - navigating to "https://www.forexfactory.com/calendar", waiting until "networkidle"
+Run at 2026-10-10T20:36:08.721926+00:00
 
 page title: 'Calendar | Forex Factory'
 page url after load: 'https://www.forexfactory.com/calendar'
@@ -12,4 +8,10 @@ sample row: date_el=True currency_el=True event_el=True actual_el=True raw_text=
 sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='All Day\n\tAUD\t\t\nBank Holiday\n\t\t\n\t\t\t\t'
 sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='All Day\n\tCNY\t\t\nBank Holiday\n\t\t\n\t\t\t\t'
 sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='7:00pm\n\tAUD\t\t\nMI Inflation Gauge m/m\n\t\n\t\n\t0.3%\t\t0.5%\t'
-Scraped 17 live actual values from forexfactory.com
+TARGET ROW: date='Mon Oct 5' currency='AUD' title='Westpac Consumer Sentiment' actual='-4.7%'
+TARGET ROW: date='Tue Oct 6' currency='CHF' title='Unemployment Rate' actual='3.1%'
+TARGET ROW: date='Thu Oct 8' currency='USD' title='Unemployment Claims' actual='197K'
+TARGET ROW: date='Fri Oct 9' currency='CAD' title='Unemployment Rate' actual='6.5%'
+TARGET ROW: date='Fri Oct 9' currency='USD' title='Prelim UoM Consumer Sentiment' actual='46.3'
+matched-actuals by date: {'2026-10-04': 2, '2026-10-05': 15, '2026-10-06': 14, '2026-10-07': 12, '2026-10-08': 7, '2026-10-09': 7}
+Scraped 57 live actual values from forexfactory.com
