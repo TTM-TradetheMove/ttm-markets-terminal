@@ -1,4 +1,4 @@
-name: Debug - dump forexfactory.com calendar HTML
+name: Debug - dump rendered forexfactory.com calendar
 
 on:
   workflow_dispatch: {}
@@ -14,24 +14,34 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Fetch raw HTML
+      - name: Install Playwright
+        run: |
+          pip install playwright
+          playwright install --with-deps chromium
+      - name: Dump rendered page
         run: |
           python3 - << 'PYEOF'
-          import urllib.request
-          req = urllib.request.Request(
-              "https://www.forexfactory.com/calendar",
-              headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"}
-          )
-          with urllib.request.urlopen(req, timeout=30) as resp:
-              html = resp.read().decode("utf-8", errors="replace")
-          with open("debug_ff.html", "w") as f:
-              f.write(html)
-          print("Saved", len(html), "bytes")
+          from playwright.sync_api import sync_playwright
+          with sync_playwright() as p:
+              browser = p.chromium.launch()
+              page = browser.new_page(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36")
+              try:
+                  page.goto("https://www.forexfactory.com/calendar", wait_until="networkidle", timeout=60000)
+              except Exception as e:
+                  print("goto error (continuing anyway):", e)
+              page.wait_for_timeout(4000)
+              html = page.content()
+              text = page.inner_text("body")
+              with open("debug_ff.html", "w") as f:
+                  f.write(html)
+              with open("debug_ff.txt", "w") as f:
+                  f.write(text)
+              browser.close()
           PYEOF
       - name: Commit debug output
         run: |
           git config user.name "ttm-calendar-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add debug_ff.html
-          git commit -m "Debug: dump forexfactory.com/calendar HTML" || echo "nothing to commit"
+          git add debug_ff.html debug_ff.txt
+          git commit -m "Debug: dump rendered forexfactory.com/calendar" || echo "nothing to commit"
           git push
