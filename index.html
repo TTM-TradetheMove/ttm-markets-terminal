@@ -486,7 +486,7 @@ footer{padding:40px 0 60px}
           <div class="th-overlap-unit"><span id="thOS">—</span><small>S</small></div>
         </div>
       </div>
-      <p class="midterm-note">The top box is whichever session is live right now (or opening soonest if all three are closed) — it rotates automatically as each session kicks in. During an overlap, the session that opened most recently takes the top spot. Session hours are standard forex-market convention (local time, DST auto-adjusted), Monday–Friday — outside that, a session shows Weekend rather than Open/Closed.</p>
+      <p class="midterm-note">The top box is whichever session's clock is live right now (or opening soonest) — it rotates automatically as each session kicks in, during an overlap the one that opened most recently takes the top spot. The rotation runs every day including weekends, since crypto trades 24/7 and bots/algos follow the same session clock regardless of the day. The Weekend badge is separate — it just flags that traditional cash FX/equity markets are shut, Monday–Friday only; it doesn't pause the rotation itself.</p>
     </div>
   </div>
 </section>
@@ -1395,6 +1395,24 @@ function isOpenNow(now, session){
 const TH_ORDER = ['mel', 'ldn', 'ny'];
 const TH_FULL_NAME = {mel:'Melbourne', ldn:'London', ny:'New York'};
 
+// Which box is "primary" (top) rotates by time-of-day alone, every day of the
+// week -- crypto trades 24/7 and algos/bots follow the same session clock on
+// weekends as weekdays, so the rotation never freezes. The Weekend badge is
+// a separate, honest flag that *traditional* cash FX/equity markets are shut;
+// it doesn't stop the session clock itself from cycling.
+function sessionClockState(now, session){
+  const hourStr = new Intl.DateTimeFormat('en-GB', {
+    timeZone: session.zone, hour:'2-digit', minute:'2-digit', hour12:false
+  }).format(now);
+  const [hh, mm] = hourStr.split(':').map(Number);
+  const minutesNow = hh * 60 + mm;
+  const openMin = session.open * 60, closeMin = session.close * 60;
+  const active = minutesNow >= openMin && minutesNow < closeMin;
+  const elapsed = active ? minutesNow - openMin : null;
+  const minutesToOpen = minutesNow < openMin ? (openMin - minutesNow) : (24 * 60 - minutesNow + openMin);
+  return {active, elapsed, minutesToOpen};
+}
+
 // All pairs that can meaningfully overlap (Melbourne/Asia-Pacific session ends
 // well before New York opens, so mel-ny never overlaps -- only adjacent pairs do).
 const TH_PAIRS = [['mel','ldn'], ['ldn','ny']];
@@ -1440,19 +1458,26 @@ function updateTradingHours(){
     // Soonest future open (used as tiebreak when nothing is open right now).
     const futureWindow = windows.filter(w => w.openUTC > now).sort((a,b) => a.openUTC - b.openUTC)[0];
 
-    state[key] = {open, openedAt: activeWindow ? activeWindow.openUTC : null, nextOpen: futureWindow ? futureWindow.openUTC : null};
+    const clock = sessionClockState(now, session);
+
+    state[key] = {
+      open, openedAt: activeWindow ? activeWindow.openUTC : null, nextOpen: futureWindow ? futureWindow.openUTC : null,
+      clockActive: clock.active, clockElapsed: clock.elapsed, clockMinutesToOpen: clock.minutesToOpen,
+    };
   });
 
-  // Primary = whichever session is open and started most recently (so during
-  // an overlap, the one that "just kicked in" takes the top spot). If nothing
-  // is open, primary = whichever opens soonest (e.g. over the weekend).
+  // Primary = whichever session's clock is "active" right now (time-of-day
+  // only, every day including weekends) and started most recently, so the
+  // one that "just kicked in" takes the top spot. If none are active by the
+  // clock, primary = whichever opens soonest. This keeps the rotation going
+  // through the weekend for algos/bots that follow the same session clock;
+  // the Weekend badge on each box still tells you tradfi cash markets are shut.
   let primaryKey = TH_ORDER
-    .filter(k => state[k].open)
-    .sort((a,b) => state[b].openedAt - state[a].openedAt)[0];
+    .filter(k => state[k].clockActive)
+    .sort((a,b) => state[a].clockElapsed - state[b].clockElapsed)[0];
   if(!primaryKey){
     primaryKey = TH_ORDER
-      .filter(k => state[k].nextOpen)
-      .sort((a,b) => state[a].nextOpen - state[b].nextOpen)[0] || TH_ORDER[0];
+      .sort((a,b) => state[a].clockMinutesToOpen - state[b].clockMinutesToOpen)[0] || TH_ORDER[0];
   }
   const idx = TH_ORDER.indexOf(primaryKey);
   const leftKey = TH_ORDER[(idx + 1) % 3];
