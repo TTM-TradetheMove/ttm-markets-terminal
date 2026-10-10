@@ -134,13 +134,43 @@ def scrape_actuals():
     (NY date, currency, normalized title) -> actual value.
     Returns {} on any failure rather than raising, so the main feed-based
     schedule is never blocked by this best-effort enrichment step.
+
+    Always writes ff_scrape_debug.txt with what it found/tried, since this
+    runs unattended in CI and the only way to diagnose a silent miss is to
+    commit a breadcrumb trail alongside calendar_data.json.
     """
     results = {}
+    debug_lines = []
+
+    def dbg(msg):
+        debug_lines.append(msg)
+        print(msg)
+
     try:
         from playwright.sync_api import sync_playwright
     except ImportError:
-        print("Playwright not installed -- skipping live actuals scrape")
+        dbg("Playwright not installed -- skipping live actuals scrape")
+        _write_debug(debug_lines)
         return results
+
+    # Candidate selector sets to try, in order -- forexfactory's markup has
+    # changed class naming schemes before (BEM-ish calendar__x historically,
+    # but we can't be sure which is live right now), so we probe a few.
+    ROW_SELECTORS = ["tr.calendar__row", "tr[data-event-id]", "table.calendar__table tbody tr", "table tbody tr"]
+    CELL_SELECTORS = {
+        "date":     [".calendar__date", "td.date", "[class*='date']"],
+        "time":     [".calendar__time", "td.time", "[class*='time']"],
+        "currency": [".calendar__currency", "td.currency", "[class*='currency']"],
+        "event":    [".calendar__event", "td.event", "[class*='event']"],
+        "actual":   [".calendar__actual", "td.actual", "[class*='actual']"],
+    }
+
+    def first_match(row, selectors):
+        for sel in selectors:
+            el = row.query_selector(sel)
+            if el:
+                return el
+        return None
 
     try:
         with sync_playwright() as p:
@@ -149,28 +179,49 @@ def scrape_actuals():
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                            "(KHTML, like Gecko) Chrome/120.0 Safari/537.36"
             )
-            page.goto("https://www.forexfactory.com/calendar", wait_until="networkidle", timeout=60000)
-            page.wait_for_selector("tr.calendar__row", timeout=20000)
+            try:
+                page.goto("https://www.forexfactory.com/calendar", wait_until="networkidle", timeout=60000)
+            except Exception as exc:
+                dbg(f"page.goto error (continuing): {exc}")
+            page.wait_for_timeout(3000)
 
-            rows = page.query_selector_all("tr.calendar__row")
+            dbg(f"page title: {page.title()!r}")
+            dbg(f"page url after load: {page.url!r}")
+
+            rows = []
+            used_row_selector = None
+            for sel in ROW_SELECTORS:
+                rows = page.query_selector_all(sel)
+                if rows:
+                    used_row_selector = sel
+                    break
+            dbg(f"row selector used: {used_row_selector!r}, rows found: {len(rows)}")
+
+            if not rows:
+                # Dump a text snippet so we can see what's actually on the page
+                # (bot-block page, cookie wall, different markup, etc.)
+                body_text = page.inner_text("body")[:1500]
+                dbg(f"no rows found -- body text snippet:\n{body_text}")
+
             current_date = None
-            current_time = None
+            sample_logged = 0
             for row in rows:
-                date_el = row.query_selector(".calendar__date")
+                date_el = first_match(row, CELL_SELECTORS["date"])
                 if date_el:
                     date_text = date_el.inner_text().strip()
                     if date_text:
                         current_date = date_text
 
-                time_el = row.query_selector(".calendar__time")
-                if time_el:
-                    time_text = time_el.inner_text().strip()
-                    if time_text:
-                        current_time = time_text
+                currency_el = first_match(row, CELL_SELECTORS["currency"])
+                event_el = first_match(row, CELL_SELECTORS["event"])
+                actual_el = first_match(row, CELL_SELECTORS["actual"])
 
-                currency_el = row.query_selector(".calendar__currency")
-                event_el = row.query_selector(".calendar__event")
-                actual_el = row.query_selector(".calendar__actual")
+                if sample_logged < 5:
+                    dbg(f"sample row: date_el={bool(date_el)} currency_el={bool(currency_el)} "
+                        f"event_el={bool(event_el)} actual_el={bool(actual_el)} "
+                        f"raw_text={row.inner_text()[:120]!r}")
+                    sample_logged += 1
+
                 if not (currency_el and event_el and actual_el):
                     continue
 
@@ -196,11 +247,22 @@ def scrape_actuals():
 
             browser.close()
     except Exception as exc:
-        print(f"Live actuals scrape failed (continuing with feed-only data): {exc}")
+        dbg(f"Live actuals scrape failed (continuing with feed-only data): {exc}")
+        _write_debug(debug_lines)
         return {}
 
-    print(f"Scraped {len(results)} live actual values from forexfactory.com")
+    dbg(f"Scraped {len(results)} live actual values from forexfactory.com")
+    _write_debug(debug_lines)
     return results
+
+
+def _write_debug(lines):
+    try:
+        with open("ff_scrape_debug.txt", "w") as f:
+            f.write(f"Run at {datetime.now(timezone.utc).isoformat()}\n\n")
+            f.write("\n".join(lines))
+    except Exception:
+        pass
 
 
 def merge_actuals(events, actuals):

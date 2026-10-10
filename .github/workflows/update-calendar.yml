@@ -36,8 +36,9 @@ jobs:
         run: |
           git config user.name "ttm-calendar-bot"
           git config user.email "actions@users.noreply.github.com"
-          if git diff --quiet -- calendar_data.json; then
-            echo "No changes to calendar_data.json"
+          git add -f ff_scrape_debug.txt 2>/dev/null || true
+          if git diff --quiet -- calendar_data.json && git diff --cached --quiet -- ff_scrape_debug.txt; then
+            echo "No changes to calendar_data.json or ff_scrape_debug.txt"
           else
             git add calendar_data.json
             git commit -m "Auto-update economic calendar"
