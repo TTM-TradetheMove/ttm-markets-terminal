@@ -106,8 +106,16 @@ def _norm(title):
     return re.sub(r"[^a-z0-9]+", "", title.lower())
 
 
-def compute_bias(actual, forecast):
-    """Best-effort numeric compare to flag beat/miss for styling."""
+def compute_miss(actual, forecast):
+    """
+    Numeric compare against forecast, used only to redden the Actual cell
+    when a print misses -- NOT the dashboard's "Crypto Bias" column. That
+    column is TTM's own editorial read of how a print is typically digested
+    by risk assets (e.g. a weak jobs print can be "bullish" for risk via
+    looser Fed expectations), which a blind beat/miss-vs-forecast compare
+    cannot responsibly infer. So scraped live rows always get bias
+    "neutral" here; only TTM's curated historical rows carry up/down.
+    """
     def to_num(s):
         if not s or s in ("—", "-"):
             return None
@@ -116,12 +124,8 @@ def compute_bias(actual, forecast):
 
     a, f = to_num(actual), to_num(forecast)
     if a is None or f is None:
-        return "neutral", False
-    if a > f:
-        return "beat", False
-    if a < f:
-        return "miss", True
-    return "neutral", False
+        return False
+    return a < f
 
 
 def scrape_actuals():
@@ -207,9 +211,8 @@ def merge_actuals(events, actuals):
         key = (e["_ny_date"], e["_currency"], e["_title_norm"])
         if key in actuals:
             e["actual"] = actuals[key]
-            bias, miss = compute_bias(e["actual"], e["forecast"])
-            e["bias"] = bias
-            e["miss"] = miss
+            e["miss"] = compute_miss(e["actual"], e["forecast"])
+            e["bias"] = "neutral"  # see compute_miss() docstring
             e["upcoming"] = False
             matched += 1
     print(f"Matched {matched} actual values onto scheduled events")
