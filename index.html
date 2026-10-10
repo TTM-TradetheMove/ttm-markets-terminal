@@ -245,6 +245,28 @@ td.num{font-variant-numeric:tabular-nums;color:var(--mute)}
 .midterm-unit small{display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--mute);margin-top:2px}
 .midterm-note{color:var(--mute);font-size:12.5px;line-height:1.6;margin:0;max-width:720px}
 
+/* Trading hours / session overlap */
+.th-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:20px}
+.th-card .fl-label{color:var(--gold);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;display:block;margin-bottom:12px}
+.th-overlap{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-bottom:16px}
+.th-overlap.live{border-color:var(--gold);box-shadow:0 0 0 1px rgba(212,168,67,.25) inset}
+#thOverlapLabel{font-size:13.5px;font-weight:600;color:var(--text)}
+.th-overlap-time{display:flex;align-items:center;gap:8px}
+.th-od{font-size:11px;color:var(--mute);margin-right:4px}
+.th-overlap-unit{background:var(--card);border:1px solid var(--line);border-radius:7px;padding:5px 9px;text-align:center;min-width:40px}
+.th-overlap-unit span{display:block;font-size:16px;font-weight:700;color:var(--gold2);font-variant-numeric:tabular-nums}
+.th-overlap-unit small{display:block;font-size:9px;color:var(--mute);letter-spacing:.5px}
+.th-boxes{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+@media(max-width:700px){.th-boxes{grid-template-columns:1fr}}
+.th-box{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.th-box.open{border-color:rgba(74,222,128,.4)}
+.th-box-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.th-city{font-size:13px;font-weight:600;color:var(--text)}
+.th-status{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 8px;border-radius:999px;background:rgba(148,163,184,.15);color:#cbd5e1;border:1px solid rgba(148,163,184,.3)}
+.th-status.open{background:rgba(74,222,128,.15);color:#4ade80;border-color:rgba(74,222,128,.35)}
+.th-clock{font-size:22px;font-weight:700;color:var(--gold2);font-variant-numeric:tabular-nums;margin-bottom:4px}
+.th-hours{font-size:11px;color:var(--mute)}
+
 /* ---------- About ---------- */
 .about-grid{display:grid;grid-template-columns:1.1fr 0.9fr;gap:40px;align-items:center}
 @media(max-width:800px){.about-grid{grid-template-columns:1fr}}
@@ -338,6 +360,37 @@ footer{padding:40px 0 60px}
       <p id="calendarUpdated" class="calendar-note" style="margin-top:8px">Loading live calendar…</p>
     </div>
 
+    <div class="th-card">
+      <span class="fl-label">Trading Hours &amp; Session Overlap</span>
+      <div id="thOverlapBanner" class="th-overlap">
+        <span id="thOverlapLabel">Loading…</span>
+        <div class="th-overlap-time">
+          <span id="thOverlapD" class="th-od">—</span>
+          <div class="th-overlap-unit"><span id="thOH">—</span><small>H</small></div>
+          <div class="th-overlap-unit"><span id="thOM">—</span><small>M</small></div>
+          <div class="th-overlap-unit"><span id="thOS">—</span><small>S</small></div>
+        </div>
+      </div>
+      <div class="th-boxes">
+        <div class="th-box" id="thBox-mel">
+          <div class="th-box-head"><span class="th-city">Melbourne</span><span class="th-status" id="thStatus-mel">—</span></div>
+          <div class="th-clock" id="thClock-mel">--:--</div>
+          <div class="th-hours" id="thHours-mel">Session 07:00–16:00 local</div>
+        </div>
+        <div class="th-box" id="thBox-ldn">
+          <div class="th-box-head"><span class="th-city">London</span><span class="th-status" id="thStatus-ldn">—</span></div>
+          <div class="th-clock" id="thClock-ldn">--:--</div>
+          <div class="th-hours" id="thHours-ldn">Session 08:00–17:00 local</div>
+        </div>
+        <div class="th-box" id="thBox-ny">
+          <div class="th-box-head"><span class="th-city">New York</span><span class="th-status" id="thStatus-ny">—</span></div>
+          <div class="th-clock" id="thClock-ny">--:--</div>
+          <div class="th-hours" id="thHours-ny">Session 08:00–17:00 local</div>
+        </div>
+      </div>
+      <p class="midterm-note">The London–New York overlap is historically the highest-liquidity, highest-volatility window for major pairs and correlates with heavier crypto volume too. Session hours are standard forex-market convention (local time, DST auto-adjusted) — not each city's full stock-exchange hours.</p>
+    </div>
+
     <div class="midterm-card">
       <span class="fl-label">US Midterm Elections</span>
       <div class="midterm-row">
@@ -381,9 +434,9 @@ footer{padding:40px 0 60px}
       <span class="fl-label">Impact</span>
       <div class="filter-row" id="filterRow">
         <button class="filter-chip active" data-filter="all"><span class="dot" style="background:var(--mute)"></span>All</button>
-        <button class="filter-chip" data-filter="high"><span class="dot" style="background:var(--red)"></span>High impact</button>
-        <button class="filter-chip" data-filter="medium"><span class="dot" style="background:var(--orange)"></span>Medium impact</button>
-        <button class="filter-chip" data-filter="low"><span class="dot" style="background:var(--yellow)"></span>Low impact</button>
+        <button class="filter-chip active" data-filter="high"><span class="dot" style="background:var(--red)"></span>High impact</button>
+        <button class="filter-chip active" data-filter="medium"><span class="dot" style="background:var(--orange)"></span>Medium impact</button>
+        <button class="filter-chip active" data-filter="low"><span class="dot" style="background:var(--yellow)"></span>Low impact</button>
       </div>
     </div>
 
@@ -864,7 +917,7 @@ fetch('calendar_data.json', {cache:'no-store'})
 const activeCountries = new Set(['US','UK','EU','JP']);
 let activePeriod = 'all';
 let activeRange = 'all';
-let activeImpact = 'all';
+const activeImpacts = new Set(['high','medium','low']);
 let adjustmentsOnly = false;
 
 function msDay(){ return 24*60*60*1000; }
@@ -881,7 +934,7 @@ function applyFilters(){
     let show = true;
     if(!activeCountries.has(country)) show = false;
     if(activePeriod !== 'all' && period !== activePeriod) show = false;
-    if(activeImpact !== 'all' && impact !== activeImpact) show = false;
+    if(!activeImpacts.has(impact)) show = false;
     if(adjustmentsOnly && tr.dataset.revised !== '1') show = false;
     if(show && activeRange !== 'all'){
       const diff = Math.abs(dt - TODAY.getTime());
@@ -927,12 +980,31 @@ document.getElementById('rangeRow').addEventListener('click', (e) => {
   applyFilters();
 });
 
+function syncImpactAllChip(){
+  const allChip = document.querySelector('#filterRow [data-filter="all"]');
+  allChip.classList.toggle('active', activeImpacts.size === 3);
+}
+syncImpactAllChip();
+
 document.getElementById('filterRow').addEventListener('click', (e) => {
   const chip = e.target.closest('.filter-chip');
   if(!chip) return;
-  document.querySelectorAll('#filterRow .filter-chip').forEach(c => c.classList.remove('active'));
-  chip.classList.add('active');
-  activeImpact = chip.dataset.filter;
+  const f = chip.dataset.filter;
+  if(f === 'all'){
+    activeImpacts.clear();
+    activeImpacts.add('high'); activeImpacts.add('medium'); activeImpacts.add('low');
+    document.querySelectorAll('#filterRow .filter-chip').forEach(c => c.classList.add('active'));
+  } else {
+    if(activeImpacts.has(f)){
+      if(activeImpacts.size === 1) return; // keep at least one selected
+      activeImpacts.delete(f);
+      chip.classList.remove('active');
+    } else {
+      activeImpacts.add(f);
+      chip.classList.add('active');
+    }
+    syncImpactAllChip();
+  }
   applyFilters();
 });
 
@@ -1236,6 +1308,124 @@ function updateMidtermCountdown(){
 }
 updateMidtermCountdown();
 setInterval(updateMidtermCountdown, 1000);
+
+/* ---- Trading hours / session overlap widget ---- */
+// Standard forex-market session hours (local time, 24h) per city. DST is handled
+// automatically because we convert via each city's real IANA timezone every tick.
+const TH_SESSIONS = {
+  mel: {zone:'Australia/Melbourne', open:7,  close:16, label:'Melbourne'},
+  ldn: {zone:'Europe/London',       open:8,  close:17, label:'London'},
+  ny:  {zone:'America/New_York',    open:8,  close:17, label:'New York'},
+};
+
+// Convert a local wall-clock time (y,m,d,hh,mm) in `zone` to a UTC Date.
+// One correction pass is enough outside the ~1hr/year DST-transition instant.
+function zonedLocalToUTC(y, m, d, hh, mm, zone){
+  const guessUTC = Date.UTC(y, m-1, d, hh, mm, 0);
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: zone, hour12:false,
+    year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit'
+  });
+  const parts = Object.fromEntries(fmt.formatToParts(new Date(guessUTC)).map(p => [p.type, p.value]));
+  const hourVal = parts.hour === '24' ? 0 : Number(parts.hour);
+  const asIfUTC = Date.UTC(Number(parts.year), Number(parts.month)-1, Number(parts.day), hourVal, Number(parts.minute), Number(parts.second));
+  const offset = asIfUTC - guessUTC;
+  return new Date(guessUTC - offset);
+}
+
+// Returns {openUTC, closeUTC} for a session's window covering `now` (looks at
+// yesterday/today/tomorrow's local date so overnight-adjacent lookups work).
+function sessionWindowsNear(now, session){
+  const zone = session.zone;
+  const fmt = new Intl.DateTimeFormat('en-US', {timeZone: zone, year:'numeric', month:'2-digit', day:'2-digit'});
+  const parts = Object.fromEntries(fmt.formatToParts(now).map(p => [p.type, p.value]));
+  const y = Number(parts.year), m = Number(parts.month), d = Number(parts.day);
+  const windows = [];
+  for(const dayOffset of [-1, 0, 1]){
+    const dt = new Date(Date.UTC(y, m-1, d + dayOffset));
+    const yy = dt.getUTCFullYear(), mm = dt.getUTCMonth()+1, dd = dt.getUTCDate();
+    const openUTC = zonedLocalToUTC(yy, mm, dd, session.open, 0, zone);
+    const closeUTC = zonedLocalToUTC(yy, mm, dd, session.close, 0, zone);
+    windows.push({openUTC, closeUTC});
+  }
+  return windows;
+}
+
+function isOpenNow(now, session){
+  const windows = sessionWindowsNear(now, session);
+  return windows.some(w => now >= w.openUTC && now < w.closeUTC);
+}
+
+function updateTradingHours(){
+  const now = new Date();
+
+  Object.entries(TH_SESSIONS).forEach(([key, session]) => {
+    const clockEl = document.getElementById('thClock-' + key);
+    const statusEl = document.getElementById('thStatus-' + key);
+    const boxEl = document.getElementById('thBox-' + key);
+    if(!clockEl) return;
+
+    const timeStr = new Intl.DateTimeFormat('en-GB', {
+      timeZone: session.zone, hour:'2-digit', minute:'2-digit', hour12:false
+    }).format(now);
+    clockEl.textContent = timeStr;
+
+    const open = isOpenNow(now, session);
+    statusEl.textContent = open ? 'Open' : 'Closed';
+    statusEl.classList.toggle('open', open);
+    boxEl.classList.toggle('open', open);
+  });
+
+  // London–New York overlap -- the headline "best trading hours" window
+  const ldnWindows = sessionWindowsNear(now, TH_SESSIONS.ldn);
+  const nyWindows = sessionWindowsNear(now, TH_SESSIONS.ny);
+  const overlaps = [];
+  ldnWindows.forEach(lw => nyWindows.forEach(nw => {
+    const start = new Date(Math.max(lw.openUTC, nw.openUTC));
+    const end = new Date(Math.min(lw.closeUTC, nw.closeUTC));
+    if(start < end) overlaps.push({start, end});
+  }));
+  overlaps.sort((a,b) => a.start - b.start);
+
+  const label = document.getElementById('thOverlapLabel');
+  const odEl = document.getElementById('thOverlapD');
+  const hEl = document.getElementById('thOH');
+  const mEl = document.getElementById('thOM');
+  const sEl = document.getElementById('thOS');
+  const banner = document.getElementById('thOverlapBanner');
+
+  const current = overlaps.find(o => now >= o.start && now < o.end);
+  const next = overlaps.find(o => o.start > now);
+
+  let diffMs, isLive;
+  if(current){
+    label.textContent = 'London–New York overlap LIVE — best trading hours right now';
+    odEl.textContent = 'Ends in';
+    diffMs = current.end - now;
+    isLive = true;
+  } else if(next){
+    label.textContent = 'Next London–New York overlap (best trading hours)';
+    odEl.textContent = 'Starts in';
+    diffMs = next.start - now;
+    isLive = false;
+  } else {
+    label.textContent = 'London–New York overlap';
+    odEl.textContent = '';
+    diffMs = 0;
+    isLive = false;
+  }
+  banner.classList.toggle('live', isLive);
+
+  const totalSecs = Math.max(0, Math.floor(diffMs / 1000));
+  const hh = Math.floor(totalSecs / 3600);
+  const mm = Math.floor((totalSecs % 3600) / 60);
+  const ss = totalSecs % 60;
+  hEl.textContent = String(hh).padStart(2,'0');
+  mEl.textContent = String(mm).padStart(2,'0');
+  sEl.textContent = String(ss).padStart(2,'0');
+}
+updateTradingHours();
+setInterval(updateTradingHours, 1000);
 </script>
 
 </body>
