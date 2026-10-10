@@ -1,4 +1,4 @@
-Run at 2026-10-10T17:43:26.104744+00:00
+Run at 2026-10-10T20:20:33.895107+00:00
 
 page.goto error (continuing): Page.goto: Timeout 60000ms exceeded.
 Call log:
@@ -11,5 +11,5 @@ sample row: date_el=False currency_el=False event_el=False actual_el=False raw_t
 sample row: date_el=True currency_el=True event_el=True actual_el=True raw_text='Sun\nOct 4\n\t\nAll Day\n\tAll\t\t\nOPEC-JMMC Meetings\n\t\t\n\t\t\t\t'
 sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='All Day\n\tAUD\t\t\nBank Holiday\n\t\t\n\t\t\t\t'
 sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='All Day\n\tCNY\t\t\nBank Holiday\n\t\t\n\t\t\t\t'
-sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='5:00pm\n\tAUD\t\t\nMI Inflation Gauge m/m\n\t\n\t\n\t0.3%\t\t0.5%\t'
-Scraped 0 live actual values from forexfactory.com
+sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='7:00pm\n\tAUD\t\t\nMI Inflation Gauge m/m\n\t\n\t\n\t0.3%\t\t0.5%\t'
+Scraped 17 live actual values from forexfactory.com
