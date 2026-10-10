@@ -185,10 +185,27 @@ def scrape_actuals():
             )
             page.set_default_timeout(8000)  # bound every call -- never let one hung row stall the whole run
             try:
-                page.goto("https://www.forexfactory.com/calendar", wait_until="networkidle", timeout=60000)
+                # networkidle never fires on this page (it has live-ticking
+                # widgets that poll continuously), so it was just burning the
+                # full 60s timeout every run for nothing -- domcontentloaded
+                # is what we actually need, then we wait + scroll ourselves.
+                page.goto("https://www.forexfactory.com/calendar", wait_until="domcontentloaded", timeout=30000)
             except Exception as exc:
                 dbg(f"page.goto error (continuing): {exc}")
-            page.wait_for_timeout(3000)
+            page.wait_for_timeout(2500)
+
+            # Some of the "Actual" cells appear to hydrate lazily as rows
+            # scroll into view (common for calendar widgets that paint the
+            # colored actual/forecast comparison via JS after initial render).
+            # Scroll the whole table into view in steps so every row gets a
+            # chance to hydrate before we read it back out.
+            try:
+                for _ in range(10):
+                    page.mouse.wheel(0, 1200)
+                    page.wait_for_timeout(350)
+                page.wait_for_timeout(1500)
+            except Exception as exc:
+                dbg(f"scroll-through error (continuing): {exc}")
 
             dbg(f"page title: {page.title()!r}")
             dbg(f"page url after load: {page.url!r}")
@@ -241,6 +258,10 @@ def scrape_actuals():
                     currency = currency_el.inner_text().strip()
                     title = event_el.inner_text().strip()
                     actual = actual_el.inner_text().strip()
+
+                    if "unemployment" in title.lower() or "consumer sentiment" in title.lower():
+                        dbg(f"TARGET ROW: date={current_date!r} currency={currency!r} title={title!r} actual={actual!r}")
+
                     if not currency or not title or not actual or actual == "—":
                         continue
                     if not current_date:
@@ -270,6 +291,11 @@ def scrape_actuals():
 
             if skipped_errors:
                 dbg(f"total rows skipped due to errors: {skipped_errors}")
+
+            by_date = {}
+            for (d, _, _) in results:
+                by_date[d] = by_date.get(d, 0) + 1
+            dbg(f"matched-actuals by date: {dict(sorted(by_date.items()))}")
 
             browser.close()
     except Exception as exc:
