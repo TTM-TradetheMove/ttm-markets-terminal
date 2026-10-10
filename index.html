@@ -271,6 +271,8 @@ td.num{font-variant-numeric:tabular-nums;color:var(--mute)}
 .th-status.open{background:rgba(74,222,128,.15);color:#4ade80;border-color:rgba(74,222,128,.35)}
 .th-clock{font-size:22px;font-weight:700;color:var(--gold2);font-variant-numeric:tabular-nums;margin-bottom:4px}
 .th-hours{font-size:11px;color:var(--mute)}
+.th-countdown{font-size:11px;color:var(--gold2);font-weight:600;font-variant-numeric:tabular-nums;margin-top:4px}
+.th-countdown.closing{color:#4ade80}
 .th-status.weekend{background:rgba(251,191,36,.15);color:#fbbf24;border-color:rgba(251,191,36,.35)}
 .th-box.weekend{border-color:rgba(251,191,36,.3)}
 .th-box[data-role="primary"]{grid-area:primary;border-color:rgba(212,168,67,.35);background:linear-gradient(180deg,rgba(212,168,67,.06),transparent)}
@@ -463,16 +465,19 @@ footer{padding:40px 0 60px}
           <div class="th-box-head"><span class="th-city">Melbourne <small>(Asia-Pacific)</small></span><span class="th-status" id="thStatus-mel">—</span></div>
           <div class="th-clock" id="thClock-mel">--:--</div>
           <div class="th-hours" id="thHours-mel">Session 07:00–16:00 local, Mon–Fri</div>
+          <div class="th-countdown" id="thCountdown-mel">—</div>
         </div>
         <div class="th-box" id="thBox-ldn" data-key="ldn">
           <div class="th-box-head"><span class="th-city">London</span><span class="th-status" id="thStatus-ldn">—</span></div>
           <div class="th-clock" id="thClock-ldn">--:--</div>
           <div class="th-hours" id="thHours-ldn">Session 08:00–17:00 local, Mon–Fri</div>
+          <div class="th-countdown" id="thCountdown-ldn">—</div>
         </div>
         <div class="th-box" id="thBox-ny" data-key="ny">
           <div class="th-box-head"><span class="th-city">New York</span><span class="th-status" id="thStatus-ny">—</span></div>
           <div class="th-clock" id="thClock-ny">--:--</div>
           <div class="th-hours" id="thHours-ny">Session 08:00–17:00 local, Mon–Fri</div>
+          <div class="th-countdown" id="thCountdown-ny">—</div>
         </div>
       </div>
 
@@ -1401,16 +1406,35 @@ const TH_FULL_NAME = {mel:'Melbourne', ldn:'London', ny:'New York'};
 // a separate, honest flag that *traditional* cash FX/equity markets are shut;
 // it doesn't stop the session clock itself from cycling.
 function sessionClockState(now, session){
-  const hourStr = new Intl.DateTimeFormat('en-GB', {
-    timeZone: session.zone, hour:'2-digit', minute:'2-digit', hour12:false
-  }).format(now);
-  const [hh, mm] = hourStr.split(':').map(Number);
-  const minutesNow = hh * 60 + mm;
-  const openMin = session.open * 60, closeMin = session.close * 60;
-  const active = minutesNow >= openMin && minutesNow < closeMin;
-  const elapsed = active ? minutesNow - openMin : null;
-  const minutesToOpen = minutesNow < openMin ? (openMin - minutesNow) : (24 * 60 - minutesNow + openMin);
-  return {active, elapsed, minutesToOpen};
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: session.zone, hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false
+  }).formatToParts(now);
+  const get = t => Number(parts.find(p => p.type === t).value);
+  const hh = get('hour'), mm = get('minute'), ss = get('second');
+  const secondsNow = hh * 3600 + mm * 60 + ss;
+  const openSec = session.open * 3600, closeSec = session.close * 3600;
+  const active = secondsNow >= openSec && secondsNow < closeSec;
+  const elapsed = active ? secondsNow - openSec : null;
+  const secondsToOpen = secondsNow < openSec ? (openSec - secondsNow) : (24 * 3600 - secondsNow + openSec);
+  const secondsToClose = active ? (closeSec - secondsNow) : null;
+  return {
+    active,
+    elapsed: active ? Math.floor(elapsed / 60) : null,
+    minutesToOpen: Math.floor(secondsToOpen / 60),
+    secondsToOpen, secondsToClose,
+  };
+}
+
+// "3h 12m 05s" / "42m 05s" / "05s"
+function formatCountdown(totalSeconds){
+  totalSeconds = Math.max(0, Math.floor(totalSeconds));
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  const pad = n => String(n).padStart(2, '0');
+  if(h > 0) return `${h}h ${pad(m)}m ${pad(s)}s`;
+  if(m > 0) return `${m}m ${pad(s)}s`;
+  return `${s}s`;
 }
 
 // All pairs that can meaningfully overlap (Melbourne/Asia-Pacific session ends
@@ -1459,6 +1483,20 @@ function updateTradingHours(){
     const futureWindow = windows.filter(w => w.openUTC > now).sort((a,b) => a.openUTC - b.openUTC)[0];
 
     const clock = sessionClockState(now, session);
+
+    // Per-box countdown: counts down to this session's own clock close (if
+    // live right now) or its own clock open (if not) -- same day-agnostic
+    // clock the rotation itself uses, so it stays meaningful through weekends.
+    const countdownEl = document.getElementById('thCountdown-' + key);
+    if(countdownEl){
+      if(clock.active){
+        countdownEl.textContent = `Closes in ${formatCountdown(clock.secondsToClose)}`;
+        countdownEl.classList.add('closing');
+      } else {
+        countdownEl.textContent = `Opens in ${formatCountdown(clock.secondsToOpen)}`;
+        countdownEl.classList.remove('closing');
+      }
+    }
 
     state[key] = {
       open, openedAt: activeWindow ? activeWindow.openUTC : null, nextOpen: futureWindow ? futureWindow.openUTC : null,
