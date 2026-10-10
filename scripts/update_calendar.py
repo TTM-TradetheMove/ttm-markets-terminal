@@ -156,7 +156,11 @@ def scrape_actuals():
     # Candidate selector sets to try, in order -- forexfactory's markup has
     # changed class naming schemes before (BEM-ish calendar__x historically,
     # but we can't be sure which is live right now), so we probe a few.
-    ROW_SELECTORS = ["tr.calendar__row", "tr[data-event-id]", "table.calendar__table tbody tr", "table tbody tr"]
+    # Deliberately NOT falling back to a bare "table tbody tr": the real page
+    # has other tables (nav/sidebar/forum excerpts) and matching those could
+    # mean walking hundreds of irrelevant rows, each a slow round-trip call.
+    ROW_SELECTORS = ["tr.calendar__row", "tr[data-event-id]", "table.calendar__table tbody tr"]
+    MAX_ROWS = 600  # hard cap so a wrong/broad selector can never cause a runaway scrape
     CELL_SELECTORS = {
         "date":     [".calendar__date", "td.date", "[class*='date']"],
         "time":     [".calendar__time", "td.time", "[class*='time']"],
@@ -179,6 +183,7 @@ def scrape_actuals():
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                            "(KHTML, like Gecko) Chrome/120.0 Safari/537.36"
             )
+            page.set_default_timeout(8000)  # bound every call -- never let one hung row stall the whole run
             try:
                 page.goto("https://www.forexfactory.com/calendar", wait_until="networkidle", timeout=60000)
             except Exception as exc:
@@ -196,6 +201,9 @@ def scrape_actuals():
                     used_row_selector = sel
                     break
             dbg(f"row selector used: {used_row_selector!r}, rows found: {len(rows)}")
+            if len(rows) > MAX_ROWS:
+                dbg(f"capping to first {MAX_ROWS} rows (found {len(rows)})")
+                rows = rows[:MAX_ROWS]
 
             if not rows:
                 # Dump a text snippet so we can see what's actually on the page
@@ -205,45 +213,63 @@ def scrape_actuals():
 
             current_date = None
             sample_logged = 0
+            skipped_errors = 0
             for row in rows:
-                date_el = first_match(row, CELL_SELECTORS["date"])
-                if date_el:
-                    date_text = date_el.inner_text().strip()
-                    if date_text:
-                        current_date = date_text
-
-                currency_el = first_match(row, CELL_SELECTORS["currency"])
-                event_el = first_match(row, CELL_SELECTORS["event"])
-                actual_el = first_match(row, CELL_SELECTORS["actual"])
-
-                if sample_logged < 5:
-                    dbg(f"sample row: date_el={bool(date_el)} currency_el={bool(currency_el)} "
-                        f"event_el={bool(event_el)} actual_el={bool(actual_el)} "
-                        f"raw_text={row.inner_text()[:120]!r}")
-                    sample_logged += 1
-
-                if not (currency_el and event_el and actual_el):
-                    continue
-
-                currency = currency_el.inner_text().strip()
-                title = event_el.inner_text().strip()
-                actual = actual_el.inner_text().strip()
-                if not currency or not title or not actual or actual == "—":
-                    continue
-                if not current_date:
-                    continue
-
                 try:
-                    year = datetime.now(timezone.utc).year
-                    parsed = datetime.strptime(f"{current_date} {year}", "%a%b %d %Y")
-                except ValueError:
-                    try:
-                        parsed = datetime.strptime(f"{current_date} {year}", "%b %d %Y")
-                    except ValueError:
+                    date_el = first_match(row, CELL_SELECTORS["date"])
+                    if date_el:
+                        # The date cell renders as two lines ("Sun" / "Oct 4"),
+                        # so inner_text() comes back "Sun\nOct 4" -- collapse
+                        # all whitespace/newlines to single spaces so it parses.
+                        date_text = " ".join(date_el.inner_text().split())
+                        if date_text:
+                            current_date = date_text
+
+                    currency_el = first_match(row, CELL_SELECTORS["currency"])
+                    event_el = first_match(row, CELL_SELECTORS["event"])
+                    actual_el = first_match(row, CELL_SELECTORS["actual"])
+
+                    if sample_logged < 5:
+                        dbg(f"sample row: date_el={bool(date_el)} currency_el={bool(currency_el)} "
+                            f"event_el={bool(event_el)} actual_el={bool(actual_el)} "
+                            f"raw_text={row.inner_text()[:120]!r}")
+                        sample_logged += 1
+
+                    if not (currency_el and event_el and actual_el):
                         continue
 
-                key = (parsed.strftime("%Y-%m-%d"), currency, _norm(title))
-                results[key] = actual
+                    currency = currency_el.inner_text().strip()
+                    title = event_el.inner_text().strip()
+                    actual = actual_el.inner_text().strip()
+                    if not currency or not title or not actual or actual == "—":
+                        continue
+                    if not current_date:
+                        continue
+
+                    try:
+                        year = datetime.now(timezone.utc).year
+                        # current_date is now whitespace-normalized, e.g. "Sun Oct 4"
+                        parsed = datetime.strptime(f"{current_date} {year}", "%a %b %d %Y")
+                    except ValueError:
+                        try:
+                            parsed = datetime.strptime(f"{current_date} {year}", "%b %d %Y")
+                        except ValueError:
+                            if skipped_errors <= 5:
+                                dbg(f"date parse failed for current_date={current_date!r}")
+                            continue
+
+                    key = (parsed.strftime("%Y-%m-%d"), currency, _norm(title))
+                    results[key] = actual
+                except Exception as row_exc:
+                    # One malformed/hung row (detached element, nav away mid-loop,
+                    # etc.) must never take down the whole scrape.
+                    skipped_errors += 1
+                    if skipped_errors <= 5:
+                        dbg(f"row error (skipped): {row_exc}")
+                    continue
+
+            if skipped_errors:
+                dbg(f"total rows skipped due to errors: {skipped_errors}")
 
             browser.close()
     except Exception as exc:
@@ -285,8 +311,19 @@ def main():
     raw = fetch_feed()
     events = transform(raw)
 
-    actuals = scrape_actuals()
-    events = merge_actuals(events, actuals)
+    # scrape_actuals() already catches everything internally, but this is a
+    # second, final safety net: whatever happens in the live-scrape/merge
+    # step, the feed-based schedule above must still get written out. A
+    # crash here must never turn into a stale/no-op dashboard update.
+    try:
+        actuals = scrape_actuals()
+        events = merge_actuals(events, actuals)
+    except Exception as exc:
+        print(f"Unexpected error during live-actuals step (writing feed-only data instead): {exc}")
+        try:
+            _write_debug([f"Unexpected top-level error: {exc}"])
+        except Exception:
+            pass
 
     # strip internal match-key fields before writing
     for e in events:
