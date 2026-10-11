@@ -1,22 +1,33 @@
 #!/usr/bin/env python3
 """
-Pulls BTC/ETH perpetual-futures funding rate + open interest from Binance and
-Bybit's free, no-auth public REST APIs and writes funding_data.json for the
-dashboard to fetch at page load.
+Pulls BTC/ETH perpetual-futures funding rate + open interest and writes
+funding_data.json for the dashboard to fetch at page load.
 
-Both are standard documented public market-data endpoints (no API key):
-  Binance: GET /fapi/v1/premiumIndex?symbol=BTCUSDT  -> lastFundingRate, markPrice, nextFundingTime
-           GET /fapi/v1/openInterest?symbol=BTCUSDT  -> openInterest (in contracts/coins)
-  Bybit:   GET /v5/market/tickers?category=linear&symbol=BTCUSDT -> fundingRate, openInterest, openInterestValue
+We go through CoinGecko's free, no-auth /derivatives endpoint rather than
+hitting Binance/Bybit directly. GitHub Actions runners (Azure/AWS datacenter
+IPs) get hard-blocked by both: Binance returns HTTP 451 (regulatory geo-block
+on its futures API from US/EU cloud ranges) and Bybit returns HTTP 403
+(anti-bot block on datacenter IPs). CoinGecko fetches this data server-side
+and re-serves it, so it isn't subject to either block.
+
+  GET https://api.coingecko.com/api/v3/derivatives
+  -> array of ticker objects: market, symbol, index_id, price, contract_type,
+     funding_rate, open_interest (USD), last_traded_at, ...
+  Docs: https://docs.coingecko.com/reference/derivatives-tickers
 
 Writes funding_debug.txt every run (like the calendar/token-events scrapers)
 so a silent miss is diagnosable without Actions-log access.
 """
 import json
+import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 
-SYMBOLS = ["BTC", "ETH"]
+API_URL = "https://api.coingecko.com/api/v3/derivatives"
+
+# (CoinGecko index_id, display symbol)
+ASSETS = [("bitcoin", "BTCUSDT"), ("ethereum", "ETHUSDT")]
+EXCHANGES = ["binance", "bybit"]
 
 debug_lines = []
 
@@ -35,68 +46,84 @@ def write_debug():
         pass
 
 
-def fetch_json(url):
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (compatible; TTMMarketsTerminalBot/1.0)"})
-    with urllib.request.urlopen(req, timeout=20) as resp:
-        return json.loads(resp.read().decode("utf-8"))
-
-
-def fetch_binance(symbol):
-    pair = f"{symbol}USDT"
-    try:
-        premium = fetch_json(f"https://fapi.binance.com/fapi/v1/premiumIndex?symbol={pair}")
-        oi = fetch_json(f"https://fapi.binance.com/fapi/v1/openInterest?symbol={pair}")
-        return {
-            "exchange": "Binance",
-            "symbol": pair,
-            "fundingRate": float(premium["lastFundingRate"]),
-            "markPrice": float(premium["markPrice"]),
-            "nextFundingTime": premium.get("nextFundingTime"),
-            "openInterest": float(oi["openInterest"]),
-        }
-    except Exception as exc:
-        dbg(f"Binance {pair} fetch failed: {exc}")
-        return None
-
-
-def fetch_bybit(symbol):
-    pair = f"{symbol}USDT"
-    try:
-        data = fetch_json(f"https://api.bybit.com/v5/market/tickers?category=linear&symbol={pair}")
-        rows = data.get("result", {}).get("list", [])
-        if not rows:
-            dbg(f"Bybit {pair}: no rows in response -- raw: {json.dumps(data)[:300]}")
-            return None
-        row = rows[0]
-        return {
-            "exchange": "Bybit",
-            "symbol": pair,
-            "fundingRate": float(row["fundingRate"]),
-            "markPrice": float(row["markPrice"]),
-            "nextFundingTime": row.get("nextFundingTime"),
-            "openInterest": float(row["openInterest"]),
-        }
-    except Exception as exc:
-        dbg(f"Bybit {pair} fetch failed: {exc}")
-        return None
+def fetch_all(attempts=3):
+    last_exc = None
+    for i in range(1, attempts + 1):
+        try:
+            req = urllib.request.Request(
+                API_URL,
+                headers={
+                    "User-Agent": "Mozilla/5.0 (compatible; TTMMarketsTerminalBot/1.0)",
+                    "Accept": "application/json",
+                },
+            )
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                body = resp.read().decode("utf-8")
+                dbg(f"Attempt {i}: HTTP {resp.status}, {len(body)} bytes")
+                return json.loads(body)
+        except urllib.error.HTTPError as exc:
+            body = ""
+            try:
+                body = exc.read().decode("utf-8", errors="replace")[:300]
+            except Exception:
+                pass
+            dbg(f"Attempt {i}: HTTPError {exc.code} {exc.reason} -- body: {body}")
+            last_exc = exc
+        except Exception as exc:
+            dbg(f"Attempt {i}: {type(exc).__name__}: {exc}")
+            last_exc = exc
+    raise last_exc
 
 
 def main():
+    try:
+        tickers = fetch_all()
+    except Exception as exc:
+        dbg(f"All attempts failed: {exc}")
+        write_debug()
+        raise SystemExit("Could not fetch derivatives data from CoinGecko -- not overwriting funding_data.json. See funding_debug.txt")
+
+    dbg(f"CoinGecko returned {len(tickers)} total derivative tickers")
+
     snapshots = []
-    for symbol in SYMBOLS:
-        for row in (fetch_binance(symbol), fetch_bybit(symbol)):
-            if row:
-                dbg(f"OK: {row['exchange']} {row['symbol']} funding={row['fundingRate']} oi={row['openInterest']}")
-                snapshots.append(row)
+    for index_id, display_symbol in ASSETS:
+        for exch in EXCHANGES:
+            match = None
+            for t in tickers:
+                market = str(t.get("market", "")).lower()
+                if (
+                    t.get("index_id") == index_id
+                    and t.get("contract_type") == "perpetual"
+                    and exch in market
+                ):
+                    match = t
+                    break
+            if not match:
+                dbg(f"No perpetual match for {exch}/{display_symbol}")
+                continue
+            try:
+                row = {
+                    "exchange": match.get("market"),
+                    "symbol": display_symbol,
+                    "fundingRate": float(match["funding_rate"]) / 100.0,  # CG gives %, store as fraction
+                    "markPrice": float(match["price"]),
+                    "nextFundingTime": None,
+                    "openInterest": float(match.get("open_interest") or 0),
+                }
+            except (KeyError, TypeError, ValueError) as exc:
+                dbg(f"{exch}/{display_symbol}: bad data in match -- {exc} -- raw: {json.dumps(match)[:300]}")
+                continue
+            dbg(f"OK: {row['exchange']} {row['symbol']} funding={row['fundingRate']} oi={row['openInterest']}")
+            snapshots.append(row)
 
     write_debug()
 
     if not snapshots:
-        raise SystemExit("No funding/OI data fetched from any exchange -- not overwriting funding_data.json. See funding_debug.txt")
+        raise SystemExit("No funding/OI snapshots matched in CoinGecko derivatives data -- not overwriting funding_data.json. See funding_debug.txt")
 
     payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "sources": ["https://fapi.binance.com", "https://api.bybit.com"],
+        "sources": ["https://api.coingecko.com/api/v3/derivatives"],
         "snapshots": snapshots,
     }
     with open("funding_data.json", "w") as f:
