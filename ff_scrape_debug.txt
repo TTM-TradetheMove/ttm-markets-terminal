@@ -1,4 +1,4 @@
-Run at 2026-10-11T13:19:17.217570+00:00
+Run at 2026-10-11T18:21:00.552489+00:00
 
 page title: 'Calendar | Forex Factory'
 page url after load: 'https://www.forexfactory.com/calendar'
@@ -6,7 +6,7 @@ row selector used: 'tr.calendar__row', rows found: 116
 sample row: date_el=False currency_el=False event_el=False actual_el=False raw_text='Sun Oct 11'
 sample row: date_el=True currency_el=True event_el=True actual_el=True raw_text='Sun\nOct 11\n\t\nAll Day\n\tJPY\t\t\nBank Holiday\n\t\t\n\t\t\t\t'
 sample row: date_el=False currency_el=False event_el=False actual_el=False raw_text='Mon Oct 12'
-sample row: date_el=True currency_el=True event_el=True actual_el=True raw_text='Mon\nOct 12\n\t\n3:30am\n\tGBP\t\t\nMPC Member Breeden Speaks\n\t\n\t\n\t\t\t\t'
+sample row: date_el=True currency_el=True event_el=True actual_el=True raw_text='Mon\nOct 12\n\t\n2:30am\n\tGBP\t\t\nMPC Member Breeden Speaks\n\t\n\t\n\t\t\t\t'
 sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='All Day\n\tUSD\t\t\nBank Holiday\n\t\t\n\t\t\t\t'
 TARGET ROW: date='Wed Oct 14' currency='AUD' title='Unemployment Rate' actual=''
 TARGET ROW: date='Thu Oct 15' currency='USD' title='Unemployment Claims' actual=''
