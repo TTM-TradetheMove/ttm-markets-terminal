@@ -245,6 +245,36 @@ td.num{font-variant-numeric:tabular-nums;color:var(--mute)}
 .midterm-unit small{display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--mute);margin-top:2px}
 .midterm-note{color:var(--mute);font-size:12.5px;line-height:1.6;margin:0;max-width:720px}
 
+/* This Week Ahead strip */
+.week-ahead{margin-bottom:22px}
+.week-ahead .fl-label{color:var(--gold);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;display:block;margin-bottom:10px}
+.week-ahead-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px}
+.wa-card{flex:0 0 auto;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--red);border-radius:10px;padding:10px 14px;min-width:168px}
+.wa-card .wa-date{font-size:10.5px;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.wa-card .wa-event{font-size:13px;font-weight:600;color:#fff;line-height:1.3}
+.wa-card .wa-country{font-size:11px;color:var(--gold2);margin-top:4px}
+.wa-empty{color:var(--mute);font-size:13px;padding:8px 0}
+
+/* Market Pulse: Fear & Greed + funding/OI */
+.pulse-grid{display:grid;grid-template-columns:1fr 2fr;gap:18px}
+@media (max-width:860px){.pulse-grid{grid-template-columns:1fr}}
+.fg-card,.funding-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.fg-card .fl-label,.funding-card .fl-label{color:var(--gold);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;display:block;margin-bottom:14px}
+.fg-body{display:flex;align-items:center;gap:18px}
+.fg-gauge{position:relative;width:120px;flex:0 0 auto}
+.fg-arc{width:120px;height:70px;display:block}
+#fgArcFill{transition:stroke-dashoffset .6s ease, stroke .6s ease}
+.fg-value{position:absolute;left:0;right:0;bottom:0;text-align:center;font-size:26px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
+.fg-meta{flex:1}
+.fg-label{font-size:15px;font-weight:700;color:var(--gold2);margin-bottom:8px}
+.fg-history{display:flex;gap:4px}
+.fg-history .fgh-dot{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.funding-table{width:100%;border-collapse:collapse;font-size:13px}
+.funding-table th{text-align:left;color:var(--mute);font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:0 10px 8px;font-weight:600}
+.funding-table td{padding:8px 10px;border-top:1px solid var(--line)}
+.funding-table .fund-pos{color:#4ade80;font-weight:700}
+.funding-table .fund-neg{color:var(--red);font-weight:700}
+
 /* Trading hours / session overlap */
 .th-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:20px}
 .th-card .fl-label{color:var(--gold);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;display:block;margin-bottom:12px}
@@ -320,6 +350,7 @@ footer{padding:40px 0 60px}
     <nav class="site-nav">
       <a href="#calendar">Macro Watch</a>
       <a href="#tradinghours">Trading Hours</a>
+      <a href="#marketpulse">Market Pulse</a>
       <a href="#tokenevents">Token Events</a>
       <a href="#congress">Congress Watch</a>
       <a href="#library">Reports</a>
@@ -372,6 +403,11 @@ footer{padding:40px 0 60px}
       <h2>Key global economic data</h2>
       <p>A ForexFactory-style read of the releases that tend to move crypto. Folder colour marks expected impact, and the Bias column reads each print the way TTM reads it — filter by country, impact, time period or range.</p>
       <p id="calendarUpdated" class="calendar-note" style="margin-top:8px">Loading live calendar…</p>
+    </div>
+
+    <div class="week-ahead" id="weekAhead">
+      <span class="fl-label">This Week Ahead — High Impact</span>
+      <div class="week-ahead-row" id="weekAheadRow"><span class="calendar-note">Loading…</span></div>
     </div>
 
     <div class="midterm-card">
@@ -492,6 +528,47 @@ footer{padding:40px 0 60px}
         </div>
       </div>
       <p class="midterm-note">The top box is whichever session's clock is live right now (or opening soonest) — it rotates automatically as each session kicks in, during an overlap the one that opened most recently takes the top spot. The rotation runs every day including weekends, since crypto trades 24/7 and bots/algos follow the same session clock regardless of the day. The Weekend badge is separate — it just flags that traditional cash FX/equity markets are shut, Monday–Friday only; it doesn't pause the rotation itself.</p>
+    </div>
+  </div>
+</section>
+
+<section id="marketpulse" class="alt">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">Market Pulse</span>
+      <h2>Sentiment &amp; derivatives snapshot</h2>
+      <p>Crypto Fear &amp; Greed Index, and BTC/ETH perpetual funding rate + open interest across major exchanges — refreshed every 30 minutes. Funding spikes often track macro prints, so read this alongside Macro Watch.</p>
+      <p id="pulseUpdated" class="calendar-note" style="margin-top:8px">Loading live market data…</p>
+    </div>
+
+    <div class="pulse-grid">
+      <div class="fg-card">
+        <span class="fl-label">Crypto Fear &amp; Greed</span>
+        <div class="fg-body">
+          <div class="fg-gauge">
+            <svg viewBox="0 0 120 70" class="fg-arc">
+              <path d="M10,65 A50,50 0 0,1 110,65" fill="none" stroke="var(--line)" stroke-width="10" stroke-linecap="round"/>
+              <path id="fgArcFill" d="M10,65 A50,50 0 0,1 110,65" fill="none" stroke="var(--gold2)" stroke-width="10" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="157"/>
+            </svg>
+            <div class="fg-value" id="fgValue">—</div>
+          </div>
+          <div class="fg-meta">
+            <div class="fg-label" id="fgClassification">Loading…</div>
+            <div class="fg-history" id="fgHistory"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="funding-card">
+        <span class="fl-label">Perp Funding &amp; Open Interest</span>
+        <table class="funding-table">
+          <thead>
+            <tr><th>Asset</th><th>Exchange</th><th>Funding Rate</th><th>Mark Price</th><th>Open Interest</th></tr>
+          </thead>
+          <tbody id="fundingBody"><tr><td colspan="5" class="calendar-note">Loading…</td></tr></tbody>
+        </table>
+        <p class="midterm-note">Funding rate is paid between longs and shorts every 8h — persistently positive means longs are paying shorts (crowded long, often a contrarian signal); persistently negative is the reverse.</p>
+      </div>
     </div>
   </div>
 </section>
@@ -921,7 +998,32 @@ function renderCalendarRows(list){
 // Historical rows render immediately so the page is never blank.
 renderCalendarRows(CALENDAR_HISTORICAL);
 
-// Upcoming rows: try the live, auto-updated feed first (refreshed every 5 min by a
+// "This Week Ahead" strip -- high-impact events dated today through +7 days,
+// pulled straight from whatever event list is currently on screen (no second
+// fetch; same data, different view).
+function renderWeekAhead(events){
+  const row = document.getElementById('weekAheadRow');
+  if(!row) return;
+  const start = new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate());
+  const end = new Date(start.getTime() + 7*msDay());
+  const upcoming = events
+    .filter(e => e.impact === 'high' && e.dt >= start && e.dt < end)
+    .sort((a,b) => a.dt - b.dt);
+
+  if(!upcoming.length){
+    row.innerHTML = '<span class="wa-empty">No high-impact releases scheduled in the next 7 days.</span>';
+    return;
+  }
+  row.innerHTML = upcoming.map(e => `
+    <div class="wa-card">
+      <div class="wa-date">${e.dt.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'})}</div>
+      <div class="wa-event">${e.event}</div>
+      <div class="wa-country">${countryLabel[e.country] || e.country}</div>
+    </div>
+  `).join('');
+}
+
+// Upcoming rows: try the live, auto-updated feed first (refreshed every 30 min by a
 // GitHub Action in this repo); fall back to the static list if it can't be reached.
 fetch('calendar_data.json', {cache:'no-store'})
   .then(r => { if(!r.ok) throw new Error('bad status'); return r.json(); })
@@ -931,12 +1033,14 @@ fetch('calendar_data.json', {cache:'no-store'})
     renderCalendarRows(CALENDAR_HISTORICAL);
     renderCalendarRows(live);
     applyFilters();
+    renderWeekAhead([...CALENDAR_HISTORICAL, ...live]);
     const stamp = document.getElementById('calendarUpdated');
     if(stamp) stamp.textContent = 'Live feed — last updated ' + new Date(data.generated_at).toLocaleString();
   })
   .catch(() => {
     renderCalendarRows(CALENDAR_UPCOMING_FALLBACK);
     applyFilters();
+    renderWeekAhead([...CALENDAR_HISTORICAL, ...CALENDAR_UPCOMING_FALLBACK]);
     const stamp = document.getElementById('calendarUpdated');
     if(stamp) stamp.textContent = 'Showing a static snapshot — live feed unavailable.';
   });
@@ -1105,6 +1209,83 @@ fetch('token_events_data.json', {cache:'no-store'})
     teEmpty.textContent = 'Unable to load event data.';
     teEmpty.style.display = 'block';
   });
+
+// ---- Market Pulse: Fear & Greed + funding/OI ----
+function renderFearGreed(data){
+  const val = data.current.value;
+  const cls = data.current.classification;
+  const valueEl = document.getElementById('fgValue');
+  const classEl = document.getElementById('fgClassification');
+  const arcFill = document.getElementById('fgArcFill');
+  const historyEl = document.getElementById('fgHistory');
+  if(!valueEl) return;
+
+  valueEl.textContent = val;
+  classEl.textContent = cls;
+
+  // Colour by zone: red (extreme fear) -> green (extreme greed), matching the
+  // classic Fear & Greed gauge convention.
+  let color = '#f87171'; // extreme fear
+  if(val >= 75) color = '#4ade80';       // extreme greed
+  else if(val >= 55) color = '#a3e635';  // greed
+  else if(val >= 45) color = '#d4a843';  // neutral (brand gold)
+  else if(val >= 25) color = '#fb923c';  // fear
+  arcFill.setAttribute('stroke', color);
+  // Arc path length is 157 (measured); 0 = empty, 157 = full semicircle.
+  const offset = 157 - (157 * val / 100);
+  arcFill.style.strokeDashoffset = offset;
+
+  historyEl.innerHTML = [...data.history].reverse().map(h => {
+    let dotColor = '#f87171';
+    if(h.value >= 75) dotColor = '#4ade80';
+    else if(h.value >= 55) dotColor = '#a3e635';
+    else if(h.value >= 45) dotColor = '#d4a843';
+    else if(h.value >= 25) dotColor = '#fb923c';
+    return `<span class="fgh-dot" style="background:${dotColor}" title="${h.date}: ${h.value} (${h.classification})"></span>`;
+  }).join('');
+}
+
+function renderFunding(data){
+  const body = document.getElementById('fundingBody');
+  if(!body) return;
+  if(!data.snapshots.length){
+    body.innerHTML = '<tr><td colspan="5" class="calendar-note">No funding data available right now.</td></tr>';
+    return;
+  }
+  body.innerHTML = data.snapshots.map(s => {
+    const pct = (s.fundingRate * 100).toFixed(4) + '%';
+    const cls = s.fundingRate > 0 ? 'fund-pos' : (s.fundingRate < 0 ? 'fund-neg' : '');
+    const oi = s.openInterest >= 1000
+      ? (s.openInterest / 1000).toLocaleString(undefined, {maximumFractionDigits:1}) + 'K'
+      : s.openInterest.toLocaleString(undefined, {maximumFractionDigits:2});
+    return `
+      <tr>
+        <td>${s.symbol.replace('USDT','')}</td>
+        <td>${s.exchange}</td>
+        <td class="${cls}">${pct}</td>
+        <td>$${s.markPrice.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+        <td>${oi} ${s.symbol.replace('USDT','')}</td>
+      </tr>`;
+  }).join('');
+}
+
+Promise.all([
+  fetch('fear_greed_data.json', {cache:'no-store'}).then(r => r.ok ? r.json() : Promise.reject()),
+  fetch('funding_data.json', {cache:'no-store'}).then(r => r.ok ? r.json() : Promise.reject()),
+]).then(([fg, funding]) => {
+  renderFearGreed(fg);
+  renderFunding(funding);
+  const stamp = document.getElementById('pulseUpdated');
+  if(stamp){
+    const newest = new Date(Math.max(new Date(fg.generated_at), new Date(funding.generated_at)));
+    stamp.textContent = 'Live — last updated ' + newest.toLocaleString();
+  }
+}).catch(() => {
+  const stamp = document.getElementById('pulseUpdated');
+  if(stamp) stamp.textContent = 'Live market data unavailable right now — check back shortly.';
+  const fundingBody = document.getElementById('fundingBody');
+  if(fundingBody) fundingBody.innerHTML = '<tr><td colspan="5" class="calendar-note">Unable to load.</td></tr>';
+});
 
 // ---- Blockworks Token Transparency panel ----
 const classLabel = {defi:"DeFi", infra:"Infrastructure", l1:"Layer 1 / Currency", other:"Other"};
