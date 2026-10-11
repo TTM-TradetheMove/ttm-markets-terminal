@@ -1,0 +1,40 @@
+name: Update BTC price history
+
+on:
+  schedule:
+    - cron: "27 */6 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-btc-price
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch BTC price history
+        run: python3 scripts/update_btc_price.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "ttm-calendar-bot"
+          git config user.email "actions@users.noreply.github.com"
+          if git diff --quiet -- btc_price_data.json; then
+            echo "No changes to btc_price_data.json"
+          else
+            git add btc_price_data.json
+            git commit -m "Auto-update BTC price history"
+            git push
+          fi

@@ -2,7 +2,7 @@ name: Update market data (Fear & Greed + funding/OI)
 
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "17,47 * * * *"
   workflow_dispatch: {}
 
 permissions:

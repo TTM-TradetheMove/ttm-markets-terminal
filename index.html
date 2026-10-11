@@ -255,6 +255,22 @@ td.num{font-variant-numeric:tabular-nums;color:var(--mute)}
 .wa-card .wa-country{font-size:11px;color:var(--gold2);margin-top:4px}
 .wa-empty{color:var(--mute);font-size:13px;padding:8px 0}
 
+/* BTC vs macro events chart */
+.chart-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-top:22px}
+.chart-card .fl-label{color:var(--gold);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;display:block;margin-bottom:14px}
+.chart-wrap{position:relative;width:100%}
+#btcChart{width:100%;height:auto;display:block}
+.btc-line{fill:none;stroke:var(--gold2);stroke-width:2}
+.btc-area{fill:url(#btcAreaGrad);opacity:.5}
+.btc-axis-label{fill:var(--mute);font-size:9px;font-family:inherit}
+.btc-gridline{stroke:var(--line);stroke-width:1}
+.btc-event-line{stroke:#f87171;stroke-width:1;stroke-dasharray:3,3;opacity:.6}
+.btc-event-dot{fill:#f87171;stroke:var(--card);stroke-width:1.5;cursor:pointer}
+.btc-event-dot:hover{fill:#fca5a5}
+.chart-tooltip{position:absolute;background:#0a0b0d;border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:12px;color:#fff;pointer-events:none;z-index:5;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.chart-tooltip .ct-date{color:var(--mute);font-size:10.5px;margin-bottom:2px}
+.chart-tooltip .ct-price{color:var(--gold2);font-weight:700}
+
 /* Market Pulse: Fear & Greed + funding/OI */
 .pulse-grid{display:grid;grid-template-columns:1fr 2fr;gap:18px}
 @media (max-width:860px){.pulse-grid{grid-template-columns:1fr}}
@@ -484,6 +500,15 @@ footer{padding:40px 0 60px}
     </table>
     <p id="calendarEmpty" class="calendar-note" style="display:none">No releases match this combination of filters.</p>
     <p class="calendar-note">Historical prints are TTM's curated record, not a live feed — Upcoming releases refresh automatically from a live calendar source (see status line above). Always confirm live figures and release times against the official BLS, BEA, ONS, ECB, Fed and BOJ calendars (or ForexFactory itself) before trading around them. Crypto Bias is TTM's own read of how a print is typically digested by risk assets, not a prediction.</p>
+
+    <div class="chart-card">
+      <span class="fl-label">BTC vs. High-Impact Macro Events — Last 90 Days</span>
+      <div class="chart-wrap">
+        <svg id="btcChart" viewBox="0 0 900 280" preserveAspectRatio="none" role="img" aria-label="BTC price over the last 90 days with markers for high-impact macro events"></svg>
+        <div id="btcTooltip" class="chart-tooltip" style="display:none"></div>
+      </div>
+      <p class="midterm-note">Gold line is BTC/USD daily close. Each marker is a High-impact event from the calendar above — hover a marker to see what it was and when.</p>
+    </div>
   </div>
 </section>
 
@@ -1025,6 +1050,7 @@ function renderWeekAhead(events){
 
 // Upcoming rows: try the live, auto-updated feed first (refreshed every 30 min by a
 // GitHub Action in this repo); fall back to the static list if it can't be reached.
+let ALL_CALENDAR_EVENTS = [];
 fetch('calendar_data.json', {cache:'no-store'})
   .then(r => { if(!r.ok) throw new Error('bad status'); return r.json(); })
   .then(data => {
@@ -1033,16 +1059,122 @@ fetch('calendar_data.json', {cache:'no-store'})
     renderCalendarRows(CALENDAR_HISTORICAL);
     renderCalendarRows(live);
     applyFilters();
-    renderWeekAhead([...CALENDAR_HISTORICAL, ...live]);
+    ALL_CALENDAR_EVENTS = [...CALENDAR_HISTORICAL, ...live];
+    renderWeekAhead(ALL_CALENDAR_EVENTS);
+    maybeRenderBtcChart();
     const stamp = document.getElementById('calendarUpdated');
     if(stamp) stamp.textContent = 'Live feed — last updated ' + new Date(data.generated_at).toLocaleString();
   })
   .catch(() => {
     renderCalendarRows(CALENDAR_UPCOMING_FALLBACK);
     applyFilters();
-    renderWeekAhead([...CALENDAR_HISTORICAL, ...CALENDAR_UPCOMING_FALLBACK]);
+    ALL_CALENDAR_EVENTS = [...CALENDAR_HISTORICAL, ...CALENDAR_UPCOMING_FALLBACK];
+    renderWeekAhead(ALL_CALENDAR_EVENTS);
+    maybeRenderBtcChart();
     const stamp = document.getElementById('calendarUpdated');
     if(stamp) stamp.textContent = 'Showing a static snapshot — live feed unavailable.';
+  });
+
+// ---- BTC price vs. macro events chart ----
+let BTC_PRICE_SERIES = null;
+function maybeRenderBtcChart(){
+  if(!BTC_PRICE_SERIES || !ALL_CALENDAR_EVENTS.length) return;
+  const svg = document.getElementById('btcChart');
+  const tooltip = document.getElementById('btcTooltip');
+  if(!svg) return;
+
+  const W = 900, H = 280, padL = 50, padR = 16, padT = 16, padB = 24;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+
+  const prices = BTC_PRICE_SERIES;
+  const minP = Math.min(...prices.map(p => p.price));
+  const maxP = Math.max(...prices.map(p => p.price));
+  const span = (maxP - minP) || 1;
+  const t0 = prices[0].dt.getTime();
+  const t1 = prices[prices.length - 1].dt.getTime();
+  const tSpan = (t1 - t0) || 1;
+
+  const x = t => padL + ((t - t0) / tSpan) * plotW;
+  const y = p => padT + plotH - ((p - minP) / span) * plotH;
+
+  const linePoints = prices.map(p => `${x(p.dt.getTime()).toFixed(1)},${y(p.price).toFixed(1)}`).join(' ');
+  const areaPoints = `${padL},${padT+plotH} ${linePoints} ${padL+plotW},${padT+plotH}`;
+
+  // Gridlines + price axis labels (3 horizontal lines: max, mid, min)
+  let gridSvg = '';
+  [minP, (minP+maxP)/2, maxP].forEach(val => {
+    const yy = y(val);
+    gridSvg += `<line class="btc-gridline" x1="${padL}" y1="${yy}" x2="${padL+plotW}" y2="${yy}"/>`;
+    gridSvg += `<text class="btc-axis-label" x="4" y="${yy+3}">$${Math.round(val).toLocaleString()}</text>`;
+  });
+
+  // High-impact event markers within the chart's date range
+  const chartStart = prices[0].dt.getTime(), chartEnd = prices[prices.length-1].dt.getTime();
+  const events = ALL_CALENDAR_EVENTS.filter(e => e.impact === 'high' && e.dt.getTime() >= chartStart && e.dt.getTime() <= chartEnd);
+
+  // Interpolate BTC price at an event's date for marker placement
+  function priceAt(targetMs){
+    let lo = prices[0], hi = prices[prices.length-1];
+    for(let i=0;i<prices.length-1;i++){
+      if(prices[i].dt.getTime() <= targetMs && prices[i+1].dt.getTime() >= targetMs){
+        lo = prices[i]; hi = prices[i+1]; break;
+      }
+    }
+    const span2 = (hi.dt.getTime() - lo.dt.getTime()) || 1;
+    const frac = (targetMs - lo.dt.getTime()) / span2;
+    return lo.price + (hi.price - lo.price) * Math.max(0, Math.min(1, frac));
+  }
+
+  let eventSvg = '';
+  events.forEach((e, i) => {
+    const ex = x(e.dt.getTime());
+    const ep = priceAt(e.dt.getTime());
+    const ey = y(ep);
+    eventSvg += `<line class="btc-event-line" x1="${ex.toFixed(1)}" y1="${padT}" x2="${ex.toFixed(1)}" y2="${padT+plotH}"/>`;
+    eventSvg += `<circle class="btc-event-dot" data-idx="${i}" cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="5"/>`;
+  });
+
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="btcAreaGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--gold2)" stop-opacity="0.35"/>
+        <stop offset="100%" stop-color="var(--gold2)" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    ${gridSvg}
+    <polygon class="btc-area" points="${areaPoints}"/>
+    <polyline class="btc-line" points="${linePoints}"/>
+    ${eventSvg}
+  `;
+
+  svg.querySelectorAll('.btc-event-dot').forEach(dot => {
+    const e = events[Number(dot.dataset.idx)];
+    dot.addEventListener('mouseenter', (evt) => {
+      tooltip.innerHTML = `<div class="ct-date">${e.dt.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'})} — ${countryLabel[e.country] || e.country}</div>${e.event}${e.actual && e.actual !== '—' ? `<div class="ct-price">Actual: ${e.actual}</div>` : ''}`;
+      tooltip.style.display = 'block';
+      positionTooltip(evt);
+    });
+    dot.addEventListener('mousemove', positionTooltip);
+    dot.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+  });
+
+  function positionTooltip(evt){
+    const wrap = svg.parentElement;
+    const rect = wrap.getBoundingClientRect();
+    tooltip.style.left = Math.min(evt.clientX - rect.left + 12, rect.width - 160) + 'px';
+    tooltip.style.top = Math.max(evt.clientY - rect.top - 40, 0) + 'px';
+  }
+}
+
+fetch('btc_price_data.json', {cache:'no-store'})
+  .then(r => { if(!r.ok) throw new Error('bad status'); return r.json(); })
+  .then(data => {
+    BTC_PRICE_SERIES = data.prices.map(p => ({...p, dt: d(p.date)}));
+    maybeRenderBtcChart();
+  })
+  .catch(() => {
+    const wrap = document.querySelector('.chart-wrap');
+    if(wrap) wrap.innerHTML = '<p class="calendar-note">Price chart unavailable right now — check back shortly.</p>';
   });
 
 // ---- Filter state ----
