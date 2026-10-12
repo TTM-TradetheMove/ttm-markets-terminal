@@ -41,7 +41,7 @@ BYBIT_WS = "wss://stream.bybit.com/v5/public/linear"
 BYBIT_SYMBOLS = ["BTCUSDT", "ETHUSDT"]
 BYBIT_TOPICS = [f"allLiquidation.{s}" for s in BYBIT_SYMBOLS] + [f"liquidation.{s}" for s in BYBIT_SYMBOLS]
 
-CAPTURE_SECONDS = 70
+CAPTURE_SECONDS = 180
 DATA_FILE = "liquidations_data.json"
 MAX_AGE_HOURS = 24
 
