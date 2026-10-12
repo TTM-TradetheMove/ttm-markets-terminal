@@ -25,8 +25,10 @@ from datetime import datetime, timezone
 
 API_URL = "https://api.coingecko.com/api/v3/derivatives"
 
-# (CoinGecko index_id, display symbol)
-ASSETS = [("bitcoin", "BTCUSDT"), ("ethereum", "ETHUSDT")]
+# (CoinGecko index_id -- the underlying asset ticker, e.g. "BTC"/"ETH", NOT
+# CoinGecko's coin-id slugs like "bitcoin"/"ethereum" -- confirmed against
+# docs.coingecko.com/reference/derivatives-tickers example response)
+ASSETS = [("BTC", "BTCUSDT"), ("ETH", "ETHUSDT")]
 EXCHANGES = ["binance", "bybit"]
 
 debug_lines = []
@@ -91,15 +93,30 @@ def main():
             match = None
             for t in tickers:
                 market = str(t.get("market", "")).lower()
+                idx = str(t.get("index_id", "")).upper()
                 if (
-                    t.get("index_id") == index_id
+                    idx == index_id.upper()
                     and t.get("contract_type") == "perpetual"
                     and exch in market
                 ):
                     match = t
                     break
             if not match:
-                dbg(f"No perpetual match for {exch}/{display_symbol}")
+                # Fallback: match on symbol directly (some exchanges report a
+                # slightly different index_id than the ticker symbol).
+                for t in tickers:
+                    market = str(t.get("market", "")).lower()
+                    sym = str(t.get("symbol", "")).upper()
+                    if (
+                        sym == display_symbol.upper()
+                        and t.get("contract_type") == "perpetual"
+                        and exch in market
+                    ):
+                        match = t
+                        break
+            if not match:
+                sample = [t.get("market") for t in tickers if exch in str(t.get("market", "")).lower()][:5]
+                dbg(f"No perpetual match for {exch}/{display_symbol} -- sample markets containing '{exch}': {sample}")
                 continue
             try:
                 row = {
