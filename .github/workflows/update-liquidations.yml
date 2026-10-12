@@ -1,0 +1,48 @@
+name: Update liquidation map
+
+on:
+  schedule:
+    - cron: "9,24,39,54 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-liquidations
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install websockets
+
+      - name: Capture liquidations (Binance + Bybit public feeds)
+        continue-on-error: true
+        run: python3 scripts/update_liquidations.py
+
+      - name: Commit and push if changed
+        if: always()
+        run: |
+          git config user.name "ttm-calendar-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git pull --rebase origin main 2>/dev/null || true
+          git add -f liquidations_debug.txt 2>/dev/null || true
+          git add liquidations_data.json 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Auto-update liquidation map"
+            git push
+          fi

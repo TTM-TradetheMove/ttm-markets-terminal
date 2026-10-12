@@ -276,6 +276,26 @@ td.num{font-variant-numeric:tabular-nums;color:var(--mute)}
 @media (max-width:860px){.pulse-grid{grid-template-columns:1fr}}
 .fg-card,.funding-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
 .fg-card .fl-label,.funding-card .fl-label{color:var(--gold);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;display:block;margin-bottom:14px}
+.liq-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-top:18px}
+.liq-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+.liq-head .fl-label{color:var(--gold);font-size:11px;text-transform:uppercase;letter-spacing:1.5px}
+.liq-totals{font-size:13px;color:var(--mute);margin-bottom:10px}
+.liq-totals b{color:var(--text)}
+.liq-totals .liq-tot-short{color:var(--green)}
+.liq-totals .liq-tot-long{color:var(--red)}
+.liq-legend{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--mute);margin-bottom:10px}
+.liq-legend-item{display:inline-flex;align-items:center;gap:6px}
+.liq-swatch{width:10px;height:10px;border-radius:2px;display:inline-block}
+.liq-swatch-short{background:var(--green)}
+.liq-swatch-long{background:var(--red)}
+.liq-chart-wrap{position:relative}
+#liqChart{width:100%;height:460px;display:block}
+.liq-bar-short{fill:var(--green)}
+.liq-bar-long{fill:var(--red)}
+.liq-axis-label{font-size:10px;fill:var(--mute);font-family:inherit}
+.liq-mark-line{stroke:var(--gold2);stroke-width:1.5;stroke-dasharray:4 3}
+.liq-mark-label{font-size:10px;fill:var(--gold2);font-family:inherit;font-weight:600}
+.liq-gridline{stroke:var(--line);stroke-width:1}
 .fg-body{display:flex;align-items:center;gap:18px}
 .fg-gauge{position:relative;width:120px;flex:0 0 auto}
 .fg-arc{width:120px;height:70px;display:block}
@@ -562,7 +582,7 @@ footer{padding:40px 0 60px}
     <div class="section-head">
       <span class="tag">Market Pulse</span>
       <h2>Sentiment &amp; derivatives snapshot</h2>
-      <p>Crypto Fear &amp; Greed Index, and BTC/ETH perpetual funding rate + open interest across major exchanges — refreshed every 30 minutes. Funding spikes often track macro prints, so read this alongside Macro Watch.</p>
+      <p>Crypto Fear &amp; Greed Index, BTC/ETH perpetual funding rate + open interest, and a real liquidation map built from Binance/Bybit's public feeds — refreshed every 15–30 minutes. Funding spikes often track macro prints, so read this alongside Macro Watch.</p>
       <p id="pulseUpdated" class="calendar-note" style="margin-top:8px">Loading live market data…</p>
     </div>
 
@@ -594,6 +614,26 @@ footer{padding:40px 0 60px}
         </table>
         <p class="midterm-note">Funding rate is paid between longs and shorts every 8h — persistently positive means longs are paying shorts (crowded long, often a contrarian signal); persistently negative is the reverse.</p>
       </div>
+    </div>
+
+    <div class="liq-card">
+      <div class="liq-head">
+        <span class="fl-label">Liquidation Map — Last 24h</span>
+        <div class="filter-row" id="liqSymbolRow">
+          <button class="filter-chip active" data-liqsym="BTCUSDT">BTC</button>
+          <button class="filter-chip" data-liqsym="ETHUSDT">ETH</button>
+        </div>
+      </div>
+      <div class="liq-totals" id="liqTotals"><span class="calendar-note">Loading…</span></div>
+      <div class="liq-legend">
+        <span class="liq-legend-item"><span class="liq-swatch liq-swatch-short"></span>Shorts liquidated (price rose through level)</span>
+        <span class="liq-legend-item"><span class="liq-swatch liq-swatch-long"></span>Longs liquidated (price fell through level)</span>
+      </div>
+      <div class="liq-chart-wrap">
+        <svg id="liqChart" viewBox="0 0 900 460" preserveAspectRatio="none" role="img" aria-label="Liquidation map showing long and short liquidations by price level over the last 24 hours"></svg>
+        <div id="liqTooltip" class="chart-tooltip" style="display:none"></div>
+      </div>
+      <p class="midterm-note">Built from real liquidation orders on Binance and Bybit's free public feeds, bucketed by distance from the current mark price — this is actual fired liquidations, not a predictive model of future risk. Captured in short windows roughly every 15 minutes, so treat it as a representative sample of the last 24h rather than a complete tape.</p>
     </div>
   </div>
 </section>
@@ -1418,6 +1458,174 @@ Promise.all([
   const fundingBody = document.getElementById('fundingBody');
   if(fundingBody) fundingBody.innerHTML = '<tr><td colspan="5" class="calendar-note">Unable to load.</td></tr>';
 });
+
+// ---- Liquidation map (real Binance + Bybit liquidation orders, last 24h) ----
+let LIQ_DATA = null;
+let LIQ_SYMBOL = 'BTCUSDT';
+const liqSymLabel = {BTCUSDT:'BTC', ETHUSDT:'ETH'};
+
+function fmtUsd(n){
+  if(n >= 1e6) return '$' + (n/1e6).toFixed(2) + 'm';
+  if(n >= 1e3) return '$' + (n/1e3).toFixed(1) + 'k';
+  return '$' + n.toFixed(0);
+}
+
+function renderLiquidationMap(){
+  const svg = document.getElementById('liqChart');
+  const totalsEl = document.getElementById('liqTotals');
+  if(!svg || !LIQ_DATA) return;
+
+  const symData = LIQ_DATA.buckets ? LIQ_DATA.buckets[LIQ_SYMBOL] : null;
+  const totals = LIQ_DATA.totals ? LIQ_DATA.totals[LIQ_SYMBOL] : null;
+
+  if(totalsEl){
+    if(totals && (totals.longUsd || totals.shortUsd)){
+      totalsEl.innerHTML = `<b>${liqSymLabel[LIQ_SYMBOL]}</b> — <span class="liq-tot-short">${fmtUsd(totals.shortUsd)} shorts</span> · <span class="liq-tot-long">${fmtUsd(totals.longUsd)} longs</span> liquidated across ${totals.count} orders (24h, Binance + Bybit)`;
+    } else {
+      totalsEl.innerHTML = '<span class="calendar-note">No liquidations captured for this symbol in the last 24h yet — the sampler runs every ~15 minutes, so coverage builds up over the first few hours.</span>';
+    }
+  }
+
+  svg.innerHTML = '';
+  if(!symData || !symData.mark || !symData.buckets.length){
+    return;
+  }
+
+  const W = 900, H = 460;
+  const marginTop = 20, marginBottom = 30, marginLeft = 90, marginRight = 20;
+  const plotW = W - marginLeft - marginRight;
+  const plotH = H - marginTop - marginBottom;
+  const centerX = marginLeft + plotW / 2;
+
+  const BUCKET_PCT = 0.5, RANGE_PCT = 10;
+  const slots = [];
+  for(let pct = RANGE_PCT; pct >= -RANGE_PCT; pct -= BUCKET_PCT) slots.push(Math.round(pct * 10) / 10);
+  const rowH = plotH / slots.length;
+
+  const byPct = {};
+  symData.buckets.forEach(b => { byPct[b.pricePct] = b; });
+
+  let maxVal = 0;
+  symData.buckets.forEach(b => { maxVal = Math.max(maxVal, b.longUsd, b.shortUsd); });
+  if(maxVal <= 0) maxVal = 1;
+  const halfPlot = plotW / 2 - 6; // leave a small center gap
+
+  const ns = 'http://www.w3.org/2000/svg';
+  const frag = document.createDocumentFragment();
+
+  // center axis line
+  const axis = document.createElementNS(ns, 'line');
+  axis.setAttribute('x1', centerX); axis.setAttribute('x2', centerX);
+  axis.setAttribute('y1', marginTop); axis.setAttribute('y2', marginTop + plotH);
+  axis.setAttribute('class', 'liq-gridline');
+  frag.appendChild(axis);
+
+  const tooltip = document.getElementById('liqTooltip');
+
+  slots.forEach((pct, i) => {
+    const y = marginTop + i * rowH;
+    const b = byPct[pct];
+    const rowCenterY = y + rowH / 2;
+
+    if(pct === 0){
+      const markLine = document.createElementNS(ns, 'line');
+      markLine.setAttribute('x1', marginLeft); markLine.setAttribute('x2', W - marginRight);
+      markLine.setAttribute('y1', rowCenterY); markLine.setAttribute('y2', rowCenterY);
+      markLine.setAttribute('class', 'liq-mark-line');
+      frag.appendChild(markLine);
+      const markLabel = document.createElementNS(ns, 'text');
+      markLabel.setAttribute('x', W - marginRight); markLabel.setAttribute('y', rowCenterY - 5);
+      markLabel.setAttribute('text-anchor', 'end');
+      markLabel.setAttribute('class', 'liq-mark-label');
+      markLabel.textContent = 'Mark $' + symData.mark.toLocaleString(undefined, {maximumFractionDigits:0});
+      frag.appendChild(markLabel);
+    }
+
+    if(i % 5 === 0){
+      const price = symData.mark * (1 + pct / 100);
+      const label = document.createElementNS(ns, 'text');
+      label.setAttribute('x', marginLeft - 8); label.setAttribute('y', rowCenterY + 3);
+      label.setAttribute('text-anchor', 'end');
+      label.setAttribute('class', 'liq-axis-label');
+      label.textContent = '$' + price.toLocaleString(undefined, {maximumFractionDigits:0});
+      frag.appendChild(label);
+    }
+
+    if(!b) return;
+    const barH = Math.max(rowH - 2, 1);
+    const barY = rowCenterY - barH / 2;
+
+    if(b.longUsd > 0){
+      const w = (b.longUsd / maxVal) * halfPlot;
+      const rect = document.createElementNS(ns, 'rect');
+      rect.setAttribute('x', centerX - 6 - w); rect.setAttribute('y', barY);
+      rect.setAttribute('width', w); rect.setAttribute('height', barH);
+      rect.setAttribute('rx', 2);
+      rect.setAttribute('class', 'liq-bar-long');
+      rect.addEventListener('mouseenter', (e) => showLiqTooltip(e, b, symData));
+      rect.addEventListener('mousemove', (e) => positionLiqTooltip(e));
+      rect.addEventListener('mouseleave', hideLiqTooltip);
+      frag.appendChild(rect);
+    }
+    if(b.shortUsd > 0){
+      const w = (b.shortUsd / maxVal) * halfPlot;
+      const rect = document.createElementNS(ns, 'rect');
+      rect.setAttribute('x', centerX + 6); rect.setAttribute('y', barY);
+      rect.setAttribute('width', w); rect.setAttribute('height', barH);
+      rect.setAttribute('rx', 2);
+      rect.setAttribute('class', 'liq-bar-short');
+      rect.addEventListener('mouseenter', (e) => showLiqTooltip(e, b, symData));
+      rect.addEventListener('mousemove', (e) => positionLiqTooltip(e));
+      rect.addEventListener('mouseleave', hideLiqTooltip);
+      frag.appendChild(rect);
+    }
+  });
+
+  svg.appendChild(frag);
+}
+
+function showLiqTooltip(evt, bucket, symData){
+  const tooltip = document.getElementById('liqTooltip');
+  if(!tooltip) return;
+  const parts = [];
+  if(bucket.shortUsd > 0) parts.push(`<span class="liq-tot-short">${fmtUsd(bucket.shortUsd)} shorts</span>`);
+  if(bucket.longUsd > 0) parts.push(`<span class="liq-tot-long">${fmtUsd(bucket.longUsd)} longs</span>`);
+  tooltip.innerHTML = `$${bucket.price.toLocaleString(undefined,{maximumFractionDigits:0})} (${bucket.pricePct > 0 ? '+' : ''}${bucket.pricePct}%)<br>${parts.join(' · ')}`;
+  tooltip.style.display = 'block';
+  positionLiqTooltip(evt);
+}
+function positionLiqTooltip(evt){
+  const tooltip = document.getElementById('liqTooltip');
+  const wrap = evt.currentTarget.closest('.liq-chart-wrap');
+  if(!tooltip || !wrap) return;
+  const rect = wrap.getBoundingClientRect();
+  tooltip.style.left = (evt.clientX - rect.left + 12) + 'px';
+  tooltip.style.top = (evt.clientY - rect.top + 12) + 'px';
+}
+function hideLiqTooltip(){
+  const tooltip = document.getElementById('liqTooltip');
+  if(tooltip) tooltip.style.display = 'none';
+}
+
+document.querySelectorAll('#liqSymbolRow .filter-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('#liqSymbolRow .filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    LIQ_SYMBOL = chip.dataset.liqsym;
+    renderLiquidationMap();
+  });
+});
+
+fetch('liquidations_data.json', {cache:'no-store'})
+  .then(r => r.ok ? r.json() : Promise.reject())
+  .then(data => {
+    LIQ_DATA = data;
+    renderLiquidationMap();
+  })
+  .catch(() => {
+    const totalsEl = document.getElementById('liqTotals');
+    if(totalsEl) totalsEl.innerHTML = '<span class="calendar-note">Liquidation data unavailable right now — check back shortly.</span>';
+  });
 
 // ---- Blockworks Token Transparency panel ----
 const classLabel = {defi:"DeFi", infra:"Infrastructure", l1:"Layer 1 / Currency", other:"Other"};
