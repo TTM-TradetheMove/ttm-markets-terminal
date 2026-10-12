@@ -1,0 +1,32 @@
+{
+  "generated_at": "2026-10-12T08:56:21.127945+00:00",
+  "window_hours": 24,
+  "sources": [
+    "wss://fstream.binance.com/ws/!forceOrder@arr",
+    "wss://stream.bybit.com/v5/public/linear"
+  ],
+  "totals": {
+    "BTCUSDT": {
+      "longUsd": 0,
+      "shortUsd": 0,
+      "count": 0
+    },
+    "ETHUSDT": {
+      "longUsd": 0,
+      "shortUsd": 0,
+      "count": 0
+    }
+  },
+  "buckets": {
+    "BTCUSDT": {
+      "mark": 83490.72,
+      "buckets": []
+    },
+    "ETHUSDT": {
+      "mark": 2551.19,
+      "buckets": []
+    }
+  },
+  "biggest": [],
+  "events": []
+}
