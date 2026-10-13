@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-13T08:12:28.907459+00:00",
+  "generated_at": "2026-10-13T08:24:41.138564+00:00",
   "window_hours": 24,
   "sources": [
     "wss://fstream.binance.com/ws/!forceOrder@arr",
@@ -12,21 +12,48 @@
       "count": 0
     },
     "ETHUSDT": {
-      "longUsd": 0,
+      "longUsd": 2.53,
       "shortUsd": 0,
-      "count": 0
+      "count": 1
     }
   },
   "buckets": {
     "BTCUSDT": {
-      "mark": 83811.49,
+      "mark": 83948.22,
       "buckets": []
     },
     "ETHUSDT": {
-      "mark": 2526.02,
-      "buckets": []
+      "mark": 2530.17,
+      "buckets": [
+        {
+          "pricePct": 0.0,
+          "price": 2530.17,
+          "longUsd": 2.53,
+          "shortUsd": 0.0
+        }
+      ]
     }
   },
-  "biggest": [],
-  "events": []
+  "biggest": [
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 2532.29,
+      "qty": 0.001,
+      "usd": 2.53229,
+      "time": 1791879768071
+    }
+  ],
+  "events": [
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 2532.29,
+      "qty": 0.001,
+      "usd": 2.53229,
+      "time": 1791879768071
+    }
+  ]
 }

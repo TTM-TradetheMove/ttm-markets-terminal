@@ -1,10 +1,18 @@
-Run at 2026-10-13T08:12:28.907379+00:00
+Run at 2026-10-13T08:24:41.138477+00:00
 
-Binance: capture failed -- NameError: name 'BINANCE_WS' is not defined
+Binance: connected (wss://fstream.binance.com/market/ws/!forceOrder@arr)
 Bybit: connected
-Bybit: raw message #1 sample: {"success":false,"ret_msg":"error:handler not found,topic:liquidation.BTCUSDT","conn_id":"db292cr1dls7rmq25nn0-2aj6i","req_id":"","op":"subscribe"}
+Bybit: raw message #1 sample: {"success":true,"ret_msg":"","conn_id":"db2952fgca6v3qc2oeo0-2bdnf","req_id":"","op":"subscribe"}
+Bybit: subscribe ack -- success=True ret_msg=
+Bybit: raw message #2 sample: {"success":true,"ret_msg":"","conn_id":"db2952fgca6v3qc2oeo0-2bdnf","req_id":"","op":"subscribe"}
+Bybit: subscribe ack -- success=True ret_msg=
+Bybit: raw message #3 sample: {"success":false,"ret_msg":"error:handler not found,topic:liquidation.BTCUSDT","conn_id":"db2952fgca6v3qc2oeo0-2bdnf","req_id":"","op":"subscribe"}
 Bybit: subscribe ack -- success=False ret_msg=error:handler not found,topic:liquidation.BTCUSDT
-Bybit: capture window closed, 1 raw messages received, 0 events parsed
-Captured 0 new liquidation events this run
-Rolling log: 0 existing + 0 new -> 0 after dedupe/trim
-Mark prices: {'BTCUSDT': 83811.49, 'ETHUSDT': 2526.02}
+Bybit: raw message #4 sample: {"success":false,"ret_msg":"error:handler not found,topic:liquidation.ETHUSDT","conn_id":"db2952fgca6v3qc2oeo0-2bdnf","req_id":"","op":"subscribe"}
+Bybit: subscribe ack -- success=False ret_msg=error:handler not found,topic:liquidation.ETHUSDT
+Binance: first raw message sample: {"e":"forceOrder","E":1791879698091,"o":{"s":"APRUSDT","S":"SELL","o":"LIMIT","f":"IOC","q":"89609","p":"0.0548000","ap":"0.0552442","X":"FILLED","l":"1453","z":"89609","T":1791879697083,"ps":"APRUSDT","st":1}}
+Bybit: capture window closed, 4 raw messages received, 0 events parsed
+Binance: capture window closed, 131 raw messages received, 1 events parsed
+Captured 1 new liquidation events this run
+Rolling log: 0 existing + 1 new -> 1 after dedupe/trim
+Mark prices: {'BTCUSDT': 83948.22, 'ETHUSDT': 2530.17}
