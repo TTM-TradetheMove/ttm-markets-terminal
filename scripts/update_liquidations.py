@@ -293,9 +293,12 @@ def main():
 
     # Merge with existing rolling log, dedupe, trim to MAX_AGE_HOURS.
     existing = []
+    existing_price_history = {"BTCUSDT": [], "ETHUSDT": []}
     try:
         with open(DATA_FILE) as f:
-            existing = json.load(f).get("events", [])
+            prev = json.load(f)
+            existing = prev.get("events", [])
+            existing_price_history = prev.get("priceHistory", existing_price_history)
     except (FileNotFoundError, json.JSONDecodeError):
         pass
 
@@ -322,6 +325,17 @@ def main():
     mark_prices = fetch_mark_prices()
     buckets = build_buckets(merged, mark_prices)
 
+    # Rolling price-history sample (one point per run, ~every 15 min) so the
+    # dashboard can draw an actual price line through the liquidation map,
+    # the way CoinGlass-style views do -- rather than just a static mark line.
+    price_history = {}
+    for symbol in ("BTCUSDT", "ETHUSDT"):
+        points = [p for p in existing_price_history.get(symbol, []) if p["time"] >= cutoff_ms]
+        if mark_prices.get(symbol):
+            points.append({"time": now_ms, "price": mark_prices[symbol]})
+        price_history[symbol] = points
+    dbg(f"Price history points: BTC={len(price_history['BTCUSDT'])} ETH={len(price_history['ETHUSDT'])}")
+
     totals = {}
     for symbol in ("BTCUSDT", "ETHUSDT"):
         sym_events = [e for e in merged if e["symbol"] == symbol]
@@ -344,6 +358,7 @@ def main():
         ],
         "totals": totals,
         "buckets": buckets,
+        "priceHistory": price_history,
         "biggest": biggest,
         "events": merged,
     }

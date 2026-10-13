@@ -296,6 +296,7 @@ td.num{font-variant-numeric:tabular-nums;color:var(--mute)}
 .liq-mark-line{stroke:var(--gold2);stroke-width:1.5;stroke-dasharray:4 3}
 .liq-mark-label{font-size:10px;fill:var(--gold2);font-family:inherit;font-weight:600}
 .liq-gridline{stroke:var(--line);stroke-width:1}
+.liq-price-line{fill:none;stroke:var(--gold);stroke-width:1.5}
 .fg-body{display:flex;align-items:center;gap:18px}
 .fg-gauge{position:relative;width:120px;flex:0 0 auto}
 .fg-arc{width:120px;height:70px;display:block}
@@ -626,14 +627,15 @@ footer{padding:40px 0 60px}
       </div>
       <div class="liq-totals" id="liqTotals"><span class="calendar-note">Loading…</span></div>
       <div class="liq-legend">
-        <span class="liq-legend-item"><span class="liq-swatch liq-swatch-short"></span>Shorts liquidated (price rose through level)</span>
-        <span class="liq-legend-item"><span class="liq-swatch liq-swatch-long"></span>Longs liquidated (price fell through level)</span>
+        <span class="liq-legend-item"><span class="liq-swatch liq-swatch-short"></span>Shorts liquidated</span>
+        <span class="liq-legend-item"><span class="liq-swatch liq-swatch-long"></span>Longs liquidated</span>
+        <span class="liq-legend-item">· dot size = order size · right panel = liquidity built up at each price level</span>
       </div>
       <div class="liq-chart-wrap">
-        <svg id="liqChart" viewBox="0 0 900 460" preserveAspectRatio="none" role="img" aria-label="Liquidation map showing long and short liquidations by price level over the last 24 hours"></svg>
+        <svg id="liqChart" viewBox="0 0 900 460" preserveAspectRatio="none" role="img" aria-label="Price chart with liquidation events plotted over time, and a liquidity profile by price level over the last 24 hours"></svg>
         <div id="liqTooltip" class="chart-tooltip" style="display:none"></div>
       </div>
-      <p class="midterm-note">Built from real liquidation orders on Binance and Bybit's free public feeds, bucketed by distance from the current mark price — this is actual fired liquidations, not a predictive model of future risk. Captured in short windows roughly every 15 minutes, so treat it as a representative sample of the last 24h rather than a complete tape.</p>
+      <p class="midterm-note">Gold line is price over the last 24h, sampled roughly every 15 minutes. Dots are real liquidation orders on Binance and Bybit's free public feeds, plotted at the time and price they fired — this is actual liquidations, not a predictive model. The right-hand panel sums liquidated volume by price level across the full window, so it reads like a heatmap of where liquidity has actually built up above and below the current price.</p>
     </div>
   </div>
 </section>
@@ -1477,6 +1479,8 @@ function renderLiquidationMap(){
 
   const symData = LIQ_DATA.buckets ? LIQ_DATA.buckets[LIQ_SYMBOL] : null;
   const totals = LIQ_DATA.totals ? LIQ_DATA.totals[LIQ_SYMBOL] : null;
+  const priceHistory = (LIQ_DATA.priceHistory && LIQ_DATA.priceHistory[LIQ_SYMBOL]) || [];
+  const events = (LIQ_DATA.events || []).filter(e => e.symbol === LIQ_SYMBOL);
 
   if(totalsEl){
     if(totals && (totals.longUsd || totals.shortUsd)){
@@ -1487,104 +1491,149 @@ function renderLiquidationMap(){
   }
 
   svg.innerHTML = '';
-  if(!symData || !symData.mark || !symData.buckets.length){
+  if(!symData || !symData.mark){
     return;
   }
 
   const W = 900, H = 460;
-  const marginTop = 20, marginBottom = 30, marginLeft = 90, marginRight = 20;
-  const plotW = W - marginLeft - marginRight;
+  const marginTop = 20, marginBottom = 30, marginLeft = 90, marginRight = 16;
+  const profileW = 150, gap = 14;
+  const mainRight = W - marginRight - profileW - gap;
   const plotH = H - marginTop - marginBottom;
-  const centerX = marginLeft + plotW / 2;
 
+  // ---- Y scale (price): span whichever is wider -- the price history range
+  // or the +/-10% bucket range -- so the line and the profile always fit.
   const BUCKET_PCT = 0.5, RANGE_PCT = 10;
-  const slots = [];
-  for(let pct = RANGE_PCT; pct >= -RANGE_PCT; pct -= BUCKET_PCT) slots.push(Math.round(pct * 10) / 10);
-  const rowH = plotH / slots.length;
+  let yMin = symData.mark * (1 - RANGE_PCT / 100);
+  let yMax = symData.mark * (1 + RANGE_PCT / 100);
+  priceHistory.forEach(p => { yMin = Math.min(yMin, p.price); yMax = Math.max(yMax, p.price); });
+  const yPad = (yMax - yMin) * 0.05;
+  yMin -= yPad; yMax += yPad;
+  const yScale = (price) => marginTop + plotH - ((price - yMin) / (yMax - yMin)) * plotH;
 
-  const byPct = {};
-  symData.buckets.forEach(b => { byPct[b.pricePct] = b; });
-
-  let maxVal = 0;
-  symData.buckets.forEach(b => { maxVal = Math.max(maxVal, b.longUsd, b.shortUsd); });
-  if(maxVal <= 0) maxVal = 1;
-  const halfPlot = plotW / 2 - 6; // leave a small center gap
+  // ---- X scale (time): last window_hours, oldest at left, now at right.
+  const windowMs = (LIQ_DATA.window_hours || 24) * 3600 * 1000;
+  const nowMs = Date.now();
+  const xMin = nowMs - windowMs, xMax = nowMs;
+  const xScale = (t) => marginLeft + ((t - xMin) / (xMax - xMin)) * (mainRight - marginLeft);
 
   const ns = 'http://www.w3.org/2000/svg';
   const frag = document.createDocumentFragment();
 
-  // center axis line
-  const axis = document.createElementNS(ns, 'line');
-  axis.setAttribute('x1', centerX); axis.setAttribute('x2', centerX);
-  axis.setAttribute('y1', marginTop); axis.setAttribute('y2', marginTop + plotH);
-  axis.setAttribute('class', 'liq-gridline');
-  frag.appendChild(axis);
+  // Gridlines + price axis labels (shared across both panels).
+  const N_GRID = 8;
+  for(let i = 0; i <= N_GRID; i++){
+    const price = yMin + (yMax - yMin) * (i / N_GRID);
+    const y = yScale(price);
+    const grid = document.createElementNS(ns, 'line');
+    grid.setAttribute('x1', marginLeft); grid.setAttribute('x2', W - marginRight);
+    grid.setAttribute('y1', y); grid.setAttribute('y2', y);
+    grid.setAttribute('class', 'liq-gridline');
+    frag.appendChild(grid);
+    const label = document.createElementNS(ns, 'text');
+    label.setAttribute('x', marginLeft - 8); label.setAttribute('y', y + 3);
+    label.setAttribute('text-anchor', 'end');
+    label.setAttribute('class', 'liq-axis-label');
+    label.textContent = '$' + price.toLocaleString(undefined, {maximumFractionDigits:0});
+    frag.appendChild(label);
+  }
 
-  const tooltip = document.getElementById('liqTooltip');
+  // Mark price line, across both panels.
+  const markY = yScale(symData.mark);
+  const markLine = document.createElementNS(ns, 'line');
+  markLine.setAttribute('x1', marginLeft); markLine.setAttribute('x2', W - marginRight);
+  markLine.setAttribute('y1', markY); markLine.setAttribute('y2', markY);
+  markLine.setAttribute('class', 'liq-mark-line');
+  frag.appendChild(markLine);
+  const markLabel = document.createElementNS(ns, 'text');
+  markLabel.setAttribute('x', marginLeft + 4); markLabel.setAttribute('y', markY - 5);
+  markLabel.setAttribute('class', 'liq-mark-label');
+  markLabel.textContent = 'Mark $' + symData.mark.toLocaleString(undefined, {maximumFractionDigits:0});
+  frag.appendChild(markLabel);
 
-  slots.forEach((pct, i) => {
-    const y = marginTop + i * rowH;
-    const b = byPct[pct];
-    const rowCenterY = y + rowH / 2;
+  // ---- Main panel: price line + liquidation events plotted at their actual time/price.
+  if(priceHistory.length >= 2){
+    const pts = priceHistory.slice().sort((a,b) => a.time - b.time)
+      .map(p => `${xScale(p.time)},${yScale(p.price)}`).join(' ');
+    const line = document.createElementNS(ns, 'polyline');
+    line.setAttribute('points', pts);
+    line.setAttribute('class', 'liq-price-line');
+    frag.appendChild(line);
+  }
 
-    if(pct === 0){
-      const markLine = document.createElementNS(ns, 'line');
-      markLine.setAttribute('x1', marginLeft); markLine.setAttribute('x2', W - marginRight);
-      markLine.setAttribute('y1', rowCenterY); markLine.setAttribute('y2', rowCenterY);
-      markLine.setAttribute('class', 'liq-mark-line');
-      frag.appendChild(markLine);
-      const markLabel = document.createElementNS(ns, 'text');
-      markLabel.setAttribute('x', W - marginRight); markLabel.setAttribute('y', rowCenterY - 5);
-      markLabel.setAttribute('text-anchor', 'end');
-      markLabel.setAttribute('class', 'liq-mark-label');
-      markLabel.textContent = 'Mark $' + symData.mark.toLocaleString(undefined, {maximumFractionDigits:0});
-      frag.appendChild(markLabel);
-    }
-
-    if(i % 5 === 0){
-      const price = symData.mark * (1 + pct / 100);
-      const label = document.createElementNS(ns, 'text');
-      label.setAttribute('x', marginLeft - 8); label.setAttribute('y', rowCenterY + 3);
-      label.setAttribute('text-anchor', 'end');
-      label.setAttribute('class', 'liq-axis-label');
-      label.textContent = '$' + price.toLocaleString(undefined, {maximumFractionDigits:0});
-      frag.appendChild(label);
-    }
-
-    if(!b) return;
-    const barH = Math.max(rowH - 2, 1);
-    const barY = rowCenterY - barH / 2;
-
-    if(b.longUsd > 0){
-      const w = (b.longUsd / maxVal) * halfPlot;
-      const rect = document.createElementNS(ns, 'rect');
-      rect.setAttribute('x', centerX - 6 - w); rect.setAttribute('y', barY);
-      rect.setAttribute('width', w); rect.setAttribute('height', barH);
-      rect.setAttribute('rx', 2);
-      rect.setAttribute('class', 'liq-bar-long');
-      rect.addEventListener('mouseenter', (e) => showLiqTooltip(e, b, symData));
-      rect.addEventListener('mousemove', (e) => positionLiqTooltip(e));
-      rect.addEventListener('mouseleave', hideLiqTooltip);
-      frag.appendChild(rect);
-    }
-    if(b.shortUsd > 0){
-      const w = (b.shortUsd / maxVal) * halfPlot;
-      const rect = document.createElementNS(ns, 'rect');
-      rect.setAttribute('x', centerX + 6); rect.setAttribute('y', barY);
-      rect.setAttribute('width', w); rect.setAttribute('height', barH);
-      rect.setAttribute('rx', 2);
-      rect.setAttribute('class', 'liq-bar-short');
-      rect.addEventListener('mouseenter', (e) => showLiqTooltip(e, b, symData));
-      rect.addEventListener('mousemove', (e) => positionLiqTooltip(e));
-      rect.addEventListener('mouseleave', hideLiqTooltip);
-      frag.appendChild(rect);
-    }
+  let maxEventUsd = 0;
+  events.forEach(e => { maxEventUsd = Math.max(maxEventUsd, e.usd); });
+  events.forEach(e => {
+    if(e.time < xMin) return;
+    const cx = xScale(e.time), cy = yScale(e.price);
+    const r = maxEventUsd > 0 ? 3 + Math.sqrt(e.usd / maxEventUsd) * 7 : 4;
+    const dot = document.createElementNS(ns, 'circle');
+    dot.setAttribute('cx', cx); dot.setAttribute('cy', cy); dot.setAttribute('r', r);
+    dot.setAttribute('class', e.side === 'short' ? 'liq-bar-short' : 'liq-bar-long');
+    dot.setAttribute('opacity', '0.85');
+    dot.addEventListener('mouseenter', (ev) => showEventTooltip(ev, e));
+    dot.addEventListener('mousemove', positionLiqTooltip);
+    dot.addEventListener('mouseleave', hideLiqTooltip);
+    frag.appendChild(dot);
   });
+
+  // ---- Right panel: liquidity profile -- total $ liquidated built up at each
+  // price level over the whole window, stacked short (green) + long (red) per
+  // bar, same Y scale as the price panel -- the CoinGlass-style side profile.
+  const profileX = mainRight + gap;
+  const divider = document.createElementNS(ns, 'line');
+  divider.setAttribute('x1', profileX - gap / 2); divider.setAttribute('x2', profileX - gap / 2);
+  divider.setAttribute('y1', marginTop); divider.setAttribute('y2', marginTop + plotH);
+  divider.setAttribute('class', 'liq-gridline');
+  frag.appendChild(divider);
+
+  if(symData.buckets && symData.buckets.length){
+    let maxBucketUsd = 0;
+    symData.buckets.forEach(b => { maxBucketUsd = Math.max(maxBucketUsd, b.longUsd + b.shortUsd); });
+    if(maxBucketUsd <= 0) maxBucketUsd = 1;
+    const barH = Math.max((plotH / ((RANGE_PCT * 2) / BUCKET_PCT)) - 2, 2);
+
+    symData.buckets.forEach(b => {
+      const y = yScale(b.price) - barH / 2;
+      const shortW = (b.shortUsd / maxBucketUsd) * profileW;
+      const longW = (b.longUsd / maxBucketUsd) * profileW;
+      if(b.shortUsd > 0){
+        const rect = document.createElementNS(ns, 'rect');
+        rect.setAttribute('x', profileX); rect.setAttribute('y', y);
+        rect.setAttribute('width', shortW); rect.setAttribute('height', barH);
+        rect.setAttribute('rx', 1.5);
+        rect.setAttribute('class', 'liq-bar-short');
+        rect.addEventListener('mouseenter', (ev) => showBucketTooltip(ev, b));
+        rect.addEventListener('mousemove', positionLiqTooltip);
+        rect.addEventListener('mouseleave', hideLiqTooltip);
+        frag.appendChild(rect);
+      }
+      if(b.longUsd > 0){
+        const rect = document.createElementNS(ns, 'rect');
+        rect.setAttribute('x', profileX + shortW); rect.setAttribute('y', y);
+        rect.setAttribute('width', longW); rect.setAttribute('height', barH);
+        rect.setAttribute('rx', 1.5);
+        rect.setAttribute('class', 'liq-bar-long');
+        rect.addEventListener('mouseenter', (ev) => showBucketTooltip(ev, b));
+        rect.addEventListener('mousemove', positionLiqTooltip);
+        rect.addEventListener('mouseleave', hideLiqTooltip);
+        frag.appendChild(rect);
+      }
+    });
+  }
 
   svg.appendChild(frag);
 }
 
-function showLiqTooltip(evt, bucket, symData){
+function showEventTooltip(evt, e){
+  const tooltip = document.getElementById('liqTooltip');
+  if(!tooltip) return;
+  const label = e.side === 'short' ? '<span class="liq-tot-short">Short liquidated</span>' : '<span class="liq-tot-long">Long liquidated</span>';
+  tooltip.innerHTML = `${label}<br>$${e.price.toLocaleString(undefined,{maximumFractionDigits:0})} · ${fmtUsd(e.usd)}<br>${e.exchange} · ${new Date(e.time).toLocaleString()}`;
+  tooltip.style.display = 'block';
+  positionLiqTooltip(evt);
+}
+function showBucketTooltip(evt, bucket){
   const tooltip = document.getElementById('liqTooltip');
   if(!tooltip) return;
   const parts = [];
