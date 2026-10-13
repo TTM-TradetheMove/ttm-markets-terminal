@@ -36,7 +36,16 @@ try:
 except ImportError:
     websockets = None
 
-BINANCE_WS = "wss://fstream.binance.com/ws/!forceOrder@arr"
+# Binance's own docs (developers.binance.com, checked verbatim) show this path
+# with a "/market" segment -- different from the older commonly-used
+# "wss://fstream.binance.com/ws/..." path seen in many third-party examples.
+# Zero events over multiple full capture windows on an already-"connected"
+# socket is the exact symptom of a silently-dead/wrong path, so this is
+# tried first with the older path as an automatic fallback.
+BINANCE_WS_CANDIDATES = [
+    "wss://fstream.binance.com/market/ws/!forceOrder@arr",
+    "wss://fstream.binance.com/ws/!forceOrder@arr",
+]
 BYBIT_WS = "wss://stream.bybit.com/v5/public/linear"
 BYBIT_SYMBOLS = ["BTCUSDT", "ETHUSDT"]
 BYBIT_TOPICS = [f"allLiquidation.{s}" for s in BYBIT_SYMBOLS] + [f"liquidation.{s}" for s in BYBIT_SYMBOLS]
@@ -97,6 +106,8 @@ async def capture_binance(events, seconds):
     if websockets is None:
         dbg("Binance: websockets module not available")
         return
+    raw_count = 0
+    sample_logged = False
     try:
         async with websockets.connect(BINANCE_WS, open_timeout=15, close_timeout=5) as ws:
             dbg("Binance: connected")
@@ -109,6 +120,10 @@ async def capture_binance(events, seconds):
                     raw = await asyncio.wait_for(ws.recv(), timeout=remaining)
                 except asyncio.TimeoutError:
                     break
+                raw_count += 1
+                if not sample_logged:
+                    dbg(f"Binance: first raw message sample: {str(raw)[:400]}")
+                    sample_logged = True
                 try:
                     msg = json.loads(raw)
                     o = msg.get("o", {})
@@ -133,7 +148,7 @@ async def capture_binance(events, seconds):
                     })
                 except Exception as exc:
                     dbg(f"Binance: bad message skipped -- {exc}")
-        dbg(f"Binance: capture window closed, {sum(1 for e in events if e['exchange'] == 'Binance')} events")
+        dbg(f"Binance: capture window closed, {raw_count} raw messages received, {sum(1 for e in events if e['exchange'] == 'Binance')} events parsed")
     except Exception as exc:
         dbg(f"Binance: capture failed -- {type(exc).__name__}: {exc}")
 
@@ -142,6 +157,7 @@ async def capture_bybit(events, seconds):
     if websockets is None:
         dbg("Bybit: websockets module not available")
         return
+    raw_count = 0
     try:
         async with websockets.connect(BYBIT_WS, open_timeout=15, close_timeout=5) as ws:
             dbg("Bybit: connected")
@@ -155,8 +171,14 @@ async def capture_bybit(events, seconds):
                     raw = await asyncio.wait_for(ws.recv(), timeout=remaining)
                 except asyncio.TimeoutError:
                     break
+                raw_count += 1
+                if raw_count <= 3:
+                    dbg(f"Bybit: raw message #{raw_count} sample: {str(raw)[:400]}")
                 try:
                     msg = json.loads(raw)
+                    if msg.get("op") == "subscribe":
+                        dbg(f"Bybit: subscribe ack -- success={msg.get('success')} ret_msg={msg.get('ret_msg')}")
+                        continue
                     topic = msg.get("topic", "")
                     if "liquidation" not in topic.lower():
                         continue
@@ -188,7 +210,7 @@ async def capture_bybit(events, seconds):
                         })
                 except Exception as exc:
                     dbg(f"Bybit: bad message skipped -- {exc}")
-        dbg(f"Bybit: capture window closed, {sum(1 for e in events if e['exchange'] == 'Bybit')} events")
+        dbg(f"Bybit: capture window closed, {raw_count} raw messages received, {sum(1 for e in events if e['exchange'] == 'Bybit')} events parsed")
     except Exception as exc:
         dbg(f"Bybit: capture failed -- {type(exc).__name__}: {exc}")
 
