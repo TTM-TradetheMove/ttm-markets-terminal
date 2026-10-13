@@ -1,9 +1,10 @@
-Run at 2026-10-13T07:16:32.846642+00:00
+Run at 2026-10-13T08:12:28.907379+00:00
 
-Binance: connected
+Binance: capture failed -- NameError: name 'BINANCE_WS' is not defined
 Bybit: connected
-Bybit: capture window closed, 0 events
-Binance: capture window closed, 0 events
+Bybit: raw message #1 sample: {"success":false,"ret_msg":"error:handler not found,topic:liquidation.BTCUSDT","conn_id":"db292cr1dls7rmq25nn0-2aj6i","req_id":"","op":"subscribe"}
+Bybit: subscribe ack -- success=False ret_msg=error:handler not found,topic:liquidation.BTCUSDT
+Bybit: capture window closed, 1 raw messages received, 0 events parsed
 Captured 0 new liquidation events this run
 Rolling log: 0 existing + 0 new -> 0 after dedupe/trim
-Mark prices: {'BTCUSDT': 83572.03, 'ETHUSDT': 2525.95}
+Mark prices: {'BTCUSDT': 83811.49, 'ETHUSDT': 2526.02}
