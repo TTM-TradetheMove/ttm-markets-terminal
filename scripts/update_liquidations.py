@@ -108,9 +108,21 @@ async def capture_binance(events, seconds):
         return
     raw_count = 0
     sample_logged = False
+    ws = None
+    connect_errors = []
+    for url in BINANCE_WS_CANDIDATES:
+        try:
+            ws = await websockets.connect(url, open_timeout=15, close_timeout=5)
+            dbg(f"Binance: connected ({url})")
+            break
+        except Exception as exc:
+            connect_errors.append(f"{url} -- {type(exc).__name__}: {exc}")
+            ws = None
+    if ws is None:
+        dbg(f"Binance: all connection candidates failed -- {connect_errors}")
+        return
     try:
-        async with websockets.connect(BINANCE_WS, open_timeout=15, close_timeout=5) as ws:
-            dbg("Binance: connected")
+        async with ws:
             deadline = time.monotonic() + seconds
             while time.monotonic() < deadline:
                 remaining = deadline - time.monotonic()
@@ -161,7 +173,13 @@ async def capture_bybit(events, seconds):
     try:
         async with websockets.connect(BYBIT_WS, open_timeout=15, close_timeout=5) as ws:
             dbg("Bybit: connected")
-            await ws.send(json.dumps({"op": "subscribe", "args": BYBIT_TOPICS}))
+            # Subscribe to each topic separately -- Bybit rejects the WHOLE
+            # batch if even one topic in a single subscribe request is
+            # invalid (confirmed: the deprecated "liquidation.{symbol}"
+            # topic returns "handler not found" and silently kills the
+            # valid "allLiquidation.{symbol}" topics sent alongside it).
+            for topic in BYBIT_TOPICS:
+                await ws.send(json.dumps({"op": "subscribe", "args": [topic]}))
             deadline = time.monotonic() + seconds
             while time.monotonic() < deadline:
                 remaining = deadline - time.monotonic()
@@ -172,7 +190,7 @@ async def capture_bybit(events, seconds):
                 except asyncio.TimeoutError:
                     break
                 raw_count += 1
-                if raw_count <= 3:
+                if raw_count <= 6:
                     dbg(f"Bybit: raw message #{raw_count} sample: {str(raw)[:400]}")
                 try:
                     msg = json.loads(raw)

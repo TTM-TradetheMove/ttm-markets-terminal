@@ -37,12 +37,15 @@ jobs:
         run: |
           git config user.name "ttm-calendar-bot"
           git config user.email "actions@users.noreply.github.com"
-          git pull --rebase origin main 2>/dev/null || true
           git add -f liquidations_debug.txt 2>/dev/null || true
           git add liquidations_data.json 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
             git commit -m "Auto-update liquidation map"
-            git push
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "Push attempt $i failed, retrying..."
+              sleep 5
+            done
           fi
