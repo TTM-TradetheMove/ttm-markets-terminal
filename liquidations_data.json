@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-14T14:46:33.445182+00:00",
+  "generated_at": "2026-10-14T19:02:45.077336+00:00",
   "window_hours": 24,
   "sources": [
     "wss://fstream.binance.com/ws/!forceOrder@arr",
@@ -19,40 +19,28 @@
   },
   "buckets": {
     "BTCUSDT": {
-      "mark": 81894.26,
+      "mark": 81623.27,
       "buckets": [
         {
-          "pricePct": -0.5,
-          "price": 81484.79,
-          "longUsd": 0.0,
+          "pricePct": 0.0,
+          "price": 81623.27,
+          "longUsd": 175543.79,
           "shortUsd": 49636.31
         },
         {
-          "pricePct": 0.0,
-          "price": 81894.26,
-          "longUsd": 175543.79,
-          "shortUsd": 0.0
-        },
-        {
-          "pricePct": 1.5,
-          "price": 83122.67,
-          "longUsd": 166.24,
-          "shortUsd": 0.0
-        },
-        {
           "pricePct": 2.0,
-          "price": 83532.15,
-          "longUsd": 0.0,
+          "price": 83255.74,
+          "longUsd": 166.24,
           "shortUsd": 5834.11
         }
       ]
     },
     "ETHUSDT": {
-      "mark": 2425.49,
+      "mark": 2427.72,
       "buckets": [
         {
           "pricePct": -0.5,
-          "price": 2413.36,
+          "price": 2415.58,
           "longUsd": 6796.13,
           "shortUsd": 0.0
         }
@@ -61,10 +49,6 @@
   },
   "priceHistory": {
     "BTCUSDT": [
-      {
-        "time": 1791904357648.8713,
-        "price": 83440.77
-      },
       {
         "time": 1791924470903.9912,
         "price": 83078.14
@@ -84,13 +68,13 @@
       {
         "time": 1791989193115.2473,
         "price": 81894.26
+      },
+      {
+        "time": 1792004564737.3853,
+        "price": 81623.27
       }
     ],
     "ETHUSDT": [
-      {
-        "time": 1791904357648.8713,
-        "price": 2514.54
-      },
       {
         "time": 1791924470903.9912,
         "price": 2503.04
@@ -110,6 +94,10 @@
       {
         "time": 1791989193115.2473,
         "price": 2425.49
+      },
+      {
+        "time": 1792004564737.3853,
+        "price": 2427.72
       }
     ]
   },
