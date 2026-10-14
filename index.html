@@ -1538,18 +1538,6 @@ function renderLiquidationMap(){
     frag.appendChild(label);
   }
 
-  // Mark price line, across both panels.
-  const markY = yScale(symData.mark);
-  const markLine = document.createElementNS(ns, 'line');
-  markLine.setAttribute('x1', marginLeft); markLine.setAttribute('x2', W - marginRight);
-  markLine.setAttribute('y1', markY); markLine.setAttribute('y2', markY);
-  markLine.setAttribute('class', 'liq-mark-line');
-  frag.appendChild(markLine);
-  const markLabel = document.createElementNS(ns, 'text');
-  markLabel.setAttribute('x', marginLeft + 4); markLabel.setAttribute('y', markY - 5);
-  markLabel.setAttribute('class', 'liq-mark-label');
-  markLabel.textContent = 'Mark $' + symData.mark.toLocaleString(undefined, {maximumFractionDigits:0});
-  frag.appendChild(markLabel);
 
   // ---- Main panel: price line + liquidation events plotted at their actual time/price.
   if(priceHistory.length >= 2){
