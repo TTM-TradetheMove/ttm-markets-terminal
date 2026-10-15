@@ -378,6 +378,37 @@ footer{padding:40px 0 60px}
 .disc{color:var(--mute);font-size:12px;border-top:1px solid var(--line);padding-top:20px;max-width:760px;margin:0 auto}
 .disc b{color:var(--text)}
 .foot-bottom{text-align:center;margin-top:24px;color:var(--mute);font-size:12px}
+/* ---- Crypto bias history drawer ---- */
+.bh-open{margin-left:8px;background:transparent;border:1px solid var(--gold);color:var(--gold2);border-radius:6px;font-size:10.5px;padding:2px 8px;cursor:pointer;font-family:inherit;letter-spacing:.3px}
+.bh-open:hover{background:rgba(212,168,67,.12)}
+.bh-sub{display:block;font-size:10.5px;color:var(--mute);font-weight:400;margin-top:2px}
+.bh-tab{position:fixed;right:0;top:46%;z-index:60;transform:rotate(-90deg) translateX(50%);transform-origin:right bottom;background:linear-gradient(180deg,var(--gold2),var(--gold));color:#1a1300;font-weight:700;font-size:12px;letter-spacing:.5px;border:0;border-radius:8px 8px 0 0;padding:8px 16px;cursor:pointer;font-family:inherit}
+.bh-scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:90;opacity:0;pointer-events:none;transition:opacity .2s}
+.bh-scrim.open{opacity:1;pointer-events:auto}
+.bh-drawer{position:fixed;top:0;right:0;bottom:0;width:min(480px,100vw);z-index:100;background:var(--bg2);border-left:1px solid var(--line);transform:translateX(100%);transition:transform .25s ease;overflow-y:auto;padding:20px 20px 40px}
+.bh-drawer.open{transform:translateX(0)}
+.bh-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+.bh-kicker{color:var(--gold);font-size:11px;text-transform:uppercase;letter-spacing:1.5px}
+.bh-head h3{margin:4px 0 0;font-size:20px;color:#fff;line-height:1.25}
+.bh-close{background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:8px;width:34px;height:34px;font-size:18px;cursor:pointer;flex:0 0 auto}
+.bh-drawer select{width:100%;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-family:inherit;font-size:13px;margin-bottom:12px}
+.bh-ctl{margin-bottom:10px}
+.bh-ctl .fl-label{color:var(--mute);font-size:10.5px;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:5px}
+.bh-bucket{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.bh-bucket .bt{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px;font-size:13px;font-weight:700}
+.bh-bucket .big{font-size:26px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
+.bh-bucket .big small{font-size:12px;color:var(--mute);font-weight:400;margin-left:6px}
+.bh-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--line);margin:8px 0}
+.bh-bar i{display:block;height:100%}
+.bh-line{font-size:12px;color:var(--mute);line-height:1.6;font-variant-numeric:tabular-nums}
+.bh-line b{color:var(--text)}
+.bh-warn{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fbbf24;border:1px solid rgba(251,191,36,.35);border-radius:999px;padding:1px 7px}
+.bh-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+.bh-tbl th{text-align:left;color:var(--mute);font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;padding:0 6px 6px;font-weight:600}
+.bh-tbl td{padding:6px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+.bh-tbl tr.pick{cursor:pointer}.bh-tbl tr.pick:hover td{background:rgba(212,168,67,.07)}
+.bh-h4{color:var(--gold);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;margin:20px 0 8px}
+.bh-note{font-size:11.5px;color:var(--mute);line-height:1.55;margin-top:14px}
 </style>
 </head>
 <body>
@@ -526,7 +557,7 @@ footer{padding:40px 0 60px}
       <tbody id="calendarBody"></tbody>
     </table>
     <p id="calendarEmpty" class="calendar-note" style="display:none">No releases match this combination of filters.</p>
-    <p class="calendar-note">Historical prints are TTM's curated record, not a live feed — Upcoming releases refresh automatically from a live calendar source (see status line above). Always confirm live figures and release times against the official BLS, BEA, ONS, ECB, Fed and BOJ calendars (or ForexFactory itself) before trading around them. Crypto Bias is TTM's own read of how a print is typically digested by risk assets, not a prediction.</p>
+    <p class="calendar-note">Historical prints are TTM's curated record, not a live feed — Upcoming releases refresh automatically from a live calendar source (see status line above). Always confirm live figures and release times against the official BLS, BEA, ONS, ECB, Fed and BOJ calendars (or ForexFactory itself) before trading around them. Crypto Bias is TTM's own read of how a print is typically digested by risk assets, not a prediction — where enough history exists, released rows show how BTC actually reacted to similar prints, and the History button opens the full breakdown.</p>
 
     <div class="chart-card">
       <span class="fl-label">BTC vs. High-Impact Macro Events — Last 90 Days</span>
@@ -819,6 +850,25 @@ footer{padding:40px 0 60px}
     <div class="foot-bottom">© 2026 Trade The Move. All reports open in a new tab from this terminal.</div>
   </div>
 </footer>
+<button class="bh-tab" id="bhTab" type="button">Bias history</button>
+<div class="bh-scrim" id="bhScrim"></div>
+<aside class="bh-drawer" id="bhDrawer" aria-hidden="true" aria-label="Crypto reaction history to economic releases">
+  <div class="bh-head">
+    <div><span class="bh-kicker">Crypto reaction history</span><h3 id="bhTitle">Economic releases vs BTC &amp; ETH</h3></div>
+    <button class="bh-close" id="bhClose" type="button" aria-label="Close">&times;</button>
+  </div>
+  <select id="bhEvent" aria-label="Choose a release"></select>
+  <div class="bh-ctl"><span class="fl-label">Asset</span><div class="filter-row" id="bhAsset">
+    <button class="filter-chip active" data-v="btc">BTC</button><button class="filter-chip" data-v="eth">ETH</button></div></div>
+  <div class="bh-ctl"><span class="fl-label">Window after release</span><div class="filter-row" id="bhWin">
+    <button class="filter-chip" data-v="0">15m</button><button class="filter-chip" data-v="1">1h</button>
+    <button class="filter-chip active" data-v="2">4h</button><button class="filter-chip" data-v="3">24h</button></div></div>
+  <div class="bh-ctl"><span class="fl-label">"Pump / dump" size</span><div class="filter-row" id="bhThr">
+    <button class="filter-chip" data-v="0.5">0.5%</button><button class="filter-chip active" data-v="1">1%</button>
+    <button class="filter-chip" data-v="2">2%</button></div></div>
+  <div id="bhBody"><p class="bh-note">Loading history…</p></div>
+</aside>
+
 
 <script>
 const ASSETS = [
@@ -994,6 +1044,10 @@ function renderCalendarRows(list){
     tr.dataset.period = row.upcoming ? 'future' : 'past';
     tr.dataset.dt = row.dt.getTime();
     tr.dataset.revised = row.revised ? '1' : '0';
+    tr.dataset.bkey = row.country + '|' + row.event;
+    tr.dataset.actual = row.actual;
+    tr.dataset.forecast = row.forecast;
+    tr.dataset.bias = row.bias;
     const prevCell = row.revised
       ? `${row.previous} <span class="adj-badge" title="Originally reported as ${row.revisedFrom}">Adj</span>`
       : row.previous;
@@ -1909,6 +1963,141 @@ function updateTradingHours(){
 }
 updateTradingHours();
 setInterval(updateTradingHours, 1000);
+
+/* ---- Crypto bias history drawer ---- */
+(function(){
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let BH = null, GROUPS = {};
+const WIN = ['15m','1h','4h','24h'];
+const st = {key:null, asset:'btc', win:2, thr:1};
+const BUCKETS = [['A','Above consensus'], ['I','In line with consensus'], ['B','Below consensus']];
+const sg = (x, dp=2) => x == null ? '—' : (x > 0 ? '+' : x < 0 ? '−' : '') + Math.abs(x).toFixed(dp) + '%';
+const cc = x => x == null ? '' : x > 0 ? 'bias-up' : x < 0 ? 'bias-down' : 'bias-neutral';
+function pnum(s){
+  if(s == null) return null;
+  const m = String(s).replace(/[,%\s]/g, '').match(/^(-?\d*\.?\d+)([KMBT]?)$/i);
+  return m ? parseFloat(m[1]) * ({K:1e3,M:1e6,B:1e9,T:1e12}[m[2].toUpperCase()] || 1) : null;
+}
+function classify(a, f){
+  const x = pnum(a), y = pnum(f);
+  if(x == null || y == null) return null;
+  return Math.abs(x - y) < 1e-9 ? 'I' : (x > y ? 'A' : 'B');
+}
+function median(xs){ const s = [...xs].sort((a,b) => a-b), n = s.length; return n ? (n % 2 ? s[(n-1)/2] : (s[n/2-1] + s[n/2]) / 2) : null; }
+function stats(list, asset, wi, thr){
+  const v = list.map(r => r[asset] && r[asset][wi]).filter(x => x != null);
+  const n = v.length;
+  if(!n) return {n:0};
+  return {n, up: v.filter(x => x > 0).length / n * 100, pump: v.filter(x => x >= thr).length / n * 100,
+          dump: v.filter(x => x <= -thr).length / n * 100, avg: v.reduce((a,b) => a+b, 0) / n, med: median(v),
+          best: Math.max(...v), worst: Math.min(...v), abs: v.reduce((a,b) => a + Math.abs(b), 0) / n};
+}
+function label(key){
+  const [c, t] = key.split('|');
+  return ((typeof countryLabel !== 'undefined' && countryLabel[c]) || c) + ' ' + t;
+}
+function open(key){
+  if(key) st.key = key;
+  $('bhDrawer').classList.add('open'); $('bhScrim').classList.add('open'); $('bhDrawer').setAttribute('aria-hidden', 'false');
+  render();
+}
+function close(){ $('bhDrawer').classList.remove('open'); $('bhScrim').classList.remove('open'); $('bhDrawer').setAttribute('aria-hidden', 'true'); }
+
+function render(){
+  const body = $('bhBody');
+  if(!BH || !BH.events || !BH.events.length){
+    $('bhEvent').innerHTML = '';
+    body.innerHTML = '<p class="bh-note">History is still being built. The data job scrapes past releases and matches them to BTC/ETH price moves; it runs daily and the first full backfill can take a while. Check back after its first run.</p>';
+    return;
+  }
+  const keys = Object.keys(GROUPS).filter(k => GROUPS[k].length >= 3).sort((a, b) => label(a).localeCompare(label(b)));
+  if(!st.key || !GROUPS[st.key]) st.key = keys.includes('US|CPI y/y') ? 'US|CPI y/y' : keys[0];
+  $('bhEvent').innerHTML = keys.map(k => `<option value="${esc(k)}" ${k === st.key ? 'selected' : ''}>${esc(label(k))} (${GROUPS[k].length})</option>`).join('');
+  $('bhTitle').textContent = label(st.key);
+  const list = GROUPS[st.key], A = st.asset.toUpperCase(), W = WIN[st.win], T = st.thr;
+  const all = stats(list, st.asset, st.win, T);
+  const base = BH.baseline && BH.baseline[st.win];
+  let html = '';
+  BUCKETS.forEach(([code, name]) => {
+    const s = stats(list.filter(r => r.s === code), st.asset, st.win, T);
+    if(!s.n){ html += `<div class="bh-bucket"><div class="bt"><span>${name}</span><span class="tf-note" style="color:var(--mute);font-weight:400">no releases</span></div></div>`; return; }
+    const flat = Math.max(0, 100 - s.pump - s.dump);
+    html += `<div class="bh-bucket"><div class="bt"><span>${name}</span><span>n = ${s.n} ${s.n < 8 ? '<span class="bh-warn">small sample</span>' : ''}</span></div>
+      <div class="big">${s.up.toFixed(0)}%<small>of the time ${A} was higher after ${W}</small></div>
+      <div class="bh-bar" title="pumps / flat / dumps"><i style="width:${s.pump}%;background:var(--green)"></i><i style="width:${flat}%;background:#3a3a40"></i><i style="width:${s.dump}%;background:var(--red)"></i></div>
+      <div class="bh-line">Pumped ≥${T}%: <b style="color:var(--green)">${s.pump.toFixed(0)}%</b> &nbsp;·&nbsp; Dumped ≥${T}%: <b style="color:var(--red)">${s.dump.toFixed(0)}%</b><br>
+      Average <b class="${cc(s.avg)}">${sg(s.avg)}</b> &nbsp;·&nbsp; Median <b class="${cc(s.med)}">${sg(s.med)}</b> &nbsp;·&nbsp; Best ${sg(s.best)} / Worst ${sg(s.worst)}</div></div>`;
+  });
+  html += `<div class="bh-line" style="margin:4px 2px 0">All ${all.n} releases: ${all.n ? all.up.toFixed(0) + '% up, avg ' + sg(all.avg) + ', average absolute move ' + all.abs.toFixed(2) + '%' : '—'}.
+    ${base ? `<br>Baseline — any random ${W} window of BTC: ${base.up}% up, average absolute move ${base.abs}%.` : ''}</div>`;
+  // recent releases
+  const recent = [...list].sort((a, b) => b.d.localeCompare(a.d)).slice(0, 10);
+  html += `<div class="bh-h4">Recent releases</div><table class="bh-tbl"><thead><tr><th>Date</th><th>Actual</th><th>Fcst</th><th>vs cons.</th><th style="text-align:right">${A} ${W}</th></tr></thead><tbody>` +
+    recent.map(r => { const v = r[st.asset] && r[st.asset][st.win];
+      return `<tr><td>${esc(r.d)}</td><td>${esc(r.a)}</td><td>${esc(r.f)}</td><td>${r.s === 'A' ? 'Above' : r.s === 'B' ? 'Below' : r.s === 'I' ? 'In line' : '—'}</td><td style="text-align:right" class="${cc(v)}">${sg(v)}</td></tr>`; }).join('') + `</tbody></table>`;
+  // leaderboard
+  const rows = keys.map(k => { const g = GROUPS[k]; return {k, n: g.length, s: stats(g, st.asset, st.win, T),
+      a: stats(g.filter(r => r.s === 'A'), st.asset, st.win, T), b: stats(g.filter(r => r.s === 'B'), st.asset, st.win, T)}; })
+    .sort((x, y) => (y.s.abs || 0) - (x.s.abs || 0));
+  html += `<div class="bh-h4">Which releases move ${A} most (${W})</div><table class="bh-tbl"><thead><tr><th>Release</th><th>n</th><th>Avg |move|</th><th>% up if above</th><th>% up if below</th></tr></thead><tbody>` +
+    rows.map(r => `<tr class="pick" data-k="${esc(r.k)}"><td>${esc(label(r.k))}</td><td>${r.n}</td><td>${r.s.n ? r.s.abs.toFixed(2) + '%' : '—'}</td>
+      <td>${r.a.n >= 3 ? r.a.up.toFixed(0) + '%' : '—'}</td><td>${r.b.n >= 3 ? r.b.up.toFixed(0) + '%' : '—'}</td></tr>`).join('') + `</tbody></table>`;
+  html += `<p class="bh-note">${BH.n} releases with price data (${esc(BH.first)} → ${esc(BH.last)}); prices from ${esc(BH.price_source || 'exchange')} 15-minute candles, measured from the scheduled release time. "Above / below" compares the actual print with the consensus forecast at the time — it does not say whether the number was good or bad news. Small samples swing wildly, several releases land at the same moment (CPI and Core CPI, payrolls and unemployment) so effects aren't isolated, and past reactions don't predict the next one. Historical statistics, not advice.</p>`;
+  body.innerHTML = html;
+}
+
+// ---- calendar integration: History buttons + data-driven bias on released rows
+function decorate(){
+  if(!BH) return;
+  document.querySelectorAll('#calendarBody tr').forEach(tr => {
+    const key = tr.dataset.bkey, g = GROUPS[key];
+    if(!g || g.length < 3 || tr.dataset.bhDone === '1') return;
+    tr.dataset.bhDone = '1';
+    const cell = tr.lastElementChild; if(!cell) return;
+    if(tr.dataset.period === 'past' && tr.dataset.bias === 'neutral'){
+      const code = classify(tr.dataset.actual, tr.dataset.forecast);
+      const bucket = code ? g.filter(r => r.s === code) : [];
+      const s = stats(bucket, 'btc', 2, 1);
+      if(s.n >= 5){
+        const lean = s.up >= 60 && s.avg > 0 ? 'up' : s.up <= 40 && s.avg < 0 ? 'down' : 'neutral';
+        cell.className = lean === 'up' ? 'bias-up' : lean === 'down' ? 'bias-down' : 'bias-neutral';
+        cell.innerHTML = (lean === 'up' ? 'Bullish ▲' : lean === 'down' ? 'Bearish ▼' : 'Neutral —') +
+          `<span class="bh-sub">hist: BTC ${s.up.toFixed(0)}% up after 4h · n=${s.n}</span>`;
+      }
+    }
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'bh-open'; b.dataset.bkey = key; b.textContent = 'History';
+    cell.appendChild(b);
+  });
+}
+const calBody = $('calendarBody');
+if(calBody){
+  let t = null;
+  new MutationObserver(() => { clearTimeout(t); t = setTimeout(decorate, 50); }).observe(calBody, {childList:true});
+  calBody.addEventListener('click', e => { const b = e.target.closest('.bh-open'); if(b) open(b.dataset.bkey); });
+}
+
+// ---- wiring
+$('bhTab').addEventListener('click', () => open());
+$('bhClose').addEventListener('click', close);
+$('bhScrim').addEventListener('click', close);
+document.addEventListener('keydown', e => { if(e.key === 'Escape') close(); });
+$('bhEvent').addEventListener('change', e => { st.key = e.target.value; render(); });
+function chips(id, fn){
+  $(id).addEventListener('click', e => { const c = e.target.closest('.filter-chip'); if(!c) return;
+    document.querySelectorAll('#' + id + ' .filter-chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); fn(c.dataset.v); render(); });
+}
+chips('bhAsset', v => st.asset = v); chips('bhWin', v => st.win = Number(v)); chips('bhThr', v => st.thr = Number(v));
+$('bhBody').addEventListener('click', e => { const r = e.target.closest('tr.pick'); if(r){ st.key = r.dataset.k; render(); $('bhDrawer').scrollTo({top:0, behavior:'smooth'}); } });
+
+fetch('../crypto_bias_history.json?t=' + Date.now()).then(r => r.ok ? r.json() : null).catch(() => null).then(d => {
+  BH = d;
+  if(d && d.events){ d.events.forEach(e => { const k = e.c + '|' + e.t; (GROUPS[k] = GROUPS[k] || []).push(e); }); }
+  decorate();
+  if($('bhDrawer').classList.contains('open')) render();
+});
+})();
 </script>
 
 </body>

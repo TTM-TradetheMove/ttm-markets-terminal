@@ -1,0 +1,65 @@
+name: Update crypto bias history
+
+on:
+  schedule:
+    - cron: "40 22 * * *"
+  workflow_dispatch:
+    inputs:
+      full:
+        description: "Force a full backfill (set to 1)"
+        required: false
+        default: ""
+  push:
+    paths:
+      - scripts/update_bias_history.py
+      - .github/workflows/update-bias-history.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-bias-history
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Playwright
+        run: |
+          pip install playwright
+          playwright install --with-deps chromium
+
+      - name: Build bias history (ForexFactory months + Coinbase candles)
+        continue-on-error: true
+        env:
+          FULL: ${{ github.event.inputs.full }}
+          HISTORY_MONTHS: "36"
+        run: python3 scripts/update_bias_history.py
+
+      - name: Commit and push if changed
+        if: always()
+        run: |
+          git config user.name "ttm-calendar-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -f bias_history_debug.txt 2>/dev/null || true
+          git add crypto_bias_history.json 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Auto-update crypto bias history"
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "Push attempt $i failed, retrying..."
+              sleep 5
+            done
+          fi
