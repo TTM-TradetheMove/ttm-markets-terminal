@@ -50,7 +50,9 @@ BYBIT_WS = "wss://stream.bybit.com/v5/public/linear"
 BYBIT_SYMBOLS = ["BTCUSDT", "ETHUSDT"]
 BYBIT_TOPICS = [f"allLiquidation.{s}" for s in BYBIT_SYMBOLS] + [f"liquidation.{s}" for s in BYBIT_SYMBOLS]
 
-CAPTURE_SECONDS = 180
+CAPTURE_SECONDS = 780  # ~13 min per 15-min run -> ~85% duty cycle
+TOTALS_FILE = "liquidation_totals.json"
+ALL = []  # (exchange, symbol, side, usd, ts_ms) for EVERY symbol seen, used for the all-coin totals
 DATA_FILE = "liquidations_data.json"
 MAX_AGE_HOURS = 24
 
@@ -140,14 +142,15 @@ async def capture_binance(events, seconds):
                     msg = json.loads(raw)
                     o = msg.get("o", {})
                     symbol = o.get("s")
-                    if symbol not in ("BTCUSDT", "ETHUSDT"):
-                        continue
                     side_raw = o.get("S")  # SELL = forced-sell = a LONG got liquidated; BUY = a SHORT got liquidated
                     side = "long" if side_raw == "SELL" else "short" if side_raw == "BUY" else None
                     price = float(o.get("ap") or o.get("p") or 0)
                     qty = float(o.get("z") or o.get("q") or 0)
                     ts = int(o.get("T") or msg.get("E") or time.time() * 1000)
-                    if not (side and price and qty):
+                    if not (symbol and side and price and qty):
+                        continue
+                    ALL.append(("Binance", symbol, side, price * qty, ts))
+                    if symbol not in ("BTCUSDT", "ETHUSDT"):
                         continue
                     events.append({
                         "exchange": "Binance",
@@ -217,6 +220,7 @@ async def capture_bybit(events, seconds):
                         ts = int(row.get("updatedTime") or row.get("T") or msg.get("ts") or time.time() * 1000)
                         if not (side and price and qty):
                             continue
+                        ALL.append(("Bybit", symbol, side, price * qty, ts))
                         events.append({
                             "exchange": "Bybit",
                             "symbol": symbol,
@@ -270,6 +274,57 @@ def build_buckets(events, mark_prices):
     return buckets_by_symbol
 
 
+def update_totals(capture_start_ms, capture_end_ms):
+    """All-coin liquidation totals (Binance all symbols + Bybit BTC/ETH) kept as
+    5-minute buckets for 24h, plus hourly per-symbol sums and the capture
+    windows so the dashboard can show how much of the last 24h was observed."""
+    try:
+        with open(TOTALS_FILE) as f:
+            prev = json.load(f)
+    except Exception:
+        prev = {}
+    cutoff = time.time() * 1000 - 24 * 3600 * 1000
+    agg = {}
+    for t5, ex, scope, L, S, n in prev.get("agg5", []):
+        if t5 >= cutoff:
+            agg[(t5, ex, scope)] = [L, S, n]
+    symh = {}
+    for h, d in prev.get("symH", {}).items():
+        if int(h) >= cutoff - 3600 * 1000:
+            symh[int(h)] = {k: list(v) for k, v in d.items()}
+    caps = [c for c in prev.get("captures", []) if c[1] >= cutoff]
+    for ex, sym, side, usd, ts in ALL:
+        t5 = int(ts // 300000 * 300000)
+        exi = 0 if ex == "Binance" else 1
+        scopes = [0] + ([1] if sym == "BTCUSDT" else [2] if sym == "ETHUSDT" else [])
+        for sc in scopes:
+            a = agg.setdefault((t5, exi, sc), [0.0, 0.0, 0])
+            a[0 if side == "long" else 1] += usd
+            a[2] += 1
+        hh = int(ts // 3600000 * 3600000)
+        sd = symh.setdefault(hh, {}).setdefault(sym, [0.0, 0.0])
+        sd[0 if side == "long" else 1] += usd
+    caps.append([int(capture_start_ms), int(capture_end_ms)])
+    # keep hourly per-symbol maps small: top 60 symbols per hour, rest folded into OTHER
+    for hh, d in symh.items():
+        if len(d) > 60:
+            ranked = sorted(d.items(), key=lambda kv: kv[1][0] + kv[1][1], reverse=True)
+            keep = dict(ranked[:60])
+            rest = [sum(v[0] for _, v in ranked[60:]), sum(v[1] for _, v in ranked[60:])]
+            keep["OTHER"] = rest
+            symh[hh] = keep
+    out = {
+        "generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "agg5": [[k[0], k[1], k[2], round(v[0]), round(v[1]), v[2]] for k, v in sorted(agg.items())],
+        "symH": {str(h): {k: [round(v[0]), round(v[1])] for k, v in d.items()} for h, d in sorted(symh.items())},
+        "captures": caps,
+        "note": "Binance: all symbols (its stream sends at most one liquidation per symbol per second). Bybit: BTC and ETH only.",
+    }
+    with open(TOTALS_FILE, "w") as f:
+        json.dump(out, f, separators=(",", ":"))
+    dbg(f"Totals: {len(ALL)} liquidations seen this run across {len({a[1] for a in ALL})} symbols; {len(agg)} 5-min buckets kept")
+
+
 def main():
     if websockets is None:
         dbg("FATAL: 'websockets' package not installed")
@@ -277,6 +332,7 @@ def main():
         raise SystemExit("websockets package missing -- not updating liquidations_data.json")
 
     events = []
+    capture_start_ms = time.time() * 1000
 
     async def run_captures():
         await asyncio.gather(
@@ -289,6 +345,11 @@ def main():
     except Exception as exc:
         dbg(f"Capture run failed: {exc}")
 
+    capture_end_ms = time.time() * 1000
+    try:
+        update_totals(capture_start_ms, capture_end_ms)
+    except Exception as exc:
+        dbg(f"Totals update failed (non-fatal): {type(exc).__name__}: {exc}")
     dbg(f"Captured {len(events)} new liquidation events this run")
 
     # Merge with existing rolling log, dedupe, trim to MAX_AGE_HOURS.

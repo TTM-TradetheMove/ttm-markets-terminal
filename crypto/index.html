@@ -409,6 +409,31 @@ footer{padding:40px 0 60px}
 .bh-tbl tr.pick{cursor:pointer}.bh-tbl tr.pick:hover td{background:rgba(212,168,67,.07)}
 .bh-h4{color:var(--gold);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;margin:20px 0 8px}
 .bh-note{font-size:11.5px;color:var(--mute);line-height:1.55;margin-top:14px}
+/* ---- Liquidation suite ---- */
+.lt-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-top:18px}
+.lt-card .fl-label{color:var(--gold);font-size:11px;text-transform:uppercase;letter-spacing:1.5px}
+.lt-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:20px;align-items:start}
+@media(max-width:820px){.lt-grid{grid-template-columns:1fr}}
+.lt-table{width:100%;border-collapse:collapse;font-size:13px}
+.lt-table th{text-align:right;color:var(--mute);font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:0 8px 8px;font-weight:600}
+.lt-table th:first-child,.lt-table td:first-child{text-align:left}
+.lt-table td{padding:9px 8px;border-top:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+.lt-table td.lg{color:var(--red);font-weight:700}.lt-table td.sh{color:var(--green);font-weight:700}
+.lt-ratio{display:flex;height:6px;border-radius:3px;overflow:hidden;margin-top:6px;background:var(--line)}
+.lt-ratio i{display:block;height:100%}
+.lt-chart-title{font-size:11px;color:var(--mute);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+#ltChart{width:100%;height:190px;display:block}
+#ltTop{margin-top:14px;overflow-x:auto}
+.lt-top{width:100%;border-collapse:collapse;font-size:12.5px}
+.lt-top th{text-align:right;color:var(--mute);font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;padding:0 8px 6px;font-weight:600}
+.lt-top th:first-child,.lt-top td:first-child{text-align:left}
+.lt-top td{padding:6px 8px;border-top:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+.lt-cov{font-size:11px;color:var(--mute);margin-top:6px}
+.lh-controls{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.lh-slider{font-size:11.5px;color:var(--mute);display:flex;align-items:center;gap:8px}
+.lh-slider input{accent-color:var(--gold)}
+#lhCanvas{width:100%;height:470px;display:block;border-radius:8px;background:#2d0b59}
+#lmChart{width:100%;height:440px;display:block}
 </style>
 </head>
 <body>
@@ -626,7 +651,7 @@ footer{padding:40px 0 60px}
     <div class="section-head">
       <span class="tag">Market Pulse</span>
       <h2>Sentiment &amp; derivatives snapshot</h2>
-      <p>Crypto Fear &amp; Greed Index, BTC/ETH perpetual funding rate + open interest, and a real liquidation map built from Binance/Bybit's public feeds — refreshed every 15–30 minutes. Funding spikes often track macro prints, so read this alongside Macro Watch.</p>
+      <p>Crypto Fear &amp; Greed Index, BTC/ETH perpetual funding rate + open interest, and total liquidations, a modelled liquidation heatmap and map, and real liquidation events from Binance/Bybit's public feeds — refreshed every 15–30 minutes. Funding spikes often track macro prints, so read this alongside Macro Watch.</p>
       <p id="pulseUpdated" class="calendar-note" style="margin-top:8px">Loading live market data…</p>
     </div>
 
@@ -660,25 +685,64 @@ footer{padding:40px 0 60px}
       </div>
     </div>
 
-    <div class="liq-card">
+    <div class="lt-card" id="ltCard">
       <div class="liq-head">
-        <span class="fl-label">Liquidation Map — Last 24h</span>
+        <span class="fl-label">Total Liquidations</span>
+        <div class="filter-row" id="ltScope">
+          <button class="filter-chip active" data-sc="0">All coins</button>
+          <button class="filter-chip" data-sc="1">BTC</button>
+          <button class="filter-chip" data-sc="2">ETH</button>
+        </div>
+      </div>
+      <div class="lt-grid">
+        <table class="lt-table" id="ltTable"><tbody><tr><td class="calendar-note">Loading…</td></tr></tbody></table>
+        <div><div class="lt-chart-title">Liquidations per hour — last 24h</div><svg id="ltChart" viewBox="0 0 520 190" preserveAspectRatio="none" role="img" aria-label="Hourly long and short liquidations over the last 24 hours"></svg></div>
+      </div>
+      <div id="ltTop"></div>
+      <p class="midterm-note" id="ltNote">Real liquidations captured from Binance (all coins) and Bybit (BTC &amp; ETH) public feeds.</p>
+    </div>
+
+    <div class="liq-card" id="liqSuite">
+      <div class="liq-head">
+        <div class="filter-row" id="liqTabs">
+          <button class="filter-chip active" data-ltab="heat">Liquidation Heatmap</button>
+          <button class="filter-chip" data-ltab="map">Liquidation Map</button>
+          <button class="filter-chip" data-ltab="real">Actual liquidations</button>
+        </div>
         <div class="filter-row" id="liqSymbolRow">
           <button class="filter-chip active" data-liqsym="BTCUSDT">BTC</button>
           <button class="filter-chip" data-liqsym="ETHUSDT">ETH</button>
         </div>
       </div>
-      <div class="liq-totals" id="liqTotals"><span class="calendar-note">Loading…</span></div>
-      <div class="liq-legend">
-        <span class="liq-legend-item"><span class="liq-swatch liq-swatch-short"></span>Shorts liquidated</span>
-        <span class="liq-legend-item"><span class="liq-swatch liq-swatch-long"></span>Longs liquidated</span>
-        <span class="liq-legend-item">· dot size = order size · right panel = liquidity built up at each price level</span>
+
+      <div class="liq-panel" id="liqPanelHeat">
+        <div class="lh-controls">
+          <span id="lhMeta" class="calendar-note"></span>
+          <label class="lh-slider">Intensity <input type="range" id="lhGain" min="0.3" max="1" step="0.05" value="0.8"></label>
+        </div>
+        <div class="liq-chart-wrap"><canvas id="lhCanvas" height="470"></canvas><div id="lhTip" class="chart-tooltip" style="display:none"></div></div>
+        <p class="midterm-note">Each horizontal band is a price level where modelled leveraged positions would be liquidated; brighter = more notional at risk. Bands fade as price trades through them. This is TTM's <b>estimate</b>, built from open-interest changes, 5-minute candles and an assumed leverage mix (10x/25x/50x/100x) — like CoinGlass's heatmap it is a model, not a record of real positions.</p>
       </div>
-      <div class="liq-chart-wrap">
-        <svg id="liqChart" viewBox="0 0 900 460" preserveAspectRatio="none" role="img" aria-label="Price chart with liquidation events plotted over time, and a liquidity profile by price level over the last 24 hours"></svg>
-        <div id="liqTooltip" class="chart-tooltip" style="display:none"></div>
+
+      <div class="liq-panel" id="liqPanelMap" style="display:none">
+        <div class="liq-legend" id="lmLegend"></div>
+        <div class="liq-chart-wrap"><svg id="lmChart" viewBox="0 0 900 440" preserveAspectRatio="none" role="img" aria-label="Estimated liquidation map by price level and leverage tier"></svg><div id="lmTip" class="chart-tooltip" style="display:none"></div></div>
+        <p class="midterm-note">Bars show estimated liquidation notional at each price level, split by leverage tier. The red curve accumulates longs that would be liquidated as price falls; the green curve accumulates shorts as price rises. Modelled from the last 30 days of open-interest changes — an estimate, not real position data.</p>
       </div>
-      <p class="midterm-note">Gold line is price over the last 24h, sampled roughly every 15 minutes. Dots are real liquidation orders on Binance and Bybit's free public feeds, plotted at the time and price they fired — this is actual liquidations, not a predictive model. The right-hand panel sums liquidated volume by price level across the full window, so it reads like a heatmap of where liquidity has actually built up above and below the current price.</p>
+
+      <div class="liq-panel" id="liqPanelReal" style="display:none">
+        <div class="liq-totals" id="liqTotals"><span class="calendar-note">Loading…</span></div>
+        <div class="liq-legend">
+          <span class="liq-legend-item"><span class="liq-swatch liq-swatch-short"></span>Shorts liquidated</span>
+          <span class="liq-legend-item"><span class="liq-swatch liq-swatch-long"></span>Longs liquidated</span>
+          <span class="liq-legend-item">· dot size = order size · right panel = liquidity built up at each price level</span>
+        </div>
+        <div class="liq-chart-wrap">
+          <svg id="liqChart" viewBox="0 0 900 460" preserveAspectRatio="none" role="img" aria-label="Price chart with liquidation events plotted over time, and a liquidity profile by price level over the last 24 hours"></svg>
+          <div id="liqTooltip" class="chart-tooltip" style="display:none"></div>
+        </div>
+        <p class="midterm-note">Gold line is price over the last 24h. Dots are real liquidation orders on Binance and Bybit's free public feeds, plotted at the time and price they fired — actual liquidations, not a model. The right-hand panel sums liquidated volume by price level across the window.</p>
+      </div>
     </div>
   </div>
 </section>
@@ -2097,6 +2161,174 @@ fetch('../crypto_bias_history.json?t=' + Date.now()).then(r => r.ok ? r.json() :
   decorate();
   if($('bhDrawer').classList.contains('open')) render();
 });
+})();
+
+/* ---- Liquidation suite: totals, heatmap, liquidation map ---- */
+(function(){
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const usd = n => n >= 1e9 ? '$' + (n/1e9).toFixed(2) + 'B' : n >= 1e6 ? '$' + (n/1e6).toFixed(2) + 'M' : n >= 1e3 ? '$' + (n/1e3).toFixed(1) + 'K' : '$' + Math.round(n);
+const symKey = () => (typeof LIQ_SYMBOL !== 'undefined' && LIQ_SYMBOL === 'ETHUSDT') ? 'ETH' : 'BTC';
+let TOT = null, HM = null, scope = 0, tab = 'heat';
+const fmtP = p => p >= 1000 ? p.toLocaleString('en-US', {maximumFractionDigits:0}) : p.toFixed(2);
+
+/* ---------- Total liquidations ---------- */
+function windowSum(w, sc){
+  const now = Date.now(); let L = 0, S = 0, n = 0;
+  TOT.agg5.forEach(([t, ex, s, l, sh, c]) => { if(s === sc && t >= now - w && t <= now){ L += l; S += sh; n += c; } });
+  return {L, S, n};
+}
+function coverage(w){
+  const now = Date.now(), a = now - w; let covered = 0;
+  (TOT.captures || []).forEach(([s, e]) => { const x = Math.max(s, a), y = Math.min(e, now); if(y > x) covered += y - x; });
+  return Math.min(1, covered / w);
+}
+function renderTotals(){
+  if(!TOT){ $('ltTable').innerHTML = '<tbody><tr><td class="calendar-note">Liquidation totals will appear after the capture job has run a few times.</td></tr></tbody>'; return; }
+  const H = 3600e3, rows = [['1h', H], ['4h', 4*H], ['12h', 12*H], ['24h', 24*H]];
+  $('ltTable').innerHTML = '<thead><tr><th></th><th>Long liq.</th><th>Short liq.</th><th>Total</th></tr></thead><tbody>' + rows.map(([lb, w]) => {
+    const r = windowSum(w, scope), tot = r.L + r.S, lp = tot ? r.L / tot * 100 : 50;
+    return `<tr><td><b>${lb}</b><div class="lt-ratio"><i style="width:${lp}%;background:var(--red)"></i><i style="width:${100-lp}%;background:var(--green)"></i></div></td>
+      <td class="lg">${usd(r.L)}</td><td class="sh">${usd(r.S)}</td><td><b>${usd(tot)}</b></td></tr>`; }).join('') + '</tbody>';
+  const c24 = coverage(24 * H);
+  $('ltNote').innerHTML = `Real liquidations from Binance (all coins) and Bybit (BTC &amp; ETH) public feeds. The sampler was listening for about <b>${Math.round(c24*100)}%</b> of the last 24h, and Binance sends at most one liquidation per coin per second, so totals are a <b>lower bound</b> — real market-wide totals run higher.`;
+  // hourly stacked bars
+  const now = Date.now(), start = Math.floor(now / H) * H - 23 * H, bars = Array.from({length: 24}, () => [0, 0]);
+  TOT.agg5.forEach(([t, ex, s, l, sh]) => { if(s !== scope) return; const i = Math.floor((t - start) / H); if(i >= 0 && i < 24){ bars[i][0] += l; bars[i][1] += sh; } });
+  const mx = Math.max(1, ...bars.map(b => b[0] + b[1])), W = 520, Hh = 190, bw = W / 24;
+  $('ltChart').innerHTML = [0, .5, 1].map(f => `<line x1="0" x2="${W}" y1="${(Hh-22) * (1-f) + 4}" y2="${(Hh-22) * (1-f) + 4}" stroke="var(--line)"/>`).join('') +
+    bars.map((b, i) => { const hl = b[0] / mx * (Hh - 26), hs = b[1] / mx * (Hh - 26), x = i * bw + 2, y0 = Hh - 22;
+      const hr = new Date(start + i * H).getHours();
+      return `<g><title>${String(hr).padStart(2,'0')}:00 — long ${usd(b[0])}, short ${usd(b[1])}</title><rect x="${x}" y="${y0 - hl}" width="${bw-4}" height="${hl}" fill="var(--red)"/><rect x="${x}" y="${y0 - hl - hs}" width="${bw-4}" height="${hs}" fill="var(--green)"/>` +
+        (i % 4 === 0 ? `<text x="${x}" y="${Hh-6}" font-size="9" fill="var(--mute)">${String(hr).padStart(2,'0')}:00</text>` : '') + `</g>`; }).join('') +
+    `<text x="2" y="12" font-size="9" fill="var(--mute)">${usd(mx)}</text>`;
+  // top coins
+  const sym = {};
+  Object.values(TOT.symH || {}).forEach(d => Object.entries(d).forEach(([k, v]) => { const a = sym[k] = sym[k] || [0, 0]; a[0] += v[0]; a[1] += v[1]; }));
+  const top = Object.entries(sym).filter(([k]) => k !== 'OTHER').sort((a, b) => (b[1][0] + b[1][1]) - (a[1][0] + a[1][1])).slice(0, 8);
+  $('ltTop').innerHTML = scope === 0 && top.length ? '<div class="lt-chart-title" style="margin-top:4px">Most liquidated coins — last ~24h</div><table class="lt-top"><thead><tr><th>Coin</th><th>Long liq.</th><th>Short liq.</th><th>Total</th></tr></thead><tbody>' +
+    top.map(([k, v]) => `<tr><td><b>${esc(k.replace(/USDT$|USDC$/, ''))}</b></td><td style="color:var(--red)">${usd(v[0])}</td><td style="color:var(--green)">${usd(v[1])}</td><td>${usd(v[0] + v[1])}</td></tr>`).join('') + '</tbody></table>' : '';
+}
+
+/* ---------- Heatmap (canvas) ---------- */
+const VIR = [[0,[45,11,89]],[.22,[59,82,139]],[.45,[33,144,141]],[.7,[93,201,99]],[1,[253,231,37]]];
+function color(t){
+  t = Math.max(0, Math.min(1, t));
+  for(let i = 1; i < VIR.length; i++) if(t <= VIR[i][0]){ const [a, ca] = VIR[i-1], [b, cb] = VIR[i], f = (t - a) / (b - a);
+    return `rgb(${Math.round(ca[0] + (cb[0]-ca[0])*f)},${Math.round(ca[1] + (cb[1]-ca[1])*f)},${Math.round(ca[2] + (cb[2]-ca[2])*f)})`; }
+  return 'rgb(253,231,37)';
+}
+let HV = null; // view geometry for tooltip
+function renderHeat(){
+  const cv = $('lhCanvas'); if(!cv) return;
+  const d = HM && HM[symKey()];
+  const ctx = cv.getContext('2d');
+  const dpr = window.devicePixelRatio || 1, cssW = cv.clientWidth || 900, cssH = 470;
+  cv.width = cssW * dpr; cv.height = cssH * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#2d0b59'; ctx.fillRect(0, 0, cssW, cssH);
+  if(!d){ ctx.fillStyle = '#cbd5e1'; ctx.font = '14px sans-serif'; ctx.fillText('Heatmap data is still being built — it appears after the first run of the heatmap job.', 20, 40); $('lhMeta').textContent = ''; return; }
+  const gain = Number($('lhGain').value);
+  const L = 6, R = 62, T = 8, B = 24, pw = cssW - L - R, ph = cssH - T - B;
+  const cands = d.candles, nc = d.cols.length;
+  const lo = Math.min(...cands.map(c => c[3])) * 0.985, hi = Math.max(...cands.map(c => c[2])) * 1.015;
+  const b0 = Math.max(0, Math.floor((lo - d.lo) / d.step)), b1 = Math.min(d.nb - 1, Math.ceil((hi - d.lo) / d.step));
+  const pLo = d.lo + b0 * d.step, pHi = d.lo + (b1 + 1) * d.step;
+  const y = p => T + ph - (p - pLo) / (pHi - pLo) * ph, cw = pw / nc;
+  for(let c = 0; c < nc; c++){
+    const col = d.cols[c];
+    for(let b = b0; b <= b1; b++){
+      const v = parseInt(col.substr(b * 2, 2), 16) / 255;
+      if(v <= 0.004) continue;
+      ctx.fillStyle = color(Math.pow(v, 0.7) * (0.3 + gain * 0.95));
+      const yy = y(d.lo + (b + 1) * d.step), hh = y(d.lo + b * d.step) - yy;
+      ctx.fillRect(L + c * cw, yy, cw + 0.6, hh + 0.6);
+    }
+  }
+  // candles
+  cands.forEach((k, i) => { const [, o, h, l, cl] = k, x = L + (i + 0.5) * cw, up = cl >= o;
+    ctx.strokeStyle = ctx.fillStyle = up ? '#3fb97a' : '#e5534b';
+    ctx.beginPath(); ctx.moveTo(x, y(h)); ctx.lineTo(x, y(l)); ctx.lineWidth = 1; ctx.stroke();
+    const yo = y(o), yc = y(cl); ctx.fillRect(x - cw * 0.3, Math.min(yo, yc), cw * 0.6, Math.max(1, Math.abs(yo - yc))); });
+  // axes
+  ctx.fillStyle = '#e8e6e1'; ctx.font = '11px sans-serif'; ctx.textAlign = 'left';
+  const stepP = (pHi - pLo) / 8, nice = Math.pow(10, Math.floor(Math.log10(stepP))), ns = [1, 2, 5, 10].map(m => m * nice).find(v => v >= stepP) || stepP;
+  for(let p = Math.ceil(pLo / ns) * ns; p < pHi; p += ns) ctx.fillText(fmtP(p), cssW - R + 6, y(p) + 4);
+  ctx.textAlign = 'center';
+  for(let c = 0; c < nc; c += 12){ const t = new Date(d.times[c]); ctx.fillText(String(t.getHours()).padStart(2,'0') + ':' + String(t.getMinutes()).padStart(2,'0'), L + (c + 0.5) * cw, cssH - 7); }
+  // last price tag
+  const lp = cands[cands.length - 1][4]; ctx.fillStyle = '#d4a843'; ctx.fillRect(cssW - R, y(lp) - 8, R - 2, 16); ctx.fillStyle = '#1a1300'; ctx.textAlign = 'left'; ctx.font = 'bold 11px sans-serif'; ctx.fillText(fmtP(lp), cssW - R + 4, y(lp) + 4);
+  HV = {d, L, T, pw, ph, cw, b0, b1, pLo, pHi, nc};
+  $('lhMeta').textContent = `${symKey()}/USDT perpetual · 24h · modelled from ${d.source} open interest · updated ${new Date(HM.generated_at).toLocaleTimeString()}`;
+}
+function heatTip(e){
+  if(!HV) return;
+  const cv = $('lhCanvas'), r = cv.getBoundingClientRect(), x = e.clientX - r.left, yv = e.clientY - r.top, tip = $('lhTip');
+  const c = Math.floor((x - HV.L) / HV.cw);
+  if(c < 0 || c >= HV.nc || yv < HV.T || yv > HV.T + HV.ph){ tip.style.display = 'none'; return; }
+  const p = HV.pLo + (1 - (yv - HV.T) / HV.ph) * (HV.pHi - HV.pLo), b = Math.floor((p - HV.d.lo) / HV.d.step);
+  const v = parseInt(HV.d.cols[c].substr(b * 2, 2), 16) / 255 * HV.d.max_usd;
+  tip.innerHTML = `<b>${new Date(HV.d.times[c]).toLocaleString([], {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'})}</b><br>Price ${fmtP(p)}<br>Est. liquidation leverage <b>${usd(v)}</b>`;
+  tip.style.display = 'block'; tip.style.left = Math.min(x + 14, r.width - 190) + 'px'; tip.style.top = (yv + 14) + 'px';
+}
+
+/* ---------- Liquidation map (SVG) ---------- */
+const TCOL = {10:'#7dd3fc', 25:'#6366f1', 50:'#facc15', 100:'#fb923c'};
+function renderMap(){
+  const svg = $('lmChart'); if(!svg) return;
+  const d = HM && HM[symKey()];
+  if(!d){ svg.innerHTML = '<text x="20" y="40" fill="#cbd5e1" font-size="14">Map data is still being built — it appears after the first run of the heatmap job.</text>'; $('lmLegend').innerHTML = ''; return; }
+  const m = d.map, nb = d.nb, W = 900, H = 440, L = 54, R = 64, T = 18, B = 34, pw = W - L - R, ph = H - T - B;
+  const price = d.price, curBin = Math.floor((price - d.lo) / d.step);
+  const stack = Array.from({length: nb}, (_, i) => m.tiers.reduce((s, _, k) => s + m.long[k][i] + m.short[k][i], 0));
+  const mx = Math.max(0.001, ...stack), bw = pw / nb;
+  // cumulative curves
+  const cumL = new Array(nb).fill(0), cumS = new Array(nb).fill(0);
+  let acc = 0; for(let i = curBin; i >= 0; i--){ acc += m.tiers.reduce((s, _, k) => s + m.long[k][i], 0); cumL[i] = acc; }
+  acc = 0; for(let i = curBin + 1; i < nb; i++){ acc += m.tiers.reduce((s, _, k) => s + m.short[k][i], 0); cumS[i] = acc; }
+  const cmx = Math.max(0.001, ...cumL, ...cumS);
+  const yb = v => T + ph - v / mx * ph * 0.9, yc = v => T + ph - v / cmx * ph * 0.95, xb = i => L + i * bw;
+  let s = '';
+  [0, .25, .5, .75, 1].forEach(f => { const yy = T + ph - f * ph * 0.9;
+    s += `<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="var(--line)" stroke-dasharray="3 3"/><text x="${L-6}" y="${yy+3}" text-anchor="end" font-size="10" fill="var(--mute)">${(mx*f).toFixed(mx > 20 ? 0 : 1)}M</text>`;
+    const yr = T + ph - f * ph * 0.95; s += `<text x="${W-R+6}" y="${yr+3}" font-size="10" fill="var(--mute)">${(cmx*f).toFixed(cmx > 20 ? 0 : 1)}M</text>`; });
+  for(let i = 0; i < nb; i++){
+    let base = 0;
+    m.tiers.forEach((t, k) => { const v = (m.long[k][i] || 0) + (m.short[k][i] || 0); if(v <= 0) return;
+      const h = v / mx * ph * 0.9; s += `<rect x="${xb(i)}" y="${T + ph - base - h}" width="${Math.max(1, bw - 0.6)}" height="${h}" fill="${TCOL[t]}"><title>${(d.lo + i*d.step).toFixed(0)} · ${t}x · $${v.toFixed(2)}M</title></rect>`; base += h; });
+  }
+  const pathOf = (arr, from, to) => { let p = ''; for(let i = from; i <= to; i++) p += (p ? 'L' : 'M') + (xb(i) + bw/2).toFixed(1) + ',' + yc(arr[i]).toFixed(1); return p; };
+  s += `<path d="${pathOf(cumL, 0, curBin)}" fill="none" stroke="#e5534b" stroke-width="2"/><path d="${pathOf(cumS, curBin + 1, nb - 1)}" fill="none" stroke="#2dd4a4" stroke-width="2"/>`;
+  const cx = xb(curBin) + bw / 2;
+  s += `<line x1="${cx}" x2="${cx}" y1="${T + 14}" y2="${T + ph}" stroke="#e5534b" stroke-width="1.5" stroke-dasharray="5 4"/><text x="${cx}" y="${T + 8}" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">Current price: ${fmtP(price)}</text>`;
+  const stepX = Math.round(nb / 9);
+  for(let i = 0; i < nb; i += stepX) s += `<text x="${xb(i)}" y="${H - 12}" text-anchor="middle" font-size="10" fill="var(--mute)">${fmtP(d.lo + i * d.step)}</text>`;
+  svg.innerHTML = s;
+  $('lmLegend').innerHTML = m.tiers.map(t => `<span class="liq-legend-item"><span class="liq-swatch" style="background:${TCOL[t]}"></span>${t}x leverage</span>`).join('') +
+    '<span class="liq-legend-item"><span class="liq-swatch" style="background:#e5534b"></span>Cumulative long liquidations</span><span class="liq-legend-item"><span class="liq-swatch" style="background:#2dd4a4"></span>Cumulative short liquidations</span>';
+}
+
+/* ---------- wiring ---------- */
+function showTab(t){
+  tab = t;
+  document.querySelectorAll('#liqTabs .filter-chip').forEach(c => c.classList.toggle('active', c.dataset.ltab === t));
+  $('liqPanelHeat').style.display = t === 'heat' ? '' : 'none';
+  $('liqPanelMap').style.display = t === 'map' ? '' : 'none';
+  $('liqPanelReal').style.display = t === 'real' ? '' : 'none';
+  if(t === 'heat') renderHeat(); if(t === 'map') renderMap();
+}
+$('liqTabs').addEventListener('click', e => { const c = e.target.closest('.filter-chip'); if(c) showTab(c.dataset.ltab); });
+$('liqSymbolRow').addEventListener('click', () => setTimeout(() => { if(tab === 'heat') renderHeat(); if(tab === 'map') renderMap(); }, 0));
+$('ltScope').addEventListener('click', e => { const c = e.target.closest('.filter-chip'); if(!c) return;
+  document.querySelectorAll('#ltScope .filter-chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); scope = Number(c.dataset.sc); renderTotals(); });
+$('lhGain').addEventListener('input', renderHeat);
+$('lhCanvas').addEventListener('mousemove', heatTip);
+$('lhCanvas').addEventListener('mouseleave', () => { $('lhTip').style.display = 'none'; });
+window.addEventListener('resize', () => { if(tab === 'heat') renderHeat(); });
+
+Promise.all([
+  fetch('../liquidation_totals.json?t=' + Date.now()).then(r => r.ok ? r.json() : null).catch(() => null),
+  fetch('../liq_heatmap_data.json?t=' + Date.now()).then(r => r.ok ? r.json() : null).catch(() => null),
+]).then(([t, h]) => { TOT = t; HM = h; renderTotals(); showTab('heat'); });
 })();
 </script>
 

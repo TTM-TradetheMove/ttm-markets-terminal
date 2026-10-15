@@ -15,7 +15,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 7
+    timeout-minutes: 18
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,6 +39,7 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git add -f liquidations_debug.txt 2>/dev/null || true
           git add liquidations_data.json 2>/dev/null || true
+          git add liquidation_totals.json 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
