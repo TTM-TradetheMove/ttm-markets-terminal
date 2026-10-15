@@ -389,6 +389,77 @@ footer{padding:40px 0 60px}
 .soon-card li{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--text);padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);break-inside:avoid}
 .soon-card li .dot{width:5px;height:5px;border-radius:50%;background:var(--mute);flex-shrink:0}
 .tag-soon{margin-left:auto;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--mute);border:1px solid var(--line);border-radius:5px;padding:2px 6px;white-space:nowrap}
+/* ---- TradFi data sections ---- */
+.tf-sub{color:var(--gold);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;margin:30px 0 12px;font-weight:600}
+.tf-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.tf-card.tf-empty,.tf-empty{color:var(--mute);font-size:13px}
+.tf-scroll{overflow-x:auto}
+.tf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.tf-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.tf-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.tf-grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:980px){.tf-grid3,.tf-grid4{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.tf-grid2,.tf-grid3,.tf-grid4{grid-template-columns:1fr}}
+.tf-up{color:var(--green);font-weight:700}.tf-down{color:var(--red);font-weight:700}.tf-flat{color:var(--mute);font-weight:600}
+.tf-pill{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 8px;border-radius:999px;background:rgba(148,163,184,.15);color:#cbd5e1;border:1px solid rgba(148,163,184,.3)}
+.tf-pill.ok{background:rgba(74,222,128,.15);color:#4ade80;border-color:rgba(74,222,128,.35)}
+.tf-pill.bad{background:rgba(229,83,75,.15);color:var(--red);border-color:rgba(229,83,75,.35)}
+.tf-pill.warn{background:rgba(251,191,36,.15);color:#fbbf24;border-color:rgba(251,191,36,.35)}
+.tf-pill.blue{background:rgba(96,165,250,.15);color:#60a5fa;border-color:rgba(96,165,250,.35)}
+.tf-exchanges{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.tf-ex{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.tf-ex.open{border-color:rgba(74,222,128,.4)}
+.tf-ex .nm{font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tf-ex .rg{font-size:10px;color:var(--mute);text-transform:uppercase;letter-spacing:1px;margin:2px 0 6px}
+.tf-ex .tm{font-size:20px;font-weight:700;color:var(--gold2);font-variant-numeric:tabular-nums}
+.tf-ex .cd{font-size:11px;color:var(--mute);margin-top:2px;font-variant-numeric:tabular-nums}
+.tf-ex.open .cd{color:#4ade80}
+.tf-idx .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.tf-idx .nm{font-size:13px;font-weight:600}
+.tf-idx .px{font-size:24px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
+.tf-idx .ch{font-size:13px;font-variant-numeric:tabular-nums;margin-bottom:8px}
+.tf-range{position:relative;height:6px;background:var(--line);border-radius:3px;margin:10px 0 4px}
+.tf-range i{position:absolute;top:-3px;width:3px;height:12px;background:var(--gold2);border-radius:2px;transform:translateX(-1px)}
+.tf-range-l{display:flex;justify-content:space-between;font-size:10.5px;color:var(--mute);font-variant-numeric:tabular-nums}
+.tf-spark{display:block;width:100%;height:34px;margin-top:8px}
+.tf-table{width:100%;border-collapse:collapse;font-size:13px}
+.tf-table th{text-align:left;color:var(--mute);font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:0 10px 8px;font-weight:600;white-space:nowrap}
+.tf-table td{padding:9px 10px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tf-table td.num,.tf-table th.num{text-align:right}
+.tf-table td a{color:var(--gold2)}
+.tf-table td.wrap{white-space:normal;min-width:220px}
+.tf-stat .lb{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.5px}
+.tf-stat .v{font-size:26px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;margin:2px 0}
+.tf-stat .d{font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums}
+.tf-note{font-size:12px;color:var(--mute);margin-top:8px}
+.tf-big{font-size:34px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
+.tf-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0}
+.tf-tile{border-radius:8px;padding:6px 6px;text-align:center;font-size:10.5px;color:#fff;line-height:1.25}
+.tf-tile b{display:block;font-size:12px;font-variant-numeric:tabular-nums}
+.tf-bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;display:flex;margin:6px 0}
+.tf-bar span{display:block;height:100%}
+.tf-gauge{position:relative;height:14px;border-radius:7px;background:linear-gradient(90deg,#e5534b,#8a6a2a 50%,#3fb97a);margin:16px 0 6px}
+.tf-gauge i{position:absolute;top:-5px;width:4px;height:24px;background:#fff;border-radius:2px;transform:translateX(-2px)}
+.tf-gauge-l{display:flex;justify-content:space-between;font-size:10.5px;color:var(--mute)}
+.tf-comps{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px 18px;margin-top:14px}
+.tf-comp{display:flex;gap:10px;align-items:center;font-size:12.5px}
+.tf-comp .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+.tf-comp small{display:block;color:var(--mute);font-size:11px}
+.tf-pair .hd{font-size:13px;font-weight:700;color:var(--gold2);margin-bottom:8px}
+.tf-pair .row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-top:1px solid var(--line)}
+.tf-pair .row:first-of-type{border-top:0}
+.tf-pair .rd{font-size:12px;color:var(--mute);margin-top:8px;line-height:1.45}
+.tf-news{display:flex;flex-direction:column}
+.tf-grid2>*,.tf-grid3>*,.tf-grid4>*{min-width:0}
+.tf-news a.it{text-decoration:none;display:block;padding:11px 0;border-top:1px solid var(--line);color:var(--text)}
+.tf-news a.it:first-child{border-top:0;padding-top:0}
+.tf-news a.it:hover .ti{color:var(--gold2)}
+.tf-news .ti{font-size:14px;line-height:1.4}
+.tf-news .mt{font-size:11px;color:var(--mute);margin-top:4px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tf-tag{font-size:10px;border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--mute)}
+.tf-corr td,.tf-corr th{text-align:center;padding:7px 8px;font-size:12px;white-space:nowrap}
+.tf-corr th{color:var(--mute);font-size:11px;font-weight:600}
+.tf-corr td.rl{text-align:left;color:var(--mute);font-weight:600;font-size:11px}
 </style>
 </head>
 <body>
@@ -625,38 +696,55 @@ footer{padding:40px 0 60px}
     <div class="section-head">
       <span class="tag">Global Markets</span>
       <h2>Global market overview</h2>
-      <p>Major indices, regional benchmarks and breadth across the trading day — in development.</p>
+      <p>US, Asia-Pacific and European indices with live-session status, performance, daily ranges, volatility and a breadth read — refreshed about every 30 minutes (index prices can be delayed up to ~15 minutes).</p>
+      <p id="tfMarketsUpdated" class="calendar-note" style="margin-top:8px">Loading market data…</p>
     </div>
-    <div class="soon-card">
-      <ul>
-        <li><span class="dot"></span>S&amp;P 500, Nasdaq 100 &amp; Dow Jones<span class="tag-soon">Building</span></li>
-        <li><span class="dot"></span>ASX 200, FTSE 100, DAX &amp; Nikkei 225<span class="tag-soon">Building</span></li>
-        <li><span class="dot"></span>Major global market performance<span class="tag-soon">Building</span></li>
-        <li><span class="dot"></span>Market breadth, volatility &amp; daily ranges<span class="tag-soon">Building</span></li>
-        <li><span class="dot"></span>US VIX volatility index<span class="tag-soon">Building</span></li>
-        <li><span class="dot"></span>Market open/closed status by region<span class="tag-soon">Building</span></li>
-      </ul>
+
+    <div class="tf-sub">Market status by region</div>
+    <div class="tf-exchanges" id="tfExchanges"></div>
+
+    <div class="tf-sub">Major indices</div>
+    <div class="tf-grid" id="tfIndexGrid"><div class="tf-card tf-empty">Loading…</div></div>
+
+    <div class="tf-sub">Major global market performance</div>
+    <div class="tf-card tf-scroll"><table class="tf-table" id="tfPerfTable"><tbody><tr><td class="tf-empty">Loading…</td></tr></tbody></table></div>
+
+    <div class="tf-sub">Volatility, breadth &amp; daily ranges</div>
+    <div class="tf-grid3">
+      <div class="tf-card" id="tfVix"><div class="tf-empty">Loading…</div></div>
+      <div class="tf-card" id="tfBreadth"><div class="tf-empty">Loading…</div></div>
+      <div class="tf-card tf-scroll" id="tfRanges"><div class="tf-empty">Loading…</div></div>
     </div>
+    <p class="calendar-note" style="margin-top:12px">Breadth is a proxy, not exchange advance/decline data: it counts the 11 S&amp;P 500 sector ETFs and 7 tracked indices that are up on the day, and compares equal-weight (RSP) with cap-weight (SPY) performance. Open/closed status follows regular cash-session hours and does not account for public holidays.</p>
   </div>
 </section>
 
-<section id="bonds" class="alt">
+<section id="bonds">
   <div class="wrap">
     <div class="section-head">
       <span class="tag">Rates</span>
       <h2>Bonds, rates &amp; central banks</h2>
-      <p>Yields, curve shape and what the major central banks are doing with policy — in development.</p>
+      <p>US Treasury and Australian government yields, curve shape and inversion, policy rates and the next meetings, what markets are pricing, and Fed balance-sheet liquidity.</p>
+      <p id="tfRatesUpdated" class="calendar-note" style="margin-top:8px">Loading rates data…</p>
     </div>
-    <div class="soon-card">
-      <ul>
-        <li><span class="dot"></span>US 2-year and 10-year Treasury yields<span class="tag-soon">Building</span></li>
-        <li><span class="dot"></span>Yield curve &amp; inversion indicators<span class="tag-soon">Building</span></li>
-        <li><span class="dot"></span>Australian government bond yields<span class="tag-soon">Building</span></li>
-        <li><span class="dot"></span>Federal Reserve, RBA, ECB, BoE &amp; BoJ decisions<span class="tag-soon">Building</span></li>
-        <li><span class="dot"></span>Interest-rate expectations<span class="tag-soon">Building</span></li>
-        <li><span class="dot"></span>QE/QT &amp; liquidity developments<span class="tag-soon">Building</span></li>
-      </ul>
+
+    <div class="tf-sub">Yields &amp; curve</div>
+    <div class="tf-grid4" id="tfYieldStats"><div class="tf-card tf-empty">Loading…</div></div>
+    <div class="tf-grid2">
+      <div class="tf-card" id="tfCurve"><div class="tf-empty">Loading…</div></div>
+      <div class="tf-card" id="tfAuYields"><div class="tf-empty">Loading…</div></div>
     </div>
+
+    <div class="tf-sub">Central banks &amp; decisions</div>
+    <div class="tf-card tf-scroll"><table class="tf-table" id="tfCbTable"><tbody><tr><td class="tf-empty">Loading…</td></tr></tbody></table></div>
+    <p class="calendar-note" style="margin-top:10px">Next-meeting dates are the published schedule at time of writing — always confirm on the central bank's own site, as dates can change. The BoJ rate comes from a monthly series so its "since" date is approximate.</p>
+
+    <div class="tf-sub">Interest-rate expectations</div>
+    <div class="tf-grid2" id="tfExpect"><div class="tf-card tf-empty">Loading…</div></div>
+    <p class="calendar-note" style="margin-top:10px">This is a market-implied <em>proxy</em>: the 2-year government yield minus the current policy rate. A 2-year well below policy means the market expects cuts; well above means hikes. It is not CME FedWatch or an official probability.</p>
+
+    <div class="tf-sub">QE / QT &amp; liquidity</div>
+    <div class="tf-card" id="tfLiquidity"><div class="tf-empty">Loading…</div></div>
   </div>
 </section>
 
@@ -665,37 +753,52 @@ footer{padding:40px 0 60px}
     <div class="section-head">
       <span class="tag">Intermarket</span>
       <h2>Macro &amp; intermarket intelligence</h2>
-      <p>How the major markets are moving relative to each other — in development.</p>
+      <p>How the dollar, yields, oil, gold and equities are moving against each other, a transparent risk-on / risk-off score, financial-conditions gauges and a 30-day correlation map.</p>
     </div>
-    <div class="soon-card">
-      <ul>
-        <li><span class="dot"></span>DXY vs. gold, equities &amp; commodities<span class="tag-soon">Building</span></li>
-        <li><span class="dot"></span>Bond yields vs. equities<span class="tag-soon">Building</span></li>
-        <li><span class="dot"></span>Oil vs. inflation expectations<span class="tag-soon">Building</span></li>
-        <li><span class="dot"></span>Risk-on vs. risk-off indicators<span class="tag-soon">Building</span></li>
-        <li><span class="dot"></span>Central-bank liquidity &amp; financial conditions<span class="tag-soon">Building</span></li>
-        <li><span class="dot"></span>Cross-market correlation comparisons<span class="tag-soon">Building</span></li>
-      </ul>
-    </div>
+
+    <div class="tf-sub">Risk-on vs risk-off</div>
+    <div class="tf-card" id="tfRisk"><div class="tf-empty">Loading…</div></div>
+
+    <div class="tf-sub">Intermarket relationships</div>
+    <div class="tf-grid3" id="tfPairs"><div class="tf-card tf-empty">Loading…</div></div>
+
+    <div class="tf-sub">Central-bank liquidity &amp; financial conditions</div>
+    <div class="tf-grid4" id="tfConditions"><div class="tf-card tf-empty">Loading…</div></div>
+
+    <div class="tf-sub">Correlation comparison — 30 trading days</div>
+    <div class="tf-card tf-scroll" id="tfCorr"><div class="tf-empty">Loading…</div></div>
+    <p class="calendar-note" style="margin-top:10px">Correlation of daily returns over the last 30 sessions: +1 moves together, −1 moves opposite, near 0 unrelated. Correlations shift quickly — treat them as a snapshot of the current regime, not a rule.</p>
   </div>
 </section>
 
-<section id="newsrisk" class="alt">
+<section id="newsrisk">
   <div class="wrap">
     <div class="section-head">
       <span class="tag">Event Risk</span>
       <h2>News &amp; event risk</h2>
-      <p>The catalysts that move markets outside the scheduled calendar — in development.</p>
+      <p>Central-bank releases, policy and trade developments, geopolitics and company news — plus how recent data surprised and which high-impact events are next.</p>
+      <p id="tfNewsUpdated" class="calendar-note" style="margin-top:8px">Loading headlines…</p>
     </div>
-    <div class="soon-card">
-      <ul>
-        <li><span class="dot"></span>Central-bank announcements<span class="tag-soon">Building</span></li>
-        <li><span class="dot"></span>Government policy &amp; trade developments<span class="tag-soon">Building</span></li>
-        <li><span class="dot"></span>Geopolitical events<span class="tag-soon">Building</span></li>
-        <li><span class="dot"></span>Major company announcements<span class="tag-soon">Building</span></li>
-        <li><span class="dot"></span>Economic surprises<span class="tag-soon">Building</span></li>
-        <li><span class="dot"></span>Upcoming high-impact events &amp; affected markets<span class="tag-soon">Building</span></li>
-      </ul>
+
+    <div class="filter-row" id="tfNewsTabs" style="margin-bottom:14px">
+      <button class="filter-chip active" data-ntab="central_banks">Central banks</button>
+      <button class="filter-chip" data-ntab="policy">Policy &amp; trade</button>
+      <button class="filter-chip" data-ntab="geopolitics">Geopolitical</button>
+      <button class="filter-chip" data-ntab="companies">Companies</button>
+      <button class="filter-chip" data-ntab="liquidity">Liquidity</button>
+    </div>
+    <div class="tf-card" id="tfNewsList"><div class="tf-empty">Loading…</div></div>
+    <p class="calendar-note" style="margin-top:10px">Headlines are linked from their original publishers via public RSS feeds; "affects" tags are automatic keyword matches, not analysis.</p>
+
+    <div class="tf-grid2" style="margin-top:22px">
+      <div>
+        <div class="tf-sub" style="margin-top:0">Economic surprises</div>
+        <div class="tf-card tf-scroll" id="tfSurprises"><div class="tf-empty">Loading…</div></div>
+      </div>
+      <div>
+        <div class="tf-sub" style="margin-top:0">Upcoming high-impact events</div>
+        <div class="tf-card tf-scroll" id="tfUpcoming"><div class="tf-empty">Loading…</div></div>
+      </div>
     </div>
   </div>
 </section>
@@ -1274,6 +1377,363 @@ function updateTradingHours(){
 }
 updateTradingHours();
 setInterval(updateTradingHours, 1000);
+
+/* ---- TradFi data sections (IIFE so nothing leaks into the calendar / clock scripts) ---- */
+(function(){
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = (x, dp=2) => (x == null || isNaN(x)) ? '—' : Number(x).toLocaleString('en-US', {minimumFractionDigits:dp, maximumFractionDigits:dp});
+const sgn = (x, dp=2, suf='') => (x == null || isNaN(x)) ? '—' : (x > 0 ? '+' : x < 0 ? '−' : '') + Math.abs(x).toFixed(dp) + suf;
+const cls = x => x == null ? 'tf-flat' : x > 0 ? 'tf-up' : x < 0 ? 'tf-down' : 'tf-flat';
+const EMPTY = 'Not loaded yet — this feed updates automatically about every 30 minutes.';
+function getJSON(name){
+  return fetch('../' + name + '?t=' + Date.now()).then(r => r.ok ? r.json() : null).catch(() => null);
+}
+function stamp(el, data, label){
+  if(!el) return;
+  if(!data || !data.generated_at){ el.textContent = 'Waiting for the first ' + label + ' data run…'; return; }
+  const t = new Date(data.generated_at);
+  const hrs = (Date.now() - t.getTime()) / 3600000;
+  el.textContent = 'Live feed — last updated ' + t.toLocaleString() + (hrs > 6 ? ' (stale — feed may be delayed)' : '');
+}
+function spark(vals, color){
+  if(!vals || vals.length < 2) return '';
+  const w = 200, h = 34, mn = Math.min(...vals), mx = Math.max(...vals), rg = (mx - mn) || 1;
+  const pts = vals.map((v, i) => (i / (vals.length - 1) * w).toFixed(1) + ',' + (h - 3 - (v - mn) / rg * (h - 6)).toFixed(1)).join(' ');
+  const c = color || (vals[vals.length-1] >= vals[0] ? 'var(--green)' : 'var(--red)');
+  return `<svg class="tf-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${c}" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>`;
+}
+function ago(ts){
+  if(!ts) return '';
+  const s = Date.now()/1000 - ts;
+  if(s < 3600) return Math.max(1, Math.round(s/60)) + 'm ago';
+  if(s < 86400) return Math.round(s/3600) + 'h ago';
+  return Math.round(s/86400) + 'd ago';
+}
+
+/* ---------- Exchanges: open / closed by region ---------- */
+const EXCH = {
+  asx:  {name:'ASX',          city:'Sydney',    region:'Asia-Pacific', zone:'Australia/Sydney', open:600, close:960},
+  tse:  {name:'Tokyo (TSE)',  city:'Tokyo',     region:'Asia-Pacific', zone:'Asia/Tokyo',       open:540, close:930},
+  lse:  {name:'London (LSE)', city:'London',    region:'Europe',       zone:'Europe/London',    open:480, close:990},
+  xet:  {name:'Xetra',        city:'Frankfurt', region:'Europe',       zone:'Europe/Berlin',    open:540, close:1050},
+  nyse: {name:'NYSE / Nasdaq',city:'New York',  region:'Americas',     zone:'America/New_York', open:570, close:960},
+};
+const SYM_EXCH = {'^GSPC':'nyse','^NDX':'nyse','^DJI':'nyse','^AXJO':'asx','^N225':'tse','^FTSE':'lse','^GDAXI':'xet'};
+function exchState(key, now){
+  const e = EXCH[key];
+  const ws = phaseWindows(now, {zone:e.zone, phases:[{name:'core', open:e.open, close:e.close}]});
+  const cur = ws.find(w => now >= w.openUTC && now < w.closeUTC);
+  const nxt = ws.filter(w => w.openUTC > now).sort((a,b) => a.openUTC - b.openUTC)[0];
+  return {open: !!cur, cur, nxt};
+}
+function renderExchanges(){
+  const el = $('tfExchanges'); if(!el) return;
+  const now = new Date();
+  el.innerHTML = Object.keys(EXCH).map(k => {
+    const e = EXCH[k], s = exchState(k, now);
+    const t = new Intl.DateTimeFormat('en-GB', {timeZone:e.zone, hour:'2-digit', minute:'2-digit', hour12:false}).format(now);
+    const cd = s.open ? 'Closes in ' + formatCountdown((s.cur.closeUTC - now)/1000)
+                      : (s.nxt ? 'Opens in ' + formatCountdown((s.nxt.openUTC - now)/1000) : '—');
+    return `<div class="tf-ex ${s.open ? 'open' : ''}"><div class="nm">${esc(e.name)}<span class="tf-pill ${s.open ? 'ok' : ''}">${s.open ? 'Open' : 'Closed'}</span></div>
+      <div class="rg">${esc(e.region)} · ${esc(e.city)}</div><div class="tm">${t}</div><div class="cd">${cd}</div></div>`;
+  }).join('');
+}
+function statusPill(sym){
+  const k = SYM_EXCH[sym]; if(!k) return '';
+  const s = exchState(k, new Date());
+  return `<span class="tf-pill ${s.open ? 'ok' : ''}">${s.open ? 'Open' : 'Closed'}</span>`;
+}
+
+/* ---------- Markets ---------- */
+function dpFor(sym){ return sym === '^VIX' ? 2 : 2; }
+function renderMarkets(m){
+  const idx = (m && m.indices) || [];
+  const grid = $('tfIndexGrid');
+  if(!idx.length){ grid.innerHTML = `<div class="tf-card tf-empty">${EMPTY}</div>`; $('tfPerfTable').innerHTML = `<tbody><tr><td class="tf-empty">${EMPTY}</td></tr></tbody>`; return; }
+  grid.innerHTML = idx.map(q => `
+    <div class="tf-card tf-idx">
+      <div class="top"><span class="nm">${esc(q.name)}</span><span data-statuspill="${esc(q.symbol)}">${statusPill(q.symbol)}</span></div>
+      <div class="px">${num(q.price, 2)}</div>
+      <div class="ch ${cls(q.chg)}">${sgn(q.chg, 2)} &nbsp;(${sgn(q.chg_pct, 2, '%')})</div>
+      <div class="tf-range"><i style="left:${Math.round((q.range_pos ?? .5) * 100)}%"></i></div>
+      <div class="tf-range-l"><span>${num(q.day_low,0)}</span><span>Day range</span><span>${num(q.day_high,0)}</span></div>
+      ${spark(q.spark)}
+    </div>`).join('');
+  const row = (q) => {
+    const p = q.perf || {}, fromHi = (q.w52_high ? (q.price / q.w52_high - 1) * 100 : null);
+    return `<tr><td><b>${esc(q.name)}</b> <span class="tf-note">${esc(q.region || '')}</span></td>
+      <td class="num ${cls(p.d1)}">${sgn(p.d1,2,'%')}</td><td class="num ${cls(p.w1)}">${sgn(p.w1,2,'%')}</td>
+      <td class="num ${cls(p.m1)}">${sgn(p.m1,2,'%')}</td><td class="num ${cls(p.ytd)}">${sgn(p.ytd,2,'%')}</td>
+      <td class="num ${cls(fromHi)}">${sgn(fromHi,1,'%')}</td></tr>`;
+  };
+  $('tfPerfTable').innerHTML = `<thead><tr><th>Index</th><th class="num">1D</th><th class="num">1W</th><th class="num">1M</th><th class="num">YTD</th><th class="num">vs 52w high</th></tr></thead><tbody>${idx.map(row).join('')}</tbody>`;
+
+  // VIX
+  const v = m.vix;
+  $('tfVix').innerHTML = !v ? `<div class="tf-empty">${EMPTY}</div>` : `
+    <div class="tf-stat"><div class="lb">US VIX volatility index</div>
+    <div class="v">${num(v.price,2)} <span class="tf-pill ${v.regime==='Calm'?'ok':v.regime==='Normal'?'blue':v.regime==='Elevated'?'warn':'bad'}">${esc(v.regime)}</span></div>
+    <div class="d ${cls(v.chg)}">${sgn(v.chg,2)} (${sgn(v.chg_pct,2,'%')}) today</div></div>
+    <div class="tf-range"><i style="left:${Math.round(Math.max(0,Math.min(1,(v.price - v.w52_low)/((v.w52_high - v.w52_low)||1)))*100)}%"></i></div>
+    <div class="tf-range-l"><span>${num(v.w52_low,1)}</span><span>52-week range</span><span>${num(v.w52_high,1)}</span></div>
+    ${spark(v.spark, 'var(--gold2)')}
+    <div class="tf-note">20-day average ${num(v.ma20,1)} · higher than ${num(v.percentile_1y,0)}% of the last year. Under 15 calm, 15–20 normal, 20–30 elevated, 30+ stress.</div>`;
+
+  // Breadth
+  const b = m.breadth;
+  if(!b){ $('tfBreadth').innerHTML = `<div class="tf-empty">${EMPTY}</div>`; }
+  else {
+    const tot = b.advancing + b.declining;
+    const tile = s => { const c = s.chg_pct || 0, a = Math.min(1, Math.abs(c) / 2);
+      const bg = c >= 0 ? `rgba(63,185,122,${0.25 + a*0.6})` : `rgba(229,83,75,${0.25 + a*0.6})`;
+      return `<div class="tf-tile" style="background:${bg}">${esc(s.name)}<b>${sgn(s.chg_pct,1,'%')}</b></div>`; };
+    const ev = b.equal_vs_cap;
+    $('tfBreadth').innerHTML = `
+      <div class="tf-stat"><div class="lb">Breadth proxy — S&amp;P sectors up today</div><div class="v">${b.advancing}<span style="color:var(--mute);font-size:16px"> / ${tot}</span></div></div>
+      <div class="tf-bar"><span style="width:${b.advancing/tot*100}%;background:var(--green)"></span><span style="width:${b.declining/tot*100}%;background:var(--red)"></span></div>
+      <div class="tf-tiles">${b.sectors.map(tile).join('')}</div>
+      <div class="tf-note">${b.indices_advancing} of ${b.indices_total} global indices up.${ev ? ` Equal-weight vs cap-weight 1M: <span class="${cls(ev.spread_m1)}">${sgn(ev.spread_m1,1,'%')}</span> (${ev.spread_m1 >= 0 ? 'broad participation' : 'narrow, mega-cap led'}).` : ''}</div>`;
+  }
+  // Ranges
+  $('tfRanges').innerHTML = `<table class="tf-table"><thead><tr><th>Index</th><th class="num">Day range</th><th class="num">Range %</th><th>Position</th></tr></thead><tbody>` +
+    idx.map(q => `<tr><td>${esc(q.name)}</td><td class="num">${num(q.day_low,0)}–${num(q.day_high,0)}</td><td class="num">${num(q.range_pct,2)}%</td>
+      <td style="min-width:90px"><div class="tf-range" style="margin:4px 0"><i style="left:${Math.round((q.range_pos ?? .5)*100)}%"></i></div></td></tr>`).join('') + `</tbody></table>`;
+}
+
+/* ---------- Rates ---------- */
+const TENORS = ['1M','3M','6M','1Y','2Y','3Y','5Y','7Y','10Y','20Y','30Y'];
+function renderCurve(t){
+  const W = 520, H = 220, L = 38, R = 12, T = 12, B = 28;
+  const sets = [['Today', t.curve, 'var(--gold2)', ''], ['1 month ago', t.month_ago, 'var(--mute)', '4 3'], ['1 year ago', t.year_ago, '#60a5fa', '2 3']].filter(s => s[1] && Object.keys(s[1]).length);
+  const vals = sets.flatMap(s => TENORS.map(k => s[1][k]).filter(v => v != null));
+  const mn = Math.floor(Math.min(...vals) * 4) / 4 - 0.1, mx = Math.ceil(Math.max(...vals) * 4) / 4 + 0.1;
+  const x = i => L + i / (TENORS.length - 1) * (W - L - R), y = v => T + (1 - (v - mn) / (mx - mn)) * (H - T - B);
+  let g = '';
+  for(let v = Math.ceil(mn * 2) / 2; v <= mx; v += 0.5) g += `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${y(v)+3}" text-anchor="end" font-size="10" fill="var(--mute)">${v.toFixed(1)}</text>`;
+  const xl = TENORS.map((k, i) => `<text x="${x(i)}" y="${H-8}" text-anchor="middle" font-size="10" fill="var(--mute)">${k}</text>`).join('');
+  const lines = sets.map(([n, c, col, dash]) => {
+    const pts = TENORS.map((k, i) => c[k] != null ? [x(i), y(c[k])] : null).filter(Boolean);
+    return `<polyline points="${pts.map(p => p.join(',')).join(' ')}" fill="none" stroke="${col}" stroke-width="${n === 'Today' ? 2.4 : 1.5}" ${dash ? `stroke-dasharray="${dash}"` : ''}/>`;
+  }).join('');
+  const dots = ['2Y','10Y'].map(k => { const i = TENORS.indexOf(k); return t.curve[k] != null ? `<circle cx="${x(i)}" cy="${y(t.curve[k])}" r="4" fill="var(--gold2)"/><text x="${x(i)}" y="${y(t.curve[k])-9}" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">${t.curve[k].toFixed(2)}</text>` : ''; }).join('');
+  const legend = sets.map(([n,,col]) => `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px"><i style="width:14px;height:3px;background:${col};display:inline-block"></i>${n}</span>`).join('');
+  const h = t.history_2s10s || [];
+  return `<span class="fl-label" style="color:var(--gold);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;display:block;margin-bottom:8px">US Treasury yield curve</span>
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">${g}${xl}${lines}${dots}</svg>
+    <div class="tf-note">${legend}</div>
+    ${h.length > 5 ? `<div class="tf-note" style="margin-top:12px">2s10s spread, last ${h.length} sessions (zero line = inversion)</div>${spreadSpark(h.map(p => p[1]))}` : ''}`;
+}
+function spreadSpark(vals){
+  const w = 300, hh = 50, mn = Math.min(...vals, 0), mx = Math.max(...vals, 0), rg = (mx - mn) || 1;
+  const y = v => hh - 4 - (v - mn) / rg * (hh - 8);
+  const pts = vals.map((v, i) => (i / (vals.length - 1) * w).toFixed(1) + ',' + y(v).toFixed(1)).join(' ');
+  return `<svg viewBox="0 0 ${w} ${hh}" preserveAspectRatio="none" style="width:100%;height:50px"><line x1="0" x2="${w}" y1="${y(0)}" y2="${y(0)}" stroke="var(--mute)" stroke-dasharray="3 3" stroke-width="1" vector-effect="non-scaling-stroke"/><polyline points="${pts}" fill="none" stroke="var(--gold2)" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>`;
+}
+const CB_ORDER = ['fed','rba','ecb','boe','boj'];
+const CB_NAME = {fed:'Fed', rba:'RBA', ecb:'ECB', boe:'BoE', boj:'BoJ'};
+// Published decision dates (check each central bank's own calendar — these can change).
+const CB_MEETINGS = {
+  fed:['2026-10-28','2026-12-09'], ecb:['2026-10-29','2026-12-17'], boe:['2026-11-05','2026-12-17'],
+  rba:['2026-11-03','2026-12-08'], boj:['2026-10-30','2026-12-18'],
+};
+function nextMeeting(k){
+  const today = new Date().toISOString().slice(0,10);
+  const d = (CB_MEETINGS[k] || []).find(x => x >= today);
+  if(!d) return '—';
+  const days = Math.round((new Date(d + 'T00:00:00Z') - new Date(today + 'T00:00:00Z')) / 86400000);
+  return `${new Date(d + 'T00:00:00Z').toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric', timeZone:'UTC'})} <span class="tf-note">(${days === 0 ? 'today' : 'in ' + days + 'd'})</span>`;
+}
+function renderRates(r, news){
+  const t = r && r.treasury;
+  const statsEl = $('tfYieldStats');
+  if(!r || !t){ statsEl.innerHTML = `<div class="tf-card tf-empty">${EMPTY}</div>`; }
+  else {
+    const c = t.curve, p = t.prev || {};
+    const stat = (lb, v, prev, extra) => `<div class="tf-card tf-stat"><div class="lb">${lb}</div><div class="v">${v != null ? v.toFixed(2) + '%' : '—'}</div>
+      <div class="d ${v != null && prev != null ? cls(v - prev) : ''}">${v != null && prev != null ? sgn((v - prev) * 100, 0, ' bp') + ' today' : ''}${extra || ''}</div></div>`;
+    const s = t.spread_2s10s, s2 = t.spread_3m10y;
+    const shape = s == null ? '' : s < 0 ? '<span class="tf-pill bad">Inverted</span>' : s < 0.15 ? '<span class="tf-pill warn">Flat</span>' : '<span class="tf-pill ok">Normal</span>';
+    const au = r.au || {};
+    let html = stat('US 2-year Treasury', c['2Y'], p['2Y']) + stat('US 10-year Treasury', c['10Y'], p['10Y']);
+    html += `<div class="tf-card tf-stat"><div class="lb">2s10s spread</div><div class="v">${s != null ? sgn(s * 100, 0, ' bp') : '—'}</div><div class="d">${shape} ${t.inverted_3m10y != null ? '· 3m–10y ' + sgn(s2 * 100, 0, ' bp') + (t.inverted_3m10y ? ' (inverted)' : '') : ''}</div></div>`;
+    if(au['10Y'] && c['10Y'] != null){
+      const sp = (au['10Y'].yield - c['10Y']) * 100;
+      html += `<div class="tf-card tf-stat"><div class="lb">AU 10Y − US 10Y</div><div class="v">${sgn(sp, 0, ' bp')}</div><div class="d">AU 10Y ${au['10Y'].yield.toFixed(2)}% vs US ${c['10Y'].toFixed(2)}%</div></div>`;
+    }
+    statsEl.innerHTML = html;
+    $('tfCurve').innerHTML = renderCurve(t);
+  }
+  if(r && r.au){
+    $('tfAuYields').innerHTML = `<span class="fl-label" style="color:var(--gold);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;display:block;margin-bottom:10px">Australian government bond yields</span>
+      <table class="tf-table"><thead><tr><th>Tenor</th><th class="num">Yield</th><th class="num">1D</th><th class="num">1M</th></tr></thead><tbody>` +
+      ['2Y','3Y','5Y','10Y'].filter(k => r.au[k]).map(k => { const a = r.au[k];
+        return `<tr><td>${k}</td><td class="num"><b>${a.yield.toFixed(2)}%</b></td><td class="num ${cls(a.prev != null ? a.yield - a.prev : null)}">${a.prev != null ? sgn((a.yield - a.prev) * 100, 0, ' bp') : '—'}</td><td class="num ${cls(a.m1 != null ? a.yield - a.m1 : null)}">${a.m1 != null ? sgn((a.yield - a.m1) * 100, 0, ' bp') : '—'}</td></tr>`; }).join('') +
+      `</tbody></table><div class="tf-note">Source: RBA capital-market yields (as of ${esc(r.au['10Y'] ? r.au['10Y'].date : '')}).</div>`;
+  } else $('tfAuYields').innerHTML = `<div class="tf-empty">Australian yields: ${EMPTY}</div>`;
+
+  // Central banks
+  const pol = (r && r.policy) || {};
+  const rel = {};
+  ((news && news.central_banks) || []).forEach(n => { if(!rel[n.bank]) rel[n.bank] = n; });
+  const rows = CB_ORDER.map(k => {
+    const p = pol[k], n = rel[CB_NAME[k]];
+    const mv = p && p.change_bp != null ? `<span class="${cls(p.change_bp)}">${sgn(p.change_bp, 0, ' bp')}</span> <span class="tf-note">since ${esc(p.since || '')}</span>` : '<span class="tf-note">no move in data window</span>';
+    return `<tr><td><b>${esc(CB_NAME[k])}</b> <span class="tf-note">${esc(p ? p.bank : '')}</span></td><td class="num"><b>${p ? esc(p.display) : '—'}</b></td><td>${p ? mv : '—'}</td>
+      <td>${nextMeeting(k)}</td><td class="wrap">${n ? `<a href="${esc(n.link)}" target="_blank" rel="noopener">${esc(n.title)}</a> <span class="tf-note">${ago(n.ts)}</span>` : '<span class="tf-note">—</span>'}</td></tr>`;
+  }).join('');
+  $('tfCbTable').innerHTML = `<thead><tr><th>Bank</th><th class="num">Policy rate</th><th>Last decision</th><th>Next meeting</th><th>Latest release</th></tr></thead><tbody>${rows}</tbody>`;
+
+  // Expectations
+  const ex = r && r.expectations;
+  const exCard = (lb, e, bank) => `<div class="tf-card tf-stat"><div class="lb">${lb}</div>
+    <div class="v">${sgn(e.gap_bp, 0, ' bp')}</div>
+    <div class="d"><span class="tf-pill ${e.gap_bp < -25 ? 'blue' : e.gap_bp > 25 ? 'warn' : ''}">${esc(e.read)}</span></div>
+    <div class="tf-note">2-year yield ${e.two_year.toFixed(2)}% vs ${bank} policy rate ${e.policy.toFixed(2)}%</div></div>`;
+  $('tfExpect').innerHTML = ex && (ex.us || ex.au) ? (ex.us ? exCard('US: 2Y yield vs Fed funds', ex.us, 'Fed funds') : '') + (ex.au ? exCard('Australia: 2Y yield vs RBA cash rate', ex.au, 'RBA') : '') : `<div class="tf-card tf-empty">${EMPTY}</div>`;
+
+  // Liquidity
+  const L = r && r.liquidity;
+  $('tfLiquidity').innerHTML = !L ? `<div class="tf-empty">${EMPTY}</div>` : `
+    <div class="tf-grid4" style="margin-bottom:6px">
+      <div class="tf-stat"><div class="lb">Fed balance sheet</div><div class="v">$${num(L.balance_sheet_bn/1000, 2)}T</div><div class="d">as of ${esc(L.as_of)}</div></div>
+      <div class="tf-stat"><div class="lb">Regime (13 weeks)</div><div class="v" style="font-size:18px;padding-top:6px">${esc(L.regime || '—')}</div><div class="d ${cls(L.chg_13w_bn)}">${sgn(L.chg_13w_bn, 0, ' $bn')} · 4w ${sgn(L.chg_4w_bn, 0)} · 52w ${sgn(L.chg_52w_bn, 0)}</div></div>
+      <div class="tf-stat"><div class="lb">Net liquidity (BS − TGA − RRP)</div><div class="v">$${num(L.net_liquidity_bn/1000, 2)}T</div><div class="d ${cls(L.net_liquidity_chg_4w_bn)}">${sgn(L.net_liquidity_chg_4w_bn, 0, ' $bn')} over ~4 weeks</div></div>
+      <div class="tf-stat"><div class="lb">Reverse repo · Treasury account</div><div class="v" style="font-size:20px;padding-top:4px">$${num(L.rrp_bn,0)}bn · $${num(L.tga_bn,0)}bn</div><div class="d">drains/adds reserves</div></div>
+    </div>${spark(L.spark, 'var(--gold2)')}
+    <div class="tf-note">Fed balance sheet, last 52 weeks. Shrinking = quantitative tightening (liquidity draining); growing = quantitative easing. Net liquidity is a common market shorthand — Fed assets minus the Treasury's cash account and reverse repo — for how much central-bank money is available to markets.</div>`;
+}
+
+/* ---------- Macro / intermarket ---------- */
+function corrOf(m, a, b){
+  const c = m && m.correlations; if(!c) return null;
+  const i = c.assets.indexOf(a), j = c.assets.indexOf(b);
+  return i < 0 || j < 0 ? null : c.matrix[i][j];
+}
+function corrTxt(c, a, b){
+  if(c == null) return '';
+  const w = Math.abs(c) < .25 ? 'largely decoupled' : (c < 0 ? 'moving inversely' : 'moving together');
+  return `30d correlation <b>${c.toFixed(2)}</b> — ${a} and ${b} ${w}.`;
+}
+function renderMacro(m, r){
+  const el = $('tfRisk');
+  const rk = m && m.risk;
+  if(!rk) el.innerHTML = `<div class="tf-empty">${EMPTY}</div>`;
+  else {
+    const pos = (rk.score + 100) / 2;
+    el.innerHTML = `<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap"><span class="tf-big">${rk.score > 0 ? '+' : ''}${rk.score}</span>
+      <span class="tf-pill ${rk.label === 'Risk-on' ? 'ok' : rk.label === 'Risk-off' ? 'bad' : 'warn'}" style="font-size:12px">${esc(rk.label)}</span>
+      <span class="tf-note">Composite of ${rk.components.length} transparent signals, −100 (risk-off) to +100 (risk-on)</span></div>
+      <div class="tf-gauge"><i style="left:${pos}%"></i></div><div class="tf-gauge-l"><span>Risk-off</span><span>Mixed</span><span>Risk-on</span></div>
+      <div class="tf-comps">${rk.components.map(c => `<div class="tf-comp"><span class="dot" style="background:${c.signal > 0 ? 'var(--green)' : c.signal < 0 ? 'var(--red)' : 'var(--mute)'}"></span><div>${esc(c.name)}<small>${esc(c.detail)}</small></div></div>`).join('')}</div>`;
+  }
+  // pairs
+  const mc = (m && m.macro) || {};
+  const cond = (r && r.conditions) || {};
+  const row = (lb, q, yld) => !q ? '' : `<div class="row"><span>${lb}</span><span>${yld ? num(q.price, 2) + '%' : num(q.price, 2)} <span class="${cls(q.chg_pct)}">${sgn(q.chg_pct, 2, '%')}</span> <span class="tf-note">1M <span class="${cls(q.perf.m1)}">${sgn(q.perf.m1, 1, '%')}</span></span></span></div>`;
+  const card = (title, rows, read) => `<div class="tf-card tf-pair"><div class="hd">${title}</div>${rows}<div class="rd">${read}</div></div>`;
+  const cards = [];
+  if(mc.dxy){
+    cards.push(card('DXY vs Gold', row('US Dollar Index', mc.dxy) + row('Gold', mc.gold), corrTxt(corrOf(m, 'DXY', 'Gold'), 'the dollar', 'gold') + ' A stronger dollar usually weighs on gold; both rising together points to a safe-haven bid.'));
+    cards.push(card('DXY vs Equities', row('US Dollar Index', mc.dxy) + row('S&P 500', mc.spx), corrTxt(corrOf(m, 'DXY', 'S&P 500'), 'the dollar', 'stocks') + ' A rapidly rising dollar tightens global financial conditions and tends to pressure risk assets.'));
+    cards.push(card('DXY vs Commodities', row('US Dollar Index', mc.dxy) + row('WTI crude', mc.oil) + row('Copper', mc.copper), corrTxt(corrOf(m, 'DXY', 'Oil'), 'the dollar', 'oil') + ' ' + corrTxt(corrOf(m, 'DXY', 'Copper'), 'the dollar', 'copper')));
+  }
+  if(mc.us10y && mc.spx){
+    const y1 = mc.us10y.perf.m1, s1 = mc.spx.perf.m1;
+    const read = y1 > 0 && s1 < 0 ? 'Yields up, stocks down over the month — rates-driven pressure on equities.' : y1 < 0 && s1 > 0 ? 'Falling yields are supporting equities.' : y1 > 0 && s1 > 0 ? 'Yields and stocks both rising — a growth-led move rather than a rates shock.' : 'Yields and stocks both falling — a growth-scare pattern.';
+    cards.push(card('Bond yields vs Equities', row('US 10-year yield', mc.us10y, true) + row('S&P 500', mc.spx), corrTxt(corrOf(m, 'US 10Y', 'S&P 500'), 'yields', 'stocks') + ' ' + read));
+  }
+  if(mc.oil){
+    const be = cond.breakeven_10y, cc = cond.oil_vs_breakeven_corr_30d;
+    const beRow = be ? `<div class="row"><span>10Y breakeven inflation</span><span>${be.value.toFixed(2)}% <span class="${cls(be.m1 != null ? be.value - be.m1 : null)}">${be.m1 != null ? sgn((be.value - be.m1) * 100, 0, ' bp') : ''}</span> <span class="tf-note">1M</span></span></div>` : '';
+    cards.push(card('Oil vs Inflation expectations', row('WTI crude', mc.oil) + beRow, (cc != null ? `30d correlation of oil returns with breakeven changes <b>${cc.toFixed(2)}</b>. ` : '') + 'Breakevens are the market\'s inflation forecast; oil is their most direct short-term driver — rising together keeps central banks cautious on cuts.'));
+  }
+  $('tfPairs').innerHTML = cards.length ? cards.join('') : `<div class="tf-card tf-empty">${EMPTY}</div>`;
+
+  // Conditions
+  const cs = [];
+  const mk = (lb, c, fmt, read) => c ? `<div class="tf-card tf-stat"><div class="lb">${lb}</div><div class="v">${fmt(c.value)}</div><div class="d">${read(c.value)}</div>${spark(c.spark, 'var(--gold2)')}</div>` : '';
+  cs.push(mk('Chicago Fed NFCI', cond.nfci, v => v.toFixed(2), v => v < 0 ? 'Looser than average' : 'Tighter than average'));
+  cs.push(mk('St. Louis stress index', cond.stlfsi, v => v.toFixed(2), v => v < 0 ? 'Below-average stress' : 'Above-average stress'));
+  cs.push(mk('High-yield credit spread', cond.hy_oas, v => v.toFixed(2) + '%', v => v < 3.5 ? 'Tight — credit relaxed' : v < 5 ? 'Normal' : 'Wide — credit stress'));
+  cs.push(mk('10Y real yield (TIPS)', cond.real_10y, v => v.toFixed(2) + '%', v => v > 2 ? 'Restrictive' : v > 1 ? 'Moderately tight' : 'Easy'));
+  const L = r && r.liquidity;
+  if(L && L.net_liquidity_bn != null) cs.push(`<div class="tf-card tf-stat"><div class="lb">Fed net liquidity</div><div class="v">$${num(L.net_liquidity_bn/1000,2)}T</div><div class="d ${cls(L.net_liquidity_chg_4w_bn)}">${sgn(L.net_liquidity_chg_4w_bn, 0, ' $bn')} / 4w</div></div>`);
+  const joined = cs.join('');
+  $('tfConditions').innerHTML = joined || `<div class="tf-card tf-empty">${EMPTY}</div>`;
+
+  // Correlation matrix
+  const c = m && m.correlations;
+  if(!c) $('tfCorr').innerHTML = `<div class="tf-empty">${EMPTY}</div>`;
+  else {
+    const cell = v => { if(v == null) return '<td>—</td>'; const a = Math.min(1, Math.abs(v));
+      const bg = v >= 0 ? `rgba(63,185,122,${a*0.7})` : `rgba(229,83,75,${a*0.7})`;
+      return `<td style="background:${bg};border-radius:6px;font-variant-numeric:tabular-nums">${v.toFixed(2)}</td>`; };
+    $('tfCorr').innerHTML = `<table class="tf-corr" style="border-collapse:separate;border-spacing:3px;width:100%"><thead><tr><th></th>${c.assets.map(a => `<th>${esc(a)}</th>`).join('')}</tr></thead><tbody>` +
+      c.assets.map((a, i) => `<tr><td class="rl">${esc(a)}</td>${c.matrix[i].map(cell).join('')}</tr>`).join('') + `</tbody></table>`;
+  }
+}
+
+/* ---------- News & event risk ---------- */
+let NEWS = null, NEWS_TAB = 'central_banks';
+function renderNews(){
+  const el = $('tfNewsList');
+  const items = NEWS && NEWS[NEWS_TAB];
+  if(!items || !items.length){ el.innerHTML = `<div class="tf-empty">${NEWS ? 'No headlines in this category right now.' : EMPTY}</div>`; return; }
+  el.innerHTML = `<div class="tf-news">` + items.slice(0, 12).map(n => `<a class="it" href="${esc(n.link)}" target="_blank" rel="noopener"><div class="ti">${esc(n.title)}</div>
+    <div class="mt"><span>${esc(n.bank || n.source || '')}</span><span>${ago(n.ts)}</span>${(n.affects || []).map(a => `<span class="tf-tag">${esc(a)}</span>`).join('')}</div></a>`).join('') + `</div>`;
+}
+const num2 = s => { if(s == null) return null; const t = String(s).replace(/[,%<>\s]/g, ''); const m = t.match(/^(-?\d*\.?\d+)([KMBT]?)$/i); if(!m) return null;
+  return parseFloat(m[1]) * ({K:1e3, M:1e6, B:1e9, T:1e12}[m[2].toUpperCase()] || 1); };
+function affected(ev){
+  const out = [], add = (...a) => a.forEach(x => out.indexOf(x) < 0 && out.push(x));
+  ({US:() => add('USD', 'US equities', 'Treasuries', 'Gold'), UK:() => add('GBP', 'FTSE 100', 'Gilts'), EU:() => add('EUR', 'DAX', 'Bunds'), JP:() => add('JPY', 'Nikkei', 'JGBs')}[ev.country] || (() => {}))();
+  const e = ev.event;
+  if(/cpi|ppi|inflation|price/i.test(e)) add('Rate expectations');
+  if(/employment|payroll|unemployment|jobless|claims/i.test(e)) add('Rate expectations', 'USD');
+  if(/crude|oil|gas/i.test(e)) add('Oil', 'Energy equities');
+  if(/fomc|fed |ecb|boe|boj|mpc|speaks|rate|lagarde|bailey|warsh/i.test(e)) add('Bonds', 'FX');
+  if(/gdp|retail|industrial|manufactur|pmi|index/i.test(e)) add('Growth outlook');
+  return out.slice(0, 5);
+}
+function renderCalendarDerived(cal){
+  const evs = (cal && cal.events) || [];
+  const today = new Date().toISOString().slice(0, 10);
+  const surprises = evs.filter(e => e.dt <= today && (e.impact === 'high' || e.impact === 'medium'))
+    .map(e => ({e, a: num2(e.actual), f: num2(e.forecast)})).filter(x => x.a != null && x.f != null)
+    .sort((x, y) => y.e.dt.localeCompare(x.e.dt)).slice(0, 10);
+  $('tfSurprises').innerHTML = !evs.length ? `<div class="tf-empty">${EMPTY}</div>` : !surprises.length ? `<div class="tf-empty">No released high/medium-impact figures with a forecast yet.</div>` :
+    `<table class="tf-table"><thead><tr><th>Date</th><th>Event</th><th class="num">Actual</th><th class="num">Forecast</th><th>Result</th></tr></thead><tbody>` +
+    surprises.map(({e, a, f}) => { const d = f === 0 ? a : (a - f) / Math.abs(f) * 100, same = Math.abs(a - f) < 1e-9;
+      return `<tr><td>${esc(e.date.slice(0, 6))}</td><td class="wrap"><span class="tf-pill">${esc(e.country)}</span> ${esc(e.event)}</td><td class="num">${esc(e.actual)}</td><td class="num">${esc(e.forecast)}</td>
+      <td class="${same ? 'tf-flat' : a > f ? 'tf-up' : 'tf-down'}">${same ? 'In line' : a > f ? 'Above' : 'Below'}</td></tr>`; }).join('') + `</tbody></table>`;
+  const up = evs.filter(e => e.upcoming && e.impact === 'high').sort((a, b) => a.dt.localeCompare(b.dt)).slice(0, 10);
+  $('tfUpcoming').innerHTML = !evs.length ? `<div class="tf-empty">${EMPTY}</div>` : !up.length ? `<div class="tf-empty">No high-impact events scheduled in the current window.</div>` :
+    `<table class="tf-table"><thead><tr><th>When</th><th>Event</th><th>Affected markets</th></tr></thead><tbody>` +
+    up.map(e => `<tr><td>${esc(e.date.slice(0, 6))}<div class="tf-note">${esc((e.time || '').split('·')[0].trim())}</div></td><td class="wrap"><span class="tf-pill">${esc(e.country)}</span> ${esc(e.event)}<div class="tf-note">Fcst ${esc(e.forecast)} · Prev ${esc(e.previous)}</div></td>
+      <td class="wrap">${affected(e).map(a => `<span class="tf-tag">${esc(a)}</span>`).join(' ')}</td></tr>`).join('') + `</tbody></table>`;
+}
+
+/* ---------- boot ---------- */
+Promise.all([getJSON('tradfi_markets.json'), getJSON('tradfi_rates.json'), getJSON('tradfi_news.json'), getJSON('calendar_data.json')])
+  .then(([m, r, n, cal]) => {
+    NEWS = n;
+    stamp($('tfMarketsUpdated'), m, 'market');
+    stamp($('tfRatesUpdated'), r, 'rates');
+    stamp($('tfNewsUpdated'), n, 'news');
+    renderMarkets(m); renderRates(r, n); renderMacro(m, r); renderNews(); renderCalendarDerived(cal);
+  });
+$('tfNewsTabs').addEventListener('click', e => {
+  const b = e.target.closest('.filter-chip'); if(!b) return;
+  document.querySelectorAll('#tfNewsTabs .filter-chip').forEach(c => c.classList.remove('active'));
+  b.classList.add('active'); NEWS_TAB = b.dataset.ntab; renderNews();
+});
+renderExchanges();
+setInterval(() => {
+  renderExchanges();
+  document.querySelectorAll('[data-statuspill]').forEach(el => { el.innerHTML = statusPill(el.dataset.statuspill); });
+}, 1000);
+})();
 </script>
 
 </body>

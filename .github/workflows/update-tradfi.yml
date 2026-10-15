@@ -1,0 +1,54 @@
+name: Update TradFi data
+
+on:
+  schedule:
+    - cron: "7,37 * * * *"
+  workflow_dispatch: {}
+  push:
+    paths:
+      - scripts/update_tradfi.py
+      - .github/workflows/update-tradfi.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-tradfi
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build TradFi data (Yahoo, US Treasury, FRED, RBA, BoE, RSS)
+        continue-on-error: true
+        run: python3 scripts/update_tradfi.py
+
+      - name: Commit and push if changed
+        if: always()
+        run: |
+          git config user.name "ttm-calendar-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -f tradfi_debug.txt 2>/dev/null || true
+          git add tradfi_markets.json 2>/dev/null || true
+          git add tradfi_rates.json 2>/dev/null || true
+          git add tradfi_news.json 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Auto-update TradFi data"
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "Push attempt $i failed, retrying..."
+              sleep 5
+            done
+          fi
