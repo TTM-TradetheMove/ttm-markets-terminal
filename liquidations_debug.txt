@@ -1,19 +1,21 @@
-Run at 2026-10-15T00:40:28.840901+00:00
+Run at 2026-10-15T05:14:44.722917+00:00
 
 Binance: connected (wss://fstream.binance.com/market/ws/!forceOrder@arr)
 Bybit: connected
-Bybit: raw message #1 sample: {"success":true,"ret_msg":"","conn_id":"db295bsjdk6lg9qurhs0-2vuek","req_id":"","op":"subscribe"}
+Bybit: raw message #1 sample: {"success":true,"ret_msg":"","conn_id":"db292cve3iepafoq97m0-2v7lw","req_id":"","op":"subscribe"}
 Bybit: subscribe ack -- success=True ret_msg=
-Bybit: raw message #2 sample: {"success":true,"ret_msg":"","conn_id":"db295bsjdk6lg9qurhs0-2vuek","req_id":"","op":"subscribe"}
+Bybit: raw message #2 sample: {"success":true,"ret_msg":"","conn_id":"db292cve3iepafoq97m0-2v7lw","req_id":"","op":"subscribe"}
 Bybit: subscribe ack -- success=True ret_msg=
-Bybit: raw message #3 sample: {"success":false,"ret_msg":"error:handler not found,topic:liquidation.BTCUSDT","conn_id":"db295bsjdk6lg9qurhs0-2vuek","req_id":"","op":"subscribe"}
+Bybit: raw message #3 sample: {"success":false,"ret_msg":"error:handler not found,topic:liquidation.BTCUSDT","conn_id":"db292cve3iepafoq97m0-2v7lw","req_id":"","op":"subscribe"}
 Bybit: subscribe ack -- success=False ret_msg=error:handler not found,topic:liquidation.BTCUSDT
-Bybit: raw message #4 sample: {"success":false,"ret_msg":"error:handler not found,topic:liquidation.ETHUSDT","conn_id":"db295bsjdk6lg9qurhs0-2vuek","req_id":"","op":"subscribe"}
+Bybit: raw message #4 sample: {"success":false,"ret_msg":"error:handler not found,topic:liquidation.ETHUSDT","conn_id":"db292cve3iepafoq97m0-2v7lw","req_id":"","op":"subscribe"}
 Bybit: subscribe ack -- success=False ret_msg=error:handler not found,topic:liquidation.ETHUSDT
-Binance: first raw message sample: {"e":"forceOrder","E":1792024651184,"o":{"s":"WALUSDT","S":"BUY","o":"LIMIT","f":"IOC","q":"2004","p":"0.0584200","ap":"0.0578200","X":"FILLED","l":"2004","z":"2004","T":1792024650179,"ps":"WALUSDT","st":1}}
-Bybit: capture window closed, 4 raw messages received, 0 events parsed
-Binance: capture window closed, 146 raw messages received, 7 events parsed
-Captured 7 new liquidation events this run
-Rolling log: 32 existing + 7 new -> 38 after dedupe/trim
-Mark prices: {'BTCUSDT': 81651.22, 'ETHUSDT': 2423.54}
+Binance: first raw message sample: {"e":"forceOrder","E":1792041102109,"o":{"s":"1000PEPEUSDT","S":"SELL","o":"LIMIT","f":"IOC","q":"12981","p":"0.0038894","ap":"0.0039143","X":"FILLED","l":"12981","z":"12981","T":1792041101106,"ps":"1000PEPEUSDT","st":1}}
+Bybit: raw message #5 sample: {"topic":"allLiquidation.BTCUSDT","type":"snapshot","ts":1792041170429,"data":[{"T":1792041169989,"s":"BTCUSDT","S":"Buy","v":"0.010","p":"80964.60"}]}
+Bybit: raw message #6 sample: {"topic":"allLiquidation.ETHUSDT","type":"snapshot","ts":1792041186314,"data":[{"T":1792041186305,"s":"ETHUSDT","S":"Buy","v":"0.34","p":"2359.04"}]}
+Bybit: capture window closed, 8 raw messages received, 4 events parsed
+Binance: capture window closed, 67 raw messages received, 4 events parsed
+Captured 8 new liquidation events this run
+Rolling log: 38 existing + 8 new -> 46 after dedupe/trim
+Mark prices: {'BTCUSDT': 81545.83, 'ETHUSDT': 2380.77}
 Price history points: BTC=6 ETH=6
