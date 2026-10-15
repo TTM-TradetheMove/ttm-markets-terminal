@@ -348,6 +348,10 @@ td.num{font-variant-numeric:tabular-nums;color:var(--mute)}
 .th-box[data-role="primary"] .th-clock{font-size:38px}
 .th-box[data-role="left"]{grid-area:left}
 .th-box[data-role="right"]{grid-area:right}
+.th-phase{font-size:12px;font-weight:600;color:var(--text);margin:2px 0 1px}
+.th-running{font-size:11px;color:var(--mute);margin-bottom:4px;font-variant-numeric:tabular-nums}
+.th-status.pre,.th-status.post{background:rgba(96,165,250,.15);color:#60a5fa;border-color:rgba(96,165,250,.35)}
+.th-box.pre,.th-box.post{border-color:rgba(96,165,250,.35)}
 
 /* ---------- About ---------- */
 .about-grid{display:grid;grid-template-columns:1.1fr 0.9fr;gap:40px;align-items:center}
@@ -392,7 +396,6 @@ footer{padding:40px 0 60px}
       <a href="#tradinghours">Trading Hours</a>
       <a href="#marketpulse">Market Pulse</a>
       <a href="#tokenevents">Token Events</a>
-      <a href="#congress">Congress Watch</a>
       <a href="#library">Reports</a>
       <a href="#transparency">Transparency Watch</a>
       <a href="#about">About</a>
@@ -404,7 +407,7 @@ footer{padding:40px 0 60px}
 <div class="hero wrap">
   <div class="hero-text">
     <h1>Every market TTM covers, <em>one terminal.</em></h1>
-    <p class="lead">Crypto today, equities and metals next. Check the macro calendar, see what Congress is trading, then pull up any asset's Review or full 7-point Deep Dive — all from one link.</p>
+    <p class="lead">Crypto today, equities and metals next. Check the macro calendar, then pull up any asset's Review or full 7-point Deep Dive — all from one link.</p>
     <div class="hero-ctas">
       <a class="btn-primary" href="#library">Open the report library</a>
       <a class="btn-ghost" href="https://t.me/+fxWM17n8TxE3ODc1" target="_blank" rel="noopener">TTM Telegram community</a>
@@ -541,27 +544,33 @@ footer{padding:40px 0 60px}
     <div class="section-head">
       <span class="tag">Session Clock</span>
       <h2>Trading hours &amp; session overlap</h2>
-      <p>Built for the TTM community on Melbourne time, with London and New York tracked right underneath. Tradfi runs Monday–Friday — and the London–New York overlap is when liquidity (and volatility) peaks, so that's the window worth planning your session around.</p>
+      <p>Three sessions tracked live — ASIA (Melbourne time), London and New York. Each box shows whether its session is running, how long it has been running, whether it is overlapping another session, and a countdown to its close. The London–New York overlap is when liquidity (and volatility) peaks.</p>
     </div>
 
     <div class="th-card">
       <div class="th-rotate" id="thRotate">
-        <div class="th-box" id="thBox-mel" data-key="mel">
-          <div class="th-box-head"><span class="th-city">Melbourne <small>(Asia-Pacific)</small></span><span class="th-status" id="thStatus-mel">—</span></div>
-          <div class="th-clock" id="thClock-mel">--:--</div>
-          <div class="th-hours" id="thHours-mel">Session 07:00–16:00 local, Mon–Fri</div>
-          <div class="th-countdown" id="thCountdown-mel">—</div>
+        <div class="th-box" id="thBox-asia" data-key="asia">
+          <div class="th-box-head"><span class="th-city">ASIA <small>(Melbourne time)</small></span><span class="th-status" id="thStatus-asia">—</span></div>
+          <div class="th-clock" id="thClock-asia">--:--</div>
+          <div class="th-phase" id="thPhase-asia">—</div>
+          <div class="th-running" id="thRunning-asia">—</div>
+          <div class="th-hours">Core 07:00–16:00 Melbourne, Mon–Fri</div>
+          <div class="th-countdown" id="thCountdown-asia">—</div>
         </div>
         <div class="th-box" id="thBox-ldn" data-key="ldn">
           <div class="th-box-head"><span class="th-city">London</span><span class="th-status" id="thStatus-ldn">—</span></div>
           <div class="th-clock" id="thClock-ldn">--:--</div>
-          <div class="th-hours" id="thHours-ldn">Session 08:00–17:00 local, Mon–Fri</div>
+          <div class="th-phase" id="thPhase-ldn">—</div>
+          <div class="th-running" id="thRunning-ldn">—</div>
+          <div class="th-hours">Core 08:00–17:00 London, Mon–Fri</div>
           <div class="th-countdown" id="thCountdown-ldn">—</div>
         </div>
         <div class="th-box" id="thBox-ny" data-key="ny">
-          <div class="th-box-head"><span class="th-city">New York</span><span class="th-status" id="thStatus-ny">—</span></div>
+          <div class="th-box-head"><span class="th-city">New York <small>(US)</small></span><span class="th-status" id="thStatus-ny">—</span></div>
           <div class="th-clock" id="thClock-ny">--:--</div>
-          <div class="th-hours" id="thHours-ny">Session 08:00–17:00 local, Mon–Fri</div>
+          <div class="th-phase" id="thPhase-ny">—</div>
+          <div class="th-running" id="thRunning-ny">—</div>
+          <div class="th-hours">Pre 04:00–09:30 · Core 09:30–16:00 · Post 16:00–20:00 ET</div>
           <div class="th-countdown" id="thCountdown-ny">—</div>
         </div>
       </div>
@@ -576,7 +585,7 @@ footer{padding:40px 0 60px}
           <div class="th-overlap-unit"><span id="thOS">—</span><small>S</small></div>
         </div>
       </div>
-      <p class="midterm-note">The top box is whichever session's clock is live right now (or opening soonest) — it rotates automatically as each session kicks in, during an overlap the one that opened most recently takes the top spot. The rotation runs every day including weekends, since crypto trades 24/7 and bots/algos follow the same session clock regardless of the day. The Weekend badge is separate — it just flags that traditional cash FX/equity markets are shut, Monday–Friday only; it doesn't pause the rotation itself.</p>
+      <p class="midterm-note">The top box is the session that most recently went live — when New York's core session starts while London is still open, it takes the top spot and reads "Overlap with London"; once London closes it becomes "Core — solo, no overlap". Before that, New York shows "Pre-market" and London stays on top. After the 16:00 ET close it shows "Post-market". Overlaps are counted between core sessions only. Sessions run Monday–Friday; the Weekend badge flags that cash markets are shut. Crypto trades 24/7, but flows and volatility still tend to follow these cash-market sessions.</p>
     </div>
   </div>
 </section>
@@ -680,68 +689,6 @@ footer{padding:40px 0 60px}
   </div>
 </section>
 
-<section id="congress">
-  <div class="wrap">
-    <div class="section-head">
-      <span class="tag">Congressional Trading</span>
-      <h2>Congress Watch</h2>
-      <p>What members of Congress have disclosed buying and selling, under the STOCK Act's periodic transaction reports — Nancy Pelosi included. Filter to this month or last month, or view the full snapshot.</p>
-    </div>
-
-    <div class="bw-banner" id="cgBanner">
-      <div class="bw-stat" id="cgTradeCount">—<small>Disclosed trades (snapshot)</small></div>
-      <div class="bw-stat" id="cgBuyCount">—<small>Buys</small></div>
-      <div class="bw-stat" id="cgSellCount">—<small>Sells</small></div>
-      <div class="bw-copy">
-        <h3>See the latest disclosed Congressional trades</h3>
-        <p>Click to open TTM's snapshot — member, ticker, action, size range and filing lag.</p>
-      </div>
-      <div class="bw-chevron" id="cgChevron">›</div>
-    </div>
-
-    <div class="bw-panel" id="cgPanel">
-      <div class="filter-block">
-        <span class="fl-label">Period</span>
-        <div class="filter-row" id="cgPeriodRow">
-          <button class="filter-chip active" data-cgperiod="all">All</button>
-          <button class="filter-chip" data-cgperiod="current">Current month</button>
-          <button class="filter-chip" data-cgperiod="last">Last month</button>
-        </div>
-      </div>
-
-      <div class="filter-block">
-        <span class="fl-label">Action</span>
-        <div class="filter-row" id="cgActionRow">
-          <button class="filter-chip active" data-cgaction="all">All</button>
-          <button class="filter-chip" data-cgaction="buy">Buys</button>
-          <button class="filter-chip" data-cgaction="sell">Sells</button>
-        </div>
-      </div>
-
-      <div class="filter-block">
-        <span class="fl-label">Member</span>
-        <div class="filter-row" id="cgMemberRow">
-          <button class="filter-chip active" data-cgmember="all">All members</button>
-        </div>
-      </div>
-
-      <div class="section-head" style="margin:22px 0 10px">
-        <span class="fl-label" style="color:var(--gold);text-transform:uppercase;font-size:11px;letter-spacing:1.5px">Profitability snapshot</span>
-      </div>
-      <table class="bwtbl" style="margin-bottom:22px">
-        <thead><tr><th>Member</th><th>Trades</th><th>Win rate</th><th>Avg return since trade</th></tr></thead>
-        <tbody id="cgPerfBody"></tbody>
-      </table>
-
-      <table class="bwtbl">
-        <thead><tr><th>Member</th><th>Ticker</th><th>Action</th><th>Size range</th><th>Traded</th><th>Filed</th><th>Return since</th></tr></thead>
-        <tbody id="cgBody"></tbody>
-      </table>
-      <p id="cgEmpty" class="calendar-note" style="display:none">No disclosed trades match this filter.</p>
-      <p class="bw-note">Illustrative snapshot, not a live feed — members have up to 45 days under the STOCK Act to file, so "Traded" and "Filed" dates often sit weeks apart, and "Return since" is a simplified mark from the disclosed trade date to now, not the member's actual cost basis or exit price. For the live, complete record, check the official <a href="https://disclosures-clerk.house.gov/PublicDisclosure/FinancialDisclosure" target="_blank" rel="noopener">House Clerk disclosure portal</a> or a tracker such as Capitol Trades/Quiver Quantitative, which calculate performance properly. Nothing here is a signal to copy — members' trades are disclosed, not endorsed.</p>
-    </div>
-  </div>
-</section>
 
 <section id="library">
   <div class="wrap">
@@ -1733,126 +1680,6 @@ bwBanner.addEventListener('click', () => {
   bwBanner.classList.toggle('open', isOpen);
 });
 
-// ---- Congress Watch ----
-// "Current month" = Oct 2026, "Last month" = Sep 2026, matching TODAY above
-const CG_TRADES = [
-  {member:"Nancy Pelosi", ticker:"NVDA", action:"buy", range:"$250K–$500K", traded:d("2026-10-01"), tradedLabel:"01 Oct 2026", filed:"14 Oct 2026", retPct:8.4},
-  {member:"Nancy Pelosi", ticker:"PANW", action:"sell", range:"$100K–$250K", traded:d("2026-09-22"), tradedLabel:"22 Sep 2026", filed:"06 Oct 2026", retPct:3.1},
-  {member:"Nancy Pelosi", ticker:"MSFT", action:"buy", range:"$500K–$1M", traded:d("2026-09-18"), tradedLabel:"18 Sep 2026", filed:"02 Oct 2026", retPct:5.6},
-  {member:"Nancy Pelosi", ticker:"GOOGL", action:"buy", range:"$1M–$5M", traded:d("2026-08-14"), tradedLabel:"14 Aug 2026", filed:"28 Aug 2026", retPct:11.2},
-  {member:"Dan Crenshaw", ticker:"COIN", action:"buy", range:"$15K–$50K", traded:d("2026-10-02"), tradedLabel:"02 Oct 2026", filed:"16 Oct 2026", retPct:-2.8},
-  {member:"Josh Gottheimer", ticker:"AAPL", action:"sell", range:"$50K–$100K", traded:d("2026-09-29"), tradedLabel:"29 Sep 2026", filed:"13 Oct 2026", retPct:1.4},
-  {member:"Marjorie Taylor Greene", ticker:"XOM", action:"buy", range:"$15K–$50K", traded:d("2026-09-10"), tradedLabel:"10 Sep 2026", filed:"24 Sep 2026", retPct:-4.5},
-  {member:"Ro Khanna", ticker:"TSLA", action:"sell", range:"$1K–$15K", traded:d("2026-09-05"), tradedLabel:"05 Sep 2026", filed:"19 Sep 2026", retPct:6.9},
-];
-
-function monthKey(dt){ return dt.getFullYear() + "-" + dt.getMonth(); }
-const CURRENT_MONTH_KEY = monthKey(TODAY);
-const lastMonthDate = new Date(TODAY.getFullYear(), TODAY.getMonth()-1, 1);
-const LAST_MONTH_KEY = monthKey(lastMonthDate);
-
-let cgPeriod = 'all';
-let cgAction = 'all';
-let cgMember = 'all';
-
-// populate member filter chips from the data
-const cgMemberRow = document.getElementById('cgMemberRow');
-const CG_MEMBERS = [...new Set(CG_TRADES.map(t => t.member))].sort();
-CG_MEMBERS.forEach(m => {
-  const btn = document.createElement('button');
-  btn.className = 'filter-chip';
-  btn.dataset.cgmember = m;
-  btn.textContent = m;
-  cgMemberRow.appendChild(btn);
-});
-
-function retClass(pct){ return pct > 0 ? 'bias-up' : (pct < 0 ? 'bias-down' : 'bias-neutral'); }
-function retLabel(pct){ return (pct > 0 ? '+' : '') + pct.toFixed(1) + '%'; }
-
-function renderCongress(){
-  const cgBody = document.getElementById('cgBody');
-  cgBody.innerHTML = '';
-  const rows = CG_TRADES.filter(t => {
-    if(cgAction !== 'all' && t.action !== cgAction) return false;
-    if(cgMember !== 'all' && t.member !== cgMember) return false;
-    const mk = monthKey(t.traded);
-    if(cgPeriod === 'current' && mk !== CURRENT_MONTH_KEY) return false;
-    if(cgPeriod === 'last' && mk !== LAST_MONTH_KEY) return false;
-    return true;
-  });
-  document.getElementById('cgEmpty').style.display = rows.length === 0 ? 'block' : 'none';
-  rows.forEach(t => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td class="evt">${t.member}</td>
-      <td><span class="fw-tag">${t.ticker}</span></td>
-      <td class="${t.action === 'buy' ? 'bias-up' : 'bias-down'}">${t.action === 'buy' ? 'Buy' : 'Sell'}</td>
-      <td class="num">${t.range}</td>
-      <td class="num">${t.tradedLabel}</td>
-      <td class="num">${t.filed}</td>
-      <td class="${retClass(t.retPct)}">${retLabel(t.retPct)}</td>
-    `;
-    cgBody.appendChild(tr);
-  });
-  // snapshot stats always reflect the full set, not the current filter
-  document.getElementById('cgTradeCount').innerHTML = `${CG_TRADES.length}<small>Disclosed trades (snapshot)</small>`;
-  document.getElementById('cgBuyCount').innerHTML = `${CG_TRADES.filter(t=>t.action==='buy').length}<small>Buys</small>`;
-  document.getElementById('cgSellCount').innerHTML = `${CG_TRADES.filter(t=>t.action==='sell').length}<small>Sells</small>`;
-
-  // profitability snapshot, aggregated per member across ALL trades (not the active filter)
-  const cgPerfBody = document.getElementById('cgPerfBody');
-  cgPerfBody.innerHTML = '';
-  CG_MEMBERS.forEach(m => {
-    const trades = CG_TRADES.filter(t => t.member === m);
-    const wins = trades.filter(t => t.retPct > 0).length;
-    const winRate = Math.round((wins / trades.length) * 100);
-    const avgReturn = trades.reduce((sum, t) => sum + t.retPct, 0) / trades.length;
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td class="evt">${m}</td>
-      <td class="num">${trades.length}</td>
-      <td class="num">${winRate}%</td>
-      <td class="${retClass(avgReturn)}">${retLabel(avgReturn)}</td>
-    `;
-    cgPerfBody.appendChild(tr);
-  });
-}
-renderCongress();
-
-document.getElementById('cgPeriodRow').addEventListener('click', (e) => {
-  const chip = e.target.closest('.filter-chip');
-  if(!chip) return;
-  document.querySelectorAll('#cgPeriodRow .filter-chip').forEach(c => c.classList.remove('active'));
-  chip.classList.add('active');
-  cgPeriod = chip.dataset.cgperiod;
-  renderCongress();
-});
-
-document.getElementById('cgActionRow').addEventListener('click', (e) => {
-  const chip = e.target.closest('.filter-chip');
-  if(!chip) return;
-  document.querySelectorAll('#cgActionRow .filter-chip').forEach(c => c.classList.remove('active'));
-  chip.classList.add('active');
-  cgAction = chip.dataset.cgaction;
-  renderCongress();
-});
-
-cgMemberRow.addEventListener('click', (e) => {
-  const chip = e.target.closest('.filter-chip');
-  if(!chip) return;
-  document.querySelectorAll('#cgMemberRow .filter-chip').forEach(c => c.classList.remove('active'));
-  chip.classList.add('active');
-  cgMember = chip.dataset.cgmember;
-  renderCongress();
-});
-
-const cgBanner = document.getElementById('cgBanner');
-const cgPanel = document.getElementById('cgPanel');
-cgBanner.addEventListener('click', () => {
-  const isOpen = cgPanel.classList.toggle('open');
-  cgBanner.classList.toggle('open', isOpen);
-});
-
 /* Liquidity Cycle modal — in-page lightbox so there's always a visible close control */
 const cycleOpenBtn = document.getElementById('cycleOpenBtn');
 const cycleModal = document.getElementById('cycleModal');
@@ -1899,16 +1726,20 @@ updateMidtermCountdown();
 setInterval(updateMidtermCountdown, 1000);
 
 /* ---- Trading hours / session overlap widget ---- */
-// Standard forex-market session hours (local time, 24h) per city. DST is handled
-// automatically because we convert via each city's real IANA timezone every tick.
+// Hours are local wall-clock minutes-from-midnight per city. DST is handled
+// automatically because every tick converts via each city's real IANA timezone.
 const TH_SESSIONS = {
-  mel: {zone:'Australia/Melbourne', open:7,  close:16, label:'Melbourne'},
-  ldn: {zone:'Europe/London',       open:8,  close:17, label:'London'},
-  ny:  {zone:'America/New_York',    open:8,  close:17, label:'New York'},
+  asia: {zone:'Australia/Melbourne', phases:[{name:'core', open:420, close:960}]},
+  ldn:  {zone:'Europe/London',       phases:[{name:'core', open:480, close:1020}]},
+  ny:   {zone:'America/New_York',    phases:[
+          {name:'pre',  open:240, close:570},
+          {name:'core', open:570, close:960},
+          {name:'post', open:960, close:1200}]},
 };
+const TH_ORDER = ['asia', 'ldn', 'ny'];
+const TH_FULL_NAME = {asia:'ASIA', ldn:'London', ny:'New York'};
 
-// Convert a local wall-clock time (y,m,d,hh,mm) in `zone` to a UTC Date.
-// One correction pass is enough outside the ~1hr/year DST-transition instant.
+// Convert a local wall-clock time in `zone` to a UTC Date.
 function zonedLocalToUTC(y, m, d, hh, mm, zone){
   const guessUTC = Date.UTC(y, m-1, d, hh, mm, 0);
   const fmt = new Intl.DateTimeFormat('en-US', {
@@ -1918,221 +1749,163 @@ function zonedLocalToUTC(y, m, d, hh, mm, zone){
   const parts = Object.fromEntries(fmt.formatToParts(new Date(guessUTC)).map(p => [p.type, p.value]));
   const hourVal = parts.hour === '24' ? 0 : Number(parts.hour);
   const asIfUTC = Date.UTC(Number(parts.year), Number(parts.month)-1, Number(parts.day), hourVal, Number(parts.minute), Number(parts.second));
-  const offset = asIfUTC - guessUTC;
-  return new Date(guessUTC - offset);
+  return new Date(guessUTC - (asIfUTC - guessUTC));
 }
 
-// Returns {openUTC, closeUTC} for a session's window covering `now` (looks at
-// yesterday/today/tomorrow's local date so overnight-adjacent lookups work).
 function isWeekendLocal(now, zone){
   const wd = new Intl.DateTimeFormat('en-US', {timeZone: zone, weekday:'short'}).format(now);
   return wd === 'Sat' || wd === 'Sun';
 }
 
-// Session windows only exist Mon-Fri (local calendar date in that zone) -- a
-// Saturday/Sunday local date contributes no window, so isOpenNow is
-// automatically false across the whole weekend without extra logic.
-// Range is -1..+4 days so a Friday-evening check can still find Monday's
-// window for the overlap countdown.
-function sessionWindowsNear(now, session){
+// Every phase window (pre/core/post) on Mon-Fri local dates, from yesterday to
+// +4 days, so the next open is always findable (including across a weekend).
+function phaseWindows(now, session){
   const zone = session.zone;
   const fmt = new Intl.DateTimeFormat('en-US', {timeZone: zone, year:'numeric', month:'2-digit', day:'2-digit'});
   const parts = Object.fromEntries(fmt.formatToParts(now).map(p => [p.type, p.value]));
   const y = Number(parts.year), m = Number(parts.month), d = Number(parts.day);
-  const windows = [];
-  for(const dayOffset of [-1, 0, 1, 2, 3, 4]){
-    const dt = new Date(Date.UTC(y, m-1, d + dayOffset));
-    const yy = dt.getUTCFullYear(), mm = dt.getUTCMonth()+1, dd = dt.getUTCDate();
-    const dow = dt.getUTCDay(); // 0=Sun, 6=Sat -- the calendar date itself decides the weekday
+  const out = [];
+  for(const off of [-1, 0, 1, 2, 3, 4]){
+    const dt = new Date(Date.UTC(y, m-1, d + off));
+    const dow = dt.getUTCDay();
     if(dow === 0 || dow === 6) continue;
-    const openUTC = zonedLocalToUTC(yy, mm, dd, session.open, 0, zone);
-    const closeUTC = zonedLocalToUTC(yy, mm, dd, session.close, 0, zone);
-    windows.push({openUTC, closeUTC});
+    const yy = dt.getUTCFullYear(), mm = dt.getUTCMonth()+1, dd = dt.getUTCDate();
+    session.phases.forEach(p => out.push({
+      phase: p.name,
+      openUTC:  zonedLocalToUTC(yy, mm, dd, Math.floor(p.open/60),  p.open % 60,  zone),
+      closeUTC: zonedLocalToUTC(yy, mm, dd, Math.floor(p.close/60), p.close % 60, zone),
+    }));
   }
-  return windows;
-}
-
-function isOpenNow(now, session){
-  const windows = sessionWindowsNear(now, session);
-  return windows.some(w => now >= w.openUTC && now < w.closeUTC);
-}
-
-// Rotation order the three boxes cycle through across the trading day.
-const TH_ORDER = ['mel', 'ldn', 'ny'];
-const TH_FULL_NAME = {mel:'Melbourne', ldn:'London', ny:'New York'};
-
-// Which box is "primary" (top) rotates by time-of-day alone, every day of the
-// week -- crypto trades 24/7 and algos/bots follow the same session clock on
-// weekends as weekdays, so the rotation never freezes. The Weekend badge is
-// a separate, honest flag that *traditional* cash FX/equity markets are shut;
-// it doesn't stop the session clock itself from cycling.
-function sessionClockState(now, session){
-  const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone: session.zone, hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false
-  }).formatToParts(now);
-  const get = t => Number(parts.find(p => p.type === t).value);
-  const hh = get('hour'), mm = get('minute'), ss = get('second');
-  const secondsNow = hh * 3600 + mm * 60 + ss;
-  const openSec = session.open * 3600, closeSec = session.close * 3600;
-  const active = secondsNow >= openSec && secondsNow < closeSec;
-  const elapsed = active ? secondsNow - openSec : null;
-  const secondsToOpen = secondsNow < openSec ? (openSec - secondsNow) : (24 * 3600 - secondsNow + openSec);
-  const secondsToClose = active ? (closeSec - secondsNow) : null;
-  return {
-    active,
-    elapsed: active ? Math.floor(elapsed / 60) : null,
-    minutesToOpen: Math.floor(secondsToOpen / 60),
-    secondsToOpen, secondsToClose,
-  };
+  return out;
 }
 
 // "3h 12m 05s" / "42m 05s" / "05s"
 function formatCountdown(totalSeconds){
   totalSeconds = Math.max(0, Math.floor(totalSeconds));
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
+  const h = Math.floor(totalSeconds / 3600), m = Math.floor((totalSeconds % 3600) / 60), s = totalSeconds % 60;
   const pad = n => String(n).padStart(2, '0');
   if(h > 0) return `${h}h ${pad(m)}m ${pad(s)}s`;
   if(m > 0) return `${m}m ${pad(s)}s`;
   return `${s}s`;
 }
+// "2h 14m" / "14m" / "<1m"
+function formatRunning(totalSeconds){
+  const mins = Math.floor(Math.max(0, totalSeconds) / 60);
+  if(mins < 1) return '<1m';
+  const h = Math.floor(mins / 60), m = mins % 60;
+  return h > 0 ? `${h}h ${String(m).padStart(2,'0')}m` : `${m}m`;
+}
 
-// All pairs that can meaningfully overlap (Melbourne/Asia-Pacific session ends
-// well before New York opens, so mel-ny never overlaps -- only adjacent pairs do).
-const TH_PAIRS = [['mel','ldn'], ['ldn','ny']];
-
+// Overlaps only count between CORE sessions.
 function pairOverlaps(now, keyA, keyB){
-  const wa = sessionWindowsNear(now, TH_SESSIONS[keyA]);
-  const wb = sessionWindowsNear(now, TH_SESSIONS[keyB]);
-  const overlaps = [];
-  wa.forEach(a => wb.forEach(b => {
+  const core = k => phaseWindows(now, TH_SESSIONS[k]).filter(w => w.phase === 'core');
+  const out = [];
+  core(keyA).forEach(a => core(keyB).forEach(b => {
     const start = new Date(Math.max(a.openUTC, b.openUTC));
     const end = new Date(Math.min(a.closeUTC, b.closeUTC));
-    if(start < end) overlaps.push({start, end, keyA, keyB});
+    if(start < end) out.push({start, end, keyA, keyB});
   }));
-  return overlaps;
+  return out;
 }
+const TH_PAIRS = [['asia','ldn'], ['ldn','ny'], ['asia','ny']];
 
 function updateTradingHours(){
   const now = new Date();
-  const state = {};
+  const st = {};
 
   TH_ORDER.forEach(key => {
-    const session = TH_SESSIONS[key];
+    const s = TH_SESSIONS[key];
+    const ws = phaseWindows(now, s);
+    const cur = ws.find(w => now >= w.openUTC && now < w.closeUTC) || null;
+    const upcoming = ws.filter(w => w.openUTC > now).sort((a,b) => a.openUTC - b.openUTC)[0] || null;
+    st[key] = {cur, upcoming, weekend: isWeekendLocal(now, s.zone)};
+  });
+
+  TH_ORDER.forEach(key => {
     const clockEl = document.getElementById('thClock-' + key);
-    const statusEl = document.getElementById('thStatus-' + key);
-    const boxEl = document.getElementById('thBox-' + key);
     if(!clockEl) return;
+    const s = TH_SESSIONS[key], x = st[key];
+    clockEl.textContent = new Intl.DateTimeFormat('en-GB', {timeZone: s.zone, hour:'2-digit', minute:'2-digit', hour12:false}).format(now);
 
-    const timeStr = new Intl.DateTimeFormat('en-GB', {
-      timeZone: session.zone, hour:'2-digit', minute:'2-digit', hour12:false
-    }).format(now);
-    clockEl.textContent = timeStr;
+    const phase = x.cur ? x.cur.phase : null;
+    const partners = TH_ORDER.filter(k => k !== key && st[k].cur && st[k].cur.phase === 'core').map(k => TH_FULL_NAME[k]);
+    let status, phaseText, runningText = '—', countText, closing = false;
 
-    const weekend = isWeekendLocal(now, session.zone);
-    const windows = sessionWindowsNear(now, session);
-    const activeWindow = windows.find(w => now >= w.openUTC && now < w.closeUTC);
-    const open = !weekend && !!activeWindow;
-    statusEl.textContent = weekend ? 'Weekend' : (open ? 'Open' : 'Closed');
-    statusEl.classList.toggle('open', open);
-    statusEl.classList.toggle('weekend', weekend);
-    boxEl.classList.toggle('open', open);
-    boxEl.classList.toggle('weekend', weekend);
-
-    // Soonest future open (used as tiebreak when nothing is open right now).
-    const futureWindow = windows.filter(w => w.openUTC > now).sort((a,b) => a.openUTC - b.openUTC)[0];
-
-    const clock = sessionClockState(now, session);
-
-    // Per-box countdown: counts down to this session's own clock close (if
-    // live right now) or its own clock open (if not) -- same day-agnostic
-    // clock the rotation itself uses, so it stays meaningful through weekends.
-    const countdownEl = document.getElementById('thCountdown-' + key);
-    if(countdownEl){
-      if(clock.active){
-        countdownEl.textContent = `Closes in ${formatCountdown(clock.secondsToClose)}`;
-        countdownEl.classList.add('closing');
-      } else {
-        countdownEl.textContent = `Opens in ${formatCountdown(clock.secondsToOpen)}`;
-        countdownEl.classList.remove('closing');
-      }
+    if(phase === 'core'){
+      status = 'Open';
+      phaseText = partners.length ? `Core — overlap with ${partners.join(' & ')}` : 'Core — solo, no overlap';
+      runningText = `Running ${formatRunning((now - x.cur.openUTC)/1000)}`;
+      countText = `Closes in ${formatCountdown((x.cur.closeUTC - now)/1000)}`;
+      closing = true;
+    } else if(phase === 'pre'){
+      status = 'Pre-market';
+      phaseText = 'Pre-market';
+      runningText = `Pre-market for ${formatRunning((now - x.cur.openUTC)/1000)}`;
+      countText = `Core opens in ${formatCountdown((x.cur.closeUTC - now)/1000)}`;
+    } else if(phase === 'post'){
+      status = 'Post-market';
+      phaseText = 'Post-market';
+      runningText = `Post-market for ${formatRunning((now - x.cur.openUTC)/1000)}`;
+      countText = `Post-market ends in ${formatCountdown((x.cur.closeUTC - now)/1000)}`;
+    } else {
+      status = x.weekend ? 'Weekend' : 'Closed';
+      phaseText = x.weekend ? 'Closed — weekend' : 'Closed';
+      const up = x.upcoming;
+      countText = up ? `${up.phase === 'pre' ? 'Pre-market opens' : 'Opens'} in ${formatCountdown((up.openUTC - now)/1000)}` : '—';
     }
 
-    state[key] = {
-      open, openedAt: activeWindow ? activeWindow.openUTC : null, nextOpen: futureWindow ? futureWindow.openUTC : null,
-      clockActive: clock.active, clockElapsed: clock.elapsed, clockMinutesToOpen: clock.minutesToOpen,
-    };
+    const statusEl = document.getElementById('thStatus-' + key);
+    const boxEl = document.getElementById('thBox-' + key);
+    statusEl.textContent = status;
+    ['open','pre','post','weekend'].forEach(c => {
+      const on = (c === 'open' && phase === 'core') || c === phase || (c === 'weekend' && !phase && x.weekend);
+      statusEl.classList.toggle(c, on);
+      boxEl.classList.toggle(c, on);
+    });
+    document.getElementById('thPhase-' + key).textContent = phaseText;
+    document.getElementById('thRunning-' + key).textContent = runningText;
+    const cd = document.getElementById('thCountdown-' + key);
+    cd.textContent = countText;
+    cd.classList.toggle('closing', closing);
   });
 
-  // Primary = whichever session's clock is "active" right now (time-of-day
-  // only, every day including weekends) and started most recently, so the
-  // one that "just kicked in" takes the top spot. If none are active by the
-  // clock, primary = whichever opens soonest. This keeps the rotation going
-  // through the weekend for algos/bots that follow the same session clock;
-  // the Weekend badge on each box still tells you tradfi cash markets are shut.
-  let primaryKey = TH_ORDER
-    .filter(k => state[k].clockActive)
-    .sort((a,b) => state[a].clockElapsed - state[b].clockElapsed)[0];
-  if(!primaryKey){
-    primaryKey = TH_ORDER
-      .sort((a,b) => state[a].clockMinutesToOpen - state[b].clockMinutesToOpen)[0] || TH_ORDER[0];
-  }
+  // Primary (top) box: the core session that went live most recently; else
+  // any pre/post session in progress; else whichever opens soonest.
+  const byRecent = list => list.sort((a,b) => (now - st[a].cur.openUTC) - (now - st[b].cur.openUTC))[0];
+  let primaryKey = byRecent(TH_ORDER.filter(k => st[k].cur && st[k].cur.phase === 'core'))
+    || byRecent(TH_ORDER.filter(k => st[k].cur))
+    || TH_ORDER.filter(k => st[k].upcoming).sort((a,b) => st[a].upcoming.openUTC - st[b].upcoming.openUTC)[0]
+    || TH_ORDER[0];
   const idx = TH_ORDER.indexOf(primaryKey);
   const leftKey = TH_ORDER[(idx + 1) % 3];
-  const rightKey = TH_ORDER[(idx + 2) % 3];
-
   TH_ORDER.forEach(key => {
-    const boxEl = document.getElementById('thBox-' + key);
-    const role = key === primaryKey ? 'primary' : (key === leftKey ? 'left' : 'right');
-    boxEl.dataset.role = role;
+    document.getElementById('thBox-' + key).dataset.role = key === primaryKey ? 'primary' : (key === leftKey ? 'left' : 'right');
   });
 
-  // Overlap banner -- whichever pair is live right now (there's at most one
-  // for this trio), else the soonest upcoming overlap among all pairs.
-  const allOverlaps = TH_PAIRS.flatMap(([a,b]) => pairOverlaps(now, a, b)).sort((x,y) => x.start - y.start);
-  const current = allOverlaps.find(o => now >= o.start && now < o.end);
-  const next = allOverlaps.find(o => o.start > now);
-
+  // Overlap banner
+  const all = TH_PAIRS.flatMap(([a,b]) => pairOverlaps(now, a, b)).sort((x,y) => x.start - y.start);
+  const current = all.find(o => now >= o.start && now < o.end);
+  const next = all.find(o => o.start > now);
   const label = document.getElementById('thOverlapLabel');
   const odEl = document.getElementById('thOverlapD');
-  const dEl = document.getElementById('thODays');
-  const hEl = document.getElementById('thOH');
-  const mEl = document.getElementById('thOM');
-  const sEl = document.getElementById('thOS');
-  const banner = document.getElementById('thOverlapBanner');
-
-  let diffMs, isLive;
+  let diffMs = 0, isLive = false;
   if(current){
-    const pairName = `${TH_FULL_NAME[current.keyA]}–${TH_FULL_NAME[current.keyB]}`;
-    label.textContent = `${pairName} overlap LIVE — best trading hours right now`;
-    odEl.textContent = 'Ends in';
-    diffMs = current.end - now;
-    isLive = true;
+    label.textContent = `${TH_FULL_NAME[current.keyA]}–${TH_FULL_NAME[current.keyB]} overlap LIVE — best trading hours right now`;
+    odEl.textContent = 'Ends in'; diffMs = current.end - now; isLive = true;
   } else if(next){
-    const pairName = `${TH_FULL_NAME[next.keyA]}–${TH_FULL_NAME[next.keyB]}`;
-    label.textContent = `Next overlap: ${pairName} (best trading hours)`;
-    odEl.textContent = 'Starts in';
-    diffMs = next.start - now;
-    isLive = false;
-  } else {
-    label.textContent = 'Session overlap';
-    odEl.textContent = '';
-    diffMs = 0;
-    isLive = false;
-  }
-  banner.classList.toggle('live', isLive);
+    label.textContent = `Next overlap: ${TH_FULL_NAME[next.keyA]}–${TH_FULL_NAME[next.keyB]} (best trading hours)`;
+    odEl.textContent = 'Starts in'; diffMs = next.start - now;
+  } else { label.textContent = 'Session overlap'; odEl.textContent = ''; }
+  document.getElementById('thOverlapBanner').classList.toggle('live', isLive);
 
-  const totalSecs = Math.max(0, Math.floor(diffMs / 1000));
-  const days = Math.floor(totalSecs / 86400);
-  const hh = Math.floor((totalSecs % 86400) / 3600);
-  const mm = Math.floor((totalSecs % 3600) / 60);
-  const ss = totalSecs % 60;
+  const t = Math.max(0, Math.floor(diffMs / 1000));
+  const days = Math.floor(t / 86400);
+  const dEl = document.getElementById('thODays');
   dEl.textContent = String(days);
   dEl.parentElement.style.display = days > 0 ? '' : 'none';
-  hEl.textContent = String(hh).padStart(2,'0');
-  mEl.textContent = String(mm).padStart(2,'0');
-  sEl.textContent = String(ss).padStart(2,'0');
+  document.getElementById('thOH').textContent = String(Math.floor((t % 86400) / 3600)).padStart(2,'0');
+  document.getElementById('thOM').textContent = String(Math.floor((t % 3600) / 60)).padStart(2,'0');
+  document.getElementById('thOS').textContent = String(t % 60).padStart(2,'0');
 }
 updateTradingHours();
 setInterval(updateTradingHours, 1000);
