@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-15T19:08:22.136511+00:00",
+  "generated_at": "2026-10-15T22:15:47.718629+00:00",
   "window_hours": 24,
   "sources": [
     "wss://fstream.binance.com/ws/!forceOrder@arr",
@@ -13,78 +13,96 @@
     },
     "ETHUSDT": {
       "longUsd": 387823.16,
-      "shortUsd": 259994.05,
-      "count": 38
+      "shortUsd": 264604.51,
+      "count": 39
     }
   },
   "buckets": {
     "BTCUSDT": {
-      "mark": 82232.22,
+      "mark": 82389.65,
       "buckets": [
         {
+          "pricePct": -2.0,
+          "price": 80741.86,
+          "longUsd": 0.0,
+          "shortUsd": 1939.88
+        },
+        {
           "pricePct": -1.5,
-          "price": 80998.74,
-          "longUsd": 68528.96,
-          "shortUsd": 2749.53
+          "price": 81153.81,
+          "longUsd": 76974.65,
+          "shortUsd": 809.65
         },
         {
           "pricePct": -1.0,
-          "price": 81409.9,
-          "longUsd": 10567.0,
+          "price": 81565.75,
+          "longUsd": 5472.47,
           "shortUsd": 0.0
         },
         {
           "pricePct": -0.5,
-          "price": 81821.06,
-          "longUsd": 3351.15,
+          "price": 81977.7,
+          "longUsd": 0.0,
           "shortUsd": 245.67
         },
         {
-          "pricePct": 0.5,
-          "price": 82643.38,
-          "longUsd": 1654.93,
+          "pricePct": 0.0,
+          "price": 82389.65,
+          "longUsd": 0.0,
           "shortUsd": 34148.78
+        },
+        {
+          "pricePct": 0.5,
+          "price": 82801.6,
+          "longUsd": 1654.93,
+          "shortUsd": 0.0
         }
       ]
     },
     "ETHUSDT": {
-      "mark": 2445.81,
+      "mark": 2460.42,
       "buckets": [
         {
-          "pricePct": -3.5,
-          "price": 2360.21,
-          "longUsd": 0.0,
+          "pricePct": -4.0,
+          "price": 2362.0,
+          "longUsd": 2749.85,
           "shortUsd": 1392.06
         },
         {
-          "pricePct": -3.0,
-          "price": 2372.44,
-          "longUsd": 56384.22,
+          "pricePct": -3.5,
+          "price": 2374.31,
+          "longUsd": 53634.36,
           "shortUsd": 75.89
         },
         {
-          "pricePct": -2.0,
-          "price": 2396.89,
+          "pricePct": -2.5,
+          "price": 2398.91,
           "longUsd": 0.0,
           "shortUsd": 157255.19
         },
         {
-          "pricePct": -1.5,
-          "price": 2409.12,
+          "pricePct": -2.0,
+          "price": 2411.21,
           "longUsd": 277514.31,
           "shortUsd": 0.0
         },
         {
-          "pricePct": -1.0,
-          "price": 2421.35,
+          "pricePct": -1.5,
+          "price": 2423.51,
           "longUsd": 53924.63,
           "shortUsd": 0.0
         },
         {
-          "pricePct": 0.5,
-          "price": 2458.04,
+          "pricePct": -0.5,
+          "price": 2448.12,
           "longUsd": 0.0,
-          "shortUsd": 101270.92
+          "shortUsd": 101234.1
+        },
+        {
+          "pricePct": 0.0,
+          "price": 2460.42,
+          "longUsd": 0.0,
+          "shortUsd": 4647.27
         }
       ]
     }
@@ -114,6 +132,10 @@
       {
         "time": 1792091300989.9907,
         "price": 82232.22
+      },
+      {
+        "time": 1792102547492.021,
+        "price": 82389.65
       }
     ],
     "ETHUSDT": [
@@ -140,6 +162,10 @@
       {
         "time": 1792091300989.9907,
         "price": 2445.81
+      },
+      {
+        "time": 1792102547492.021,
+        "price": 2460.42
       }
     ]
   },
@@ -337,6 +363,15 @@
       "exchange": "Binance",
       "symbol": "ETHUSDT",
       "side": "short",
+      "price": 2462.85,
+      "qty": 1.872,
+      "usd": 4610.4552,
+      "time": 1792102521153
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "short",
       "price": 2453.29,
       "qty": 1.8,
       "usd": 4415.9220000000005,
@@ -359,18 +394,18 @@
       "qty": 1.051,
       "usd": 2487.0969099999998,
       "time": 1792041185075
-    },
-    {
-      "exchange": "Binance",
-      "symbol": "ETHUSDT",
-      "side": "long",
-      "price": 2409.65,
-      "qty": 1.0,
-      "usd": 2409.65,
-      "time": 1792016308816
     }
   ],
   "events": [
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 2462.85,
+      "qty": 1.872,
+      "usd": 4610.4552,
+      "time": 1792102521153
+    },
     {
       "exchange": "Binance",
       "symbol": "ETHUSDT",
