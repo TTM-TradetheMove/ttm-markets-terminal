@@ -552,7 +552,7 @@ footer{padding:40px 0 60px}
           <div class="th-overlap-unit"><span id="thOS">—</span><small>S</small></div>
         </div>
       </div>
-      <p class="midterm-note">The top box is the session that most recently went live — when New York's core session starts while London is still open, it takes the top spot and reads "Overlap with London"; once London closes it becomes "Core — solo, no overlap". Before that, New York shows "Pre-market" and London stays on top. After the 16:00 ET close it shows "Post-market". Overlaps are counted between core sessions only. Sessions run Monday–Friday; the Weekend badge flags that cash markets are shut.</p>
+      <p class="midterm-note">The top box is the session that most recently went live — when New York's core session starts while London is still open, it takes the top spot and reads "Overlap with London"; once London closes it becomes "Core — solo, no overlap". Before that, New York shows "Pre-market" and London stays on top. After the 16:00 ET close it shows "Post-market". Overlaps are counted between core sessions only. Sessions run Monday–Friday, so every box simply reads Closed over the weekend and counts down to the next open.</p>
     </div>
   </div>
 </section>
@@ -1213,8 +1213,8 @@ function updateTradingHours(){
       runningText = `Post-market for ${formatRunning((now - x.cur.openUTC)/1000)}`;
       countText = `Post-market ends in ${formatCountdown((x.cur.closeUTC - now)/1000)}`;
     } else {
-      status = x.weekend ? 'Weekend' : 'Closed';
-      phaseText = x.weekend ? 'Closed — weekend' : 'Closed';
+      status = 'Closed';
+      phaseText = 'Closed';
       const up = x.upcoming;
       countText = up ? `${up.phase === 'pre' ? 'Pre-market opens' : 'Opens'} in ${formatCountdown((up.openUTC - now)/1000)}` : '—';
     }
@@ -1223,7 +1223,7 @@ function updateTradingHours(){
     const boxEl = document.getElementById('thBox-' + key);
     statusEl.textContent = status;
     ['open','pre','post','weekend'].forEach(c => {
-      const on = (c === 'open' && phase === 'core') || c === phase || (c === 'weekend' && !phase && x.weekend);
+      const on = (c === 'open' && phase === 'core') || c === phase || false;
       statusEl.classList.toggle(c, on);
       boxEl.classList.toggle(c, on);
     });
