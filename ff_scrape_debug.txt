@@ -1,4 +1,4 @@
-Run at 2026-10-16T15:01:57.203526+00:00
+Run at 2026-10-16T18:46:22.639663+00:00
 
 page title: 'Calendar | Forex Factory'
 page url after load: 'https://www.forexfactory.com/calendar'
@@ -10,5 +10,5 @@ sample row: date_el=True currency_el=True event_el=True actual_el=True raw_text=
 sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='10:30am\n\tGBP\t\t\nMPC Member Breeden Speaks\n\t\n\t\n\t\t\t\t'
 TARGET ROW: date='Thu Oct 15' currency='AUD' title='Unemployment Rate' actual='4.7%'
 TARGET ROW: date='Thu Oct 15' currency='USD' title='Unemployment Claims' actual='199K'
-matched-actuals by date: {'2026-10-13': 10, '2026-10-14': 16, '2026-10-15': 27, '2026-10-16': 9}
-Scraped 62 live actual values from forexfactory.com
+matched-actuals by date: {'2026-10-13': 10, '2026-10-14': 16, '2026-10-15': 27, '2026-10-16': 10}
+Scraped 63 live actual values from forexfactory.com
