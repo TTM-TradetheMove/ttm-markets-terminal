@@ -1,4 +1,4 @@
-Run at 2026-10-15T22:57:13.742113+00:00
+Run at 2026-10-16T01:10:09.958206+00:00
 
 page title: 'Calendar | Forex Factory'
 page url after load: 'https://www.forexfactory.com/calendar'
@@ -6,9 +6,9 @@ row selector used: 'tr.calendar__row', rows found: 118
 sample row: date_el=False currency_el=False event_el=False actual_el=False raw_text='Sun Oct 11'
 sample row: date_el=True currency_el=True event_el=True actual_el=True raw_text='Sun\nOct 11\n\t\nAll Day\n\tJPY\t\t\nBank Holiday\n\t\t\n\t\t\t\t'
 sample row: date_el=False currency_el=False event_el=False actual_el=False raw_text='Mon Oct 12'
-sample row: date_el=True currency_el=True event_el=True actual_el=True raw_text='Mon\nOct 12\n\t\n4:30am\n\tGBP\t\t\nMPC Member Breeden Speaks\n\t\n\t\n\t\t\t\t'
+sample row: date_el=True currency_el=True event_el=True actual_el=True raw_text='Mon\nOct 12\n\t\n2:30am\n\tGBP\t\t\nMPC Member Breeden Speaks\n\t\n\t\n\t\t\t\t'
 sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='All Day\n\tUSD\t\t\nBank Holiday\n\t\t\n\t\t\t\t'
 TARGET ROW: date='Wed Oct 14' currency='AUD' title='Unemployment Rate' actual='4.7%'
 TARGET ROW: date='Thu Oct 15' currency='USD' title='Unemployment Claims' actual='199K'
-matched-actuals by date: {'2026-10-12': 4, '2026-10-13': 12, '2026-10-14': 14, '2026-10-15': 23}
+matched-actuals by date: {'2026-10-12': 5, '2026-10-13': 12, '2026-10-14': 21, '2026-10-15': 15}
 Scraped 53 live actual values from forexfactory.com
