@@ -47,10 +47,17 @@ BINANCE_WS_CANDIDATES = [
     "wss://fstream.binance.com/ws/!forceOrder@arr",
 ]
 BYBIT_WS = "wss://stream.bybit.com/v5/public/linear"
-BYBIT_SYMBOLS = ["BTCUSDT", "ETHUSDT"]
-BYBIT_TOPICS = [f"allLiquidation.{s}" for s in BYBIT_SYMBOLS] + [f"liquidation.{s}" for s in BYBIT_SYMBOLS]
+BYBIT_SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "BNBUSDT", "ADAUSDT", "AVAXUSDT",
+                 "LINKUSDT", "SUIUSDT", "HYPEUSDT", "LTCUSDT", "BCHUSDT", "DOTUSDT", "TRXUSDT", "NEARUSDT",
+                 "AAVEUSDT", "WLDUSDT", "ARBUSDT", "OPUSDT", "PEPEUSDT", "TONUSDT", "ENAUSDT", "FARTCOINUSDT",
+                 "1000PEPEUSDT", "ONDOUSDT", "TAOUSDT", "UNIUSDT", "APTUSDT", "XLMUSDT"]
+BYBIT_TOPICS = [f"allLiquidation.{s}" for s in BYBIT_SYMBOLS]
+OKX_WS = "wss://ws.okx.com:8443/ws/v5/public"
+OKX_INSTRUMENTS = ["https://www.okx.com/api/v5/public/instruments?instType=SWAP",
+                   "https://aws.okx.com/api/v5/public/instruments?instType=SWAP"]
 
-CAPTURE_SECONDS = 780  # ~13 min per 15-min run -> ~85% duty cycle
+import os
+CAPTURE_SECONDS = int(os.environ.get("CAPTURE_SECONDS", "270"))  # 5-min cron -> ~4.5 min listening per run
 TOTALS_FILE = "liquidation_totals.json"
 ALL = []  # (exchange, symbol, side, usd, ts_ms) for EVERY symbol seen, used for the all-coin totals
 DATA_FILE = "liquidations_data.json"
@@ -209,7 +216,7 @@ async def capture_bybit(events, seconds):
                         if not isinstance(row, dict):
                             continue
                         symbol = row.get("symbol") or row.get("s")
-                        if symbol not in ("BTCUSDT", "ETHUSDT"):
+                        if not symbol:
                             continue
                         side_raw = row.get("side") or row.get("S")
                         # Bybit: side is the side of the FORCED order itself.
@@ -221,6 +228,8 @@ async def capture_bybit(events, seconds):
                         if not (side and price and qty):
                             continue
                         ALL.append(("Bybit", symbol, side, price * qty, ts))
+                        if symbol not in ("BTCUSDT", "ETHUSDT"):
+                            continue
                         events.append({
                             "exchange": "Bybit",
                             "symbol": symbol,
@@ -235,6 +244,67 @@ async def capture_bybit(events, seconds):
         dbg(f"Bybit: capture window closed, {raw_count} raw messages received, {sum(1 for e in events if e['exchange'] == 'Bybit')} events parsed")
     except Exception as exc:
         dbg(f"Bybit: capture failed -- {type(exc).__name__}: {exc}")
+
+
+def okx_contract_values():
+    """ctVal per SWAP instrument (OKX liquidation sizes are in contracts)."""
+    for url in OKX_INSTRUMENTS:
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (compatible; TTMMarketsTerminalBot/1.0)"})
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                rows = json.loads(resp.read().decode("utf-8")).get("data", [])
+            out = {r["instId"]: (float(r.get("ctVal") or 0), r.get("ctType") or "linear") for r in rows}
+            dbg(f"OKX: {len(out)} swap contract sizes loaded")
+            return out
+        except Exception as exc:
+            dbg(f"OKX instruments failed ({url}): {type(exc).__name__}: {exc}")
+    return {}
+
+
+async def capture_okx(seconds):
+    if websockets is None:
+        return
+    cv = okx_contract_values()
+    if not cv:
+        dbg("OKX: no contract sizes, skipping")
+        return
+    raw_count = parsed = 0
+    try:
+        async with websockets.connect(OKX_WS, open_timeout=15, close_timeout=5) as ws:
+            await ws.send(json.dumps({"op": "subscribe", "args": [{"channel": "liquidation-orders", "instType": "SWAP"}]}))
+            dbg("OKX: connected + subscribed")
+            deadline = time.monotonic() + seconds
+            while time.monotonic() < deadline:
+                try:
+                    raw = await asyncio.wait_for(ws.recv(), timeout=deadline - time.monotonic())
+                except asyncio.TimeoutError:
+                    break
+                raw_count += 1
+                if raw_count <= 3:
+                    dbg(f"OKX: raw message #{raw_count}: {str(raw)[:300]}")
+                try:
+                    msg = json.loads(raw)
+                    for d in msg.get("data", []) or []:
+                        inst = d.get("instId", "")
+                        ctv, ctt = cv.get(inst, (0, "linear"))
+                        if not ctv:
+                            continue
+                        sym = inst.replace("-SWAP", "").replace("-", "")
+                        for x in d.get("details", []) or []:
+                            side_raw = x.get("posSide") or ""
+                            if side_raw not in ("long", "short"):
+                                side_raw = "long" if x.get("side") == "sell" else "short"
+                            sz = float(x.get("sz") or 0); px = float(x.get("bkPx") or 0)
+                            ts = int(x.get("ts") or time.time() * 1000)
+                            usd = sz * ctv if ctt == "inverse" else sz * ctv * px
+                            if usd <= 0:
+                                continue
+                            ALL.append(("OKX", sym, side_raw, usd, ts)); parsed += 1
+                except Exception as exc:
+                    dbg(f"OKX: bad message skipped -- {exc}")
+        dbg(f"OKX: capture window closed, {raw_count} raw messages, {parsed} liquidations parsed")
+    except Exception as exc:
+        dbg(f"OKX: capture failed -- {type(exc).__name__}: {exc}")
 
 
 def build_buckets(events, mark_prices):
@@ -295,7 +365,7 @@ def update_totals(capture_start_ms, capture_end_ms):
     caps = [c for c in prev.get("captures", []) if c[1] >= cutoff]
     for ex, sym, side, usd, ts in ALL:
         t5 = int(ts // 300000 * 300000)
-        exi = 0 if ex == "Binance" else 1
+        exi = {"Binance": 0, "Bybit": 1, "OKX": 2}.get(ex, 1)
         scopes = [0] + ([1] if sym == "BTCUSDT" else [2] if sym == "ETHUSDT" else [])
         for sc in scopes:
             a = agg.setdefault((t5, exi, sc), [0.0, 0.0, 0])
@@ -318,7 +388,7 @@ def update_totals(capture_start_ms, capture_end_ms):
         "agg5": [[k[0], k[1], k[2], round(v[0]), round(v[1]), v[2]] for k, v in sorted(agg.items())],
         "symH": {str(h): {k: [round(v[0]), round(v[1])] for k, v in d.items()} for h, d in sorted(symh.items())},
         "captures": caps,
-        "note": "Binance: all symbols (its stream sends at most one liquidation per symbol per second). Bybit: BTC and ETH only.",
+        "note": "Binance: all symbols (its stream sends at most one liquidation per symbol per second). Bybit: top 30 symbols. OKX: all swaps.",
     }
     with open(TOTALS_FILE, "w") as f:
         json.dump(out, f, separators=(",", ":"))
@@ -338,6 +408,7 @@ def main():
         await asyncio.gather(
             capture_binance(events, CAPTURE_SECONDS),
             capture_bybit(events, CAPTURE_SECONDS),
+            capture_okx(CAPTURE_SECONDS),
         )
 
     try:

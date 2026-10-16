@@ -2,7 +2,7 @@ name: Update liquidation map
 
 on:
   schedule:
-    - cron: "9,24,39,54 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch: {}
 
 permissions:
@@ -15,7 +15,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 18
+    timeout-minutes: 8
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,7 +28,7 @@ jobs:
       - name: Install dependencies
         run: pip install websockets
 
-      - name: Capture liquidations (Binance + Bybit public feeds)
+      - name: Capture liquidations (Binance + Bybit + OKX public feeds)
         continue-on-error: true
         run: python3 scripts/update_liquidations.py
 

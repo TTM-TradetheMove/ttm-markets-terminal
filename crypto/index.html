@@ -1721,7 +1721,7 @@ document.querySelectorAll('#liqSymbolRow .filter-chip').forEach(chip => {
   });
 });
 
-fetch('../liquidations_data.json', {cache:'no-store'})
+function loadLiqData(){ return fetch('../liquidations_data.json?t=' + Date.now(), {cache:'no-store'})
   .then(r => r.ok ? r.json() : Promise.reject())
   .then(data => {
     LIQ_DATA = data;
@@ -1731,6 +1731,9 @@ fetch('../liquidations_data.json', {cache:'no-store'})
     const totalsEl = document.getElementById('liqTotals');
     if(totalsEl) totalsEl.innerHTML = '<span class="calendar-note">Liquidation data unavailable right now — check back shortly.</span>';
   });
+}
+loadLiqData();
+setInterval(() => { if(!document.hidden) loadLiqData(); }, 300000);
 
 // ---- Blockworks Token Transparency panel ----
 const classLabel = {defi:"DeFi", infra:"Infrastructure", l1:"Layer 1 / Currency", other:"Other"};
@@ -2191,7 +2194,9 @@ function renderTotals(){
     return `<tr><td><b>${lb}</b><div class="lt-ratio"><i style="width:${lp}%;background:var(--red)"></i><i style="width:${100-lp}%;background:var(--green)"></i></div></td>
       <td class="lg">${usd(r.L)}</td><td class="sh">${usd(r.S)}</td><td><b>${usd(tot)}</b></td></tr>`; }).join('') + '</tbody>';
   const c24 = coverage(24 * H);
-  $('ltNote').innerHTML = `Real liquidations from Binance (all coins) and Bybit (BTC &amp; ETH) public feeds. The sampler was listening for about <b>${Math.round(c24*100)}%</b> of the last 24h, and Binance sends at most one liquidation per coin per second, so totals are a <b>lower bound</b> — real market-wide totals run higher.`;
+  const r24 = windowSum(24 * H, scope), t24 = r24.L + r24.S;
+  const est = c24 >= .15 && t24 ? ` Adjusted for coverage, the 24h figure is roughly <b>${usd(t24 / c24)}</b>.` : '';
+  $('ltNote').innerHTML = `Real liquidations from Binance (all coins), OKX (all coins) and Bybit (top 30 coins) public feeds — not every exchange CoinGlass adds up, and Binance sends at most one liquidation per coin per second, so totals are a <b>lower bound</b>. The sampler was listening for about <b>${Math.round(c24*100)}%</b> of the last 24h.${est} Refreshes every 5 minutes.`;
   // hourly stacked bars
   const now = Date.now(), start = Math.floor(now / H) * H - 23 * H, bars = Array.from({length: 24}, () => [0, 0]);
   TOT.agg5.forEach(([t, ex, s, l, sh]) => { if(s !== scope) return; const i = Math.floor((t - start) / H); if(i >= 0 && i < 24){ bars[i][0] += l; bars[i][1] += sh; } });
@@ -2325,10 +2330,14 @@ $('lhCanvas').addEventListener('mousemove', heatTip);
 $('lhCanvas').addEventListener('mouseleave', () => { $('lhTip').style.display = 'none'; });
 window.addEventListener('resize', () => { if(tab === 'heat') renderHeat(); });
 
-Promise.all([
-  fetch('../liquidation_totals.json?t=' + Date.now()).then(r => r.ok ? r.json() : null).catch(() => null),
-  fetch('../liq_heatmap_data.json?t=' + Date.now()).then(r => r.ok ? r.json() : null).catch(() => null),
-]).then(([t, h]) => { TOT = t; HM = h; renderTotals(); showTab('heat'); });
+function loadLiq(first){
+  return Promise.all([
+    fetch('../liquidation_totals.json?t=' + Date.now(), {cache:'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null),
+    fetch('../liq_heatmap_data.json?t=' + Date.now(), {cache:'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null),
+  ]).then(([t, h]) => { if(t) TOT = t; if(h) HM = h; renderTotals(); if(first) showTab('heat'); else showTab(tab); });
+}
+loadLiq(true);
+setInterval(() => { if(!document.hidden) loadLiq(false); }, 300000);
 })();
 </script>
 
