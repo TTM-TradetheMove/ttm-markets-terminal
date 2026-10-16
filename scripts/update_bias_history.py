@@ -139,6 +139,10 @@ def scrape_months(months):
             try:
                 page.goto(url, wait_until="domcontentloaded", timeout=45000)
                 page.wait_for_timeout(2500)
+                for _ in range(12):  # Cloudflare "Just a moment..." interstitial often clears by itself
+                    if "just a moment" not in page.title().lower():
+                        break
+                    page.wait_for_timeout(2500)
                 last_h = 0
                 for _ in range(30):
                     page.mouse.wheel(0, 2500)

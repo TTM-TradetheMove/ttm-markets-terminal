@@ -110,8 +110,98 @@ def bybit(sym, start_ms, end_ms):
     return (cl, oi) if cl and len(oi) > 100 else None
 
 
+
+def coinbase_candles(sym, start_ms, end_ms):
+    """5-minute spot candles from Coinbase Exchange (reachable from GitHub runners,
+    unlike Binance/Bybit REST which are geo-blocked there)."""
+    prod = {"BTCUSDT": "BTC-USD", "ETHUSDT": "ETH-USD"}.get(sym)
+    if not prod:
+        return None
+    out, t = {}, start_ms
+    iso = lambda ms: datetime.fromtimestamp(ms / 1000, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    while t < end_ms:
+        e = min(t + 299 * STEP5, end_ms)
+        d = get(f"https://api.exchange.coinbase.com/products/{prod}/candles?granularity=300&start={iso(t)}&end={iso(e)}")
+        if d is None:
+            return None
+        for ts, lo, hi, op, cl, _v in d:
+            out[int(ts) * 1000] = (int(ts) * 1000, float(op), float(hi), float(lo), float(cl))
+        t = e
+        time.sleep(0.12)
+    cl = sorted(out.values())
+    return cl if len(cl) > 500 else None
+
+
+def okx_oi(sym, start_ms, end_ms):
+    inst = {"BTCUSDT": "BTC-USDT-SWAP", "ETHUSDT": "ETH-USDT-SWAP"}.get(sym)
+    if not inst:
+        return None
+    for host in ("www.okx.com", "aws.okx.com"):
+        for period in ("5m", "15m"):
+            oi, end, pages = {}, end_ms, 0
+            while end > start_ms and pages < 400:
+                d = get(f"https://{host}/api/v5/rubik/stat/contracts/open-interest-history?instId={inst}&period={period}&limit=100&end={end}", tries=2)
+                rows = (d or {}).get("data") or []
+                if not rows:
+                    break
+                for r in rows:  # [ts, oi (contracts), oiCcy, oiUsd]
+                    try:
+                        oi[int(r[0]) // STEP5 * STEP5] = float(r[3])
+                    except (ValueError, IndexError):
+                        pass
+                oldest = min(int(r[0]) for r in rows)
+                if oldest >= end:
+                    break
+                end = oldest - 1
+                pages += 1
+                time.sleep(0.1)
+            if len(oi) >= 200:
+                log(f"{sym}: OKX {period} open interest - {len(oi)} points from {host}")
+                return oi
+    return None
+
+
+def gate_oi(sym, start_ms, end_ms):
+    contract = {"BTCUSDT": "BTC_USDT", "ETHUSDT": "ETH_USDT"}.get(sym)
+    if not contract:
+        return None
+    oi, frm, pages = {}, start_ms // 1000, 0
+    while frm < end_ms // 1000 and pages < 200:
+        d = get(f"https://api.gateio.ws/api/v4/futures/usdt/contract_stats?contract={contract}&interval=5m&limit=100&from={frm}", tries=2)
+        if not d or not isinstance(d, list):
+            break
+        for r in d:
+            try:
+                usd = r.get("open_interest_usd")
+                if usd is None:
+                    continue
+                oi[int(r["time"]) * 1000 // STEP5 * STEP5] = float(usd)
+            except (KeyError, ValueError, TypeError):
+                pass
+        last = max(int(r["time"]) for r in d)
+        if last < frm:
+            break
+        frm = last + 300
+        pages += 1
+        time.sleep(0.1)
+    if len(oi) >= 200:
+        log(f"{sym}: Gate open interest - {len(oi)} points")
+        return oi
+    return None
+
+
 def fetch(sym, start_ms, end_ms):
-    for name, fn in (("binance", binance), ("bybit", bybit)):
+    """Returns (source_label, candles, oi). Open interest: OKX, then Gate; candles from
+    Coinbase. Binance / Bybit REST are last-resort only (both block GitHub's US runners)."""
+    candles = coinbase_candles(sym, start_ms, end_ms)
+    log(f"{sym}: coinbase candles - {len(candles) if candles else 'FAILED'}")
+    if candles:
+        for name, fn in (("OKX", okx_oi), ("Gate", gate_oi)):
+            oi = fn(sym, start_ms, end_ms)
+            if oi:
+                return f"{name} (price: Coinbase)", candles, oi
+            log(f"{sym}: {name} open interest failed")
+    for name, fn in (("Binance", binance), ("Bybit", bybit)):
         got = fn(sym, start_ms, end_ms)
         if got:
             log(f"{sym}: {name} ok - {len(got[0])} candles, {len(got[1])} OI points")
