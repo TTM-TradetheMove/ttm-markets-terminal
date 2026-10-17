@@ -19,7 +19,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,7 +31,8 @@ jobs:
 
       - name: Build TradFi data (Yahoo, US Treasury, FRED, RBA, BoE, RSS)
         continue-on-error: true
-        run: python3 scripts/update_tradfi.py
+        timeout-minutes: 6
+        run: timeout 300 python3 scripts/update_tradfi.py
 
       - name: Commit and push if changed
         if: always()

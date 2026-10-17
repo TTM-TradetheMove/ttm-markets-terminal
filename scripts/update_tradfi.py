@@ -26,21 +26,40 @@ UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
 LOG = []
 
 
+T0 = time.time()
+DEADLINE = T0 + 240          # hard stop for all network work (job limit is 8 min)
+HOST_FAIL, HOST_OK = {}, {}
+
+
 def log(msg):
-    print(msg)
+    print(msg, flush=True)
     LOG.append(msg)
+    try:  # live debug file: survives a cancelled / timed-out run
+        with open(os.path.join(ROOT, "tradfi_debug.txt"), "w") as f:
+            f.write("\n".join(LOG) + "\n")
+    except Exception:
+        pass
 
 
-def get(url, timeout=25, tries=3, accept="*/*"):
+def get(url, timeout=12, tries=2, accept="*/*"):
+    host = urllib.parse.urlparse(url).netloc
     for i in range(tries):
+        if time.time() > DEADLINE:
+            log(f"  SKIP (deadline) {url[:100]}")
+            return None
+        if HOST_FAIL.get(host, 0) >= 4 and not HOST_OK.get(host):
+            log(f"  SKIP (host {host} unreachable) {url[:90]}")
+            return None
         try:
             req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": accept})
             with urllib.request.urlopen(req, timeout=timeout) as r:
                 raw = r.read()
+            HOST_OK[host] = HOST_OK.get(host, 0) + 1
             return raw.decode("utf-8-sig", errors="replace")
         except Exception as e:  # noqa
+            HOST_FAIL[host] = HOST_FAIL.get(host, 0) + 1
             log(f"  GET fail ({i+1}/{tries}) {url[:110]} -> {type(e).__name__}: {str(e)[:90]}")
-            time.sleep(1.5 * (i + 1))
+            time.sleep(1.0 * (i + 1))
     return None
 
 
@@ -184,12 +203,13 @@ def build_quote(sym, name, meta, series, off):
 
 
 def fetch_markets():
+    from concurrent.futures import ThreadPoolExecutor
     quotes, hist = {}, {}
     allsyms = ([(s, n) for s, n, _ in INDICES] + SECTORS + OTHERS)
     region = {s: r for s, _, r in INDICES}
-    for sym, name in allsyms:
-        got = yahoo(sym)
-        time.sleep(0.35)
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        results = list(ex.map(lambda sn: yahoo(sn[0]), allsyms))
+    for (sym, name), got in zip(allsyms, results):
         if not got:
             log(f"yahoo: no data for {sym}")
             continue
@@ -664,40 +684,41 @@ def fetch_news():
 
 # ----------------------------------------------------------------------------
 def main():
+    from concurrent.futures import ThreadPoolExecutor
     log(f"TTM tradfi run {now_iso()}")
     mk_new, rates_new, news_new = {}, {}, {}
+    pool = ThreadPoolExecutor(max_workers=7)
+    F = {
+        "markets": pool.submit(fetch_markets),
+        "treasury": pool.submit(fetch_treasury),
+        "au": pool.submit(fetch_au),
+        "policy": pool.submit(fetch_policy),
+        "liquidity": pool.submit(fetch_liquidity),
+        "conditions": pool.submit(fetch_conditions),
+        "news": pool.submit(fetch_news),
+    }
 
+    def res(name, default=None):
+        try:
+            v = F[name].result(timeout=max(5, DEADLINE + 20 - time.time()))
+            log(f"{name}: {'ok' if v else 'EMPTY'}")
+            return v
+        except Exception as e:  # noqa
+            log(f"{name} FAILED: {type(e).__name__}: {e}")
+            return default
+
+    quotes, hist = res("markets", ({}, {}))
     try:
-        quotes, hist = fetch_markets()
         if quotes:
             mk_new = derive_market_sections(quotes, hist)
             mk_new["sectors_quotes"] = None
     except Exception as e:  # noqa
-        log(f"markets FAILED: {type(e).__name__}: {e}")
-        quotes, hist = {}, {}
-
-    try:
-        rates_new["treasury"] = fetch_treasury()
-        log(f"treasury: {'ok' if rates_new['treasury'] else 'FAILED'}")
-    except Exception as e:  # noqa
-        log(f"treasury FAILED: {type(e).__name__}: {e}")
-    try:
-        rates_new["au"] = fetch_au()
-    except Exception as e:  # noqa
-        log(f"au FAILED: {type(e).__name__}: {e}")
-    try:
-        rates_new["policy"] = fetch_policy()
-    except Exception as e:  # noqa
-        log(f"policy FAILED: {type(e).__name__}: {e}")
-    try:
-        rates_new["liquidity"] = fetch_liquidity()
-    except Exception as e:  # noqa
-        log(f"liquidity FAILED: {type(e).__name__}: {e}")
-    cond = None
-    try:
-        cond = fetch_conditions()
-    except Exception as e:  # noqa
-        log(f"conditions FAILED: {type(e).__name__}: {e}")
+        log(f"markets derive FAILED: {type(e).__name__}: {e}")
+    rates_new["treasury"] = res("treasury")
+    rates_new["au"] = res("au")
+    rates_new["policy"] = res("policy")
+    rates_new["liquidity"] = res("liquidity")
+    cond = res("conditions")
 
     # expectations proxy: 2Y yield vs policy rate
     try:
@@ -734,17 +755,14 @@ def main():
                 v.pop("_series", None)
         rates_new["conditions"] = cond
 
-    try:
-        news_new = fetch_news()
-    except Exception as e:  # noqa
-        log(f"news FAILED: {type(e).__name__}: {e}")
+    news_new = res("news", {}) or {}
 
     mk_new.pop("sectors_quotes", None)
     merge_write("tradfi_markets.json", mk_new)
     merge_write("tradfi_rates.json", rates_new)
     merge_write("tradfi_news.json", news_new)
-    with open(os.path.join(ROOT, "tradfi_debug.txt"), "w") as f:
-        f.write("\n".join(LOG) + "\n")
+    log(f"done in {time.time() - T0:.0f}s")
+    pool.shutdown(wait=False, cancel_futures=True)
 
 
 if __name__ == "__main__":
