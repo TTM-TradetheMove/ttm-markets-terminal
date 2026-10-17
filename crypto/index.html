@@ -791,6 +791,7 @@ footer{padding:40px 0 60px}
       <button class="filter-chip active" data-sp="truth">Trump · Truth Social</button>
       <button class="filter-chip" data-sp="x">Key X accounts</button>
     </div>
+    <div class="filter-row" id="spAcct" style="margin-bottom:14px;display:none"></div>
     <div id="spBody"></div>
   </div>
 </section>
@@ -2496,8 +2497,10 @@ setInterval(() => { if(!document.hidden) loadLiq(false); }, 300000);
 (function(){
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let SP = null, tab = 'truth';
+let SP = null, tab = 'truth', who = 'latest';
+const MAXAGE = 30 * 86400, SHOW = 6;
 const ago = ts => { if(!ts) return ''; const s = Date.now()/1000 - ts; return s < 3600 ? Math.max(1, Math.round(s/60)) + 'm ago' : s < 86400 ? Math.round(s/3600) + 'h ago' : Math.round(s/86400) + 'd ago'; };
+const fresh = p => p && p.ts && (Date.now()/1000 - p.ts) <= MAXAGE;
 const safeLink = u => /^https:\/\//.test(u || '') ? u : '#';
 function card(p, who){
   const tags = (p.tags || []).map(t => `<span class="sp-tag ${esc(t)}">${esc(t)}</span>`).join('');
@@ -2515,15 +2518,26 @@ function render(){
         `<p class="calendar-note" style="margin-top:10px">Source: an independent public archive of Truth Social. Showing ${items.length} key posts out of ${SP.truth_seen || 'the'} most recent.</p>`
       : `<div class="sp-empty">${SP.truth_error ? 'The Truth Social archive is not reachable right now.' : 'No crypto- or market-related Truth Social posts in the latest batch.'}</div>`;
   } else {
-    const xs = SP.x || [];
-    const note = !SP.x_working ? '<div class="sp-empty" style="margin-bottom:12px">X does not offer free access to posts, so these accounts could not be read on the last run. The posts below (if any) are older ones.</div>' : '';
-    const withPosts = xs.filter(a => a.posts && a.posts.length), without = xs.filter(a => !(a.posts && a.posts.length));
-    el.innerHTML = note + withPosts.map(a => `<div class="sp-acct"><b>${esc(a.name)}</b><span>@${esc(a.handle)} · ${esc(a.why)}</span></div><div class="sp-grid">${a.posts.map(p => card(p, a.name)).join('')}</div>`).join('') +
-      (without.length ? `<div class="sp-empty" style="margin-top:18px">No key posts to show for: ${without.map(a => esc(a.name) + (a.via ? '' : ' (not readable)')).join(', ')}.</div>` : '');
+    const xs = (SP.x || []).map(a => Object.assign({}, a, {posts: (a.posts || []).filter(fresh).sort((p, q) => q.ts - p.ts)}));
+    const bar = $('spAcct'); bar.style.display = '';
+    if(who !== 'latest' && !xs.some(a => a.handle === who)) who = 'latest';
+    bar.innerHTML = `<button class="filter-chip ${who === 'latest' ? 'active' : ''}" data-who="latest">Latest from all</button>` +
+      xs.map(a => `<button class="filter-chip ${who === a.handle ? 'active' : ''}" data-who="${esc(a.handle)}">${esc(a.name)}${a.posts.length ? '' : ' (0)'}</button>`).join('');
+    const note = !SP.x_working ? '<div class="sp-empty" style="margin-bottom:12px">X does not offer free access to posts, so the accounts could not be read on the last run. Only posts from the last 30 days are shown; older ones are hidden.</div>' : '';
+    let list;
+    if(who === 'latest'){
+      list = [].concat(...xs.map(a => a.posts.map(p => ({p, name: a.name})))).sort((x, y) => y.p.ts - x.p.ts).slice(0, SHOW);
+    } else {
+      const a = xs.find(a => a.handle === who);
+      list = a.posts.slice(0, SHOW).map(p => ({p, name: a.name}));
+    }
+    el.innerHTML = note + (list.length ? `<div class="sp-grid">${list.map(i => card(i.p, i.name)).join('')}</div><p class="calendar-note" style="margin-top:10px">Showing the ${list.length} most recent key post${list.length === 1 ? '' : 's'}${who === 'latest' ? ' across all accounts' : ''}.</p>`
+      : '<div class="sp-empty">No recent key posts for this selection.</div>');
   }
 }
 $('spTabs').addEventListener('click', e => { const c = e.target.closest('.filter-chip'); if(!c) return;
-  document.querySelectorAll('#spTabs .filter-chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); tab = c.dataset.sp; render(); });
+  document.querySelectorAll('#spTabs .filter-chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); tab = c.dataset.sp; if(tab !== 'x') $('spAcct').style.display = 'none'; render(); });
+$('spAcct').addEventListener('click', e => { const c = e.target.closest('[data-who]'); if(c){ who = c.dataset.who; render(); } });
 function load(){ fetch('../social_data.json?t=' + Date.now(), {cache:'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null).then(d => { SP = d; render(); }); }
 load(); setInterval(() => { if(!document.hidden) load(); }, 300000);
 })();
