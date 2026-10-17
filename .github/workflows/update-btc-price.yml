@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: "27 */6 * * *"
   workflow_dispatch: {}
+  push:
+    paths:
+      - scripts/update_btc_price.py
 
 permissions:
   contents: write
@@ -31,10 +34,14 @@ jobs:
         run: |
           git config user.name "ttm-calendar-bot"
           git config user.email "actions@users.noreply.github.com"
-          if git diff --quiet -- btc_price_data.json; then
+          git add btc_price_data.json 2>/dev/null || true
+          if git diff --cached --quiet; then
             echo "No changes to btc_price_data.json"
           else
-            git add btc_price_data.json
             git commit -m "Auto-update BTC price history"
-            git push
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "Push attempt $i failed, retrying..."
+              sleep 5
+            done
           fi
