@@ -270,6 +270,19 @@ td.num{font-variant-numeric:tabular-nums;color:var(--mute)}
 .bm-tbl tr.stat td.yr{color:var(--gold2)}
 .bm-tbl tr.sep td{padding:3px;background:none}
 .bm-tbl td.part{outline:1px dashed var(--gold)}
+.rsi-wrap{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;overflow-x:auto}
+.rsi-tbl{width:100%;border-collapse:separate;border-spacing:3px;font-variant-numeric:tabular-nums;min-width:720px}
+.rsi-tbl th{color:var(--mute);font-size:11px;font-weight:600;padding:6px 4px;text-align:center;cursor:pointer;user-select:none;white-space:nowrap}
+.rsi-tbl th:hover{color:var(--gold2)}
+.rsi-tbl th.on{color:var(--gold2)}
+.rsi-tbl th.l,.rsi-tbl td.l{text-align:left}
+.rsi-tbl td{text-align:center;font-size:12.5px;padding:7px 4px;border-radius:6px;color:#fff;white-space:nowrap}
+.rsi-tbl td.l{background:none;color:var(--text);font-weight:700;padding-left:8px}
+.rsi-tbl td.px{background:none;color:var(--text);font-weight:400}
+.rsi-tbl td.na{background:rgba(255,255,255,.03);color:var(--mute)}
+.rsi-sum td{font-size:11.5px;color:var(--mute);background:none;padding:6px 2px}
+.rsi-key{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mute);margin:0 0 10px;align-items:center}
+.rsi-key i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px}
 .sp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
 .sp-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
 .sp-card p{margin:0;font-size:14px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
@@ -491,6 +504,7 @@ footer{padding:40px 0 60px}
       <a href="#tradinghours">Trading Hours</a>
       <a href="#marketpulse">Market Pulse</a>
       <a href="#btcmonthly">BTC Monthly</a>
+      <a href="#rsimap">RSI Heatmap</a>
       <a href="#socialpulse">Social Pulse</a>
       <a href="#tokenevents">Token Events</a>
       <a href="#library">Reports</a>
@@ -790,6 +804,25 @@ footer{padding:40px 0 60px}
     </div>
     <div class="bm-wrap"><table class="bm-tbl" id="bmTable"><tbody><tr><td class="empty">Loading…</td></tr></tbody></table></div>
     <p class="calendar-note" style="margin-top:10px">Source: Bitstamp daily BTC/USD (Coinbase as backup), updated daily. Early years had tiny prices and very large percentage moves, so colours are capped. Past monthly patterns are not a forecast. Not financial advice.</p>
+  </div>
+</section>
+
+<section id="rsimap">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">RSI Heatmap</span>
+      <h2>Which coins are overbought or oversold</h2>
+      <p>The 14-period RSI for 40 major coins across six timeframes, from 15 minutes up to one week. Red means overbought (RSI 70 or higher, price has run hot), green means oversold (RSI 30 or lower, price has been sold hard). Click a column heading to sort.</p>
+      <p id="rsiUpdated" class="calendar-note" style="margin-top:8px">Loading RSI…</p>
+    </div>
+    <div class="filter-row" id="rsiFilter" style="margin-bottom:12px">
+      <button class="filter-chip active" data-f="all">All coins</button>
+      <button class="filter-chip" data-f="ob">Overbought anywhere</button>
+      <button class="filter-chip" data-f="os">Oversold anywhere</button>
+    </div>
+    <div class="rsi-key"><span><i style="background:rgba(229,83,75,.75)"></i>Overbought &ge; 70</span><span><i style="background:rgba(255,255,255,.08)"></i>Neutral 30–70</span><span><i style="background:rgba(63,185,122,.75)"></i>Oversold &le; 30</span></div>
+    <div class="rsi-wrap"><table class="rsi-tbl" id="rsiTable"><tbody><tr><td class="na">Loading…</td></tr></tbody></table></div>
+    <p class="calendar-note" style="margin-top:10px">RSI(14) with Wilder smoothing on OKX spot USDT candles, refreshed about every 10 minutes; the newest candle is still forming. Overbought and oversold are signals of stretched momentum, not buy or sell calls: strong trends can stay overbought or oversold for a long time. Not financial advice.</p>
   </div>
 </section>
 
@@ -2598,6 +2631,46 @@ function render(){
 $('bmRange').addEventListener('click', e => { const c = e.target.closest('.filter-chip'); if(!c) return;
   document.querySelectorAll('#bmRange .filter-chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); last = +c.dataset.n; render(); });
 fetch('../btc_monthly.json?t=' + Date.now(), {cache:'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null).then(d => { D = d; render(); });
+})();
+
+/* ---- RSI heatmap ---- */
+(function(){
+const $ = id => document.getElementById(id);
+let D = null, sortKey = 'mc', sortDir = 1, filt = 'all';
+const px = p => p >= 1000 ? p.toLocaleString(undefined, {maximumFractionDigits: 0}) : p >= 1 ? p.toFixed(2) : p >= 0.01 ? p.toFixed(4) : p.toPrecision(3);
+function bg(v){
+  if(v == null) return null;
+  if(v >= 70){ const k = Math.min(1, (v - 70) / 20); return `rgba(229,83,75,${(0.35 + 0.5 * k).toFixed(2)})`; }
+  if(v <= 30){ const k = Math.min(1, (30 - v) / 20); return `rgba(63,185,122,${(0.35 + 0.5 * k).toFixed(2)})`; }
+  return 'rgba(255,255,255,0.07)';
+}
+function render(){
+  const t = $('rsiTable'); if(!t) return;
+  if(!D || !D.coins || !D.coins.length){ t.innerHTML = '<tbody><tr><td class="na">RSI data will appear after the data job has run.</td></tr></tbody>'; $('rsiUpdated').textContent = 'Waiting for the first data run…'; return; }
+  const tfs = D.tfs;
+  let rows = D.coins.map((c, i) => Object.assign({mc: i}, c));
+  if(filt === 'ob') rows = rows.filter(c => tfs.some(f => c.r[f] != null && c.r[f] >= 70));
+  if(filt === 'os') rows = rows.filter(c => tfs.some(f => c.r[f] != null && c.r[f] <= 30));
+  const val = c => sortKey === 'mc' ? c.mc : sortKey === 's' ? c.s : sortKey === 'c' ? c.c : c.r[sortKey];
+  rows.sort((a, b) => { const x = val(a), y = val(b); if(x == null) return 1; if(y == null) return -1; return (x < y ? -1 : x > y ? 1 : 0) * sortDir; });
+  const th = (k, label, cls) => `<th class="${cls || ''} ${sortKey === k ? 'on' : ''}" data-k="${k}">${label}${sortKey === k ? (sortDir > 0 ? ' ▲' : ' ▼') : ''}</th>`;
+  let html = '<thead><tr>' + th('s', 'Coin', 'l') + '<th>Price</th>' + th('c', '24h') + tfs.map(f => th(f, {'1d':'1D','1w':'1W'}[f] || f)).join('') + '</tr></thead><tbody>';
+  rows.forEach(c => {
+    html += `<tr><td class="l">${c.s}</td><td class="px">$${px(c.p)}</td><td class="px" style="color:${c.c > 0 ? 'var(--green)' : c.c < 0 ? 'var(--red)' : 'var(--text)'}">${c.c == null ? '—' : (c.c > 0 ? '+' : '') + c.c.toFixed(1) + '%'}</td>` +
+      tfs.map(f => { const v = c.r[f]; return v == null ? '<td class="na">—</td>' : `<td style="background:${bg(v)}">${v.toFixed(1)}</td>`; }).join('') + '</tr>';
+  });
+  const cnt = (f, fn) => D.coins.filter(c => c.r[f] != null && fn(c.r[f])).length;
+  html += '<tr class="rsi-sum"><td class="l" colspan="3">Overbought coins</td>' + tfs.map(f => `<td>${cnt(f, v => v >= 70)}</td>`).join('') + '</tr>';
+  html += '<tr class="rsi-sum"><td class="l" colspan="3">Oversold coins</td>' + tfs.map(f => `<td>${cnt(f, v => v <= 30)}</td>`).join('') + '</tr>';
+  t.innerHTML = html + '</tbody>';
+  $('rsiUpdated').textContent = `${D.coins.length} coins · RSI(${D.period}) · updated ${new Date(D.generated_at).toLocaleTimeString()}.`;
+}
+$('rsiTable').addEventListener('click', e => { const h = e.target.closest('th[data-k]'); if(!h) return;
+  const k = h.dataset.k; if(sortKey === k) sortDir = -sortDir; else { sortKey = k; sortDir = (k === 's' ? 1 : -1); } render(); });
+$('rsiFilter').addEventListener('click', e => { const c = e.target.closest('.filter-chip'); if(!c) return;
+  document.querySelectorAll('#rsiFilter .filter-chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); filt = c.dataset.f; render(); });
+function load(){ fetch('../rsi_heatmap.json?t=' + Date.now(), {cache:'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null).then(d => { if(d) D = d; render(); }); }
+load(); setInterval(() => { if(!document.hidden) load(); }, 300000);
 })();
 </script>
 
