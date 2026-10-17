@@ -126,6 +126,46 @@ def fetch_truth():
     return (items or None), (None if allp else "feed returned no posts"), len(allp)
 
 
+NEWS_FEEDS = [("CoinDesk", "https://www.coindesk.com/arc/outboundfeeds/rss/"),
+              ("Cointelegraph", "https://cointelegraph.com/rss"),
+              ("The Block", "https://www.theblock.co/rss.xml"),
+              ("Decrypt", "https://decrypt.co/feed"),
+              ("Bitcoin Magazine", "https://bitcoinmagazine.com/.rss/full/"),
+              ("CryptoSlate", "https://cryptoslate.com/feed/")]
+
+
+def fetch_news_one(name, url):
+    txt = get(url, accept="application/rss+xml,application/xml,text/xml,*/*")
+    if not txt:
+        return {"name": name, "posts": [], "ok": False}
+    out = []
+    try:
+        root = ET.fromstring(txt)
+    except ET.ParseError as e:
+        log(f"  {name}: rss parse error {e}")
+        return {"name": name, "posts": [], "ok": False}
+    for it in root.iter("item"):
+        g = lambda n: (it.findtext(n) or "").strip()
+        title = clean(g("title"))
+        desc = clean(g("description"))
+        if desc.lower().startswith(title.lower()[:30]) and title:
+            desc = ""
+        try:
+            ts = int(parsedate_to_datetime(g("pubDate")).timestamp())
+        except Exception:
+            ts = None
+        if title and ts:
+            out.append({"id": g("guid") or g("link"), "title": title, "text": desc[:280], "link": g("link"), "ts": ts})
+    out.sort(key=lambda p: p["ts"], reverse=True)
+    log(f"news {name}: {len(out)} items")
+    return {"name": name, "posts": out[:8], "ok": bool(out)}
+
+
+def fetch_news():
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        return list(ex.map(lambda f: fetch_news_one(*f), NEWS_FEEDS))
+
+
 def x_from_feed(handle, url):
     txt = get(url, accept="application/rss+xml,*/*")
     return parse_rss(txt) if txt else []
@@ -259,8 +299,11 @@ def main():
     oldx = {a["handle"]: a for a in old.get("x", [])}
     state = old.get("x_state", {})
     has_api = bool(os.environ.get("X_BEARER_TOKEN"))
+    x_on = has_api or bool(os.environ.get("X_FEEDS_JSON"))
+    f_news = None
     with ThreadPoolExecutor(max_workers=1) as ex:
         f_truth = ex.submit(fetch_truth)
+        f_news = ex.submit(fetch_news)
         # public X endpoints are rate limited per IP: one account at a time, spaced out, never in parallel
         xs, fails = [], 0
         for n, a in enumerate(X_ACCOUNTS):
@@ -274,6 +317,11 @@ def main():
             fails = 0 if r["via"] else fails + 1
             xs.append(r)
         truth, truth_err, truth_seen = f_truth.result()
+        news = f_news.result()
+    oldnews = {n["name"]: n for n in old.get("news", [])}
+    for n in news:  # keep earlier items if a feed fails this run
+        if not n["posts"] and n["name"] in oldnews:
+            n["posts"] = oldnews[n["name"]]["posts"]
     # keep previous Truth posts if the archive failed this run
     if not truth and old.get("truth"):
         truth = old["truth"]
@@ -285,6 +333,7 @@ def main():
         "truth": truth or [],
         "truth_error": truth_err,
         "truth_seen": truth_seen,
+        "news": news,
         "x": xs,
         "x_working": sum(1 for a in xs if a["via"]),
         "x_state": state,

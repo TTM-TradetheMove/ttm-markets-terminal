@@ -784,11 +784,12 @@ footer{padding:40px 0 60px}
     <div class="section-head">
       <span class="tag">Social Pulse</span>
       <h2>Key posts: Trump &amp; crypto's loudest voices</h2>
-      <p>Only the posts that matter for crypto — mentions of Bitcoin, crypto, ETFs, regulation, rates, tariffs and similar market-moving topics. Everything else is filtered out. Links go to the original posts.</p>
+      <p>Trump's market-moving Truth Social posts, plus the latest headlines from the main crypto news outlets. Pick an outlet to see its last 6 stories. Links go to the originals.</p>
       <p id="spUpdated" class="calendar-note" style="margin-top:8px">Loading posts…</p>
     </div>
     <div class="filter-row" id="spTabs" style="margin-bottom:14px">
       <button class="filter-chip active" data-sp="truth">Trump · Truth Social</button>
+      <button class="filter-chip" data-sp="news">Crypto news</button>
       <button class="filter-chip" data-sp="x">Key X accounts</button>
     </div>
     <div class="filter-row" id="spAcct" style="margin-bottom:14px;display:none"></div>
@@ -2497,7 +2498,7 @@ setInterval(() => { if(!document.hidden) loadLiq(false); }, 300000);
 (function(){
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let SP = null, tab = 'truth', who = 'latest';
+let SP = null, tab = 'truth', who = 'latest', whoN = 'latest';
 const MAXAGE = 30 * 86400, SHOW = 6;
 const ago = ts => { if(!ts) return ''; const s = Date.now()/1000 - ts; return s < 3600 ? Math.max(1, Math.round(s/60)) + 'm ago' : s < 86400 ? Math.round(s/3600) + 'h ago' : Math.round(s/86400) + 'd ago'; };
 const fresh = p => p && p.ts && (Date.now()/1000 - p.ts) <= MAXAGE;
@@ -2506,6 +2507,10 @@ function card(p, who){
   const tags = (p.tags || []).map(t => `<span class="sp-tag ${esc(t)}">${esc(t)}</span>`).join('');
   return `<div class="sp-card"><div class="sp-meta"><b style="color:var(--text)">${esc(who)}</b><span>${ago(p.ts)}</span>${tags}</div>
     <p>${esc((p.text || '').slice(0, 700))}</p><a class="sp-link" href="${esc(safeLink(p.link))}" target="_blank" rel="noopener noreferrer">View original ↗</a></div>`;
+}
+function ncard(p, who){
+  return `<div class="sp-card"><div class="sp-meta"><b style="color:var(--text)">${esc(who)}</b><span>${ago(p.ts)}</span></div>
+    <p><b>${esc(p.title)}</b>${p.text ? '<br>' + esc(p.text) : ''}</p><a class="sp-link" href="${esc(safeLink(p.link))}" target="_blank" rel="noopener noreferrer">Read story ↗</a></div>`;
 }
 function render(){
   const el = $('spBody'); if(!el) return;
@@ -2517,6 +2522,16 @@ function render(){
     el.innerHTML = items.length ? `<div class="sp-grid">${items.map(p => card(p, 'Donald J. Trump')).join('')}</div>` +
         `<p class="calendar-note" style="margin-top:10px">Source: an independent public archive of Truth Social. Showing ${items.length} key posts out of ${SP.truth_seen || 'the'} most recent.</p>`
       : `<div class="sp-empty">${SP.truth_error ? 'The Truth Social archive is not reachable right now.' : 'No crypto- or market-related Truth Social posts in the latest batch.'}</div>`;
+  } else if(tab === 'news'){
+    const ns = (SP.news || []).map(n => Object.assign({}, n, {posts: (n.posts || []).filter(p => p.ts && Date.now()/1000 - p.ts <= 3 * 86400).sort((p, q) => q.ts - p.ts)}));
+    const bar = $('spAcct'); bar.style.display = '';
+    if(whoN !== 'latest' && !ns.some(n => n.name === whoN)) whoN = 'latest';
+    bar.innerHTML = `<button class="filter-chip ${whoN === 'latest' ? 'active' : ''}" data-who="latest">Latest from all</button>` +
+      ns.map(n => `<button class="filter-chip ${whoN === n.name ? 'active' : ''}" data-who="${esc(n.name)}">${esc(n.name)}${n.posts.length ? '' : ' (0)'}</button>`).join('');
+    const list = whoN === 'latest' ? [].concat(...ns.map(n => n.posts.map(p => ({p, name: n.name})))).sort((x, y) => y.p.ts - x.p.ts).slice(0, SHOW)
+      : (ns.find(n => n.name === whoN).posts.slice(0, SHOW).map(p => ({p, name: whoN})));
+    el.innerHTML = list.length ? `<div class="sp-grid">${list.map(i => ncard(i.p, i.name)).join('')}</div><p class="calendar-note" style="margin-top:10px">Showing the ${list.length} most recent stor${list.length === 1 ? 'y' : 'ies'} from the last 3 days${whoN === 'latest' ? ' across all outlets' : ''}.</p>`
+      : '<div class="sp-empty">No recent stories for this selection — the news feeds may not have loaded yet.</div>';
   } else {
     const xs = (SP.x || []).map(a => Object.assign({}, a, {posts: (a.posts || []).filter(fresh).sort((p, q) => q.ts - p.ts)}));
     const bar = $('spAcct'); bar.style.display = '';
@@ -2536,8 +2551,8 @@ function render(){
   }
 }
 $('spTabs').addEventListener('click', e => { const c = e.target.closest('.filter-chip'); if(!c) return;
-  document.querySelectorAll('#spTabs .filter-chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); tab = c.dataset.sp; if(tab !== 'x') $('spAcct').style.display = 'none'; render(); });
-$('spAcct').addEventListener('click', e => { const c = e.target.closest('[data-who]'); if(c){ who = c.dataset.who; render(); } });
+  document.querySelectorAll('#spTabs .filter-chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); tab = c.dataset.sp; if(tab === 'truth') $('spAcct').style.display = 'none'; render(); });
+$('spAcct').addEventListener('click', e => { const c = e.target.closest('[data-who]'); if(c){ if(tab === 'news') whoN = c.dataset.who; else who = c.dataset.who; render(); } });
 function load(){ fetch('../social_data.json?t=' + Date.now(), {cache:'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null).then(d => { SP = d; render(); }); }
 load(); setInterval(() => { if(!document.hidden) load(); }, 300000);
 })();
