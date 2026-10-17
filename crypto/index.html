@@ -340,17 +340,19 @@ td.num{font-variant-numeric:tabular-nums;color:var(--mute)}
 .th-status.open{background:rgba(74,222,128,.15);color:#4ade80;border-color:rgba(74,222,128,.35)}
 .th-clock{font-size:22px;font-weight:700;color:var(--gold2);font-variant-numeric:tabular-nums;margin-bottom:4px}
 .th-hours{font-size:11px;color:var(--mute)}
-.th-ex{margin:8px 0 6px;padding-top:8px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:5px;font-size:11px}
-.th-ex-row{display:grid;grid-template-columns:auto auto 1fr;gap:2px 8px;align-items:baseline}
+.th-ex{margin:10px 0 6px;padding-top:10px;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;font-size:11px}
+.th-ex-row{display:grid;grid-template-columns:1fr auto;gap:3px 8px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.03)}
+.th-ex-row.open{border-color:rgba(52,211,153,.35)}
+.th-ex-row.brk{border-color:rgba(251,191,36,.35)}
 .th-ex-row .n{font-weight:700;color:var(--text,#e5e7eb)}
 .th-ex-row .s{font-size:9px;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:999px;border:1px solid var(--line);color:var(--mute)}
 .th-ex-row.open .s{color:#34d399;border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.1)}
 .th-ex-row.brk .s{color:#fbbf24;border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.1)}
 .th-ex-row .h,.th-ex-row .c{grid-column:1/-1;color:var(--mute)}
 .th-ex-row .c{color:var(--gold2,#fbbf24)}
-.th-ex-tog{padding:5px 8px;border-radius:8px;background:rgba(255,255,255,.04);color:var(--mute)}
+.th-ex-tog{grid-column:1/-1;padding:9px 10px;border-radius:10px;border:1px dashed var(--line);background:rgba(255,255,255,.04);color:var(--mute)}
 .th-ex-tog b{color:var(--text,#e5e7eb)}
-.th-ex-tog.live{background:rgba(52,211,153,.1);color:#34d399}
+.th-ex-tog.live{background:rgba(52,211,153,.1);color:#34d399;border-color:rgba(52,211,153,.4)}
 
 .th-countdown{font-size:11px;color:var(--gold2);font-weight:600;font-variant-numeric:tabular-nums;margin-top:4px}
 .th-countdown.closing{color:#4ade80}
@@ -656,7 +658,7 @@ footer{padding:40px 0 60px}
           <div class="th-overlap-unit"><span id="thOS">—</span><small>S</small></div>
         </div>
       </div>
-      <p class="midterm-note">The top box is the session that most recently went live — when New York's core session starts while London is still open, it takes the top spot and reads "Overlap with London"; once London closes it becomes "Core — solo, no overlap". Before that, New York shows "Pre-market" and London stays on top. After the 16:00 ET close it shows "Post-market". Overlaps are counted between core sessions only. On weekends the same session times and overlaps still run — they are just labelled Weekend, because cash markets are shut. Each box also lists its exchanges (ASX and Tokyo, LSE and Xetra, NYSE/Nasdaq) with open hours, Tokyo's lunch break and when they run together. Crypto trades 24/7, but flows and volatility still tend to follow these cash-market sessions.</p>
+      <p class="midterm-note">The top box is the session that most recently went live — when New York's core session starts while London is still open, it takes the top spot and reads "Overlap with London"; once London closes it becomes "Core — solo, no overlap". Before that, New York shows "Pre-market" and London stays on top. After the 16:00 ET close it shows "Post-market". The overlap box below counts times when exchanges from two different regions are open at once. On weekends the same session times and overlaps still run — they are just labelled Weekend, because cash markets are shut. Each box also lists its exchanges (ASX and Tokyo, LSE and Xetra, NYSE/Nasdaq) with open hours, Tokyo's lunch break and when they run together. Crypto trades 24/7, but flows and volatility still tend to follow these cash-market sessions.</p>
     </div>
   </div>
 </section>
