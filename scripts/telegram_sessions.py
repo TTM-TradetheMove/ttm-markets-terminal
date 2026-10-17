@@ -22,7 +22,7 @@ from zoneinfo import ZoneInfo
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATE = os.path.join(ROOT, "telegram_state.json")
 SITE = "https://ttm-tradethemove.github.io/ttm-markets-terminal/crypto/#tradinghours"
-HEADSUP = int(os.environ.get("HEADSUP_MIN", "15"))
+HEADSUP = int(os.environ.get("HEADSUP_MIN", "10"))
 WEEKENDS = os.environ.get("INCLUDE_WEEKENDS", "0") == "1"
 MAX_LOOKBACK = timedelta(minutes=20)  # never replay more than this after an outage
 DISPLAY = ZoneInfo("Australia/Melbourne")
@@ -105,6 +105,8 @@ def build_events(now):
                 a = local_to_utc(day, segs[0][1], zone)
                 b = local_to_utc(day, segs[1][0], zone)
                 d = day.isoformat()
+                ev.append((a - timedelta(minutes=HEADSUP), f"{name}-breakhead-{d}", f"⏳ <b>{name}</b> goes on lunch break in {HEADSUP} min ({fmt(a, zone)}–{fmt(b, zone)} local)"))
+                ev.append((b - timedelta(minutes=HEADSUP), f"{name}-reopenhead-{d}", f"⏰ <b>{name}</b> reopens from lunch in {HEADSUP} min"))
                 ev.append((a, f"{name}-break-{d}", f"🍜 <b>{name}</b> lunch break ({fmt(a, zone)}–{fmt(b, zone)} local)"))
                 ev.append((b, f"{name}-reopen-{d}", f"🔄 <b>{name}</b> reopened after lunch"))
     # --- cross-region overlaps (>= 2 regions open at once), merged into continuous periods
