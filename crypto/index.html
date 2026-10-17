@@ -340,6 +340,18 @@ td.num{font-variant-numeric:tabular-nums;color:var(--mute)}
 .th-status.open{background:rgba(74,222,128,.15);color:#4ade80;border-color:rgba(74,222,128,.35)}
 .th-clock{font-size:22px;font-weight:700;color:var(--gold2);font-variant-numeric:tabular-nums;margin-bottom:4px}
 .th-hours{font-size:11px;color:var(--mute)}
+.th-ex{margin:8px 0 6px;padding-top:8px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:5px;font-size:11px}
+.th-ex-row{display:grid;grid-template-columns:auto auto 1fr;gap:2px 8px;align-items:baseline}
+.th-ex-row .n{font-weight:700;color:var(--text,#e5e7eb)}
+.th-ex-row .s{font-size:9px;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:999px;border:1px solid var(--line);color:var(--mute)}
+.th-ex-row.open .s{color:#34d399;border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.1)}
+.th-ex-row.brk .s{color:#fbbf24;border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.1)}
+.th-ex-row .h,.th-ex-row .c{grid-column:1/-1;color:var(--mute)}
+.th-ex-row .c{color:var(--gold2,#fbbf24)}
+.th-ex-tog{padding:5px 8px;border-radius:8px;background:rgba(255,255,255,.04);color:var(--mute)}
+.th-ex-tog b{color:var(--text,#e5e7eb)}
+.th-ex-tog.live{background:rgba(52,211,153,.1);color:#34d399}
+
 .th-countdown{font-size:11px;color:var(--gold2);font-weight:600;font-variant-numeric:tabular-nums;margin-top:4px}
 .th-countdown.closing{color:#4ade80}
 .th-status.weekend{background:rgba(251,191,36,.15);color:#fbbf24;border-color:rgba(251,191,36,.35)}
@@ -611,6 +623,7 @@ footer{padding:40px 0 60px}
           <div class="th-phase" id="thPhase-asia">—</div>
           <div class="th-running" id="thRunning-asia">—</div>
           <div class="th-hours">Core 07:00–16:00 Melbourne, Mon–Fri</div>
+          <div class="th-ex" id="thEx-asia"></div>
           <div class="th-countdown" id="thCountdown-asia">—</div>
         </div>
         <div class="th-box" id="thBox-ldn" data-key="ldn">
@@ -619,6 +632,7 @@ footer{padding:40px 0 60px}
           <div class="th-phase" id="thPhase-ldn">—</div>
           <div class="th-running" id="thRunning-ldn">—</div>
           <div class="th-hours">Core 08:00–17:00 London, Mon–Fri</div>
+          <div class="th-ex" id="thEx-ldn"></div>
           <div class="th-countdown" id="thCountdown-ldn">—</div>
         </div>
         <div class="th-box" id="thBox-ny" data-key="ny">
@@ -627,6 +641,7 @@ footer{padding:40px 0 60px}
           <div class="th-phase" id="thPhase-ny">—</div>
           <div class="th-running" id="thRunning-ny">—</div>
           <div class="th-hours">Pre 04:00–09:30 · Core 09:30–16:00 · Post 16:00–20:00 ET</div>
+          <div class="th-ex" id="thEx-ny"></div>
           <div class="th-countdown" id="thCountdown-ny">—</div>
         </div>
       </div>
@@ -641,7 +656,7 @@ footer{padding:40px 0 60px}
           <div class="th-overlap-unit"><span id="thOS">—</span><small>S</small></div>
         </div>
       </div>
-      <p class="midterm-note">The top box is the session that most recently went live — when New York's core session starts while London is still open, it takes the top spot and reads "Overlap with London"; once London closes it becomes "Core — solo, no overlap". Before that, New York shows "Pre-market" and London stays on top. After the 16:00 ET close it shows "Post-market". Overlaps are counted between core sessions only. Sessions run Monday–Friday; the Weekend badge flags that cash markets are shut. Crypto trades 24/7, but flows and volatility still tend to follow these cash-market sessions.</p>
+      <p class="midterm-note">The top box is the session that most recently went live — when New York's core session starts while London is still open, it takes the top spot and reads "Overlap with London"; once London closes it becomes "Core — solo, no overlap". Before that, New York shows "Pre-market" and London stays on top. After the 16:00 ET close it shows "Post-market". Overlaps are counted between core sessions only. On weekends the same session times and overlaps still run — they are just labelled Weekend, because cash markets are shut. Each box also lists its exchanges (ASX and Tokyo, LSE and Xetra, NYSE/Nasdaq) with open hours, Tokyo's lunch break and when they run together. Crypto trades 24/7, but flows and volatility still tend to follow these cash-market sessions.</p>
     </div>
   </div>
 </section>
@@ -1929,6 +1944,60 @@ function pairOverlaps(now, keyA, keyB){
 }
 const TH_PAIRS = [['asia','ldn'], ['ldn','ny'], ['asia','ny']];
 
+
+// ---- Exchange hours inside each session box (same exchanges as the TradFi page).
+// Segments are local minutes-from-midnight; two segments = a lunch break (Tokyo).
+const TH_EX = {
+  asia: [{n:'ASX', city:'Sydney', zone:'Australia/Sydney', segs:[[600,960]]},
+         {n:'Tokyo (TSE)', city:'Tokyo', zone:'Asia/Tokyo', segs:[[540,690],[750,930]]}],
+  ldn:  [{n:'LSE', city:'London', zone:'Europe/London', segs:[[480,990]]},
+         {n:'Xetra', city:'Frankfurt', zone:'Europe/Berlin', segs:[[540,1050]]}],
+  ny:   [{n:'NYSE / Nasdaq', city:'New York', zone:'America/New_York', segs:[[570,960]]}],
+};
+const hhmm = (d, zone) => new Intl.DateTimeFormat('en-GB', {timeZone: zone, hour:'2-digit', minute:'2-digit', hour12:false}).format(d);
+const mm2 = m => String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0');
+function exWindows(now, ex){
+  return phaseWindows(now, {zone: ex.zone, phases: ex.segs.map(([o,c]) => ({name:'core', open:o, close:c}))});
+}
+function renderSessionExchanges(key, now){
+  const el = document.getElementById('thEx-' + key); if(!el) return;
+  const list = TH_EX[key], zone = TH_SESSIONS[key].zone, city = TH_FULL_NAME[key];
+  const wins = list.map(ex => exWindows(now, ex));
+  let html = list.map((ex, i) => {
+    const w = wins[i], cur = w.find(x => now >= x.openUTC && now < x.closeUTC);
+    const prev = w.filter(x => x.closeUTC <= now).sort((a,b) => b.closeUTC - a.closeUTC)[0];
+    const nxt = w.filter(x => x.openUTC > now).sort((a,b) => a.openUTC - b.openUTC)[0];
+    const brk = !cur && ex.segs.length > 1 && prev && nxt && (nxt.openUTC - prev.closeUTC) < 2*3600e3;
+    const state = cur ? 'Open' : brk ? 'Lunch break' : 'Closed';
+    const cd = cur ? 'Closes in ' + formatCountdown((cur.closeUTC - now)/1000)
+             : nxt ? (brk ? 'Reopens in ' : 'Opens in ') + formatCountdown((nxt.openUTC - now)/1000) : '—';
+    return `<div class="th-ex-row ${cur ? 'open' : brk ? 'brk' : ''}"><span class="n">${ex.n}</span><span class="s">${state}</span>
+      <span class="h">${ex.segs.map(([o,c]) => mm2(o) + '–' + mm2(c)).join(' · ')} ${ex.city}${ex.segs.length > 1 ? ' (lunch break ' + mm2(ex.segs[0][1]) + '–' + mm2(ex.segs[1][0]) + ')' : ''}</span>
+      <span class="c">${cd}</span></div>`;
+  }).join('');
+  if(list.length > 1){
+    const ov = [];
+    wins[0].forEach(a => wins[1].forEach(b => {
+      const s0 = Math.max(a.openUTC, b.openUTC), e0 = Math.min(a.closeUTC, b.closeUTC);
+      if(s0 < e0) ov.push({s: new Date(s0), e: new Date(e0)});
+    }));
+    ov.sort((a,b) => a.s - b.s);
+    const f = ov.find(o => o.e > now);
+    if(f){
+      const grp = ov.filter(o => o.e > now && o.s - f.s < 10*3600e3);
+      const live = now >= f.s && now < f.e;
+      const names = list.map(x => x.n).join(' + ');
+      const span = grp.map(o => hhmm(o.s, zone) + '–' + hhmm(o.e, zone)).join(' · ');
+      html += `<div class="th-ex-tog ${live ? 'live' : ''}">${live ? 'Running together now' : 'Next together'}: <b>${names}</b><br>${span} ${city === 'ASIA' ? 'Melbourne' : city} time` +
+        (live ? ` · ends in ${formatCountdown((f.e - now)/1000)}` : ` · starts in ${formatCountdown((f.s - now)/1000)}`) +
+        (grp.length > 1 ? `<br>Gap between = lunch break` : '') + `</div>`;
+    }
+  } else {
+    html += `<div class="th-ex-tog">Single exchange — no overlap within this session</div>`;
+  }
+  el.innerHTML = html;
+}
+
 function updateTradingHours(){
   const now = new Date();
   const st = {};
@@ -1974,6 +2043,7 @@ function updateTradingHours(){
       countText = up ? `${up.phase === 'pre' ? 'Pre-market opens' : 'Opens'} in ${formatCountdown((up.openUTC - now)/1000)}` : '—';
     }
 
+    renderSessionExchanges(key, now);
     const statusEl = document.getElementById('thStatus-' + key);
     const boxEl = document.getElementById('thBox-' + key);
     statusEl.textContent = status;
