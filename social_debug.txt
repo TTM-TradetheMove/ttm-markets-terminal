@@ -1,0 +1,57 @@
+social run 2026-10-17T06:27:49.906121+00:00
+  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/saylor?showReplies=false -> HTTPError: HTTP Error 429: Too Many Requests
+  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/VitalikButerin?showReplie -> HTTPError: HTTP Error 429: Too Many Requests
+  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/brian_armstrong?showRepli -> HTTPError: HTTP Error 429: Too Many Requests
+  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/elonmusk?showReplies=fals -> HTTPError: HTTP Error 429: Too Many Requests
+  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/cz_binance?showReplies=fa -> HTTPError: HTTP Error 429: Too Many Requests
+truth: 80 posts seen, 5 key (crypto/market) kept
+  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/CryptoHayes?showReplies=f -> HTTPError: HTTP Error 429: Too Many Requests
+  GET fail https://nitter.net/VitalikButerin/rss -> HTTPError: HTTP Error 410: Gone
+  GET fail https://nitter.net/saylor/rss -> HTTPError: HTTP Error 410: Gone
+  GET fail https://nitter.net/brian_armstrong/rss -> HTTPError: HTTP Error 410: Gone
+  GET fail https://nitter.poast.org/VitalikButerin/rss -> URLError: <urlopen error [Errno -5] No address associated with hostname>
+  GET fail https://nitter.net/cz_binance/rss -> HTTPError: HTTP Error 410: Gone
+  GET fail https://nitter.net/elonmusk/rss -> HTTPError: HTTP Error 410: Gone
+  GET fail https://nitter.poast.org/saylor/rss -> URLError: <urlopen error [Errno -5] No address associated with hostname>
+  GET fail https://nitter.poast.org/cz_binance/rss -> URLError: <urlopen error [Errno -5] No address associated with hostname>
+  GET fail https://nitter.poast.org/brian_armstrong/rss -> URLError: <urlopen error [Errno -5] No address associated with hostname>
+  GET fail https://nitter.poast.org/elonmusk/rss -> URLError: <urlopen error [Errno -5] No address associated with hostname>
+  GET fail https://nitter.privacydev.net/saylor/rss -> URLError: <urlopen error [Errno 111] Connection refused>
+  GET fail https://nitter.privacydev.net/cz_binance/rss -> URLError: <urlopen error [Errno 111] Connection refused>
+  GET fail https://nitter.privacydev.net/VitalikButerin/rss -> URLError: <urlopen error [Errno 111] Connection refused>
+  GET fail https://nitter.privacydev.net/brian_armstrong/rss -> URLError: <urlopen error [Errno 111] Connection refused>
+  GET fail https://nitter.privacydev.net/elonmusk/rss -> URLError: <urlopen error [Errno 111] Connection refused>
+  GET fail https://nitter.net/CryptoHayes/rss -> HTTPError: HTTP Error 410: Gone
+  GET fail https://nitter.poast.org/CryptoHayes/rss -> URLError: <urlopen error [Errno -5] No address associated with hostname>
+  GET fail https://nitter.privacydev.net/CryptoHayes/rss -> URLError: <urlopen error [Errno 111] Connection refused>
+  GET fail https://xcancel.com/saylor/rss -> HTTPError: HTTP Error 451: 
+  GET fail https://xcancel.com/brian_armstrong/rss -> HTTPError: HTTP Error 451: 
+x @saylor: no source worked
+x @brian_armstrong: no source worked
+  GET fail https://xcancel.com/elonmusk/rss -> HTTPError: HTTP Error 451: 
+x @elonmusk: no source worked
+  GET fail https://xcancel.com/cz_binance/rss -> HTTPError: HTTP Error 451: 
+x @cz_binance: no source worked
+  GET fail https://xcancel.com/VitalikButerin/rss -> HTTPError: HTTP Error 451: 
+x @VitalikButerin: no source worked
+  GET fail https://xcancel.com/CryptoHayes/rss -> HTTPError: HTTP Error 451: 
+x @CryptoHayes: no source worked
+  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/SECGov?showReplies=false -> HTTPError: HTTP Error 429: Too Many Requests
+  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/federalreserve?showReplie -> HTTPError: HTTP Error 429: Too Many Requests
+  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/RaoulGMI?showReplies=fals -> HTTPError: HTTP Error 429: Too Many Requests
+  GET fail https://nitter.net/RaoulGMI/rss -> HTTPError: HTTP Error 410: Gone
+  GET fail https://nitter.poast.org/RaoulGMI/rss -> URLError: <urlopen error [Errno -5] No address associated with hostname>
+  GET fail https://nitter.net/SECGov/rss -> HTTPError: HTTP Error 410: Gone
+  GET fail https://nitter.net/federalreserve/rss -> HTTPError: HTTP Error 410: Gone
+  GET fail https://nitter.privacydev.net/RaoulGMI/rss -> URLError: <urlopen error [Errno 111] Connection refused>
+  GET fail https://xcancel.com/RaoulGMI/rss -> HTTPError: HTTP Error 451: 
+x @RaoulGMI: no source worked
+  GET fail https://nitter.poast.org/federalreserve/rss -> URLError: <urlopen error [Errno -5] No address associated with hostname>
+  GET fail https://nitter.poast.org/SECGov/rss -> URLError: <urlopen error [Errno -5] No address associated with hostname>
+  GET fail https://nitter.privacydev.net/federalreserve/rss -> URLError: <urlopen error [Errno 111] Connection refused>
+  GET fail https://nitter.privacydev.net/SECGov/rss -> URLError: <urlopen error [Errno 111] Connection refused>
+  GET fail https://xcancel.com/SECGov/rss -> HTTPError: HTTP Error 451: 
+x @SECGov: no source worked
+  GET fail https://xcancel.com/federalreserve/rss -> HTTPError: HTTP Error 451: 
+x @federalreserve: no source worked
+wrote social_data.json: truth=5, x accounts with posts=0/9; 2s
