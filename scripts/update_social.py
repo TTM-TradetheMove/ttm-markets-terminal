@@ -23,7 +23,7 @@ from concurrent.futures import ThreadPoolExecutor
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36")
 T0 = time.time()
-DEADLINE = T0 + 200
+DEADLINE = T0 + 230
 LOG = []
 
 TRUTH_FEED = "https://www.trumpstruth.org/feed"
@@ -59,16 +59,22 @@ def log(msg):
         pass
 
 
-def get(url, timeout=15, accept="*/*"):
+def get(url, timeout=15, accept="*/*", headers=None):
     if time.time() > DEADLINE:
         return None
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": accept})
+        h = {"User-Agent": UA, "Accept": accept}
+        h.update(headers or {})
+        req = urllib.request.Request(url, headers=h)
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return r.read().decode("utf-8", errors="replace")
     except Exception as e:  # noqa
         log(f"  GET fail {url[:90]} -> {type(e).__name__}: {str(e)[:80]}")
+        LAST_ERR[0] = getattr(e, "code", None)
         return None
+
+
+LAST_ERR = [None]
 
 
 def clean(t):
@@ -126,7 +132,19 @@ def x_from_feed(handle, url):
 
 
 def x_from_syndication(handle):
-    txt = get(f"https://syndication.twitter.com/srv/timeline-profile/screen-name/{handle}?showReplies=false")
+    txt = None
+    for url in (f"https://syndication.twitter.com/srv/timeline-profile/screen-name/{handle}?showReplies=false",
+                f"https://cdn.syndication.twimg.com/srv/timeline-profile/screen-name/{handle}?showReplies=false"):
+        LAST_ERR[0] = None
+        txt = get(url)
+        if txt:
+            break
+        if LAST_ERR[0] == 429:
+            log("  rate limited (429) - waiting 25s then one retry")
+            time.sleep(25)
+            txt = get(url)
+            if txt:
+                break
     if not txt:
         return []
     m = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', txt, re.S)
@@ -161,46 +179,106 @@ def x_from_nitter(handle):
     return []
 
 
-def fetch_x(acct):
-    handle, name, why = acct
-    feeds = json.loads(os.environ.get("X_FEEDS_JSON", "{}") or "{}")
-    for how, fn in (("rss", lambda: x_from_feed(handle, feeds[handle]) if handle in feeds else []),
-                    ("syndication", lambda: x_from_syndication(handle)),
-                    ("nitter", lambda: x_from_nitter(handle))):
+def x_from_api(handle, state):
+    """Official X API v2 (pay-per-use). Needs the X_BEARER_TOKEN secret. Only NEW posts are requested
+    (since_id), so usage - and cost - stays small. User ids / newest id seen are cached in `state`."""
+    tok = os.environ.get("X_BEARER_TOKEN")
+    if not tok:
+        return None
+    auth = {"Authorization": f"Bearer {tok}"}
+    st = state.setdefault(handle, {})
+    if not st.get("uid"):
+        txt = get(f"https://api.twitter.com/2/users/by/username/{handle}", headers=auth, accept="application/json")
         try:
-            items = [i for i in fn() if i.get("text")]
-        except Exception as e:  # noqa
-            log(f"  {handle} via {how} failed: {type(e).__name__}: {e}")
-            items = []
-        if items:
-            for i in items:
-                i["tags"] = tags_for(i["text"])
-            key = [i for i in items if i["tags"]]  # KEY posts only
-            log(f"x @{handle}: {len(items)} posts via {how}, {len(key)} key kept")
-            return {"handle": handle, "name": name, "why": why, "via": how, "seen": len(items), "posts": key[:8]}
-    log(f"x @{handle}: no source worked")
-    return {"handle": handle, "name": name, "why": why, "via": None, "posts": []}
+            st["uid"] = json.loads(txt)["data"]["id"]
+        except Exception:
+            log(f"  X API: could not resolve @{handle}: {(txt or 'no response')[:150]}")
+            return None
+    q = {"max_results": "10", "exclude": "replies,retweets", "tweet.fields": "created_at"}
+    if st.get("since"):
+        q["since_id"] = st["since"]
+    txt = get(f"https://api.twitter.com/2/users/{st['uid']}/tweets?" + urllib.parse.urlencode(q), headers=auth, accept="application/json")
+    try:
+        data = json.loads(txt)
+    except Exception:
+        return None
+    if data.get("errors") and not data.get("data"):
+        log(f"  X API errors for @{handle}: {json.dumps(data.get('errors'))[:200]}")
+        return None
+    out = []
+    for t in data.get("data") or []:
+        try:
+            ts = int(dt.datetime.fromisoformat(t["created_at"].replace("Z", "+00:00")).timestamp())
+        except Exception:
+            ts = None
+        out.append({"id": t["id"], "text": clean(t.get("text", "")), "link": f"https://x.com/{handle}/status/{t['id']}", "ts": ts})
+    if data.get("meta", {}).get("newest_id"):
+        st["since"] = data["meta"]["newest_id"]
+    return out  # [] is a valid answer: no new posts since last run
+
+
+def fetch_x(acct, prev=None, state=None):
+    handle, name, why = acct
+    state = state if state is not None else {}
+    feeds = json.loads(os.environ.get("X_FEEDS_JSON", "{}") or "{}")
+    via, items = None, []
+    got = None
+    try:
+        got = x_from_api(handle, state)
+    except Exception as e:  # noqa
+        log(f"  {handle} via x-api failed: {type(e).__name__}: {e}")
+    if got is not None:
+        via, items = "x-api", [i for i in got if i.get("text")]
+    else:
+        for how, fn in (("rss", lambda: x_from_feed(handle, feeds[handle]) if handle in feeds else []),
+                        ("syndication", lambda: x_from_syndication(handle))):
+            try:
+                found = [i for i in fn() if i.get("text")]
+            except Exception as e:  # noqa
+                log(f"  {handle} via {how} failed: {type(e).__name__}: {e}")
+                found = []
+            if found:
+                via, items = how, found
+                break
+    for i in items:
+        i["tags"] = tags_for(i["text"])
+    key = [i for i in items if i["tags"]]  # KEY posts only
+    merged = {p["id"]: p for p in (prev or []) + key}  # keep earlier key posts, newest first
+    posts = sorted(merged.values(), key=lambda p: p.get("ts") or 0, reverse=True)[:8]
+    log(f"x @{handle}: via {via}, {len(items)} fetched, {len(key)} key, {len(posts)} kept")
+    return {"handle": handle, "name": name, "why": why, "via": via, "seen": len(items), "posts": posts}
 
 
 def main():
     log(f"social run {dt.datetime.now(dt.timezone.utc).isoformat()}")
-    with ThreadPoolExecutor(max_workers=6) as ex:
-        f_truth = ex.submit(fetch_truth)
-        f_x = [ex.submit(fetch_x, a) for a in X_ACCOUNTS]
-        truth, truth_err, truth_seen = f_truth.result()
-        xs = [f.result() for f in f_x]
     try:
         with open(os.path.join(ROOT, "social_data.json")) as f:
             old = json.load(f)
     except Exception:
         old = {}
-    # keep previous posts if a source failed this run (page never goes blank because of one bad run)
+    oldx = {a["handle"]: a for a in old.get("x", [])}
+    state = old.get("x_state", {})
+    has_api = bool(os.environ.get("X_BEARER_TOKEN"))
+    with ThreadPoolExecutor(max_workers=1) as ex:
+        f_truth = ex.submit(fetch_truth)
+        # public X endpoints are rate limited per IP: one account at a time, spaced out, never in parallel
+        xs, fails = [], 0
+        for n, a in enumerate(X_ACCOUNTS):
+            prev = oldx.get(a[0], {}).get("posts", [])
+            if not has_api and (time.time() > DEADLINE - 20 or fails >= 3):
+                xs.append({"handle": a[0], "name": a[1], "why": a[2], "via": None, "posts": prev})
+                continue
+            if n and not has_api:
+                time.sleep(6)
+            r = fetch_x(a, prev, state)
+            fails = 0 if r["via"] else fails + 1
+            xs.append(r)
+        truth, truth_err, truth_seen = f_truth.result()
+    # keep previous Truth posts if the archive failed this run
     if not truth and old.get("truth"):
         truth = old["truth"]
-    oldx = {a["handle"]: a for a in old.get("x", [])}
     for a in xs:
-        if not a["posts"] and oldx.get(a["handle"], {}).get("posts"):
-            a["posts"] = oldx[a["handle"]]["posts"]
+        if not a["via"] and a["posts"]:
             a["stale"] = True
     out = {
         "generated_at": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat(),
@@ -208,7 +286,8 @@ def main():
         "truth_error": truth_err,
         "truth_seen": truth_seen,
         "x": xs,
-        "x_working": sum(1 for a in xs if a["posts"] and not a.get("stale")),
+        "x_working": sum(1 for a in xs if a["via"]),
+        "x_state": state,
         "note": "Truth Social posts come from an independent public archive. X has no free API, so X accounts are best-effort.",
     }
     with open(os.path.join(ROOT, "social_data.json"), "w") as f:

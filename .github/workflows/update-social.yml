@@ -27,10 +27,11 @@ jobs:
           python-version: "3.12"
       - name: Fetch Truth Social + X posts
         continue-on-error: true
-        timeout-minutes: 4
+        timeout-minutes: 5
         env:
           X_FEEDS_JSON: ${{ secrets.X_FEEDS_JSON }}
-        run: timeout 230 python3 scripts/update_social.py
+          X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
+        run: timeout 260 python3 scripts/update_social.py
       - name: Commit and push if changed
         if: always()
         run: |
