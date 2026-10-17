@@ -109,27 +109,57 @@ def build_events(now):
                 ev.append((b - timedelta(minutes=HEADSUP), f"{name}-reopenhead-{d}", f"⏰ <b>{name}</b> reopens from lunch in {HEADSUP} min"))
                 ev.append((a, f"{name}-break-{d}", f"🍜 <b>{name}</b> lunch break ({fmt(a, zone)}–{fmt(b, zone)} local)"))
                 ev.append((b, f"{name}-reopen-{d}", f"🔄 <b>{name}</b> reopened after lunch"))
-    # --- cross-region overlaps (>= 2 regions open at once), merged into continuous periods
+    # --- every exchange: heads-up + moment for its first open and last close of the day
+    for k, name, zone, segs in EXCHANGES:
+        for day in days_around(now, zone):
+            if is_weekend(day) and not WEEKENDS:
+                continue
+            o = local_to_utc(day, segs[0][0], zone)
+            c = local_to_utc(day, segs[-1][1], zone)
+            d = day.isoformat()
+            hrs = f"{fmt(o, zone)}–{fmt(c, zone)} local"
+            ev.append((o - timedelta(minutes=HEADSUP), f"{name}-xhead-open-{d}", f"⏰ <b>{name}</b> opens in {HEADSUP} min ({hrs})"))
+            ev.append((o, f"{name}-xopen-{d}", f"🟢 <b>{name}</b> is open ({hrs})"))
+            ev.append((c - timedelta(minutes=HEADSUP), f"{name}-xhead-close-{d}", f"⏳ <b>{name}</b> closes in {HEADSUP} min"))
+            ev.append((c, f"{name}-xclose-{d}", f"🔴 <b>{name}</b> closed"))
+    # --- multi-session = exchanges from >= 2 different sessions open at once (merged into periods)
     wins = []
     for k, name, zone, segs in EXCHANGES:
         for (st, en, _) in windows(now, zone, segs):
             wins.append((k, name, st, en))
     cuts = sorted({w[2] for w in wins} | {w[3] for w in wins})
-    periods = []
+    periods = []  # [start, end, [(a, b, sessions, exchanges)...]]
     for a, b in zip(cuts, cuts[1:]):
         mid = a + (b - a) / 2
         op = [w for w in wins if w[2] <= mid < w[3]]
-        if len({w[0] for w in op}) >= 2:
+        sess = {w[0] for w in op}
+        if len(sess) >= 2:
+            iv = (a, b, sess, {w[1] for w in op})
             if periods and periods[-1][1] == a:
                 periods[-1][1] = b
-                periods[-1][2].update(w[1] for w in op)
+                periods[-1][2].append(iv)
             else:
-                periods.append([a, b, {w[1] for w in op}])
-    for a, b, names in periods:
-        label = " + ".join(sorted(names))
-        d = a.date().isoformat() + a.strftime("%H%M")
-        ev.append((a, f"overlap-start-{d}", f"🔥 <b>OVERLAP LIVE</b> — {label}\nBest liquidity: {fmt(a, 'Australia/Melbourne')}–{fmt(b, 'Australia/Melbourne')} Melbourne time"))
-        ev.append((b, f"overlap-end-{d}", f"⚪ Overlap ended ({label})"))
+                periods.append([a, b, [iv]])
+
+    def snames(sess):
+        return " + ".join(SESSIONS[k]["name"] for k in ("asia", "ldn", "ny") if k in sess)
+
+    for a, b, ivs in periods:
+        d = a.strftime("%Y%m%d%H%M")
+        first = ivs[0]
+        win = f"{fmt(a, 'Australia/Melbourne')}–{fmt(b, 'Australia/Melbourne')} Melbourne time"
+        detail = lambda iv: f"{snames(iv[2])} ({', '.join(sorted(iv[3]))})"
+        ev.append((a - timedelta(minutes=HEADSUP), f"multi-head-{d}",
+                   f"⚠️ <b>MULTI-SESSION in {HEADSUP} min</b> — {detail(first)}\n{win}"))
+        ev.append((a, f"multi-start-{d}", f"🔥 <b>MULTI-SESSION LIVE</b> — {detail(first)}\nBest liquidity: {win}"))
+        for prev, cur in zip(ivs, ivs[1:]):
+            if cur[2] != prev[2] or cur[3] != prev[3]:
+                ev.append((cur[0], f"multi-change-{d}-{cur[0].strftime('%H%M')}",
+                           f"🔀 <b>Multi-session update</b> — now {detail(cur)}"))
+        last = ivs[-1]
+        ev.append((b - timedelta(minutes=HEADSUP), f"multi-endhead-{d}",
+                   f"⚠️ <b>Multi-session ends in {HEADSUP} min</b> — {detail(last)}"))
+        ev.append((b, f"multi-end-{d}", f"⚪ Multi-session ended ({snames(first[2] | last[2])})"))
     return ev
 
 
@@ -160,7 +190,7 @@ def send(text):
 
 
 def main():
-    now = datetime.now(timezone.utc)
+    now = datetime.fromisoformat(os.environ["NOW_ISO"]) if os.environ.get("NOW_ISO") else datetime.now(timezone.utc)
     try:
         st = json.load(open(STATE))
     except Exception:
@@ -170,13 +200,21 @@ def main():
     sent = set(st.get("sent", []))
     due = sorted((e for e in build_events(now) if last < e[0] <= now and e[1] not in sent), key=lambda e: e[0])
     print(f"window {last.isoformat()} -> {now.isoformat()}: {len(due)} event(s)")
+    # merge messages that fire at the same moment and are the same kind (e.g. LSE + Xetra both opening)
+    def kind(key):
+        return "head" if "head" in key else "moment"
+    groups = {}
     for ts, key, text in due:
+        k = (ts, kind(key))
+        groups.setdefault(k, []).append((key, text))
+    for (ts, kd), items in sorted(groups.items(), key=lambda kv: kv[0][0]):
+        body = "\n".join(t for _, t in items)
         tail = ""
-        if "OPEN" in text or "OVERLAP LIVE" in text:
+        if any(x in body for x in ("OPEN", "LIVE", "is open")):
             o = open_now(now)
             tail = f"\nCore sessions open: {', '.join(o) if o else 'none'}"
-        if send(text + tail + f"\n<a href=\"{SITE}\">Live clocks</a>"):
-            sent.add(key)
+        if send(body + tail + f"\n<a href=\"{SITE}\">Live clocks</a>"):
+            sent.update(k for k, _ in items)
             time.sleep(1)
     json.dump({"last": now.timestamp(), "sent": sorted(sent)[-300:]}, open(STATE, "w"))
 
