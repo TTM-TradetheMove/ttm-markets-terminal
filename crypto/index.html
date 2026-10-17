@@ -1878,8 +1878,8 @@ function isWeekendLocal(now, zone){
   return wd === 'Sat' || wd === 'Sun';
 }
 
-// Every phase window (pre/core/post) on Mon-Fri local dates, from yesterday to
-// +4 days, so the next open is always findable (including across a weekend).
+// Every phase window (pre/core/post) from yesterday to +4 days. Crypto trades 24/7, so
+// weekends keep the Mon-Fri session times and overlaps; they are only labelled "Weekend".
 function phaseWindows(now, session){
   const zone = session.zone;
   const fmt = new Intl.DateTimeFormat('en-US', {timeZone: zone, year:'numeric', month:'2-digit', day:'2-digit'});
@@ -1889,7 +1889,6 @@ function phaseWindows(now, session){
   for(const off of [-1, 0, 1, 2, 3, 4]){
     const dt = new Date(Date.UTC(y, m-1, d + off));
     const dow = dt.getUTCDay();
-    if(dow === 0 || dow === 6) continue;
     const yy = dt.getUTCFullYear(), mm = dt.getUTCMonth()+1, dd = dt.getUTCDate();
     session.phases.forEach(p => out.push({
       phase: p.name,
@@ -1953,23 +1952,23 @@ function updateTradingHours(){
     let status, phaseText, runningText = '—', countText, closing = false;
 
     if(phase === 'core'){
-      status = 'Open';
+      status = x.weekend ? 'Weekend · Open' : 'Open';
       phaseText = partners.length ? `Core — overlap with ${partners.join(' & ')}` : 'Core — solo, no overlap';
       runningText = `Running ${formatRunning((now - x.cur.openUTC)/1000)}`;
       countText = `Closes in ${formatCountdown((x.cur.closeUTC - now)/1000)}`;
       closing = true;
     } else if(phase === 'pre'){
-      status = 'Pre-market';
+      status = x.weekend ? 'Weekend · Pre-market' : 'Pre-market';
       phaseText = 'Pre-market';
       runningText = `Pre-market for ${formatRunning((now - x.cur.openUTC)/1000)}`;
       countText = `Core opens in ${formatCountdown((x.cur.closeUTC - now)/1000)}`;
     } else if(phase === 'post'){
-      status = 'Post-market';
+      status = x.weekend ? 'Weekend · Post-market' : 'Post-market';
       phaseText = 'Post-market';
       runningText = `Post-market for ${formatRunning((now - x.cur.openUTC)/1000)}`;
       countText = `Post-market ends in ${formatCountdown((x.cur.closeUTC - now)/1000)}`;
     } else {
-      status = x.weekend ? 'Weekend' : 'Closed';
+      status = x.weekend ? 'Weekend · Closed' : 'Closed';
       phaseText = x.weekend ? 'Closed — weekend' : 'Closed';
       const up = x.upcoming;
       countText = up ? `${up.phase === 'pre' ? 'Pre-market opens' : 'Opens'} in ${formatCountdown((up.openUTC - now)/1000)}` : '—';
@@ -1979,9 +1978,9 @@ function updateTradingHours(){
     const boxEl = document.getElementById('thBox-' + key);
     statusEl.textContent = status;
     ['open','pre','post','weekend'].forEach(c => {
-      const on = (c === 'open' && phase === 'core') || c === phase || (c === 'weekend' && !phase && x.weekend);
-      statusEl.classList.toggle(c, on);
-      boxEl.classList.toggle(c, on);
+      const on = (c === 'open' && phase === 'core') || c === phase;
+      statusEl.classList.toggle(c, c === 'weekend' ? x.weekend && !phase : on);
+      boxEl.classList.toggle(c, c === 'weekend' ? x.weekend : on);
     });
     document.getElementById('thPhase-' + key).textContent = phaseText;
     document.getElementById('thRunning-' + key).textContent = runningText;
