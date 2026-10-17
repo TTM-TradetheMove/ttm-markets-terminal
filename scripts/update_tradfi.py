@@ -27,7 +27,7 @@ LOG = []
 
 
 T0 = time.time()
-DEADLINE = T0 + 240          # hard stop for all network work (job limit is 8 min)
+DEADLINE = T0 + 265          # hard stop for all network work (job limit is 8 min)
 HOST_FAIL, HOST_OK = {}, {}
 
 
@@ -41,13 +41,13 @@ def log(msg):
         pass
 
 
-def get(url, timeout=12, tries=2, accept="*/*"):
+def get(url, timeout=12, tries=2, accept="*/*", breaker=True):
     host = urllib.parse.urlparse(url).netloc
     for i in range(tries):
         if time.time() > DEADLINE:
             log(f"  SKIP (deadline) {url[:100]}")
             return None
-        if HOST_FAIL.get(host, 0) >= 4 and not HOST_OK.get(host):
+        if breaker and HOST_FAIL.get(host, 0) >= 4 and not HOST_OK.get(host):
             log(f"  SKIP (host {host} unreachable) {url[:90]}")
             return None
         try:
@@ -314,8 +314,31 @@ def derive_market_sections(quotes, hist):
 # ----------------------------------------------------------------------------
 # FRED (no key) + US Treasury + RBA + BoE
 # ----------------------------------------------------------------------------
+FRED_CACHE = {}
+FRED_SERIES = [("DFEDTARU", "2024-01-01"), ("DFEDTARL", "2024-01-01"), ("IRSTCB01AUM156N", "2024-01-01"),
+               ("ECBDFR", "2024-01-01"), ("IRSTCB01GBM156N", "2024-01-01"), ("IRSTCB01JPM156N", "2024-01-01"),
+               ("WALCL", "2024-01-01"), ("RRPONTSYD", "2024-01-01"), ("WTREGEN", "2024-01-01"),
+               ("NFCI", "2024-01-01"), ("STLFSI4", "2024-01-01"), ("BAMLH0A0HYM2", "2025-01-01"),
+               ("T10YIE", "2025-01-01"), ("T5YIE", "2025-01-01"), ("DFII10", "2025-01-01"), ("DFF", "2025-06-01")]
+
+
+def _fred_raw(series_id, start):
+    # FRED is slow from cloud IPs: long timeout, and exempt from the host circuit breaker
+    return get(f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}&cosd={start}",
+               timeout=45, tries=2, breaker=False)
+
+
+def prefetch_fred():
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        for (sid, start), txt in zip(FRED_SERIES, ex.map(lambda a: _fred_raw(*a), FRED_SERIES)):
+            FRED_CACHE[(sid, start)] = txt
+    log(f"fred prefetch: {sum(1 for v in FRED_CACHE.values() if v)}/{len(FRED_SERIES)} series")
+
+
 def fred(series_id, start="2024-01-01"):
-    txt = get(f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}&cosd={start}", tries=2)
+    key = (series_id, start)
+    txt = FRED_CACHE[key] if key in FRED_CACHE else _fred_raw(series_id, start)
     if not txt:
         return []
     out = []
@@ -687,6 +710,10 @@ def main():
     from concurrent.futures import ThreadPoolExecutor
     log(f"TTM tradfi run {now_iso()}")
     mk_new, rates_new, news_new = {}, {}, {}
+    try:
+        prefetch_fred()
+    except Exception as e:  # noqa
+        log(f"fred prefetch FAILED: {e}")
     pool = ThreadPoolExecutor(max_workers=7)
     F = {
         "markets": pool.submit(fetch_markets),
