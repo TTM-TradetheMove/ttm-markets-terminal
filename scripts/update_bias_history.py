@@ -188,6 +188,32 @@ def scrape_months(months):
     return rows
 
 
+def rows_from_seed():
+    """Rows exported from the user's own browser (bias_history_seed.json) - needed because ForexFactory's
+    Cloudflare blocks GitHub's servers for older months. Format: [{month:'2025-10', date:'Wed Oct 1', currency, title, actual, forecast, previous}]"""
+    out = []
+    try:
+        data = json.load(open(os.path.join(ROOT, "bias_history_seed.json")))
+    except Exception:
+        return out
+    if isinstance(data, dict):
+        data = data.get("rows", [])
+    for r in data:
+        if (r.get("currency"), r.get("title")) not in SCHEDULE:
+            continue
+        try:
+            y, m = map(int, r["month"].split("-"))
+            txt = re.sub(r"^[A-Za-z]{3}\s+(?=[A-Za-z]{3}\s+\d)", "", r["date"].strip())  # drop weekday
+            pd = datetime.strptime(txt + " 2000", "%b %d %Y")
+        except Exception:
+            continue
+        yy = y - 1 if (pd.month == 12 and m == 1) else y + 1 if (pd.month == 1 and m == 12) else y
+        out.append({"d": f"{yy}-{pd.month:02d}-{pd.day:02d}", "cur": r["currency"], "title": r["title"],
+                    "actual": r.get("actual", ""), "forecast": r.get("forecast", ""), "previous": r.get("previous", "")})
+    log(f"seed file: {len(out)} tracked rows")
+    return out
+
+
 def rows_from_calendar_json():
     out = []
     try:
@@ -336,6 +362,7 @@ def main():
         raw += scrape_months(month_list(n_months))
     except Exception as e:  # noqa
         log(f"scrape failed: {type(e).__name__}: {e}")
+    raw += rows_from_seed()
     raw += rows_from_calendar_json()
 
     now = datetime.now(timezone.utc)
