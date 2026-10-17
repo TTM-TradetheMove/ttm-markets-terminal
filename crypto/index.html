@@ -1896,15 +1896,20 @@ const TH_FULL_NAME = {asia:'ASIA', ldn:'London', ny:'New York'};
 
 // Convert a local wall-clock time in `zone` to a UTC Date.
 function zonedLocalToUTC(y, m, d, hh, mm, zone){
-  const guessUTC = Date.UTC(y, m-1, d, hh, mm, 0);
+  // Two passes so the offset is taken at the real instant, not the guess (matters on DST-change days).
   const fmt = new Intl.DateTimeFormat('en-US', {
     timeZone: zone, hour12:false,
     year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit'
   });
-  const parts = Object.fromEntries(fmt.formatToParts(new Date(guessUTC)).map(p => [p.type, p.value]));
-  const hourVal = parts.hour === '24' ? 0 : Number(parts.hour);
-  const asIfUTC = Date.UTC(Number(parts.year), Number(parts.month)-1, Number(parts.day), hourVal, Number(parts.minute), Number(parts.second));
-  return new Date(guessUTC - (asIfUTC - guessUTC));
+  const wall = Date.UTC(y, m-1, d, hh, mm, 0);
+  const offsetAt = t => {
+    const parts = Object.fromEntries(fmt.formatToParts(new Date(t)).map(p => [p.type, p.value]));
+    const hourVal = parts.hour === '24' ? 0 : Number(parts.hour);
+    return Date.UTC(Number(parts.year), Number(parts.month)-1, Number(parts.day), hourVal, Number(parts.minute), Number(parts.second)) - t;
+  };
+  let t = wall - offsetAt(wall);
+  t = wall - offsetAt(t);
+  return new Date(t);
 }
 
 function isWeekendLocal(now, zone){
