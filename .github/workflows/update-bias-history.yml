@@ -12,6 +12,7 @@ on:
   push:
     paths:
       - scripts/update_bias_history.py
+      - bias_history_seed.json
       - .github/workflows/update-bias-history.yml
 
 permissions:
