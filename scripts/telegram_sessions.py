@@ -190,6 +190,9 @@ def send(text):
 
 
 def main():
+    if os.environ.get("SEND_TEST") == "1":
+        send("✅ <b>TTM Session bot test</b> — connected. Session alerts will appear here.")
+        return
     now = datetime.fromisoformat(os.environ["NOW_ISO"]) if os.environ.get("NOW_ISO") else datetime.now(timezone.utc)
     try:
         st = json.load(open(STATE))

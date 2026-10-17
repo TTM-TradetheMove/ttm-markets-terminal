@@ -3,7 +3,12 @@ name: Telegram session announcer
 on:
   schedule:
     - cron: "*/5 * * * *"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      send_test:
+        description: "Send a test message instead of normal alerts"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -30,6 +35,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           INCLUDE_WEEKENDS: "0"
+          SEND_TEST: ${{ inputs.send_test && '1' || '0' }}
         run: python3 scripts/telegram_sessions.py
 
       - name: Save state
