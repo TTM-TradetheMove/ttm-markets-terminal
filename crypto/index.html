@@ -969,6 +969,7 @@ footer{padding:40px 0 60px}
     <div><span class="bh-kicker">Crypto reaction history</span><h3 id="bhTitle">Economic releases vs BTC &amp; ETH</h3></div>
     <button class="bh-close" id="bhClose" type="button" aria-label="Close">&times;</button>
   </div>
+  <div class="bh-ctl"><span class="fl-label">Release to view</span><div class="filter-row" id="bhQuick"></div></div>
   <select id="bhEvent" aria-label="Choose a release"></select>
   <div class="bh-ctl"><span class="fl-label">Asset</span><div class="filter-row" id="bhAsset">
     <button class="filter-chip active" data-v="btc">BTC</button><button class="filter-chip" data-v="eth">ETH</button></div></div>
@@ -2222,14 +2223,22 @@ function render(){
     body.innerHTML = '<p class="bh-note">History is still being built. The data job scrapes past releases and matches them to BTC/ETH price moves; it runs daily and the first full backfill can take a while. Check back after its first run.</p>';
     return;
   }
-  const keys = Object.keys(GROUPS).filter(k => GROUPS[k].length >= 3 || k === 'ALL|All releases').sort((a, b) => a.startsWith('ALL|') ? -1 : b.startsWith('ALL|') ? 1 : label(a).localeCompare(label(b)));
-  if(!st.key || !GROUPS[st.key] || !keys.includes(st.key)) st.key = keys.includes('US|CPI y/y') ? 'US|CPI y/y' : keys[0];
+  const keys = Object.keys(GROUPS).filter(k => GROUPS[k].length >= 1).sort((a, b) => a.startsWith('ALL|') ? -1 : b.startsWith('ALL|') ? 1 : label(a).localeCompare(label(b)));
+  if(!st.key || !GROUPS[st.key] || !keys.includes(st.key)) st.key = keys[0];
   $('bhEvent').innerHTML = keys.map(k => `<option value="${esc(k)}" ${k === st.key ? 'selected' : ''}>${esc(label(k))} (${GROUPS[k].length})</option>`).join('');
+  const QUICK = [['ALL|All releases','All'],['US|CPI y/y','CPI'],['US|Core CPI m/m','Core CPI'],['US|PPI m/m','PPI'],['US|Retail Sales m/m','Retail'],['US|Non-Farm Employment Change','NFP'],['US|Unemployment Claims','Claims'],['US|ISM Manufacturing PMI','ISM']].filter(q => GROUPS[q[0]]);
+  $('bhQuick').innerHTML = QUICK.map(q => `<button class="filter-chip ${q[0] === st.key ? 'active' : ''}" data-k="${esc(q[0])}">${q[1]}</button>`).join('');
   $('bhTitle').textContent = label(st.key);
   const list = GROUPS[st.key], A = st.asset.toUpperCase(), W = WIN[st.win], T = st.thr;
   const all = stats(list, st.asset, st.win, T);
   const base = BH.baseline && BH.baseline[st.win];
-  let html = '';
+  const isAll = st.key === 'ALL|All releases';
+  const recent = [...list].sort((a, b) => (b.u || b.d).localeCompare(a.u || a.d)).slice(0, 15);
+  const verdict = c => c === 'A' ? '<b class="bias-up">Above</b>' : c === 'B' ? '<b class="bias-down">Below</b>' : c === 'I' ? 'In line' : '—';
+  let html = `<div class="bh-h4" style="margin-top:6px">Recent releases${isAll ? '' : ' — ' + esc(label(st.key))}</div><table class="bh-tbl"><thead><tr><th>Release</th><th>Actual</th><th>Fcst</th><th>Prev</th><th>vs fcst</th><th style="text-align:right">${A} ${W}</th></tr></thead><tbody>` +
+    recent.map(r => { const v = r[st.asset] && r[st.asset][st.win];
+      return `<tr><td>${esc(r.t)}<span class="bh-sub">${esc(r.d)}</span></td><td>${esc(r.a)}</td><td>${esc(r.f)}</td><td>${esc(r.p)}</td><td>${verdict(r.s)}</td><td style="text-align:right" class="${cc(v)}">${sg(v)}</td></tr>`; }).join('') + `</tbody></table>`;
+  html += `<div class="bh-h4">If the print is… (${esc(label(st.key))})</div>`;
   BUCKETS.forEach(([code, name]) => {
     const s = stats(list.filter(r => r.s === code), st.asset, st.win, T);
     if(!s.n){ html += `<div class="bh-bucket"><div class="bt"><span>${name}</span><span class="tf-note" style="color:var(--mute);font-weight:400">no releases</span></div></div>`; return; }
@@ -2243,11 +2252,6 @@ function render(){
   if(BH.events.length < 60) html = `<p class="bh-note">History is still building: ${BH.events.length} releases tracked so far${BH.first ? ' (' + esc(BH.first) + ' to ' + esc(BH.last || '') + ')' : ''}. Percentages from small samples can swing a lot, so treat them as early hints.</p>` + html;
   html += `<div class="bh-line" style="margin:4px 2px 0">All ${all.n} releases: ${all.n ? all.up.toFixed(0) + '% up, avg ' + sg(all.avg) + ', average absolute move ' + all.abs.toFixed(2) + '%' : '—'}.
     ${base ? `<br>Baseline — any random ${W} window of BTC: ${base.up}% up, average absolute move ${base.abs}%.` : ''}</div>`;
-  // recent releases
-  const recent = [...list].sort((a, b) => b.d.localeCompare(a.d)).slice(0, 10);
-  html += `<div class="bh-h4">Recent releases</div><table class="bh-tbl"><thead><tr><th>Date</th><th>Actual</th><th>Fcst</th><th>vs cons.</th><th style="text-align:right">${A} ${W}</th></tr></thead><tbody>` +
-    recent.map(r => { const v = r[st.asset] && r[st.asset][st.win];
-      return `<tr><td>${esc(r.d)}</td><td>${esc(r.a)}</td><td>${esc(r.f)}</td><td>${r.s === 'A' ? 'Above' : r.s === 'B' ? 'Below' : r.s === 'I' ? 'In line' : '—'}</td><td style="text-align:right" class="${cc(v)}">${sg(v)}</td></tr>`; }).join('') + `</tbody></table>`;
   // leaderboard
   const rows = keys.map(k => { const g = GROUPS[k]; return {k, n: g.length, s: stats(g, st.asset, st.win, T),
       a: stats(g.filter(r => r.s === 'A'), st.asset, st.win, T), b: stats(g.filter(r => r.s === 'B'), st.asset, st.win, T)}; })
@@ -2264,7 +2268,7 @@ function decorate(){
   if(!BH) return;
   document.querySelectorAll('#calendarBody tr').forEach(tr => {
     const key = tr.dataset.bkey, g = GROUPS[key];
-    if(!g || g.length < 3 || tr.dataset.bhDone === '1') return;
+    if(!g || g.length < 1 || tr.dataset.bhDone === '1') return;
     tr.dataset.bhDone = '1';
     const cell = tr.lastElementChild; if(!cell) return;
     if(tr.dataset.period === 'past' && tr.dataset.bias === 'neutral'){
@@ -2295,6 +2299,7 @@ $('bhTab').addEventListener('click', () => open());
 $('bhClose').addEventListener('click', close);
 $('bhScrim').addEventListener('click', close);
 document.addEventListener('keydown', e => { if(e.key === 'Escape') close(); });
+$('bhQuick').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if(b){ st.key = b.dataset.k; render(); } });
 $('bhEvent').addEventListener('change', e => { st.key = e.target.value; render(); });
 function chips(id, fn){
   $(id).addEventListener('click', e => { const c = e.target.closest('.filter-chip'); if(!c) return;
