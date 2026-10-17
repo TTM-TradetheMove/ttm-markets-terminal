@@ -307,6 +307,121 @@ async def capture_okx(seconds):
         dbg(f"OKX: capture failed -- {type(exc).__name__}: {exc}")
 
 
+def http_json(url, timeout=20):
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (compatible; TTMMarketsTerminalBot/1.0)"})
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+REST_WM = {}  # exchange -> watermark (ms); REST rows at or before it were already counted
+
+
+def poll_gate(wm_ms, now_ms):
+    """Gate USDT futures public liquidation history. `order_size` is what each event closed
+    (`size` is the remaining position); negative order_size = sell = a LONG liquidated."""
+    base = "https://api.gateio.ws/api/v4/futures/usdt"
+    mult = {c["name"]: float(c.get("quanto_multiplier") or 0) for c in http_json(base + "/contracts")}
+    rows = http_json(f"{base}/liq_orders?limit=1000&from={int(wm_ms // 1000)}")
+    n = 0
+    for r in rows:
+        ts = int(float(r.get("time", 0)) * 1000)
+        if ts <= wm_ms or ts > now_ms:
+            continue
+        c = r.get("contract", "")
+        m = mult.get(c, 0)
+        px = float(r.get("fill_price") or r.get("order_price") or 0)
+        sz = float(r.get("order_size") or 0)
+        if not (m and px and sz):
+            continue
+        ALL.append(("Gate", c.replace("_", ""), "long" if sz < 0 else "short", abs(sz) * m * px, ts)); n += 1
+    dbg(f"Gate: {len(rows)} rows returned, {n} new liquidations counted")
+
+
+def poll_deribit(wm_ms, now_ms):
+    """Deribit BTC/ETH futures + perps (inverse, amount = USD). A trade carries `liquidation`:
+    'T' taker liquidated, 'M' maker liquidated, 'MT' both. Taker sell = long liquidated."""
+    n = 0; total = 0
+    for cur in ("BTC", "ETH"):
+        start = wm_ms + 1
+        for _ in range(6):
+            d = http_json("https://www.deribit.com/api/v2/public/get_last_trades_by_currency_and_time"
+                          f"?currency={cur}&kind=future&start_timestamp={int(start)}&end_timestamp={int(now_ms)}&count=1000&sorting=asc")
+            trades = (d.get("result") or {}).get("trades", [])
+            total += len(trades)
+            for t in trades:
+                liq = t.get("liquidation")
+                if not liq:
+                    continue
+                ts = int(t["timestamp"]); usd = float(t.get("amount") or 0)
+                if not usd:
+                    continue
+                taker_sell = t.get("direction") == "sell"
+                sym = cur + "USD"
+                if liq in ("T", "MT"):
+                    ALL.append(("Deribit", sym, "long" if taker_sell else "short", usd, ts)); n += 1
+                if liq in ("M", "MT"):
+                    ALL.append(("Deribit", sym, "short" if taker_sell else "long", usd, ts)); n += 1
+            if not (d.get("result") or {}).get("has_more") or not trades:
+                break
+            start = int(trades[-1]["timestamp"]) + 1
+    dbg(f"Deribit: {total} trades scanned, {n} liquidation entries counted")
+
+
+def poll_rest(prev_wm):
+    now_ms = int(time.time() * 1000)
+    for name, fn in (("Gate", poll_gate), ("Deribit", poll_deribit)):
+        wm = prev_wm.get(name) or now_ms - 30 * 60 * 1000
+        wm = max(wm, now_ms - 60 * 60 * 1000)  # never look back more than 1h
+        try:
+            fn(wm, now_ms)
+            REST_WM[name] = now_ms
+        except Exception as exc:
+            dbg(f"{name}: poll failed -- {type(exc).__name__}: {exc}")
+            REST_WM[name] = prev_wm.get(name) or wm
+
+
+async def capture_htx(seconds):
+    """HTX USDT-M public liquidation stream for all contracts (gzip frames, ping/pong).
+    Field names are logged each run because the docs excerpt could not be fully verified."""
+    if websockets is None:
+        return
+    import gzip
+    raw_count = parsed = 0
+    try:
+        async with websockets.connect("wss://api.hbdm.com/linear-swap-ws", open_timeout=15, close_timeout=5) as ws:
+            await ws.send(json.dumps({"sub": "public.*.liquidation_orders", "id": "ttm"}))
+            dbg("HTX: connected + subscribed")
+            deadline = time.monotonic() + seconds
+            while time.monotonic() < deadline:
+                try:
+                    raw = await asyncio.wait_for(ws.recv(), timeout=deadline - time.monotonic())
+                except asyncio.TimeoutError:
+                    break
+                raw_count += 1
+                try:
+                    txt = gzip.decompress(raw).decode() if isinstance(raw, (bytes, bytearray)) else raw
+                    msg = json.loads(txt)
+                    if "ping" in msg:
+                        await ws.send(json.dumps({"pong": msg["ping"]})); continue
+                    if raw_count <= 4:
+                        dbg(f"HTX: message #{raw_count}: {txt[:300]}")
+                    if "liquidation_orders" not in str(msg.get("topic", "")):
+                        continue
+                    for x in msg.get("data", []) or []:
+                        px = float(x.get("price") or 0)
+                        usd = float(x.get("trade_turnover") or 0) or float(x.get("amount") or 0) * px
+                        if not usd:
+                            continue
+                        side = "long" if x.get("direction") == "sell" else "short"
+                        sym = str(x.get("contract_code") or x.get("symbol") or "").replace("-", "")
+                        ALL.append(("HTX", sym, side, usd, int(x.get("created_at") or time.time() * 1000))); parsed += 1
+                except Exception as exc:
+                    dbg(f"HTX: bad message skipped -- {exc}")
+        dbg(f"HTX: capture window closed, {raw_count} raw messages, {parsed} liquidations parsed")
+    except Exception as exc:
+        dbg(f"HTX: capture failed -- {type(exc).__name__}: {exc}")
+
+
 def build_buckets(events, mark_prices):
     """Price-distance buckets (% from current mark), summed USD by side, per symbol."""
     BUCKET_PCT = 0.5   # each bucket spans 0.5% of mark price
@@ -365,7 +480,7 @@ def update_totals(capture_start_ms, capture_end_ms):
     caps = [c for c in prev.get("captures", []) if c[1] >= cutoff]
     for ex, sym, side, usd, ts in ALL:
         t5 = int(ts // 300000 * 300000)
-        exi = {"Binance": 0, "Bybit": 1, "OKX": 2}.get(ex, 1)
+        exi = {"Binance": 0, "Bybit": 1, "OKX": 2, "Gate": 3, "HTX": 4, "Deribit": 5}.get(ex, 1)
         scopes = [0] + ([1] if sym == "BTCUSDT" else [2] if sym == "ETHUSDT" else [])
         for sc in scopes:
             a = agg.setdefault((t5, exi, sc), [0.0, 0.0, 0])
@@ -388,7 +503,8 @@ def update_totals(capture_start_ms, capture_end_ms):
         "agg5": [[k[0], k[1], k[2], round(v[0]), round(v[1]), v[2]] for k, v in sorted(agg.items())],
         "symH": {str(h): {k: [round(v[0]), round(v[1])] for k, v in d.items()} for h, d in sorted(symh.items())},
         "captures": caps,
-        "note": "Binance: all symbols (its stream sends at most one liquidation per symbol per second). Bybit: top 30 symbols. OKX: all swaps.",
+        "wm": {**prev.get("wm", {}), **REST_WM},
+        "note": "Binance: all symbols (its stream sends at most one liquidation per symbol per second). Bybit: top 30 symbols. OKX, Gate, HTX: all contracts. Deribit: BTC/ETH. Bitget publishes no liquidation feed.",
     }
     with open(TOTALS_FILE, "w") as f:
         json.dump(out, f, separators=(",", ":"))
@@ -409,12 +525,19 @@ def main():
             capture_binance(events, CAPTURE_SECONDS),
             capture_bybit(events, CAPTURE_SECONDS),
             capture_okx(CAPTURE_SECONDS),
+            capture_htx(CAPTURE_SECONDS),
         )
 
+    try:
+        with open(TOTALS_FILE) as f:
+            prev_wm = json.load(f).get("wm", {})
+    except Exception:
+        prev_wm = {}
     try:
         asyncio.run(run_captures())
     except Exception as exc:
         dbg(f"Capture run failed: {exc}")
+    poll_rest(prev_wm)
 
     capture_end_ms = time.time() * 1000
     try:

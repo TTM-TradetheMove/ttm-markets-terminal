@@ -2196,7 +2196,7 @@ function renderTotals(){
   const c24 = coverage(24 * H);
   const r24 = windowSum(24 * H, scope), t24 = r24.L + r24.S;
   const est = c24 >= .15 && t24 ? ` Adjusted for coverage, the 24h figure is roughly <b>${usd(t24 / c24)}</b>.` : '';
-  $('ltNote').innerHTML = `Real liquidations from Binance (all coins), OKX (all coins) and Bybit (top 30 coins) public feeds — not every exchange CoinGlass adds up, and Binance sends at most one liquidation per coin per second, so totals are a <b>lower bound</b>. The sampler was listening for about <b>${Math.round(c24*100)}%</b> of the last 24h.${est} Refreshes every 5 minutes.`;
+  $('ltNote').innerHTML = `Real liquidations from Binance, OKX, Gate and HTX (all coins), Bybit (top 30 coins) and Deribit (BTC/ETH) public feeds — Bitget publishes no liquidation feed, and Binance sends at most one liquidation per coin per second, so totals are a <b>lower bound</b>. The sampler was listening for about <b>${Math.round(c24*100)}%</b> of the last 24h.${est} Refreshes every 5 minutes.`;
   // hourly stacked bars
   const now = Date.now(), start = Math.floor(now / H) * H - 23 * H, bars = Array.from({length: 24}, () => [0, 0]);
   TOT.agg5.forEach(([t, ex, s, l, sh]) => { if(s !== scope) return; const i = Math.floor((t - start) / H); if(i >= 0 && i < 24){ bars[i][0] += l; bars[i][1] += sh; } });
