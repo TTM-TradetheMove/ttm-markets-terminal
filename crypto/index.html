@@ -1293,10 +1293,27 @@ function maybeRenderBtcChart(){
   }
 }
 
+// Daily BTC closes: the repo's JSON first, then Coinbase straight from the browser if that file is missing/stale.
+function loadBtcFromCoinbase(){
+  const end = new Date(), start = new Date(end.getTime() - 100 * 864e5);
+  return fetch('https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=86400&start=' + start.toISOString() + '&end=' + end.toISOString())
+    .then(r => { if(!r.ok) throw new Error('coinbase ' + r.status); return r.json(); })
+    .then(rows => {
+      if(!Array.isArray(rows) || rows.length < 30) throw new Error('coinbase short');
+      return rows.map(r => ({date: new Date(r[0] * 1000).toISOString().slice(0, 10), price: Math.round(r[4] * 100) / 100}))
+                 .sort((x, y) => x.date.localeCompare(y.date)).slice(-92);
+    });
+}
 fetch('../btc_price_data.json', {cache:'no-store'})
   .then(r => { if(!r.ok) throw new Error('bad status'); return r.json(); })
   .then(data => {
-    BTC_PRICE_SERIES = data.prices.map(p => ({...p, dt: d(p.date)}));
+    const age = Date.now() - new Date(data.generated_at || 0).getTime();
+    if(!data.prices || data.prices.length < 30 || age > 3 * 864e5) throw new Error('stale');
+    return data.prices;
+  })
+  .catch(() => loadBtcFromCoinbase())
+  .then(prices => {
+    BTC_PRICE_SERIES = prices.map(p => ({...p, dt: d(p.date)}));
     maybeRenderBtcChart();
   })
   .catch(() => {
