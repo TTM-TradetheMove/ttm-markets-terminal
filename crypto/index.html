@@ -1949,7 +1949,9 @@ const TH_PAIRS = [['asia','ldn'], ['ldn','ny'], ['asia','ny']];
 // Segments are local minutes-from-midnight; two segments = a lunch break (Tokyo).
 const TH_EX = {
   asia: [{n:'ASX', city:'Sydney', zone:'Australia/Sydney', segs:[[600,960]]},
-         {n:'Tokyo (TSE)', city:'Tokyo', zone:'Asia/Tokyo', segs:[[540,690],[750,930]]}],
+         {n:'Tokyo (TSE)', city:'Tokyo', zone:'Asia/Tokyo', segs:[[540,690],[750,930]]},
+         {n:'Hong Kong (HKEX)', city:'Hong Kong', zone:'Asia/Hong_Kong', segs:[[570,720],[780,960]]},
+         {n:'Singapore (SGX)', city:'Singapore', zone:'Asia/Singapore', segs:[[540,1020]]}],
   ldn:  [{n:'LSE', city:'London', zone:'Europe/London', segs:[[480,990]]},
          {n:'Xetra', city:'Frankfurt', zone:'Europe/Berlin', segs:[[540,1050]]}],
   ny:   [{n:'NYSE / Nasdaq', city:'New York', zone:'America/New_York', segs:[[570,960]]}],
@@ -1976,21 +1978,24 @@ function renderSessionExchanges(key, now){
       <span class="c">${cd}</span></div>`;
   }).join('');
   if(list.length > 1){
-    const ov = [];
-    wins[0].forEach(a => wins[1].forEach(b => {
-      const s0 = Math.max(a.openUTC, b.openUTC), e0 = Math.min(a.closeUTC, b.closeUTC);
-      if(s0 < e0) ov.push({s: new Date(s0), e: new Date(e0)});
-    }));
-    ov.sort((a,b) => a.s - b.s);
-    const f = ov.find(o => o.e > now);
+    const cuts = [...new Set(wins.flatMap(w => w.flatMap(x => [+x.openUTC, +x.closeUTC])))].sort((p, q) => p - q);
+    const ivs = [];
+    for(let i = 0; i < cuts.length - 1; i++){
+      const mid = (cuts[i] + cuts[i+1]) / 2;
+      const names = list.filter((ex, j) => wins[j].some(x => mid >= x.openUTC && mid < x.closeUTC)).map(ex => ex.n);
+      if(names.length >= 2) ivs.push({s: cuts[i], e: cuts[i+1], names});
+    }
+    const periods = [];
+    ivs.forEach(v => { const l = periods[periods.length - 1]; if(l && l.e === v.s){ l.e = v.e; l.ivs.push(v); } else periods.push({s: v.s, e: v.e, ivs: [v]}); });
+    const f = periods.find(o => o.e > now);
     if(f){
-      const grp = ov.filter(o => o.e > now && o.s - f.s < 10*3600e3);
+      const grp = periods.filter(o => o.e > now && o.s - f.s < 10*3600e3);
       const live = now >= f.s && now < f.e;
-      const names = list.map(x => x.n).join(' + ');
-      const span = grp.map(o => hhmm(o.s, zone) + '–' + hhmm(o.e, zone)).join(' · ');
-      html += `<div class="th-ex-tog ${live ? 'live' : ''}">${live ? 'Running together now' : 'Next together'}: <b>${names}</b><br>${span} ${city === 'ASIA' ? 'Melbourne' : city} time` +
+      const cur = live ? f.ivs.find(v => now >= v.s && now < v.e) : f.ivs[0];
+      const span = grp.map(o => hhmm(new Date(o.s), zone) + '–' + hhmm(new Date(o.e), zone)).join(' · ');
+      html += `<div class="th-ex-tog ${live ? 'live' : ''}">${live ? 'Running together now' : 'Next together'}: <b>${cur.names.join(' + ')}</b><br>${span} ${city === 'ASIA' ? 'Melbourne' : city} time` +
         (live ? ` · ends in ${formatCountdown((f.e - now)/1000)}` : ` · starts in ${formatCountdown((f.s - now)/1000)}`) +
-        (grp.length > 1 ? `<br>Gap between = lunch break` : '') + `</div>`;
+        (grp.length > 1 ? `<br>Gaps between = lunch breaks` : '') + `</div>`;
     }
   } else {
     html += `<div class="th-ex-tog">Single exchange — no overlap within this session</div>`;
@@ -2072,19 +2077,33 @@ function updateTradingHours(){
     document.getElementById('thBox-' + key).dataset.role = key === primaryKey ? 'primary' : (key === leftKey ? 'left' : 'right');
   });
 
-  // Overlap banner
-  const all = TH_PAIRS.flatMap(([a,b]) => pairOverlaps(now, a, b)).sort((x,y) => x.start - y.start);
-  const current = all.find(o => now >= o.start && now < o.end);
-  const next = all.find(o => o.start > now);
+  // Overlap banner: built from the real exchange hours (incl. Tokyo's lunch break), so it
+  // always agrees with the boxes above. An overlap = exchanges from two different regions open at once.
+  const exAll = [];
+  TH_ORDER.forEach(k => TH_EX[k].forEach(ex => exAll.push({n: ex.n, k, w: exWindows(now, ex)})));
+  const cuts = [...new Set(exAll.flatMap(e => e.w.flatMap(x => [+x.openUTC, +x.closeUTC])))].sort((p, q) => p - q);
+  const ivs = [];
+  for(let i = 0; i < cuts.length - 1; i++){
+    const mid = (cuts[i] + cuts[i+1]) / 2;
+    const open = exAll.filter(e => e.w.some(x => mid >= x.openUTC && mid < x.closeUTC));
+    const names = open.map(e => e.n);
+    if(new Set(open.map(e => e.k)).size >= 2) ivs.push({s: cuts[i], e: cuts[i+1], names});
+  }
+  const periods = [];
+  ivs.forEach(v => { const l = periods[periods.length - 1]; if(l && l.e === v.s) { l.e = v.e; l.ivs.push(v); } else periods.push({s: v.s, e: v.e, ivs: [v]}); });
+  const current = periods.find(o => now >= o.s && now < o.e);
+  const next = periods.find(o => o.s > now);
   const label = document.getElementById('thOverlapLabel');
   const odEl = document.getElementById('thOverlapD');
+  const rng = o => hhmm(new Date(o.s), 'Australia/Melbourne') + '–' + hhmm(new Date(o.e), 'Australia/Melbourne');
   let diffMs = 0, isLive = false;
   if(current){
-    label.textContent = `${TH_FULL_NAME[current.keyA]}–${TH_FULL_NAME[current.keyB]} overlap LIVE — best trading hours right now`;
-    odEl.textContent = 'Ends in'; diffMs = current.end - now; isLive = true;
+    const iv = current.ivs.find(v => now >= v.s && now < v.e);
+    label.textContent = `Overlap LIVE: ${iv.names.join(' + ')} — best trading hours right now (until ${hhmm(new Date(current.e), 'Australia/Melbourne')} Melbourne)`;
+    odEl.textContent = 'Ends in'; diffMs = current.e - now; isLive = true;
   } else if(next){
-    label.textContent = `Next overlap: ${TH_FULL_NAME[next.keyA]}–${TH_FULL_NAME[next.keyB]} (best trading hours)`;
-    odEl.textContent = 'Starts in'; diffMs = next.start - now;
+    label.textContent = `Next overlap: ${next.ivs[0].names.join(' + ')} (${rng(next)} Melbourne time)`;
+    odEl.textContent = 'Starts in'; diffMs = next.s - now;
   } else { label.textContent = 'Session overlap'; odEl.textContent = ''; }
   document.getElementById('thOverlapBanner').classList.toggle('live', isLive);
 
