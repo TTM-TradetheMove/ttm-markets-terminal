@@ -283,6 +283,16 @@ td.num{font-variant-numeric:tabular-nums;color:var(--mute)}
 .rsi-sum td{font-size:11.5px;color:var(--mute);background:none;padding:6px 2px}
 .rsi-key{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mute);margin:0 0 10px;align-items:center}
 .rsi-key i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px}
+.rsi-tiles{display:flex;flex-wrap:wrap;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.rsi-tile{border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;line-height:1.2;flex:0 0 auto;transition:transform .12s}
+.rsi-tile:hover{transform:scale(1.04);z-index:2;outline:1px solid var(--gold)}
+.rsi-tile b{font-size:14px;letter-spacing:.3px}
+.rsi-tile .v{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums}
+.rsi-tile small{font-size:10.5px;opacity:.85;font-variant-numeric:tabular-nums}
+.rsi-tile.sz1{width:150px;height:130px}.rsi-tile.sz1 b{font-size:17px}.rsi-tile.sz1 .v{font-size:28px}
+.rsi-tile.sz2{width:112px;height:98px}
+.rsi-tile.sz3{width:86px;height:76px}.rsi-tile.sz3 .v{font-size:16px}.rsi-tile.sz3 b{font-size:12.5px}
+@media (max-width:600px){.rsi-tile.sz1{width:46%}.rsi-tile.sz2{width:30%}.rsi-tile.sz3{width:22%}}
 .sp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
 .sp-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
 .sp-card p{margin:0;font-size:14px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
@@ -812,8 +822,17 @@ footer{padding:40px 0 60px}
     <div class="section-head">
       <span class="tag">RSI Heatmap</span>
       <h2>Which coins are overbought or oversold</h2>
-      <p>The 14-period RSI for 40 major coins across six timeframes, from 15 minutes up to one week. Red means overbought (RSI 70 or higher, price has run hot), green means oversold (RSI 30 or lower, price has been sold hard). Click a column heading to sort.</p>
+      <p>The 14-period RSI for 40 major coins across six timeframes, from 15 minutes up to one week. Red means overbought (RSI 70 or higher, price has run hot), green means oversold (RSI 30 or lower, price has been sold hard). Pick a timeframe for the tile view (bigger tiles are bigger coins), or switch to the table to compare every timeframe and sort by any column.</p>
       <p id="rsiUpdated" class="calendar-note" style="margin-top:8px">Loading RSI…</p>
+    </div>
+    <div class="filter-row" id="rsiView" style="margin-bottom:8px">
+      <button class="filter-chip active" data-v="tiles">Heatmap</button>
+      <button class="filter-chip" data-v="table">Table (all timeframes)</button>
+    </div>
+    <div class="filter-row" id="rsiTf" style="margin-bottom:12px">
+      <button class="filter-chip" data-t="15m">15m</button><button class="filter-chip" data-t="1h">1h</button>
+      <button class="filter-chip active" data-t="4h">4h</button><button class="filter-chip" data-t="12h">12h</button>
+      <button class="filter-chip" data-t="1d">1D</button><button class="filter-chip" data-t="1w">1W</button>
     </div>
     <div class="filter-row" id="rsiFilter" style="margin-bottom:12px">
       <button class="filter-chip active" data-f="all">All coins</button>
@@ -821,7 +840,8 @@ footer{padding:40px 0 60px}
       <button class="filter-chip" data-f="os">Oversold anywhere</button>
     </div>
     <div class="rsi-key"><span><i style="background:rgba(229,83,75,.75)"></i>Overbought &ge; 70</span><span><i style="background:rgba(255,255,255,.08)"></i>Neutral 30–70</span><span><i style="background:rgba(63,185,122,.75)"></i>Oversold &le; 30</span></div>
-    <div class="rsi-wrap"><table class="rsi-tbl" id="rsiTable"><tbody><tr><td class="na">Loading…</td></tr></tbody></table></div>
+    <div class="rsi-tiles" id="rsiTiles"></div>
+    <div class="rsi-wrap" id="rsiTblWrap" style="display:none"><table class="rsi-tbl" id="rsiTable"><tbody><tr><td class="na">Loading…</td></tr></tbody></table></div>
     <p class="calendar-note" style="margin-top:10px">RSI(14) with Wilder smoothing on OKX spot USDT candles, refreshed about every 10 minutes; the newest candle is still forming. Overbought and oversold are signals of stretched momentum, not buy or sell calls: strong trends can stay overbought or oversold for a long time. Not financial advice.</p>
   </div>
 </section>
@@ -2636,7 +2656,7 @@ fetch('../btc_monthly.json?t=' + Date.now(), {cache:'no-store'}).then(r => r.ok 
 /* ---- RSI heatmap ---- */
 (function(){
 const $ = id => document.getElementById(id);
-let D = null, sortKey = 'mc', sortDir = 1, filt = 'all';
+let D = null, sortKey = 'mc', sortDir = 1, filt = 'all', view = 'tiles', tf = '4h';
 const px = p => p >= 1000 ? p.toLocaleString(undefined, {maximumFractionDigits: 0}) : p >= 1 ? p.toFixed(2) : p >= 0.01 ? p.toFixed(4) : p.toPrecision(3);
 function bg(v){
   if(v == null) return null;
@@ -2644,8 +2664,25 @@ function bg(v){
   if(v <= 30){ const k = Math.min(1, (30 - v) / 20); return `rgba(63,185,122,${(0.35 + 0.5 * k).toFixed(2)})`; }
   return 'rgba(255,255,255,0.07)';
 }
+function tileBg(v){
+  if(v == null) return 'rgba(255,255,255,.05)';
+  if(v >= 50){ const k = Math.min(1, (v - 50) / 30); return `rgba(229,83,75,${(0.18 + 0.72 * k).toFixed(2)})`; }
+  const k = Math.min(1, (50 - v) / 30); return `rgba(63,185,122,${(0.18 + 0.72 * k).toFixed(2)})`;
+}
+function renderTiles(){
+  const el = $('rsiTiles'); if(!el || !D) return;
+  let rows = D.coins.map((c, i) => Object.assign({mc: i}, c));
+  if(filt === 'ob') rows = rows.filter(c => D.tfs.some(f => c.r[f] != null && c.r[f] >= 70));
+  if(filt === 'os') rows = rows.filter(c => D.tfs.some(f => c.r[f] != null && c.r[f] <= 30));
+  el.innerHTML = rows.map(c => { const v = c.r[tf], sz = c.mc < 5 ? 1 : c.mc < 16 ? 2 : 3;
+    return `<div class="rsi-tile sz${sz}" style="background:${tileBg(v)}" title="${c.s}: RSI ${v == null ? '—' : v.toFixed(1)} on ${tf} · $${px(c.p)}"><b>${c.s}</b><span class="v">${v == null ? '—' : v.toFixed(1)}</span><small>${c.c == null ? '' : (c.c > 0 ? '+' : '') + c.c.toFixed(1) + '%'}</small></div>`; }).join('') || '<div class="calendar-note" style="padding:14px">No coins match this filter.</div>';
+}
 function render(){
   const t = $('rsiTable'); if(!t) return;
+  $('rsiTiles').style.display = view === 'tiles' ? '' : 'none';
+  $('rsiTblWrap').style.display = view === 'table' ? '' : 'none';
+  $('rsiTf').style.display = view === 'tiles' ? '' : 'none';
+  if(view === 'tiles' && D && D.coins && D.coins.length){ renderTiles(); $('rsiUpdated').textContent = `${D.coins.length} coins · RSI(${D.period}) on ${tf} · tile size follows market-cap rank · updated ${new Date(D.generated_at).toLocaleTimeString()}.`; return; }
   if(!D || !D.coins || !D.coins.length){ t.innerHTML = '<tbody><tr><td class="na">RSI data will appear after the data job has run.</td></tr></tbody>'; $('rsiUpdated').textContent = 'Waiting for the first data run…'; return; }
   const tfs = D.tfs;
   let rows = D.coins.map((c, i) => Object.assign({mc: i}, c));
@@ -2667,6 +2704,10 @@ function render(){
 }
 $('rsiTable').addEventListener('click', e => { const h = e.target.closest('th[data-k]'); if(!h) return;
   const k = h.dataset.k; if(sortKey === k) sortDir = -sortDir; else { sortKey = k; sortDir = (k === 's' ? 1 : -1); } render(); });
+$('rsiView').addEventListener('click', e => { const c = e.target.closest('.filter-chip'); if(!c) return;
+  document.querySelectorAll('#rsiView .filter-chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); view = c.dataset.v; render(); });
+$('rsiTf').addEventListener('click', e => { const c = e.target.closest('.filter-chip'); if(!c) return;
+  document.querySelectorAll('#rsiTf .filter-chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); tf = c.dataset.t; render(); });
 $('rsiFilter').addEventListener('click', e => { const c = e.target.closest('.filter-chip'); if(!c) return;
   document.querySelectorAll('#rsiFilter .filter-chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); filt = c.dataset.f; render(); });
 function load(){ fetch('../rsi_heatmap.json?t=' + Date.now(), {cache:'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null).then(d => { if(d) D = d; render(); }); }
