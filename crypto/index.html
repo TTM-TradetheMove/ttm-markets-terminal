@@ -257,6 +257,20 @@ td.num{font-variant-numeric:tabular-nums;color:var(--mute)}
 .wa-card .wa-country{font-size:11px;color:var(--gold2);margin-top:4px}
 .wa-empty{color:var(--mute);font-size:13px;padding:8px 0}
 
+
+/* ---- Social Pulse ---- */
+.sp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.sp-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.sp-card p{margin:0;font-size:14px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.sp-meta{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:11px;color:var(--mute)}
+.sp-tag{font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:999px;border:1px solid var(--line)}
+.sp-tag.crypto{color:var(--gold2);border-color:rgba(212,168,67,.5);background:rgba(212,168,67,.1)}
+.sp-tag.macro{color:#60a5fa;border-color:rgba(96,165,250,.4);background:rgba(96,165,250,.1)}
+.sp-card a.sp-link{color:var(--gold2);font-size:12px;text-decoration:none}
+.sp-card a.sp-link:hover{text-decoration:underline}
+.sp-acct{margin:22px 0 10px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.sp-acct b{font-size:15px;color:#fff}.sp-acct span{font-size:12px;color:var(--mute)}
+.sp-empty{background:var(--card);border:1px dashed var(--line);border-radius:12px;padding:14px 16px;color:var(--mute);font-size:13px}
 /* BTC vs macro events chart */
 .chart-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-top:22px}
 .chart-card .fl-label{color:var(--gold);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;display:block;margin-bottom:14px}
@@ -465,6 +479,7 @@ footer{padding:40px 0 60px}
       <a href="#calendar">Macro Watch</a>
       <a href="#tradinghours">Trading Hours</a>
       <a href="#marketpulse">Market Pulse</a>
+      <a href="#socialpulse">Social Pulse</a>
       <a href="#tokenevents">Token Events</a>
       <a href="#library">Reports</a>
       <a href="#transparency">Transparency Watch</a>
@@ -761,6 +776,22 @@ footer{padding:40px 0 60px}
         <p class="midterm-note">Gold line is price over the last 24h. Dots are real liquidation orders on Binance and Bybit's free public feeds, plotted at the time and price they fired — actual liquidations, not a model. The right-hand panel sums liquidated volume by price level across the window.</p>
       </div>
     </div>
+  </div>
+</section>
+
+<section id="socialpulse">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">Social Pulse</span>
+      <h2>Key posts: Trump &amp; crypto's loudest voices</h2>
+      <p>Only the posts that matter for crypto — mentions of Bitcoin, crypto, ETFs, regulation, rates, tariffs and similar market-moving topics. Everything else is filtered out. Links go to the original posts.</p>
+      <p id="spUpdated" class="calendar-note" style="margin-top:8px">Loading posts…</p>
+    </div>
+    <div class="filter-row" id="spTabs" style="margin-bottom:14px">
+      <button class="filter-chip active" data-sp="truth">Trump · Truth Social</button>
+      <button class="filter-chip" data-sp="x">Key X accounts</button>
+    </div>
+    <div id="spBody"></div>
   </div>
 </section>
 
@@ -2450,6 +2481,42 @@ function loadLiq(first){
 }
 loadLiq(true);
 setInterval(() => { if(!document.hidden) loadLiq(false); }, 300000);
+})();
+
+/* ---- Social Pulse: key Truth Social + X posts ---- */
+(function(){
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let SP = null, tab = 'truth';
+const ago = ts => { if(!ts) return ''; const s = Date.now()/1000 - ts; return s < 3600 ? Math.max(1, Math.round(s/60)) + 'm ago' : s < 86400 ? Math.round(s/3600) + 'h ago' : Math.round(s/86400) + 'd ago'; };
+const safeLink = u => /^https:\/\//.test(u || '') ? u : '#';
+function card(p, who){
+  const tags = (p.tags || []).map(t => `<span class="sp-tag ${esc(t)}">${esc(t)}</span>`).join('');
+  return `<div class="sp-card"><div class="sp-meta"><b style="color:var(--text)">${esc(who)}</b><span>${ago(p.ts)}</span>${tags}</div>
+    <p>${esc((p.text || '').slice(0, 700))}</p><a class="sp-link" href="${esc(safeLink(p.link))}" target="_blank" rel="noopener noreferrer">View original ↗</a></div>`;
+}
+function render(){
+  const el = $('spBody'); if(!el) return;
+  if(!SP){ el.innerHTML = '<div class="sp-empty">Social posts will appear after the feed job has run.</div>'; $('spUpdated').textContent = 'Waiting for the first social-feed run…'; return; }
+  const t = new Date(SP.generated_at);
+  $('spUpdated').textContent = 'Last updated ' + t.toLocaleString() + ' — refreshes about every 10 minutes.';
+  if(tab === 'truth'){
+    const items = SP.truth || [];
+    el.innerHTML = items.length ? `<div class="sp-grid">${items.map(p => card(p, 'Donald J. Trump')).join('')}</div>` +
+        `<p class="calendar-note" style="margin-top:10px">Source: an independent public archive of Truth Social. Showing ${items.length} key posts out of ${SP.truth_seen || 'the'} most recent.</p>`
+      : `<div class="sp-empty">${SP.truth_error ? 'The Truth Social archive is not reachable right now.' : 'No crypto- or market-related Truth Social posts in the latest batch.'}</div>`;
+  } else {
+    const xs = SP.x || [];
+    const note = !SP.x_working ? '<div class="sp-empty" style="margin-bottom:12px">X does not offer free access to posts, so these accounts could not be read on the last run. The posts below (if any) are older ones.</div>' : '';
+    const withPosts = xs.filter(a => a.posts && a.posts.length), without = xs.filter(a => !(a.posts && a.posts.length));
+    el.innerHTML = note + withPosts.map(a => `<div class="sp-acct"><b>${esc(a.name)}</b><span>@${esc(a.handle)} · ${esc(a.why)}</span></div><div class="sp-grid">${a.posts.map(p => card(p, a.name)).join('')}</div>`).join('') +
+      (without.length ? `<div class="sp-empty" style="margin-top:18px">No key posts to show for: ${without.map(a => esc(a.name) + (a.via ? '' : ' (not readable)')).join(', ')}.</div>` : '');
+  }
+}
+$('spTabs').addEventListener('click', e => { const c = e.target.closest('.filter-chip'); if(!c) return;
+  document.querySelectorAll('#spTabs .filter-chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); tab = c.dataset.sp; render(); });
+function load(){ fetch('../social_data.json?t=' + Date.now(), {cache:'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null).then(d => { SP = d; render(); }); }
+load(); setInterval(() => { if(!document.hidden) load(); }, 300000);
 })();
 </script>
 

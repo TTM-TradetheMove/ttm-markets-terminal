@@ -1,0 +1,49 @@
+name: Update social pulse
+
+on:
+  schedule:
+    - cron: "3,13,23,33,43,53 * * * *"
+  workflow_dispatch: {}
+  push:
+    paths:
+      - scripts/update_social.py
+      - .github/workflows/update-social.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-social
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch Truth Social + X posts
+        continue-on-error: true
+        timeout-minutes: 4
+        env:
+          X_FEEDS_JSON: ${{ secrets.X_FEEDS_JSON }}
+        run: timeout 230 python3 scripts/update_social.py
+      - name: Commit and push if changed
+        if: always()
+        run: |
+          git config user.name "ttm-calendar-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -f social_debug.txt 2>/dev/null || true
+          git add social_data.json 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Auto-update social pulse"
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              sleep 5
+            done
+          fi
