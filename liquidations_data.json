@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-17T10:20:47.408824+00:00",
+  "generated_at": "2026-10-17T13:53:05.631624+00:00",
   "window_hours": 24,
   "sources": [
     "wss://fstream.binance.com/ws/!forceOrder@arr",
@@ -19,34 +19,34 @@
   },
   "buckets": {
     "BTCUSDT": {
-      "mark": 81441.0,
+      "mark": 81355.81,
       "buckets": [
         {
-          "pricePct": -0.5,
-          "price": 81033.79,
-          "longUsd": 1298.6,
-          "shortUsd": 0.0
-        },
-        {
           "pricePct": 0.0,
-          "price": 81441.0,
-          "longUsd": 163.09,
+          "price": 81355.81,
+          "longUsd": 1461.69,
           "shortUsd": 35345.0
         }
       ]
     },
     "ETHUSDT": {
-      "mark": 2430.0,
+      "mark": 2419.59,
       "buckets": [
         {
           "pricePct": -1.0,
-          "price": 2405.7,
-          "longUsd": 972.99,
-          "shortUsd": 13072.44
+          "price": 2395.39,
+          "longUsd": 0.0,
+          "shortUsd": 9361.11
         },
         {
           "pricePct": -0.5,
-          "price": 2417.85,
+          "price": 2407.49,
+          "longUsd": 972.99,
+          "shortUsd": 3711.33
+        },
+        {
+          "pricePct": 0.0,
+          "price": 2419.59,
           "longUsd": 0.0,
           "shortUsd": 2944.11
         }
@@ -82,6 +82,10 @@
       {
         "time": 1792232447113.7273,
         "price": 81441.0
+      },
+      {
+        "time": 1792245185315.7656,
+        "price": 81355.81
       }
     ],
     "ETHUSDT": [
@@ -112,6 +116,10 @@
       {
         "time": 1792232447113.7273,
         "price": 2430.0
+      },
+      {
+        "time": 1792245185315.7656,
+        "price": 2419.59
       }
     ]
   },
