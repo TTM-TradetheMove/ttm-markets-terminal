@@ -2204,6 +2204,7 @@ function stats(list, asset, wi, thr){
           best: Math.max(...v), worst: Math.min(...v), abs: v.reduce((a,b) => a + Math.abs(b), 0) / n};
 }
 function label(key){
+  if(key === 'ALL|All releases') return 'All tracked releases combined';
   const [c, t] = key.split('|');
   return ((typeof countryLabel !== 'undefined' && countryLabel[c]) || c) + ' ' + t;
 }
@@ -2221,8 +2222,8 @@ function render(){
     body.innerHTML = '<p class="bh-note">History is still being built. The data job scrapes past releases and matches them to BTC/ETH price moves; it runs daily and the first full backfill can take a while. Check back after its first run.</p>';
     return;
   }
-  const keys = Object.keys(GROUPS).filter(k => GROUPS[k].length >= 3).sort((a, b) => label(a).localeCompare(label(b)));
-  if(!st.key || !GROUPS[st.key]) st.key = keys.includes('US|CPI y/y') ? 'US|CPI y/y' : keys[0];
+  const keys = Object.keys(GROUPS).filter(k => GROUPS[k].length >= 3 || k === 'ALL|All releases').sort((a, b) => a.startsWith('ALL|') ? -1 : b.startsWith('ALL|') ? 1 : label(a).localeCompare(label(b)));
+  if(!st.key || !GROUPS[st.key] || !keys.includes(st.key)) st.key = keys.includes('US|CPI y/y') ? 'US|CPI y/y' : keys[0];
   $('bhEvent').innerHTML = keys.map(k => `<option value="${esc(k)}" ${k === st.key ? 'selected' : ''}>${esc(label(k))} (${GROUPS[k].length})</option>`).join('');
   $('bhTitle').textContent = label(st.key);
   const list = GROUPS[st.key], A = st.asset.toUpperCase(), W = WIN[st.win], T = st.thr;
@@ -2239,6 +2240,7 @@ function render(){
       <div class="bh-line">Pumped ≥${T}%: <b style="color:var(--green)">${s.pump.toFixed(0)}%</b> &nbsp;·&nbsp; Dumped ≥${T}%: <b style="color:var(--red)">${s.dump.toFixed(0)}%</b><br>
       Average <b class="${cc(s.avg)}">${sg(s.avg)}</b> &nbsp;·&nbsp; Median <b class="${cc(s.med)}">${sg(s.med)}</b> &nbsp;·&nbsp; Best ${sg(s.best)} / Worst ${sg(s.worst)}</div></div>`;
   });
+  if(BH.events.length < 60) html = `<p class="bh-note">History is still building: ${BH.events.length} releases tracked so far${BH.first ? ' (' + esc(BH.first) + ' to ' + esc(BH.last || '') + ')' : ''}. Percentages from small samples can swing a lot, so treat them as early hints.</p>` + html;
   html += `<div class="bh-line" style="margin:4px 2px 0">All ${all.n} releases: ${all.n ? all.up.toFixed(0) + '% up, avg ' + sg(all.avg) + ', average absolute move ' + all.abs.toFixed(2) + '%' : '—'}.
     ${base ? `<br>Baseline — any random ${W} window of BTC: ${base.up}% up, average absolute move ${base.abs}%.` : ''}</div>`;
   // recent releases
@@ -2303,7 +2305,7 @@ $('bhBody').addEventListener('click', e => { const r = e.target.closest('tr.pick
 
 fetch('../crypto_bias_history.json?t=' + Date.now()).then(r => r.ok ? r.json() : null).catch(() => null).then(d => {
   BH = d;
-  if(d && d.events){ d.events.forEach(e => { const k = e.c + '|' + e.t; (GROUPS[k] = GROUPS[k] || []).push(e); }); }
+  if(d && d.events){ d.events.forEach(e => { const k = e.c + '|' + e.t; (GROUPS[k] = GROUPS[k] || []).push(e); }); GROUPS['ALL|All releases'] = d.events.slice(); }
   decorate();
   if($('bhDrawer').classList.contains('open')) render();
 });
