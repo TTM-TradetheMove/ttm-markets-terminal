@@ -1,0 +1,42 @@
+TTM tradfi run 2026-10-17T01:13:21+00:00
+rss Fed: 6 items
+yahoo: 27/27 symbols
+markets: ok
+treasury: ok
+rss ECB: 6 items
+rba f2-data.csv: 5 series, e.g. ['FCMYGBAG2D', 'FCMYGBAG3D', 'FCMYGBAG5D', 'FCMYGBAG10D', 'FCMYGBAGID']
+au: ok
+rss BoE: 6 items
+rss RBA: 1 items
+rss BoJ: 6 items
+rss google[policy]: 14 items
+rss google[geopolitics]: 14 items
+rss google[companies]: 14 items
+rss google[liquidity]: 14 items
+  GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=NFCI&cosd=2024-01-01 -> TimeoutError: The read operation timed out
+  GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFEDTARU&cosd=2024-01-01 -> TimeoutError: The read operation timed out
+  GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=WALCL&cosd=2024-01-01 -> TimeoutError: The read operation timed out
+  GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=NFCI&cosd=2024-01-01 -> TimeoutError: The read operation timed out
+  GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=WALCL&cosd=2024-01-01 -> TimeoutError: The read operation timed out
+  GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFEDTARU&cosd=2024-01-01 -> TimeoutError: The read operation timed out
+  SKIP (host fred.stlouisfed.org unreachable) https://fred.stlouisfed.org/graph/fredgraph.csv?id=STLFSI4&cosd=2024-01-01
+  SKIP (host fred.stlouisfed.org unreachable) https://fred.stlouisfed.org/graph/fredgraph.csv?id=RRPONTSYD&cosd=2024-01-01
+  SKIP (host fred.stlouisfed.org unreachable) https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2&cosd=2025-01-01
+  SKIP (host fred.stlouisfed.org unreachable) https://fred.stlouisfed.org/graph/fredgraph.csv?id=WTREGEN&cosd=2024-01-01
+  SKIP (host fred.stlouisfed.org unreachable) https://fred.stlouisfed.org/graph/fredgraph.csv?id=T10YIE&cosd=2025-01-01
+  SKIP (host fred.stlouisfed.org unreachable) https://fred.stlouisfed.org/graph/fredgraph.csv?id=T5YIE&cosd=2025-01-01
+  SKIP (host fred.stlouisfed.org unreachable) https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFII10&cosd=2025-01-01
+  SKIP (host fred.stlouisfed.org unreachable) https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFF&cosd=2025-06-01
+  SKIP (host fred.stlouisfed.org unreachable) https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFEDTARL&cosd=2024-01-01
+rba f1-data.csv: 17 series, e.g. ['FIRMMCRTD', 'FIRMMCCRT', 'FIRMMCRID', 'FIRMMCRIH', 'FIRMMCRIL', 'FIRMMCRIV']
+  SKIP (host fred.stlouisfed.org unreachable) https://fred.stlouisfed.org/graph/fredgraph.csv?id=ECBDFR&cosd=2024-01-01
+boe IUDBEDR: 707 rows
+  SKIP (host fred.stlouisfed.org unreachable) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01JPM156N&cosd=2024-01-01
+policy: ok
+liquidity: EMPTY
+conditions: EMPTY
+news: ok
+wrote tradfi_markets.json (updated) keys=['breadth', 'correlations', 'indices', 'macro', 'risk', 'vix']
+wrote tradfi_rates.json (updated) keys=['au', 'expectations', 'policy', 'treasury']
+wrote tradfi_news.json (updated) keys=['central_banks', 'companies', 'geopolitics', 'liquidity', 'policy']
+done in 29s
