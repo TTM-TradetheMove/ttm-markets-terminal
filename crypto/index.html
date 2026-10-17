@@ -573,28 +573,28 @@ footer{padding:40px 0 60px}
     <div class="filter-block">
       <span class="fl-label">Period</span>
       <div class="filter-row" id="periodRow">
-        <button class="filter-chip active" data-period="all">All</button>
+        <button class="filter-chip" data-period="all">All</button>
         <button class="filter-chip" data-period="past">Historic (released)</button>
-        <button class="filter-chip" data-period="future">Upcoming</button>
+        <button class="filter-chip active" data-period="future">Upcoming</button>
       </div>
     </div>
 
     <div class="filter-block">
       <span class="fl-label">Range</span>
       <div class="filter-row" id="rangeRow">
-        <button class="filter-chip active" data-range="all">All</button>
+        <button class="filter-chip" data-range="all">All</button>
         <button class="filter-chip" data-range="week">This week</button>
-        <button class="filter-chip" data-range="month">This month</button>
+        <button class="filter-chip active" data-range="month">This month</button>
       </div>
     </div>
 
     <div class="filter-block">
       <span class="fl-label">Impact</span>
       <div class="filter-row" id="filterRow">
-        <button class="filter-chip active" data-filter="all"><span class="dot" style="background:var(--mute)"></span>All</button>
+        <button class="filter-chip" data-filter="all"><span class="dot" style="background:var(--mute)"></span>All</button>
         <button class="filter-chip active" data-filter="high"><span class="dot" style="background:var(--red)"></span>High impact</button>
-        <button class="filter-chip active" data-filter="medium"><span class="dot" style="background:var(--orange)"></span>Medium impact</button>
-        <button class="filter-chip active" data-filter="low"><span class="dot" style="background:var(--yellow)"></span>Low impact</button>
+        <button class="filter-chip" data-filter="medium"><span class="dot" style="background:var(--orange)"></span>Medium impact</button>
+        <button class="filter-chip" data-filter="low"><span class="dot" style="background:var(--yellow)"></span>Low impact</button>
       </div>
     </div>
 
@@ -1128,12 +1128,32 @@ const biasLabel = {up:"Bullish ▲", down:"Bearish ▼", neutral:"Neutral —"};
 const biasClass = {up:"bias-up", down:"bias-down", neutral:"bias-neutral"};
 
 const calendarBody = document.getElementById('calendarBody');
+// An event counts as historic once it has an actual, or once its time has passed:
+// speeches 1h after they start, data releases 2h after (so a missed scrape never leaves them 'upcoming' forever).
+const SPEECH_RX = /speaks|speech|testif|press conf|remarks|talks|hearing/i;
+function isPastRow(row){
+  if(row.upcoming === false || (row.actual && row.actual !== '—')) return true;
+  if(!row.ts) return false;
+  return Date.now()/1000 > row.ts + (SPEECH_RX.test(row.event) ? 3600 : 7200);
+}
+function refreshPeriods(){
+  const now = Date.now()/1000;
+  document.querySelectorAll('#calendarBody tr').forEach(tr => {
+    if(tr.dataset.period !== 'future' || tr.dataset.hasactual || !tr.dataset.ts) return;
+    if(now > Number(tr.dataset.ts) + (tr.dataset.speech ? 3600 : 7200)) tr.dataset.period = 'past';
+  });
+  applyFilters();
+}
+setInterval(() => { if(!document.hidden) refreshPeriods(); }, 60000);
 function renderCalendarRows(list){
   list.forEach(row => {
     const tr = document.createElement('tr');
     tr.dataset.impact = row.impact;
     tr.dataset.country = row.country;
-    tr.dataset.period = row.upcoming ? 'future' : 'past';
+    tr.dataset.period = isPastRow(row) ? 'past' : 'future';
+    tr.dataset.ts = row.ts || '';
+    tr.dataset.speech = SPEECH_RX.test(row.event) ? '1' : '';
+    tr.dataset.hasactual = (row.actual && row.actual !== '—') ? '1' : '';
     tr.dataset.dt = row.dt.getTime();
     tr.dataset.revised = row.revised ? '1' : '0';
     tr.dataset.bkey = row.country + '|' + row.event;
@@ -1189,7 +1209,7 @@ function renderWeekAhead(events){
 // Upcoming rows: try the live, auto-updated feed first (refreshed every 30 min by a
 // GitHub Action in this repo); fall back to the static list if it can't be reached.
 let ALL_CALENDAR_EVENTS = [];
-fetch('../calendar_data.json', {cache:'no-store'})
+function loadCalendarLive(){ return fetch('../calendar_data.json?t=' + Date.now(), {cache:'no-store'})
   .then(r => { if(!r.ok) throw new Error('bad status'); return r.json(); })
   .then(data => {
     const live = data.events.map(e => ({...e, dt:d(e.dt)}));
@@ -1204,6 +1224,7 @@ fetch('../calendar_data.json', {cache:'no-store'})
     if(stamp) stamp.textContent = 'Live feed — last updated ' + new Date(data.generated_at).toLocaleString();
   })
   .catch(() => {
+    if(ALL_CALENDAR_EVENTS.length) return; // keep what is already on screen if a refresh fails
     renderCalendarRows(CALENDAR_UPCOMING_FALLBACK);
     applyFilters();
     ALL_CALENDAR_EVENTS = [...CALENDAR_HISTORICAL, ...CALENDAR_UPCOMING_FALLBACK];
@@ -1212,6 +1233,9 @@ fetch('../calendar_data.json', {cache:'no-store'})
     const stamp = document.getElementById('calendarUpdated');
     if(stamp) stamp.textContent = 'Showing a static snapshot — live feed unavailable.';
   });
+}
+loadCalendarLive();
+setInterval(() => { if(!document.hidden) loadCalendarLive(); }, 300000);
 
 // ---- BTC price vs. macro events chart ----
 let BTC_PRICE_SERIES = null;
@@ -1334,9 +1358,9 @@ fetch('../btc_price_data.json', {cache:'no-store'})
 
 // ---- Filter state ----
 const activeCountries = new Set(['US','UK','EU','JP']);
-let activePeriod = 'all';
-let activeRange = 'all';
-const activeImpacts = new Set(['high','medium','low']);
+let activePeriod = 'future';
+let activeRange = 'month';
+const activeImpacts = new Set(['high']);
 let adjustmentsOnly = false;
 
 function msDay(){ return 24*60*60*1000; }

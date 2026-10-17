@@ -17,7 +17,7 @@ never goes stale, just without fresh Actuals until the next successful run.
 import json
 import re
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 FEED_URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
@@ -92,6 +92,7 @@ def transform(raw_events):
             "miss": False,
             "bias": "neutral",
             "upcoming": True,
+            "ts": int(dt_source.timestamp()),
             # match keys used to merge in live "actual" values, not rendered
             "_ny_date": dt_ny.strftime("%Y-%m-%d"),
             "_currency": e.get("country"),
@@ -323,6 +324,17 @@ def merge_actuals(events, actuals):
     matched = 0
     for e in events:
         key = (e["_ny_date"], e["_currency"], e["_title_norm"])
+        if key not in actuals:
+            # FF's page date can differ from our NY date by a day (timezone of the scrape): try the neighbours
+            try:
+                base = datetime.strptime(e["_ny_date"], "%Y-%m-%d")
+                for off in (-1, 1):
+                    k2 = ((base + timedelta(days=off)).strftime("%Y-%m-%d"), e["_currency"], e["_title_norm"])
+                    if k2 in actuals:
+                        key = k2
+                        break
+            except ValueError:
+                pass
         if key in actuals:
             e["actual"] = actuals[key]
             e["miss"] = compute_miss(e["actual"], e["forecast"])
@@ -330,6 +342,18 @@ def merge_actuals(events, actuals):
             e["upcoming"] = False
             matched += 1
     print(f"Matched {matched} actual values onto scheduled events")
+    nowts = datetime.now(timezone.utc).timestamp()
+    miss = [f'{e["_ny_date"]} {e["_currency"]} {e["event"]}' for e in events
+            if e.get("upcoming") and e.get("ts") and e["ts"] < nowts - 7200 and "speak" not in e["event"].lower()]
+    if miss:
+        print("Past events still without an actual (" + str(len(miss)) + "): " + "; ".join(miss[:25]))
+        print("Scraped keys for GBP/GDP-like titles: " + str([k for k in actuals if k[1] == "GBP"][:30]))
+        try:
+            with open("ff_scrape_debug.txt", "a") as f:
+                f.write("\nPast events without actual (" + str(len(miss)) + "): " + "; ".join(miss[:25]) + "\n")
+                f.write("Scraped GBP keys: " + str([k for k in actuals if k[1] == "GBP"][:30]) + "\n")
+        except Exception:
+            pass
     return events
 
 
