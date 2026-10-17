@@ -314,6 +314,87 @@ def derive_market_sections(quotes, hist):
 # ----------------------------------------------------------------------------
 # FRED (no key) + US Treasury + RBA + BoE
 # ----------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------
+# Non-FRED sources (FRED often times out from GitHub's servers)
+# ----------------------------------------------------------------------------
+_NYFED = {}
+
+
+def _nyfed_effr(start):
+    if "rows" not in _NYFED:
+        end = dt.date.today().isoformat()
+        txt = get("https://markets.newyorkfed.org/api/rates/unsecured/effr/search.json"
+                  f"?startDate={start}&endDate={end}&type=rate", timeout=30, tries=2, accept="application/json")
+        _NYFED["rows"] = (json.loads(txt).get("refRates") or []) if txt else []
+        log(f"nyfed effr: {len(_NYFED['rows'])} rows")
+    return _NYFED["rows"]
+
+
+def alt_series(sid, start):
+    """Same (date, value) lists as fred(), from other free public sources. [] if unavailable."""
+    try:
+        if sid in ("DFEDTARU", "DFEDTARL", "DFF"):
+            col = {"DFEDTARU": "targetRateTo", "DFEDTARL": "targetRateFrom", "DFF": "percentRate"}[sid]
+            out = [(r["effectiveDate"], float(r[col])) for r in _nyfed_effr(start) if r.get(col) is not None]
+            return sorted(out)
+        if sid == "ECBDFR":
+            txt = get("https://data-api.ecb.europa.eu/service/data/FM/D.U2.EUR.4F.KR.DFR.LEV"
+                      f"?startPeriod={start}&format=csvdata", timeout=30, tries=2)
+            out = []
+            for r in csv.DictReader(io.StringIO(txt or "")):
+                try:
+                    out.append((r["TIME_PERIOD"], float(r["OBS_VALUE"])))
+                except (KeyError, ValueError):
+                    pass
+            log(f"ecb DFR: {len(out)} rows")
+            return sorted(out)
+        if sid == "NFCI":
+            txt = get("https://www.chicagofed.org/-/media/publications/nfci/nfci-data-series-csv.csv", timeout=30, tries=2)
+            out = []
+            for r in csv.reader(io.StringIO(txt or "")):
+                if len(r) >= 2:
+                    d = parse_date(r[0])
+                    try:
+                        if d and d >= start:
+                            out.append((d, float(r[1])))
+                    except ValueError:
+                        pass
+            log(f"chicagofed NFCI: {len(out)} rows")
+            return sorted(out)
+        if sid in ("T10YIE", "T5YIE", "DFII10"):
+            tenor = "5" if sid == "T5YIE" else "10"
+            years = range(int(start[:4]), dt.date.today().year + 1)
+
+            def table(kind, y):
+                u = ("https://home.treasury.gov/resource-center/data-chart-center/interest-rates/"
+                     f"daily-treasury-rates.csv/{y}/all?type={kind}&field_tdr_date_value={y}&page&_format=csv")
+                res = {}
+                for r in csv.DictReader(io.StringIO(get(u, timeout=30, tries=2) or "")):
+                    d = parse_date(r.get("Date", ""))
+                    v = {k.strip().upper(): x for k, x in r.items() if k}.get(f"{tenor} YR")
+                    try:
+                        if d and v not in ("", None):
+                            res[d] = float(v)
+                    except ValueError:
+                        pass
+                return res
+            real, nom = {}, {}
+            for y in years:
+                real.update(table("daily_treasury_real_yield_curve", y))
+                if sid != "DFII10":
+                    nom.update(table("daily_treasury_yield_curve", y))
+            if sid == "DFII10":
+                out = sorted((d, v) for d, v in real.items() if d >= start)
+            else:
+                out = sorted((d, round(nom[d] - real[d], 3)) for d in real if d in nom and d >= start)
+            log(f"treasury real-yield {sid}: {len(out)} rows")
+            return out
+    except Exception as e:  # noqa
+        log(f"alt {sid} failed: {type(e).__name__}: {e}")
+    return []
+
+
 FRED_CACHE = {}
 FRED_SERIES = [("DFEDTARU", "2024-01-01"), ("DFEDTARL", "2024-01-01"), ("IRSTCB01AUM156N", "2024-01-01"),
                ("ECBDFR", "2024-01-01"), ("IRSTCB01GBM156N", "2024-01-01"), ("IRSTCB01JPM156N", "2024-01-01"),
@@ -331,14 +412,20 @@ def _fred_raw(series_id, start):
 def prefetch_fred():
     from concurrent.futures import ThreadPoolExecutor
     with ThreadPoolExecutor(max_workers=8) as ex:
-        for (sid, start), txt in zip(FRED_SERIES, ex.map(lambda a: _fred_raw(*a), FRED_SERIES)):
+        def one(a):
+            got = alt_series(*a)
+            return got if got else _fred_raw(*a)
+        for (sid, start), txt in zip(FRED_SERIES, ex.map(one, FRED_SERIES)):
             FRED_CACHE[(sid, start)] = txt
-    log(f"fred prefetch: {sum(1 for v in FRED_CACHE.values() if v)}/{len(FRED_SERIES)} series")
+    log(f"series prefetch: {sum(1 for v in FRED_CACHE.values() if v)}/{len(FRED_SERIES)} ok "
+        f"(missing: {[k[0] for k, v in FRED_CACHE.items() if not v]})")
 
 
 def fred(series_id, start="2024-01-01"):
     key = (series_id, start)
-    txt = FRED_CACHE[key] if key in FRED_CACHE else _fred_raw(series_id, start)
+    txt = FRED_CACHE[key] if key in FRED_CACHE else (alt_series(series_id, start) or _fred_raw(series_id, start))
+    if isinstance(txt, list):
+        return txt
     if not txt:
         return []
     out = []
@@ -355,7 +442,7 @@ def fred(series_id, start="2024-01-01"):
 
 def parse_date(s):
     s = s.strip()
-    for f in ("%Y-%m-%d", "%d-%b-%Y", "%d %b %Y", "%d/%m/%Y", "%b-%Y", "%d-%b-%y", "%m/%d/%Y"):
+    for f in ("%Y-%m-%d", "%m/%d/%Y", "%d-%b-%Y", "%d %b %Y", "%b-%Y", "%d-%b-%y", "%d/%m/%Y"):
         try:
             return dt.datetime.strptime(s, f).date().isoformat()
         except ValueError:
