@@ -966,13 +966,13 @@ footer{padding:40px 0 60px}
 <div class="bh-scrim" id="bhScrim"></div>
 <aside class="bh-drawer" id="bhDrawer" aria-hidden="true" aria-label="Crypto reaction history to economic releases">
   <div class="bh-head">
-    <div><span class="bh-kicker">Crypto reaction history</span><h3 id="bhTitle">Economic releases vs BTC &amp; ETH</h3></div>
+    <div><span class="bh-kicker">Crypto reaction history</span><h3 id="bhTitle">Economic releases vs BTC, ETH, XRP &amp; SOL</h3></div>
     <button class="bh-close" id="bhClose" type="button" aria-label="Close">&times;</button>
   </div>
   <div class="bh-ctl"><span class="fl-label">Release to view</span><div class="filter-row" id="bhQuick"></div></div>
   <select id="bhEvent" aria-label="Choose a release"></select>
   <div class="bh-ctl"><span class="fl-label">Asset</span><div class="filter-row" id="bhAsset">
-    <button class="filter-chip active" data-v="btc">BTC</button><button class="filter-chip" data-v="eth">ETH</button></div></div>
+    <button class="filter-chip active" data-v="btc">BTC</button><button class="filter-chip" data-v="eth">ETH</button><button class="filter-chip" data-v="xrp">XRP</button><button class="filter-chip" data-v="sol">SOL</button></div></div>
   <div class="bh-ctl"><span class="fl-label">Window after release</span><div class="filter-row" id="bhWin">
     <button class="filter-chip" data-v="0">15m</button><button class="filter-chip" data-v="1">1h</button>
     <button class="filter-chip active" data-v="2">4h</button><button class="filter-chip" data-v="3">24h</button></div></div>
@@ -2220,7 +2220,7 @@ function render(){
   const body = $('bhBody');
   if(!BH || !BH.events || !BH.events.length){
     $('bhEvent').innerHTML = '';
-    body.innerHTML = '<p class="bh-note">History is still being built. The data job scrapes past releases and matches them to BTC/ETH price moves; it runs daily and the first full backfill can take a while. Check back after its first run.</p>';
+    body.innerHTML = '<p class="bh-note">History is still being built. The data job scrapes past releases and matches them to BTC, ETH, XRP and SOL price moves; it runs daily and the first full backfill can take a while. Check back after its first run.</p>';
     return;
   }
   const keys = Object.keys(GROUPS).filter(k => GROUPS[k].length >= 1).sort((a, b) => a.startsWith('ALL|') ? -1 : b.startsWith('ALL|') ? 1 : label(a).localeCompare(label(b)));
@@ -2231,7 +2231,7 @@ function render(){
   $('bhTitle').textContent = label(st.key);
   const list = GROUPS[st.key], A = st.asset.toUpperCase(), W = WIN[st.win], T = st.thr;
   const all = stats(list, st.asset, st.win, T);
-  const base = BH.baseline && BH.baseline[st.win];
+  const base = st.asset === 'btc' && BH.baseline && BH.baseline[st.win];
   const isAll = st.key === 'ALL|All releases';
   const recent = [...list].sort((a, b) => (b.u || b.d).localeCompare(a.u || a.d)).slice(0, 15);
   const verdict = c => c === 'A' ? '<b class="bias-up">Above</b>' : c === 'B' ? '<b class="bias-down">Below</b>' : c === 'I' ? 'In line' : '—';
@@ -2249,6 +2249,8 @@ function render(){
       <div class="bh-line">Pumped ≥${T}%: <b style="color:var(--green)">${s.pump.toFixed(0)}%</b> &nbsp;·&nbsp; Dumped ≥${T}%: <b style="color:var(--red)">${s.dump.toFixed(0)}%</b><br>
       Average <b class="${cc(s.avg)}">${sg(s.avg)}</b> &nbsp;·&nbsp; Median <b class="${cc(s.med)}">${sg(s.med)}</b> &nbsp;·&nbsp; Best ${sg(s.best)} / Worst ${sg(s.worst)}</div></div>`;
   });
+  const hasAsset = list.some(r => r[st.asset]);
+  if(!hasAsset) html = `<p class="bh-note">${A} history is still being added by the data job (it fills in on its next run). BTC and ETH are ready now.</p>` + html;
   if(BH.events.length < 60) html = `<p class="bh-note">History is still building: ${BH.events.length} releases tracked so far${BH.first ? ' (' + esc(BH.first) + ' to ' + esc(BH.last || '') + ')' : ''}. Percentages from small samples can swing a lot, so treat them as early hints.</p>` + html;
   html += `<div class="bh-line" style="margin:4px 2px 0">All ${all.n} releases: ${all.n ? all.up.toFixed(0) + '% up, avg ' + sg(all.avg) + ', average absolute move ' + all.abs.toFixed(2) + '%' : '—'}.
     ${base ? `<br>Baseline — any random ${W} window of BTC: ${base.up}% up, average absolute move ${base.abs}%.` : ''}</div>`;

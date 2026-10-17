@@ -25,6 +25,7 @@ from zoneinfo import ZoneInfo
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "crypto_bias_history.json")
+ASSETS = ("btc", "eth", "xrp", "sol")
 GRAN = 900  # seconds, 15-minute candles
 LOG = []
 
@@ -288,7 +289,8 @@ def fetch_candles_bitstamp(pair, start, end):
 
 
 def get_candles(asset, start, end):
-    prod, pair = {"btc": ("BTC-USD", "btcusd"), "eth": ("ETH-USD", "ethusd")}[asset]
+    prod, pair = {"btc": ("BTC-USD", "btcusd"), "eth": ("ETH-USD", "ethusd"),
+                  "xrp": ("XRP-USD", "xrpusd"), "sol": ("SOL-USD", "solusd")}[asset]
     c = fetch_candles_coinbase(prod, start, end)
     src = "coinbase"
     if not c:
@@ -378,14 +380,14 @@ def main():
         recs[key] = {"c": key[0], "t": r["title"], "d": r["d"], "u": rel.strftime("%Y-%m-%dT%H:%MZ"),
                      "a": r["actual"], "f": r["forecast"], "p": r["previous"],
                      "s": classify(r["actual"], r["forecast"]),
-                     "btc": old.get("btc"), "eth": old.get("eth")}
+                     **{a: old.get(a) for a in ASSETS}}
     log(f"{len(recs)} records after merge")
 
     # which records still need price reactions?
     need = []
     for r in recs.values():
         rel = datetime.strptime(r["u"], "%Y-%m-%dT%H:%MZ").replace(tzinfo=timezone.utc)
-        incomplete = (not r.get("btc")) or r["btc"][3] is None or not r.get("eth")
+        incomplete = (not r.get("btc")) or r["btc"][3] is None or any(not r.get(a) for a in ASSETS)
         if incomplete and rel < now - timedelta(hours=25):
             need.append(rel)
         elif incomplete and rel < now - timedelta(minutes=30):
@@ -397,7 +399,7 @@ def main():
         end = min(now, max(need) + timedelta(hours=26))
         log(f"fetching prices {start:%Y-%m-%d} -> {end:%Y-%m-%d} for {len(need)} releases")
         cand = {}
-        for asset in ("btc", "eth"):
+        for asset in ASSETS:
             cand[asset], src = get_candles(asset, start, end)
             if cand[asset]:
                 prices_src = src
@@ -408,7 +410,7 @@ def main():
             if rel < start + timedelta(hours=1) or rel > end:
                 continue
             ts = int(rel.timestamp())
-            for asset in ("btc", "eth"):
+            for asset in ASSETS:
                 if cand[asset]:
                     rx = reaction(cand[asset], ts)
                     if rx and (not r.get(asset) or any(v is not None for v in rx)):
