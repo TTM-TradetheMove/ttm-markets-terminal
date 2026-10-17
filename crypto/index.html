@@ -259,6 +259,17 @@ td.num{font-variant-numeric:tabular-nums;color:var(--mute)}
 
 
 /* ---- Social Pulse ---- */
+.bm-wrap{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;overflow-x:auto}
+.bm-tbl{width:100%;border-collapse:separate;border-spacing:3px;font-variant-numeric:tabular-nums;min-width:860px}
+.bm-tbl th{color:var(--mute);font-size:11px;font-weight:600;padding:4px 2px;text-align:center}
+.bm-tbl td{text-align:center;font-size:12px;padding:8px 2px;border-radius:6px;color:#fff;white-space:nowrap}
+.bm-tbl td.yr{background:none;color:var(--text);font-weight:700;text-align:left;padding-left:6px}
+.bm-tbl td.empty{background:rgba(255,255,255,.03)}
+.bm-tbl td.tot{font-weight:700}
+.bm-tbl tr.stat td{font-size:11.5px;color:var(--text)}
+.bm-tbl tr.stat td.yr{color:var(--gold2)}
+.bm-tbl tr.sep td{padding:3px;background:none}
+.bm-tbl td.part{outline:1px dashed var(--gold)}
 .sp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
 .sp-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
 .sp-card p{margin:0;font-size:14px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
@@ -479,6 +490,7 @@ footer{padding:40px 0 60px}
       <a href="#calendar">Macro Watch</a>
       <a href="#tradinghours">Trading Hours</a>
       <a href="#marketpulse">Market Pulse</a>
+      <a href="#btcmonthly">BTC Monthly</a>
       <a href="#socialpulse">Social Pulse</a>
       <a href="#tokenevents">Token Events</a>
       <a href="#library">Reports</a>
@@ -775,6 +787,24 @@ footer{padding:40px 0 60px}
         <p class="midterm-note">Gold line is price over the last 24h. Dots are real liquidation orders on Binance and Bybit's free public feeds, plotted at the time and price they fired — actual liquidations, not a model. The right-hand panel sums liquidated volume by price level across the window.</p>
       </div>
     </div>
+  </div>
+</section>
+
+<section id="btcmonthly" class="alt">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">BTC Monthly Returns</span>
+      <h2>Bitcoin month by month, since the start</h2>
+      <p>Each cell is Bitcoin's return for that calendar month (month-end close vs the previous month-end). Green is a gain, red is a loss, and the dashed cell is the month still in progress. The bottom rows show how each month has behaved across the years.</p>
+      <p id="bmUpdated" class="calendar-note" style="margin-top:8px">Loading history…</p>
+    </div>
+    <div class="filter-row" id="bmRange" style="margin-bottom:12px">
+      <button class="filter-chip active" data-n="0">All years</button>
+      <button class="filter-chip" data-n="5">Last 5 years</button>
+      <button class="filter-chip" data-n="10">Last 10 years</button>
+    </div>
+    <div class="bm-wrap"><table class="bm-tbl" id="bmTable"><tbody><tr><td class="empty">Loading…</td></tr></tbody></table></div>
+    <p class="calendar-note" style="margin-top:10px">Source: Bitstamp daily BTC/USD (Coinbase as backup), updated daily. Early years had tiny prices and very large percentage moves, so colours are capped. Past monthly patterns are not a forecast. Not financial advice.</p>
   </div>
 </section>
 
@@ -2517,6 +2547,51 @@ $('spTabs').addEventListener('click', e => { const c = e.target.closest('.filter
 $('spAcct').addEventListener('click', e => { const c = e.target.closest('[data-who]'); if(c){ if(tab === 'news') whoN = c.dataset.who; else who = c.dataset.who; render(); } });
 function load(){ fetch('../social_data.json?t=' + Date.now(), {cache:'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null).then(d => { SP = d; render(); }); }
 load(); setInterval(() => { if(!document.hidden) load(); }, 300000);
+})();
+
+/* ---- BTC monthly returns heatmap ---- */
+(function(){
+const $ = id => document.getElementById(id);
+const MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+let D = null, last = 0;
+const fmt = r => (r > 0 ? '+' : r < 0 ? '−' : '') + Math.abs(r).toFixed(Math.abs(r) >= 100 ? 0 : 1) + '%';
+function bg(r){
+  const k = Math.min(1, Math.sqrt(Math.abs(r) / 40));
+  return r >= 0 ? `rgba(63,185,122,${(0.12 + 0.62 * k).toFixed(2)})` : `rgba(229,83,75,${(0.12 + 0.62 * k).toFixed(2)})`;
+}
+const med = a => { const s = [...a].sort((x, y) => x - y), n = s.length; return n ? (n % 2 ? s[(n-1)/2] : (s[n/2-1] + s[n/2]) / 2) : null; };
+function render(){
+  const t = $('bmTable'); if(!t) return;
+  if(!D || !D.months || !D.months.length){ t.innerHTML = '<tbody><tr><td class="empty">Monthly history will appear after the data job has run.</td></tr></tbody>'; $('bmUpdated').textContent = 'Waiting for the first data run…'; return; }
+  const by = {}; D.months.forEach(m => { const [y, mo] = m.m.split('-'); (by[y] = by[y] || {})[+mo - 1] = m; });
+  let years = Object.keys(by).sort((a, b) => b - a);
+  if(last) years = years.slice(0, last);
+  const cols = Array.from({length: 12}, () => []);
+  let html = '<thead><tr><th></th>' + MN.map(m => `<th>${m}</th>`).join('') + '<th>Year</th></tr></thead><tbody>';
+  years.forEach(y => {
+    let comp = 1, any = false, partial = false;
+    html += `<tr><td class="yr">${y}</td>`;
+    for(let i = 0; i < 12; i++){
+      const m = by[y][i];
+      if(!m){ html += '<td class="empty"></td>'; continue; }
+      comp *= 1 + m.r / 100; any = true; if(m.p) partial = true; else cols[i].push(m.r);
+      html += `<td class="${m.p ? 'part' : ''}" style="background:${bg(m.r)}" title="${MN[i]} ${y}: close $${m.c.toLocaleString()}">${fmt(m.r)}</td>`;
+    }
+    const yr = (comp - 1) * 100;
+    html += any ? `<td class="tot ${partial ? 'part' : ''}" style="background:${bg(yr)}">${fmt(yr)}</td></tr>` : '<td class="empty"></td></tr>';
+  });
+  html += '<tr class="sep"><td colspan="14"></td></tr>';
+  const row = (label, f, color) => `<tr class="stat"><td class="yr">${label}</td>` + cols.map(c => { const v = c.length ? f(c) : null; return v == null ? '<td class="empty"></td>' : `<td ${color ? `style="background:${bg(v)}"` : ''}>${color ? fmt(v) : v}</td>`; }).join('') + '<td class="empty"></td></tr>';
+  html += row('Average', c => c.reduce((a, b) => a + b, 0) / c.length, true);
+  html += row('Median', c => med(c), true);
+  html += row('% positive', c => Math.round(c.filter(x => x > 0).length / c.length * 100) + '%', false);
+  html += row('Months', c => c.length, false);
+  t.innerHTML = html + '</tbody>';
+  $('bmUpdated').textContent = `${D.months.length} months from ${D.first} — last updated ${new Date(D.generated_at).toLocaleDateString()}.`;
+}
+$('bmRange').addEventListener('click', e => { const c = e.target.closest('.filter-chip'); if(!c) return;
+  document.querySelectorAll('#bmRange .filter-chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); last = +c.dataset.n; render(); });
+fetch('../btc_monthly.json?t=' + Date.now(), {cache:'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null).then(d => { D = d; render(); });
 })();
 </script>
 
