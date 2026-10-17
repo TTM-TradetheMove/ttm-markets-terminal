@@ -750,7 +750,6 @@ footer{padding:40px 0 60px}
         <div class="filter-row" id="liqTabs">
           <button class="filter-chip active" data-ltab="heat">Liquidation Heatmap</button>
           <button class="filter-chip" data-ltab="map">Liquidation Map</button>
-          <button class="filter-chip" data-ltab="real">Actual liquidations</button>
         </div>
         <div class="filter-row" id="liqSymbolRow">
           <button class="filter-chip active" data-liqsym="BTCUSDT">BTC</button>
@@ -771,20 +770,6 @@ footer{padding:40px 0 60px}
         <div class="liq-legend" id="lmLegend"></div>
         <div class="liq-chart-wrap"><svg id="lmChart" viewBox="0 0 900 440" preserveAspectRatio="none" role="img" aria-label="Estimated liquidation map by price level and leverage tier"></svg><div id="lmTip" class="chart-tooltip" style="display:none"></div></div>
         <p class="midterm-note">Bars show estimated liquidation notional at each price level, split by leverage tier. The red curve accumulates longs that would be liquidated as price falls; the green curve accumulates shorts as price rises. Modelled from the last 30 days of open-interest changes — an estimate, not real position data.</p>
-      </div>
-
-      <div class="liq-panel" id="liqPanelReal" style="display:none">
-        <div class="liq-totals" id="liqTotals"><span class="calendar-note">Loading…</span></div>
-        <div class="liq-legend">
-          <span class="liq-legend-item"><span class="liq-swatch liq-swatch-short"></span>Shorts liquidated</span>
-          <span class="liq-legend-item"><span class="liq-swatch liq-swatch-long"></span>Longs liquidated</span>
-          <span class="liq-legend-item">· dot size = order size · right panel = liquidity built up at each price level</span>
-        </div>
-        <div class="liq-chart-wrap">
-          <svg id="liqChart" viewBox="0 0 900 460" preserveAspectRatio="none" role="img" aria-label="Price chart with liquidation events plotted over time, and a liquidity profile by price level over the last 24 hours"></svg>
-          <div id="liqTooltip" class="chart-tooltip" style="display:none"></div>
-        </div>
-        <p class="midterm-note">Gold line is price over the last 24h. Dots are real liquidation orders on Binance and Bybit's free public feeds, plotted at the time and price they fired — actual liquidations, not a model. The right-hand panel sums liquidated volume by price level across the window.</p>
       </div>
     </div>
   </div>
@@ -1792,8 +1777,6 @@ function loadLiqData(){ return fetch('../liquidations_data.json?t=' + Date.now()
     if(totalsEl) totalsEl.innerHTML = '<span class="calendar-note">Liquidation data unavailable right now — check back shortly.</span>';
   });
 }
-loadLiqData();
-setInterval(() => { if(!document.hidden) loadLiqData(); }, 300000);
 
 // ---- Blockworks Token Transparency panel ----
 const classLabel = {defi:"DeFi", infra:"Infrastructure", l1:"Layer 1 / Currency", other:"Other"};
@@ -2464,7 +2447,6 @@ function showTab(t){
   document.querySelectorAll('#liqTabs .filter-chip').forEach(c => c.classList.toggle('active', c.dataset.ltab === t));
   $('liqPanelHeat').style.display = t === 'heat' ? '' : 'none';
   $('liqPanelMap').style.display = t === 'map' ? '' : 'none';
-  $('liqPanelReal').style.display = t === 'real' ? '' : 'none';
   if(t === 'heat') renderHeat(); if(t === 'map') renderMap();
 }
 $('liqTabs').addEventListener('click', e => { const c = e.target.closest('.filter-chip'); if(c) showTab(c.dataset.ltab); });
