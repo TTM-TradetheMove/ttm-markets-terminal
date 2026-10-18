@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-18T17:30:20+00:00",
+ "generated_at": "2026-10-18T19:36:06+00:00",
  "truth": [
   {
    "id": "https://www.trumpstruth.org/statuses/42409",
@@ -54,6 +54,13 @@
    "name": "CoinDesk",
    "posts": [
     {
+     "id": "ca2f6e56-f7a4-4a55-81e5-5768f07db0a1",
+     "title": "The White House's crypto chief departs: State of Crypto",
+     "text": "Patrick Witt announced his departure from the White House last week.",
+     "link": "https://www.coindesk.com/policy/2026/10/18/the-white-house-s-crypto-chief-departs-state-of-crypto",
+     "ts": 1792348200
+    },
+    {
      "id": "9ca05b2c-cf83-4b74-9849-50e8e947ec66",
      "title": "Wall Street freaked out Friday. VIX and bitcoin say the fear may fade Monday.",
      "text": "Wall Street's fear gauge, the VIX index, spiked on Friday as stocks dropped. History says Friday panics usually fade on Monday. Seasonality and calm bitcoin suggest the same.",
@@ -101,13 +108,6 @@
      "text": "A 10-minute flush hit round-the-clock chip-stock contracts while U.S. markets were shut, leaving traders with no real share price to lean on.",
      "link": "https://www.coindesk.com/markets/2026/10/18/chip-stock-bets-lost-usd52-million-in-10-minutes-with-wall-street-shut",
      "ts": 1792307612
-    },
-    {
-     "id": "13c8097d-ec8a-4432-b9fe-05e69cc7bfc2",
-     "title": "Circle defends USDC economics as stablecoin rivals court its partners with bigger cut",
-     "text": "Coinbase, Circle\u2019s largest USDC partner, also backs Open USD, a rival network that passes reserve income to partners after a management fee.",
-     "link": "https://www.coindesk.com/business/2026/10/17/circle-defends-usdc-economics-as-stablecoin-rivals-court-its-partners-with-bigger-cut",
-     "ts": 1792285595
     }
    ],
    "ok": true
@@ -364,6 +364,20 @@
    "name": "CryptoSlate",
    "posts": [
     {
+     "id": "https://cryptoslate.com/?p=573512",
+     "title": "Zcash\u2019s planned Sprout freeze would leave private keys unable to move funds",
+     "text": "NU7 would leave legacy funds issued but unspendable, even with intact keys, while the mainnet activation decision remains pending.\n\nRead the full story on CryptoSlate\n\nUnderstand the crypto stories that matter and what to watch next. Get The Catalyst in your inbox",
+     "link": "https://cryptoslate.com/zcashs-planned-sprout-freeze-would-leave-private-keys-unable-to-move-funds/",
+     "ts": 1792350034
+    },
+    {
+     "id": "https://cryptoslate.com/?p=573705",
+     "title": "Fidelity\u2019s $500,000 crypto settlement leaves IRAs outside wallet-transfer terms",
+     "text": "The California agreement requires notice if Fidelity ends its retail transfer feature, while preserving security restrictions and IRA exclusions.\n\nRead the full story on CryptoSlate\n\nUnderstand the crypto stories that matter and what to watch next. Get The Catalyst in your inbox",
+     "link": "https://cryptoslate.com/fidelitys-500000-crypto-settlement-leaves-iras-outside-wallet-transfer-terms/",
+     "ts": 1792346410
+    },
+    {
      "id": "https://cryptoslate.com/?p=571421",
      "title": "Crypto doesn\u2019t need your party to win, just its candidates",
      "text": "The crypto industry has finally found a way to participate in America's partisan warfare without committing to either of the (only) two available parties: help elect people who agree with it about crypto, then let them argue about everything else. Fairshake's latest House spendin",
@@ -404,20 +418,6 @@
      "text": "The waiver has no fixed expiry, and any Bitcoin benefit depends on how it affects inflation and financing conditions.\n\nRead the full story on CryptoSlate\n\nUnderstand the crypto stories that matter and what to watch next. Get The Catalyst in your inbox",
      "link": "https://cryptoslate.com/trump-waives-new-russia-tariffs-as-october-18-oil-deadline-arrives/",
      "ts": 1792328430
-    },
-    {
-     "id": "https://cryptoslate.com/?p=574090",
-     "title": "CryptoQuant CEO sees $30,000 Bitcoin floor even if ETFs and treasury firms exit",
-     "text": "Bitcoin could find support near $30,000 even if institutional investors unwind their accumulated exposure, CryptoQuant's chief executive argues. The scenario would require reversing roughly $58 billion in net inflows to US spot Bitcoin exchange-traded funds (ETFs) and selling the",
-     "link": "https://cryptoslate.com/cryptoquant-ceo-sees-30000-bitcoin-floor-even-if-etfs-and-treasury-firms-exit/",
-     "ts": 1792326634
-    },
-    {
-     "id": "https://cryptoslate.com/?p=571419",
-     "title": "Prediction markets have a major problem as most Americans reject betting on elections",
-     "text": "Prediction markets want you to see them (and use them) as one of the best possible instruments for finding out what\u2019s happening in the world. Open any election market, and you\u2019re immediately given a probability that shifts in real time as people trade. It\u2019s a single number, easy ",
-     "link": "https://cryptoslate.com/prediction-markets-have-a-major-problem-as-most-americans-reject-betting-on-elections/",
-     "ts": 1792324810
     }
    ],
    "ok": true
@@ -521,8 +521,8 @@
    "handle": "VitalikButerin",
    "name": "Vitalik Buterin",
    "why": "Ethereum",
-   "via": "syndication",
-   "seen": 90,
+   "via": null,
+   "seen": 0,
    "posts": [
     {
      "id": "1882649065139384600",
@@ -596,14 +596,14 @@
       "crypto"
      ]
     }
-   ]
+   ],
+   "stale": true
   },
   {
    "handle": "cz_binance",
    "name": "CZ",
    "why": "Binance founder",
-   "via": "syndication",
-   "seen": 99,
+   "via": null,
    "posts": [
     {
      "id": "2050391023034216808",
@@ -677,14 +677,14 @@
       "crypto"
      ]
     }
-   ]
+   ],
+   "stale": true
   },
   {
    "handle": "brian_armstrong",
    "name": "Brian Armstrong",
    "why": "Coinbase CEO",
-   "via": "syndication",
-   "seen": 91,
+   "via": null,
    "posts": [
     {
      "id": "2082921033649004786",
@@ -761,14 +761,14 @@
       "crypto"
      ]
     }
-   ]
+   ],
+   "stale": true
   },
   {
    "handle": "CryptoHayes",
    "name": "Arthur Hayes",
    "why": "Macro / liquidity views",
    "via": null,
-   "seen": 0,
    "posts": [
     {
      "id": "2102502536444047740",
@@ -1065,7 +1065,7 @@
    "stale": true
   }
  ],
- "x_working": 3,
+ "x_working": 0,
  "x_state": {},
  "note": "Truth Social posts come from an independent public archive. X has no free API, so X accounts are best-effort."
 }
