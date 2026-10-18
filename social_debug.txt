@@ -1,24 +1,30 @@
-social run 2026-10-17T23:21:24.603492+00:00
+social run 2026-10-18T01:13:49.156033+00:00
+  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/elonmusk?showReplies=fals -> HTTPError: HTTP Error 429: Too Many Requests
+  rate limited (429) - waiting 25s then one retry
 truth: 80 posts seen, 5 key (crypto/market) kept
-news Decrypt: 37 items
+news Decrypt: 57 items
 news The Block: 20 items
-news CryptoSlate: 10 items
 news Cointelegraph: 30 items
+news CryptoSlate: 10 items
 news CoinDesk: 25 items
 news Bitcoin Magazine: 10 items
-x @elonmusk: via syndication, 100 fetched, 0 key, 0 kept
-x @saylor: via syndication, 99 fetched, 76 key, 8 kept
-x @VitalikButerin: via syndication, 90 fetched, 31 key, 8 kept
-x @cz_binance: via syndication, 99 fetched, 48 key, 8 kept
-x @brian_armstrong: via syndication, 91 fetched, 62 key, 8 kept
-x @CryptoHayes: via syndication, 99 fetched, 65 key, 8 kept
-x @RaoulGMI: via syndication, 94 fetched, 59 key, 8 kept
-x @SECGov: via syndication, 17 fetched, 5 key, 5 kept
-  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/federalreserve?showReplie -> HTTPError: HTTP Error 429: Too Many Requests
+  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/elonmusk?showReplies=fals -> HTTPError: HTTP Error 429: Too Many Requests
+  GET fail https://cdn.syndication.twimg.com/srv/timeline-profile/screen-name/elonmusk?showReplies=fa -> HTTPError: HTTP Error 429: Too Many Requests
   rate limited (429) - waiting 25s then one retry
-  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/federalreserve?showReplie -> HTTPError: HTTP Error 429: Too Many Requests
-  GET fail https://cdn.syndication.twimg.com/srv/timeline-profile/screen-name/federalreserve?showRepl -> HTTPError: HTTP Error 429: Too Many Requests
+  GET fail https://cdn.syndication.twimg.com/srv/timeline-profile/screen-name/elonmusk?showReplies=fa -> HTTPError: HTTP Error 429: Too Many Requests
+x @elonmusk: via None, 0 fetched, 0 key, 0 kept
+  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/saylor?showReplies=false -> HTTPError: HTTP Error 429: Too Many Requests
   rate limited (429) - waiting 25s then one retry
-  GET fail https://cdn.syndication.twimg.com/srv/timeline-profile/screen-name/federalreserve?showRepl -> HTTPError: HTTP Error 429: Too Many Requests
-x @federalreserve: via None, 0 fetched, 0 key, 0 kept
-wrote social_data.json: truth=5, x accounts with posts=8/9; 104s
+  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/saylor?showReplies=false -> HTTPError: HTTP Error 429: Too Many Requests
+  GET fail https://cdn.syndication.twimg.com/srv/timeline-profile/screen-name/saylor?showReplies=fals -> HTTPError: HTTP Error 429: Too Many Requests
+  rate limited (429) - waiting 25s then one retry
+  GET fail https://cdn.syndication.twimg.com/srv/timeline-profile/screen-name/saylor?showReplies=fals -> HTTPError: HTTP Error 429: Too Many Requests
+x @saylor: via None, 0 fetched, 0 key, 8 kept
+  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/VitalikButerin?showReplie -> HTTPError: HTTP Error 429: Too Many Requests
+  rate limited (429) - waiting 25s then one retry
+  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/VitalikButerin?showReplie -> HTTPError: HTTP Error 429: Too Many Requests
+  GET fail https://cdn.syndication.twimg.com/srv/timeline-profile/screen-name/VitalikButerin?showRepl -> HTTPError: HTTP Error 429: Too Many Requests
+  rate limited (429) - waiting 25s then one retry
+  GET fail https://cdn.syndication.twimg.com/srv/timeline-profile/screen-name/VitalikButerin?showRepl -> HTTPError: HTTP Error 429: Too Many Requests
+x @VitalikButerin: via None, 0 fetched, 0 key, 8 kept
+wrote social_data.json: truth=5, x accounts with posts=0/9; 163s

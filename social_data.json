@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-17T23:23:08+00:00",
+ "generated_at": "2026-10-18T01:16:32+00:00",
  "truth": [
   {
    "id": "https://www.trumpstruth.org/statuses/42381",
@@ -55,6 +55,13 @@
    "name": "CoinDesk",
    "posts": [
     {
+     "id": "13c8097d-ec8a-4432-b9fe-05e69cc7bfc2",
+     "title": "Circle defends USDC economics as stablecoin rivals court its partners with bigger cut",
+     "text": "Coinbase, Circle\u2019s largest USDC partner, also backs Open USD, a rival network that passes reserve income to partners after a management fee.",
+     "link": "https://www.coindesk.com/business/2026/10/17/circle-defends-usdc-economics-as-stablecoin-rivals-court-its-partners-with-bigger-cut",
+     "ts": 1792285595
+    },
+    {
      "id": "e3e952c1-a946-4698-8a9a-9ab401c188f2",
      "title": "Goldman, Wells Fargo, Morgan Stanley see tokenization as a growth play, not a threat",
      "text": "The largest banks in the world are eyeing new trading opportunities, speeding up payments and a role for advisers as tokenization takes root in Wall Street.",
@@ -102,13 +109,6 @@
      "text": "If the White House accord's audits are going to be worth anything, auditors should be able to choose what they test, writes Samuel Vance-Law, head of research at the Decentralization Research Center.",
      "link": "https://www.coindesk.com/opinion/2026/10/16/big-tech-s-ai-auditors-will-only-see-what-they-re-shown",
      "ts": 1792162702
-    },
-    {
-     "id": "4c5c9524-2f78-44da-9d2b-431bd30482cd",
-     "title": "Traders will soon be able to bet on whether Coinbase, Robinhood and Marathon will hit their targets",
-     "text": "Your day-ahead look for Oct. 16, 2026",
-     "link": "https://www.coindesk.com/daybook-us/2026/10/16/traders-will-soon-be-able-to-bet-on-whether-coinbase-robinhood-and-marathon-will-hit-their-targets",
-     "ts": 1792149300
     }
    ],
    "ok": true
@@ -429,16 +429,16 @@
    "handle": "elonmusk",
    "name": "Elon Musk",
    "why": "Market-moving on DOGE / BTC",
-   "via": "syndication",
-   "seen": 100,
+   "via": null,
+   "seen": 0,
    "posts": []
   },
   {
    "handle": "saylor",
    "name": "Michael Saylor",
    "why": "Strategy (MSTR) BTC buys",
-   "via": "syndication",
-   "seen": 99,
+   "via": null,
+   "seen": 0,
    "posts": [
     {
      "id": "2040438683380146574",
@@ -515,14 +515,15 @@
       "crypto"
      ]
     }
-   ]
+   ],
+   "stale": true
   },
   {
    "handle": "VitalikButerin",
    "name": "Vitalik Buterin",
    "why": "Ethereum",
-   "via": "syndication",
-   "seen": 90,
+   "via": null,
+   "seen": 0,
    "posts": [
     {
      "id": "1882649065139384600",
@@ -596,14 +597,14 @@
       "crypto"
      ]
     }
-   ]
+   ],
+   "stale": true
   },
   {
    "handle": "cz_binance",
    "name": "CZ",
    "why": "Binance founder",
-   "via": "syndication",
-   "seen": 99,
+   "via": null,
    "posts": [
     {
      "id": "2050391023034216808",
@@ -677,14 +678,14 @@
       "crypto"
      ]
     }
-   ]
+   ],
+   "stale": true
   },
   {
    "handle": "brian_armstrong",
    "name": "Brian Armstrong",
    "why": "Coinbase CEO",
-   "via": "syndication",
-   "seen": 91,
+   "via": null,
    "posts": [
     {
      "id": "2082921033649004786",
@@ -761,14 +762,14 @@
       "crypto"
      ]
     }
-   ]
+   ],
+   "stale": true
   },
   {
    "handle": "CryptoHayes",
    "name": "Arthur Hayes",
    "why": "Macro / liquidity views",
-   "via": "syndication",
-   "seen": 99,
+   "via": null,
    "posts": [
     {
      "id": "2102502536444047740",
@@ -845,14 +846,14 @@
       "macro"
      ]
     }
-   ]
+   ],
+   "stale": true
   },
   {
    "handle": "RaoulGMI",
    "name": "Raoul Pal",
    "why": "Macro / liquidity cycle",
-   "via": "syndication",
-   "seen": 94,
+   "via": null,
    "posts": [
     {
      "id": "1988767475899510914",
@@ -926,14 +927,14 @@
       "macro"
      ]
     }
-   ]
+   ],
+   "stale": true
   },
   {
    "handle": "SECGov",
    "name": "SEC",
    "why": "Regulation",
-   "via": "syndication",
-   "seen": 17,
+   "via": null,
    "posts": [
     {
      "id": "2111203232194101356",
@@ -980,18 +981,18 @@
       "crypto"
      ]
     }
-   ]
+   ],
+   "stale": true
   },
   {
    "handle": "federalreserve",
    "name": "Federal Reserve",
    "why": "Rates / policy",
    "via": null,
-   "seen": 0,
    "posts": []
   }
  ],
- "x_working": 8,
+ "x_working": 0,
  "x_state": {},
  "note": "Truth Social posts come from an independent public archive. X has no free API, so X accounts are best-effort."
 }
