@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-18T10:01:43.406958+00:00",
+  "generated_at": "2026-10-18T13:57:37.328574+00:00",
   "window_hours": 24,
   "sources": [
     "wss://fstream.binance.com/ws/!forceOrder@arr",
@@ -19,50 +19,42 @@
   },
   "buckets": {
     "BTCUSDT": {
-      "mark": 82146.86,
+      "mark": 81387.41,
       "buckets": [
         {
-          "pricePct": -1.0,
-          "price": 81325.39,
+          "pricePct": 0.0,
+          "price": 81387.41,
           "longUsd": 162.53,
-          "shortUsd": 0.0
+          "shortUsd": 2039.4
         },
         {
-          "pricePct": -0.5,
-          "price": 81736.13,
+          "pricePct": 0.5,
+          "price": 81794.35,
           "longUsd": 116858.38,
-          "shortUsd": 3917.93
+          "shortUsd": 1878.53
         }
       ]
     },
     "ETHUSDT": {
-      "mark": 2424.95,
+      "mark": 2391.98,
       "buckets": [
         {
-          "pricePct": -1.0,
-          "price": 2400.7,
+          "pricePct": 0.5,
+          "price": 2403.94,
           "longUsd": 79.41,
-          "shortUsd": 555.96
+          "shortUsd": 16511.08
         },
         {
-          "pricePct": -0.5,
-          "price": 2412.83,
+          "pricePct": 1.0,
+          "price": 2415.9,
           "longUsd": 555.77,
-          "shortUsd": 15955.13
+          "shortUsd": 0.0
         }
       ]
     }
   },
   "priceHistory": {
     "BTCUSDT": [
-      {
-        "time": 1792232447113.7273,
-        "price": 81441.0
-      },
-      {
-        "time": 1792245185315.7656,
-        "price": 81355.81
-      },
       {
         "time": 1792255524487.996,
         "price": 81141.4
@@ -90,17 +82,13 @@
       {
         "time": 1792317702919.58,
         "price": 82146.86
+      },
+      {
+        "time": 1792331857091.5479,
+        "price": 81387.41
       }
     ],
     "ETHUSDT": [
-      {
-        "time": 1792232447113.7273,
-        "price": 2430.0
-      },
-      {
-        "time": 1792245185315.7656,
-        "price": 2419.59
-      },
       {
         "time": 1792255524487.996,
         "price": 2402.9
@@ -128,6 +116,10 @@
       {
         "time": 1792317702919.58,
         "price": 2424.95
+      },
+      {
+        "time": 1792331857091.5479,
+        "price": 2391.98
       }
     ]
   },
