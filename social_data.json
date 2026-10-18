@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-18T19:36:06+00:00",
+ "generated_at": "2026-10-18T21:54:23+00:00",
  "truth": [
   {
    "id": "https://www.trumpstruth.org/statuses/42409",
@@ -178,6 +178,13 @@
    "name": "The Block",
    "posts": [
     {
+     "id": "b30f6590-bbd7-5725-9f00-dc255e6b3685",
+     "title": "Crypto.com, Novig sue Missouri over sports event contracts; Kalshi, Polymarket, Robinhood hold off",
+     "text": "Kalshi, Polymarket, Robinhood and Underdog, which also received cease-and-desist orders, have not filed suits in Missouri, according to court records.",
+     "link": "https://www.theblock.co/news/regulation/2026-10-18-crypto-com-novig-sue-missouri-over-sports-event-contracts-kalshi-polymarket-robinhood-hold-off-418866",
+     "ts": 1792353028
+    },
+    {
      "id": "ea1c2908-69f5-5f03-b9ce-eea0d0dc686b",
      "title": "Cysic suspends bridge after attacker mints tokens and moves $727,000 to Ethereum",
      "text": "The attacker, after minting 10 million CYS, managed to bridge about $727,000 in proceeds to Ethereum through Mayan, deBridge and SWFT's Bridgers.",
@@ -225,13 +232,6 @@
      "text": "The focus is how Ethereum works under the hood: how it tracks and updates state, how transactions flow through the network, how computation is priced through gas, how smart contracts and token standards make Ethereum programmable, and how other Layer 1 blockchains approach the sa",
      "link": "https://www.theblock.co/learn/ethereum/how-ethereum-works-418525",
      "ts": 1792157467
-    },
-    {
-     "id": "0be7a174-8f1b-5223-9775-38dbf1f1ad01",
-     "title": "OpenAI says research model spent another wallet\u2019s testnet ETH without authorization on coding task",
-     "text": "OpenAI's research model used another wallet's testnet ETH without permission to complete a coding task in June.",
-     "link": "https://www.theblock.co/news/business/2026-10-16-openai-says-research-model-spent-another-wallets-testnet-eth-without-authorization-on-coding-task-418798",
-     "ts": 1792150494
     }
    ],
    "ok": true
@@ -521,8 +521,8 @@
    "handle": "VitalikButerin",
    "name": "Vitalik Buterin",
    "why": "Ethereum",
-   "via": null,
-   "seen": 0,
+   "via": "syndication",
+   "seen": 90,
    "posts": [
     {
      "id": "1882649065139384600",
@@ -596,14 +596,14 @@
       "crypto"
      ]
     }
-   ],
-   "stale": true
+   ]
   },
   {
    "handle": "cz_binance",
    "name": "CZ",
    "why": "Binance founder",
-   "via": null,
+   "via": "syndication",
+   "seen": 99,
    "posts": [
     {
      "id": "2050391023034216808",
@@ -677,14 +677,14 @@
       "crypto"
      ]
     }
-   ],
-   "stale": true
+   ]
   },
   {
    "handle": "brian_armstrong",
    "name": "Brian Armstrong",
    "why": "Coinbase CEO",
-   "via": null,
+   "via": "syndication",
+   "seen": 91,
    "posts": [
     {
      "id": "2082921033649004786",
@@ -761,14 +761,14 @@
       "crypto"
      ]
     }
-   ],
-   "stale": true
+   ]
   },
   {
    "handle": "CryptoHayes",
    "name": "Arthur Hayes",
    "why": "Macro / liquidity views",
-   "via": null,
+   "via": "syndication",
+   "seen": 99,
    "posts": [
     {
      "id": "2102502536444047740",
@@ -845,14 +845,14 @@
       "macro"
      ]
     }
-   ],
-   "stale": true
+   ]
   },
   {
    "handle": "RaoulGMI",
    "name": "Raoul Pal",
    "why": "Macro / liquidity cycle",
-   "via": null,
+   "via": "syndication",
+   "seen": 94,
    "posts": [
     {
      "id": "1988767475899510914",
@@ -926,14 +926,14 @@
       "macro"
      ]
     }
-   ],
-   "stale": true
+   ]
   },
   {
    "handle": "SECGov",
    "name": "SEC",
    "why": "Regulation",
-   "via": null,
+   "via": "syndication",
+   "seen": 17,
    "posts": [
     {
      "id": "2111203232194101356",
@@ -980,14 +980,14 @@
       "crypto"
      ]
     }
-   ],
-   "stale": true
+   ]
   },
   {
    "handle": "federalreserve",
    "name": "Federal Reserve",
    "why": "Rates / policy",
-   "via": null,
+   "via": "syndication",
+   "seen": 17,
    "posts": [
     {
      "id": "2111189582213709997",
@@ -1061,11 +1061,10 @@
       "macro"
      ]
     }
-   ],
-   "stale": true
+   ]
   }
  ],
- "x_working": 0,
+ "x_working": 7,
  "x_state": {},
  "note": "Truth Social posts come from an independent public archive. X has no free API, so X accounts are best-effort."
 }
