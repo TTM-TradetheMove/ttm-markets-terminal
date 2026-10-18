@@ -32,13 +32,17 @@ jobs:
       - name: Scrape latest token events
         run: python3 scripts/update_token_events.py
 
+      - name: Add exchange and unlock sources
+        if: always()
+        run: python3 scripts/update_token_sources.py
+
       - name: Commit and push if changed
         if: always()
         run: |
           git config user.name "ttm-calendar-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add -f token_events_debug.txt 2>/dev/null || true
-          if git diff --quiet -- token_events_data.json && git diff --cached --quiet -- token_events_debug.txt; then
+          git add -f token_events_debug.txt token_sources_debug.txt token_sources_cache.json 2>/dev/null || true
+          if git diff --quiet -- token_events_data.json && git diff --cached --quiet; then
             echo "No changes to token_events_data.json or token_events_debug.txt"
           else
             git add token_events_data.json 2>/dev/null || true
