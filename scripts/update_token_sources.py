@@ -11,7 +11,7 @@ from datetime import datetime, timezone, timedelta
 
 UA = {"User-Agent": "Mozilla/5.0 (compatible; TTMMarketsTerminalBot/1.0)", "Accept": "application/json"}
 NOW = datetime.now(timezone.utc)
-KEEP_PAST = timedelta(days=10)
+KEEP_PAST = timedelta(days=60)
 LOG = []
 
 

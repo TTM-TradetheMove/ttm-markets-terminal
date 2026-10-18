@@ -876,6 +876,15 @@ footer{padding:40px 0 60px}
     </div>
 
     <div class="filter-block">
+      <span class="fl-label">When</span>
+      <div class="filter-row" id="teWhenRow">
+        <button class="filter-chip active" data-tewhen="up">Upcoming</button>
+        <button class="filter-chip" data-tewhen="past">Historic</button>
+        <button class="filter-chip" data-tewhen="all">All</button>
+      </div>
+    </div>
+
+    <div class="filter-block">
       <span class="fl-label">Type</span>
       <div class="filter-row" id="teTypeRow">
         <button class="filter-chip active" data-tetype="all">All</button>
@@ -1517,6 +1526,7 @@ adjToggle.addEventListener('click', () => {
 const teBody = document.getElementById('tokenEventsBody');
 const teEmpty = document.getElementById('tokenEventsEmpty');
 let teActiveType = 'all';
+let teWhen = 'up';
 let TE_EVENTS = [];
 
 function liveCountdown(dtStr){
@@ -1534,7 +1544,11 @@ function liveCountdown(dtStr){
 
 function renderTokenEvents(){
   teBody.innerHTML = '';
-  const filtered = teActiveType === 'all' ? TE_EVENTS : TE_EVENTS.filter(e => e.type === teActiveType);
+  const today = new Date().toISOString().slice(0, 10);
+  let filtered = teActiveType === 'all' ? TE_EVENTS.slice() : TE_EVENTS.filter(e => e.type === teActiveType);
+  if(teWhen === 'up') filtered = filtered.filter(e => e.dt >= today);
+  else if(teWhen === 'past') filtered = filtered.filter(e => e.dt < today);
+  filtered.sort((a, b) => a.dt < b.dt ? (teWhen === 'past' ? 1 : -1) : a.dt > b.dt ? (teWhen === 'past' ? -1 : 1) : 0);
   filtered.forEach(e => {
     const tr = document.createElement('tr');
     const nameCell = e.link
@@ -1551,6 +1565,15 @@ function renderTokenEvents(){
   });
   teEmpty.style.display = filtered.length === 0 ? 'block' : 'none';
 }
+
+document.getElementById('teWhenRow').addEventListener('click', (e) => {
+  const chip = e.target.closest('.filter-chip');
+  if(!chip) return;
+  document.querySelectorAll('#teWhenRow .filter-chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  teWhen = chip.dataset.tewhen;
+  renderTokenEvents();
+});
 
 document.getElementById('teTypeRow').addEventListener('click', (e) => {
   const chip = e.target.closest('.filter-chip');
