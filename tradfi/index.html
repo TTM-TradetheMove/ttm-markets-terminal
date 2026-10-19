@@ -507,6 +507,30 @@ img,svg,video,canvas{max-width:100%}
   .site-inner img.logo{height:38px}
   .back-link{font-size:11px;padding:4px 7px}
 }
+
+/* ---------- Menu / section views ---------- */
+.site-nav{display:none !important}
+body:not(.view-section) section[id]{display:none}
+body.view-section section[id]{display:none}
+body.view-section section[id].active{display:block}
+body.view-section .hero,body.view-section .hero-simple,body.view-section #menuHome{display:none}
+#backBar{display:none;background:rgba(11,11,12,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+body.view-section #backBar{display:block}
+#backBar .wrap{display:flex;align-items:center;gap:14px;padding-top:10px;padding-bottom:10px}
+#backBtn{background:var(--gold);color:#0b0b0c;border:0;border-radius:8px;padding:9px 16px;font:700 13px/1 inherit;font-family:inherit;cursor:pointer}
+#backBtn:hover{background:var(--gold2)}
+#backFab{display:none;position:fixed;left:14px;bottom:16px;z-index:60;background:var(--gold);color:#0b0b0c;border:0;border-radius:999px;padding:11px 18px;font:700 13px/1 inherit;font-family:inherit;cursor:pointer;box-shadow:0 6px 22px rgba(0,0,0,.55)}
+body.view-section #backFab{display:block}
+#backTitle{color:var(--mute);font-size:12px;letter-spacing:1.5px;text-transform:uppercase}
+#menuHome{padding:6px 0 46px}
+#menuHome h2{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin:0 0 14px;font-weight:600}
+.menu-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.menu-tile{display:block;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 20px 18px;color:var(--text);text-decoration:none;cursor:pointer;font:inherit;transition:border-color .15s,transform .15s,background .15s}
+.menu-tile:hover{border-color:var(--gold);background:var(--card2);transform:translateY(-2px)}
+.menu-tile b{display:block;font-size:17px;color:var(--gold2);margin-bottom:6px}
+.menu-tile span{display:block;font-size:13px;color:var(--mute);line-height:1.45}
+@media (max-width:860px){.menu-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:420px){.menu-tile{padding:14px}.menu-tile b{font-size:15px}.menu-tile span{font-size:12px}}
 </style>
 </head>
 <body>
@@ -533,6 +557,9 @@ img,svg,video,canvas{max-width:100%}
   <h1>Traditional markets, <em>the TTM way.</em></h1>
   <p>Same macro calendar and session clock as the Crypto terminal, built out here for forex, indices, commodities and stocks. Global market coverage below is actively being built — calendar and trading hours are live now.</p>
 </div>
+<div id="menuHome"><div class="wrap"><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#congress"><b>Congress Watch</b><span>Congress trading disclosures</span></a><a class="menu-tile" href="#globalmarkets"><b>Global Markets</b><span>Indices, FX, metals and energy</span></a><a class="menu-tile" href="#bonds"><b>Bonds &amp; Rates</b><span>Yields, curves and policy rates</span></a><a class="menu-tile" href="#macrointel"><b>Macro Intel</b><span>Central banks and financial conditions</span></a><a class="menu-tile" href="#newsrisk"><b>News &amp; Risk</b><span>Headlines and risk watch</span></a></div></div></div>
+<button id="backFab" type="button">&larr; Menu</button>
+<div id="backBar"><div class="wrap"><button id="backBtn" type="button">&larr; Back to menu</button><span id="backTitle"></span></div></div>
 <section id="calendar">
   <div class="wrap">
     <div class="section-head">
@@ -1869,5 +1896,25 @@ setInterval(() => {
 })();
 </script>
 
+
+<script>
+(function(){
+  const secs = Array.from(document.querySelectorAll('body > section[id]'));
+  const ids = secs.map(s => s.id);
+  const titles = {}; document.querySelectorAll('.site-nav a[href^="#"]').forEach(a => titles[a.getAttribute('href').slice(1)] = a.textContent.trim());
+  function show(){
+    const id = (location.hash || '').slice(1);
+    const sec = ids.includes(id) ? document.getElementById(id) : null;
+    secs.forEach(s => s.classList.toggle('active', s === sec));
+    document.body.classList.toggle('view-section', !!sec);
+    const t = document.getElementById('backTitle'); if(t) t.textContent = sec ? (titles[id] || id) : '';
+    window.scrollTo(0, 0);
+    if(sec) setTimeout(() => window.dispatchEvent(new Event('resize')), 60);
+  }
+  ['backBtn','backFab'].forEach(i => document.getElementById(i).addEventListener('click', () => { location.hash = ''; }));
+  window.addEventListener('hashchange', show);
+  show();
+})();
+</script>
 </body>
 </html>
