@@ -873,6 +873,12 @@ body.view-section #backFab{display:block}
       <button class="filter-chip" data-n="10">Last 10 years</button>
     </div>
     <div class="bm-wrap"><table class="bm-tbl" id="bmTable"><tbody><tr><td class="empty">Loading…</td></tr></tbody></table></div>
+    <div class="section-head" style="margin-top:34px">
+      <span class="tag">August to July view</span>
+      <h2>The same months, lined up Aug → Jul</h2>
+      <p>Same data and colours as above, but each row is a 12-month run starting in August and ending in July (for example 2025/26 = Aug 2025 to Jul 2026). Lining the months up this way makes it easier to compare how a whole cycle year unfolds against earlier ones. The dashed cells are the months still in progress.</p>
+    </div>
+    <div class="bm-wrap"><table class="bm-tbl" id="bmTable2"><tbody><tr><td class="empty">Loading…</td></tr></tbody></table></div>
     <p class="calendar-note" style="margin-top:10px">Source: Bitstamp daily BTC/USD (Coinbase as backup), updated daily. Early years had tiny prices and very large percentage moves, so colours are capped. Past monthly patterns are not a forecast. Not financial advice.</p>
   </div>
 </section>
@@ -2704,6 +2710,36 @@ function bg(r){
   return r >= 0 ? `rgba(63,185,122,${(0.12 + 0.62 * k).toFixed(2)})` : `rgba(229,83,75,${(0.12 + 0.62 * k).toFixed(2)})`;
 }
 const med = a => { const s = [...a].sort((x, y) => x - y), n = s.length; return n ? (n % 2 ? s[(n-1)/2] : (s[n/2-1] + s[n/2]) / 2) : null; };
+const MN2 = ['Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun','Jul'];
+function renderCycle(by){
+  const t = $('bmTable2'); if(!t) return;
+  const cyc = {};
+  Object.keys(by).forEach(y => { for(let i = 0; i < 12; i++){ const m = by[y][i]; if(!m) continue;
+    const cy = i >= 7 ? +y : +y - 1, pos = (i - 7 + 12) % 12; (cyc[cy] = cyc[cy] || {})[pos] = Object.assign({mi: i, yr: +y}, m); } });
+  let rows = Object.keys(cyc).map(Number).sort((a, b) => b - a);
+  if(last) rows = rows.slice(0, last);
+  const cols = Array.from({length: 12}, () => []);
+  let html = '<thead><tr><th></th>' + MN2.map(m => `<th>${m}</th>`).join('') + '<th>Aug–Jul</th></tr></thead><tbody>';
+  rows.forEach(cy => {
+    let comp = 1, any = false, partial = false;
+    html += `<tr><td class="yr">${cy}/${String(cy + 1).slice(2)}</td>`;
+    for(let i = 0; i < 12; i++){
+      const m = cyc[cy][i];
+      if(!m){ html += '<td class="empty"></td>'; continue; }
+      comp *= 1 + m.r / 100; any = true; if(m.p) partial = true; else cols[i].push(m.r);
+      html += `<td class="${m.p ? 'part' : ''}" style="background:${bg(m.r)}" title="${MN[m.mi]} ${m.yr}: close $${m.c.toLocaleString()}">${fmt(m.r)}</td>`;
+    }
+    const tot = (comp - 1) * 100;
+    html += any ? `<td class="tot ${partial ? 'part' : ''}" style="background:${bg(tot)}">${fmt(tot)}</td></tr>` : '<td class="empty"></td></tr>';
+  });
+  html += '<tr class="sep"><td colspan="14"></td></tr>';
+  const row = (label, f, color) => `<tr class="stat"><td class="yr">${label}</td>` + cols.map(c => { const v = c.length ? f(c) : null; return v == null ? '<td class="empty"></td>' : `<td ${color ? `style="background:${bg(v)}"` : ''}>${color ? fmt(v) : v}</td>`; }).join('') + '<td class="empty"></td></tr>';
+  html += row('Average', c => c.reduce((a, b) => a + b, 0) / c.length, true);
+  html += row('Median', c => med(c), true);
+  html += row('% positive', c => Math.round(c.filter(x => x > 0).length / c.length * 100) + '%', false);
+  html += row('Months', c => c.length, false);
+  t.innerHTML = html + '</tbody>';
+}
 function render(){
   const t = $('bmTable'); if(!t) return;
   if(!D || !D.months || !D.months.length){ t.innerHTML = '<tbody><tr><td class="empty">Monthly history will appear after the data job has run.</td></tr></tbody>'; $('bmUpdated').textContent = 'Waiting for the first data run…'; return; }
@@ -2731,49 +2767,7 @@ function render(){
   html += row('% positive', c => Math.round(c.filter(x => x > 0).length / c.length * 100) + '%', false);
   html += row('Months', c => c.length, false);
   t.innerHTML = html + '</tbody>';
-  $('bmUpdated').textContent = `${D.months.length} months from ${D.first} — last updated ${new Date(D.generated_at).toLocaleDateString()}.`;
-}
-$('bmRange').addEventListener('click', e => { const c = e.target.closest('.filter-chip'); if(!c) return;
-  document.querySelectorAll('#bmRange .filter-chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); last = +c.dataset.n; render(); });
-fetch('../btc_monthly.json?t=' + Date.now(), {cache:'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null).then(d => { D = d; render(); });
-})();
-
-/* ---- RSI heatmap ---- */
-(function(){
-const $ = id => document.getElementById(id);
-let D = null, sortKey = 'mc', sortDir = 1, filt = 'all', view = 'tiles', tf = '4h';
-const px = p => p >= 1000 ? p.toLocaleString(undefined, {maximumFractionDigits: 0}) : p >= 1 ? p.toFixed(2) : p >= 0.01 ? p.toFixed(4) : p.toPrecision(3);
-const ZONES = [['ob','Overbought','rgba(214,69,61,.88)'],['st','Strong','rgba(217,130,43,.82)'],['ne','Neutral','rgba(255,255,255,.08)'],['wk','Weak','rgba(47,154,140,.78)'],['os','Oversold','rgba(47,158,95,.88)']];
-const zoneOf = v => v == null ? null : v >= 70 ? 'ob' : v >= 60 ? 'st' : v > 40 ? 'ne' : v > 30 ? 'wk' : 'os';
-const zoneName = v => { const z = zoneOf(v); return z ? ZONES.find(x => x[0] === z)[1] : ''; };
-function bg(v){ const z = zoneOf(v); return z ? ZONES.find(x => x[0] === z)[2] : null; }
-function tileBg(v){ return bg(v) || 'rgba(255,255,255,.05)'; }
-function renderTiles(){
-  const el = $('rsiTiles'); if(!el || !D) return;
-  let rows = D.coins.map((c, i) => Object.assign({mc: i}, c));
-  if(filt !== 'all') rows = rows.filter(c => zoneOf(c.r[tf]) === filt);
-  el.innerHTML = rows.map(c => { const v = c.r[tf], sz = c.mc < 5 ? 1 : c.mc < 16 ? 2 : 3;
-    return `<div class="rsi-tile sz${sz}" style="background:${tileBg(v)}" title="${c.s}: RSI ${v == null ? '—' : v.toFixed(1)} (${zoneName(v)}) on ${tf} · $${px(c.p)}"><b>${c.s}</b><span class="v">${v == null ? '—' : v.toFixed(1)}</span><small>${c.c == null ? '' : (c.c > 0 ? '+' : '') + c.c.toFixed(1) + '%'}</small></div>`; }).join('') || '<div class="calendar-note" style="padding:14px">No coins match this filter.</div>';
-}
-function render(){
-  const t = $('rsiTable'); if(!t) return;
-  $('rsiTiles').style.display = view === 'tiles' ? '' : 'none';
-  $('rsiTblWrap').style.display = view === 'table' ? '' : 'none';
-  if(view === 'tiles' && D && D.coins && D.coins.length){ renderTiles(); $('rsiUpdated').textContent = `${D.coins.length} coins · RSI(${D.period}) on ${tf} · tile size follows market-cap rank · updated ${new Date(D.generated_at).toLocaleTimeString()}.`; return; }
-  if(!D || !D.coins || !D.coins.length){ t.innerHTML = '<tbody><tr><td class="na">RSI data will appear after the data job has run.</td></tr></tbody>'; $('rsiUpdated').textContent = 'Waiting for the first data run…'; return; }
-  const tfs = D.tfs;
-  let rows = D.coins.map((c, i) => Object.assign({mc: i}, c));
-  if(filt !== 'all') rows = rows.filter(c => zoneOf(c.r[tf]) === filt);
-  const val = c => sortKey === 'mc' ? c.mc : sortKey === 's' ? c.s : sortKey === 'c' ? c.c : c.r[sortKey];
-  rows.sort((a, b) => { const x = val(a), y = val(b); if(x == null) return 1; if(y == null) return -1; return (x < y ? -1 : x > y ? 1 : 0) * sortDir; });
-  const th = (k, label, cls) => `<th class="${cls || ''} ${sortKey === k ? 'on' : ''}" data-k="${k}">${label}${sortKey === k ? (sortDir > 0 ? ' ▲' : ' ▼') : ''}</th>`;
-  let html = '<thead><tr>' + th('s', 'Coin', 'l') + '<th>Price</th>' + th('c', '24h') + tfs.map(f => th(f, {'1d':'1D','1w':'1W'}[f] || f)).join('') + '</tr></thead><tbody>';
-  rows.forEach(c => {
-    html += `<tr><td class="l">${c.s}</td><td class="px">$${px(c.p)}</td><td class="px" style="color:${c.c > 0 ? 'var(--green)' : c.c < 0 ? 'var(--red)' : 'var(--text)'}">${c.c == null ? '—' : (c.c > 0 ? '+' : '') + c.c.toFixed(1) + '%'}</td>` +
-      tfs.map(f => { const v = c.r[f]; return v == null ? '<td class="na">—</td>' : `<td style="background:${bg(v)}">${v.toFixed(1)}</td>`; }).join('') + '</tr>';
-  });
-  ZONES.forEach(z => { html += `<tr class="rsi-sum"><td class="l" colspan="3">${z[1]} coins</td>` + tfs.map(f => `<td>${D.coins.filter(c => zoneOf(c.r[f]) === z[0]).length}</td>`).join('') + '</tr>'; });
-  t.innerHTML = html + '</tbody>';
+  renderCycle(by);
   $('bmUpdated').textContent = `${D.months.length} months from ${D.first} — last updated ${new Date(D.generated_at).toLocaleDateString()}.`;
 }
 $('bmRange').addEventListener('click', e => { const c = e.target.closest('.filter-chip'); if(!c) return;
