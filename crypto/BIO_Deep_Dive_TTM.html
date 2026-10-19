@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bio Protocol (BIO) Deep Dive — TTM | Trade The Move</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+  :root{
+    --bg:#09080a; --bg-panel:#131110; --bg-panel-2:#1a1714; --hairline:#2c2620;
+    --gold:#d4af37; --gold-bright:#f4d375; --gold-dim:#9a7c2c;
+    --ink:#eae6da; --ink-dim:#9c9484; --up:#4caf7d; --down:#d9534f;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:var(--bg); color:var(--ink); font-family:'Inter',sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased; }
+  .wrap{ max-width:980px; margin:0 auto; padding:0 28px 80px; }
+  .hero{ position:relative; padding:56px 28px 40px; border-bottom:1px solid var(--hairline);
+    background: radial-gradient(ellipse at top left, rgba(212,175,55,0.08), transparent 60%), linear-gradient(180deg,#0d0b09 0%,#09080a 100%); overflow:hidden; }
+  .hero::after{ content:""; position:absolute; inset:0;
+    background-image: linear-gradient(rgba(212,175,55,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(212,175,55,0.04) 1px, transparent 1px);
+    background-size:42px 42px; mask-image: radial-gradient(ellipse at top left, black, transparent 70%); pointer-events:none; }
+  .hero-inner{ max-width:980px; margin:0 auto; position:relative; z-index:1; }
+  .logo-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:44px; flex-wrap:wrap; gap:16px; }
+  .logo-row img{ height:140px; width:auto; display:block; }
+  .brief-tag{ font-family:'Space Mono',monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-dim);
+    border:1px solid var(--hairline); padding:6px 12px; border-radius:3px; }
+  .eyebrow{ font-family:'Space Mono',monospace; font-size:12px; letter-spacing:0.18em; text-transform:uppercase; color:var(--gold); margin-bottom:14px; }
+  h1.title{ font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:clamp(38px,6vw,62px); letter-spacing:0.01em; line-height:1.02; color:var(--ink); }
+  h1.title span{ color:var(--gold); }
+  .subhead{ margin-top:14px; color:var(--ink-dim); font-size:16px; max-width:600px; }
+  .price-strip{ display:flex; align-items:baseline; gap:18px; margin-top:36px; flex-wrap:wrap; }
+  .price-strip .px{ font-family:'Oswald',sans-serif; font-size:54px; font-weight:600; color:var(--gold-bright); }
+  .price-strip .chg{ font-family:'Space Mono',monospace; font-size:16px; color:var(--down); padding:4px 10px; border:1px solid rgba(217,83,79,0.4); border-radius:3px; }
+  .price-strip .chg.up{ color:var(--up); border-color:rgba(76,175,125,0.4); }
+  .price-meta{ color:var(--ink-dim); font-size:13px; font-family:'Space Mono',monospace; }
+  section{ padding:46px 0; border-bottom:1px solid var(--hairline); }
+  section:last-of-type{ border-bottom:none; }
+  .sec-head{ display:flex; align-items:baseline; gap:14px; margin-bottom:26px; }
+  .sec-num{ font-family:'Space Mono',monospace; color:var(--gold-dim); font-size:13px; }
+  h2{ font-family:'Oswald',sans-serif; text-transform:uppercase; font-weight:600; font-size:24px; letter-spacing:0.02em; }
+  .sec-sub{ color:var(--ink-dim); font-size:14px; margin-top:-14px; margin-bottom:22px; max-width:680px; }
+  .framework-banner{ background:linear-gradient(135deg,var(--bg-panel-2),var(--bg-panel)); border:1px solid var(--hairline); border-left:3px solid var(--gold);
+    padding:22px 26px; margin-bottom:8px; }
+  .framework-banner .label{ font-family:'Space Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--gold-bright); margin-bottom:8px; }
+  .framework-banner p{ font-size:14px; color:var(--ink-dim); max-width:700px; }
+  .stat-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--hairline); border:1px solid var(--hairline); }
+  .stat{ background:var(--bg-panel); padding:20px 18px; }
+  .stat .label{ font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-dim); }
+  .stat .value{ font-family:'Oswald',sans-serif; font-size:22px; font-weight:600; margin-top:8px; color:var(--ink); }
+  .stat .value.gold{ color:var(--gold-bright); }
+  @media (max-width:700px){ .stat-grid{ grid-template-columns:repeat(2,1fr); } }
+  .timeline{ position:relative; padding-left:26px; }
+  .timeline::before{ content:""; position:absolute; left:5px; top:6px; bottom:6px; width:1px; background:linear-gradient(180deg,var(--gold),var(--hairline) 90%); }
+  .t-item{ position:relative; padding-bottom:26px; }
+  .t-item:last-child{ padding-bottom:0; }
+  .t-item::before{ content:""; position:absolute; left:-26px; top:4px; width:11px; height:11px; border-radius:50%; background:var(--bg); border:2px solid var(--gold); }
+  .t-year{ font-family:'Space Mono',monospace; color:var(--gold); font-size:13px; letter-spacing:0.05em; }
+  .t-desc{ font-size:14.5px; color:var(--ink); margin-top:4px; max-width:660px; }
+  table.levels{ width:100%; border-collapse:collapse; font-size:14px; }
+  table.levels th{ text-align:left; font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-dim);
+    padding:10px 12px; border-bottom:1px solid var(--hairline); }
+  table.levels td{ padding:12px; border-bottom:1px solid var(--hairline); color:var(--ink); }
+  table.levels tr:last-child td{ border-bottom:none; }
+  .tag{ font-family:'Space Mono',monospace; font-size:11px; padding:3px 8px; border-radius:3px; }
+  .tag.res{ background:rgba(217,83,79,0.12); color:#e8837f; border:1px solid rgba(217,83,79,0.3); }
+  .tag.sup{ background:rgba(76,175,125,0.12); color:#7fd1a5; border:1px solid rgba(76,175,125,0.3); }
+  .tag.piv{ background:rgba(212,175,55,0.14); color:var(--gold-bright); border:1px solid rgba(212,175,55,0.35); }
+  .two-col{ display:grid; grid-template-columns:1fr 1fr; gap:28px; }
+  @media (max-width:760px){ .two-col{ grid-template-columns:1fr; } }
+  .card{ background:var(--bg-panel); border:1px solid var(--hairline); padding:22px 22px; }
+  .card h3{ font-family:'Oswald',sans-serif; text-transform:uppercase; font-size:15px; letter-spacing:0.05em; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .dot.g{ background:var(--up); }
+  .dot.r{ background:var(--down); }
+  .dot.n{ background:var(--gold); }
+  .card ul{ list-style:none; }
+  .card li{ font-size:13.8px; color:var(--ink); padding:9px 0; border-bottom:1px dashed var(--hairline); }
+  .card li:last-child{ border-bottom:none; }
+  .card li b{ color:var(--gold-bright); font-weight:600; }
+  .verdict-box{ background:linear-gradient(135deg,var(--bg-panel-2),var(--bg-panel)); border:1px solid var(--hairline); border-left:3px solid var(--gold-bright); padding:24px 26px; }
+  .verdict-box p{ font-size:14.5px; color:var(--ink); margin-top:10px; }
+  .verdict-box p:first-of-type{ margin-top:0; }
+  .alert-box{ background:rgba(217,83,79,0.08); border:1px solid rgba(217,83,79,0.35); border-left:3px solid var(--down); padding:20px 24px; margin-bottom:24px; }
+  .alert-box .label{ font-family:'Space Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:#e8837f; margin-bottom:8px; }
+  .alert-box p{ font-size:14px; color:var(--ink); }
+  footer{ padding:34px 0 10px; }
+  .disclaimer{ font-family:'Space Mono',monospace; font-size:11.5px; line-height:1.7; color:var(--ink-dim); border-top:1px solid var(--hairline); padding-top:22px; }
+  .footer-brand{ display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+  .footer-brand img{ height:52px; opacity:0.85; }
+  .footer-brand span{ font-family:'Space Mono',monospace; font-size:11px; color:var(--ink-dim); letter-spacing:0.08em; }
+</style>
+<style id="ttm-return-css">.ttm-return{position:fixed;top:14px;left:14px;z-index:9999;display:inline-flex;align-items:center;gap:8px;padding:9px 16px;background:rgba(9,8,10,.92);border:1px solid #d4af37;color:#f4d375;border-radius:999px;font:600 13px/1 Inter,system-ui,sans-serif;letter-spacing:.04em;text-decoration:none;cursor:pointer;backdrop-filter:blur(6px);box-shadow:0 4px 18px rgba(0,0,0,.5)}.ttm-return:hover{background:#d4af37;color:#09080a}@media print{.ttm-return{display:none}}</style></head>
+<body><a class="ttm-return" id="ttm-return" href="index.html#library">&larr; Return</a><script>document.getElementById("ttm-return").addEventListener("click",function(e){try{if(window.opener&&!window.opener.closed){e.preventDefault();window.opener.focus();window.close();setTimeout(function(){location.href=this.href}.bind(this),150);}}catch(x){}});</script>
+<div class="hero">
+  <div class="hero-inner">
+    <div class="logo-row">
+      <img src="ttm_logo.png" alt="TTM — Trade The Move">
+      <div class="brief-tag">Deep Dive Research · 19 Oct 2026</div>
+    </div>
+    <div class="eyebrow">Full Research Report</div>
+    <h1 class="title">Bio Protocol <span>/ BIO Deep Dive</span></h1>
+    <p class="subhead">A full research pass on Bio Protocol using the same 7-point framework: a rare, institutionally-seeded DeSci thesis with credible backers, set against micro-cap liquidity, thin disclosed usage data, a 97% drawdown and a token supply that the issuer's own filing describes as uncapped.</p>
+    <div class="price-strip">
+      <div class="px">≈$0.0236</div>
+      <div class="chg">-1.7% to -2% (24h) · -20.7% (7d, CoinGecko) · 24h range ≈ $0.0226–0.0240 · ≈97% below Jan 2025 all-time high</div>
+    </div>
+    <div class="price-meta" style="margin-top:10px;">Market Cap ≈ $50.6–59.2M · Rank #335–439 (varies by tracker) · Reference: Oct 2026</div>
+  </div>
+</div>
+<div class="wrap">
+<section>
+<div class="sec-head"><span class="sec-num">01</span><h2>Real Usage — Is Anyone Actually Using It?</h2></div>
+<div class="framework-banner"><div class="label">Framework Check</div><p>Past the narrative: is there measurable, growing on-chain activity, or is price driven by speculation alone? For Bio Protocol most usage figures are self-reported or dated, and no current launchpad volume or BioDAO count was found from an independent source.</p></div>
+<div class="stat-grid" style="margin-top:24px;"><div class="stat"><div class="label">BioDAOs (sources differ)</div><div class="value">7 (Apr 2026 article) to 10 (The Grid directory)</div></div><div class="stat"><div class="label">Tokenized IP (early 2026)</div><div class="value">&gt;$40M, 60 funded projects</div></div><div class="stat"><div class="label">Token Holders (early 2026)</div><div class="value">&gt;27,000 (BioDAO ecosystem)</div></div><div class="stat"><div class="label">BIO Holders (CoinMarketCap)</div><div class="value">≈48.87K</div></div><div class="stat"><div class="label">Deals Facilitated (mid-2025, self-reported)</div><div class="value">$50M+ across 200+ deals</div></div><div class="stat"><div class="label">DeFi TVL (CoinGecko)</div><div class="value">≈$3.16M</div></div><div class="stat"><div class="label">Aubrai BioAgent Funding</div><div class="value">&gt;$900K raised, ~1,000 hypotheses</div></div><div class="stat"><div class="label">Launchpad Volume / Treasury Balance</div><div class="value">Not found / not disclosed</div></div></div>
+<div style="margin-top:24px;"><div class="card"><h3><span class="dot n"></span>What the Data Actually Shows</h3><ul><li><b>The ecosystem is real but small.</b> An April 2026 analysis cites over $40M in tokenized IP, 60 funded research projects and more than 27,000 token holders across the BioDAO network. A profile page cites a $300M+ ecosystem market cap and $65M+ in BioDAO treasuries, but dates these to the token-launch period and they are self-reported. These are the numbers the project supplies, not independently audited totals.</li><li><b>On-chain value locked is tiny.</b> CoinGecko shows about $3.16M total value locked against a roughly $51M market cap. Most of the economic activity (IP tokens, DAO treasuries) lives in other tokens, not in BIO contracts, so TVL understates the network but also shows BIO itself does not hold much.</li><li><b>BioAgents are the newest growth line.</b> Aubrai, the first BioAgent (built with VitaDAO and Aubrey de Grey, launched Aug 2025), is reported to have raised over $900K and generated 1,000 or so on-chain hypotheses in its first weeks. Sources give slightly different hypothesis counts (nearly 1,000 versus over 1,000). A PeptAI launch on Base and a move to wet-lab experimentation (mid-2026) are noted, with no volumes found.</li><li><b>Disclosure gaps.</b> The Blockworks Token Transparency filing (24 Aug 2026, marked Partial with 10 gaps) lists no launch counts, no volumes, no revenue, no treasury balance and no BioDAO count. The one revenue-related fact: 70% of a 1% fee on BIO/Token liquidity-pool trading goes to the treasury and 30% to Bio.xyz.</li><li><b>Peers are small too.</b> VitaDAO has invested about $4.6-4.7M across 30+ longevity projects since 2021, and Molecule reported 46 IP-NFT projects with a combined market cap above $16M at end of January 2026. The whole DeSci category is described as having far smaller flows than other crypto sectors.</li><li><b>Security record.</b> Pashov Audit Group reviewed the Launchpad Curation Contracts (12 Mar 2025: 1 critical, 2 high, 2 medium, 3 low findings) and FYEO reviewed Launchpad v2 contracts. The filing states no exploit affecting tokenholders or protocol funds was identified as of 22 Apr 2026.</li></ul></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">02</span><h2>Tokenomics — Large Unlocked Float, and an Uncapped Supply Question</h2></div>
+<div class="framework-banner"><div class="label">Framework Check</div><p>Circulating vs. max supply, the unlock schedule, and whether network growth feeds back into the token. Most of BIO's supply is already liquid; the open questions are the supply cap and how much remains vested.</p></div>
+<div class="stat-grid" style="margin-top:24px;"><div class="stat"><div class="label">Starting / Total Supply</div><div class="value">3.32B BIO</div></div><div class="stat"><div class="label">Max Supply (sources conflict)</div><div class="value">3.32B (CoinGecko, CMC) vs. none (issuer filing)</div></div><div class="stat"><div class="label">Circulating Supply</div><div class="value">≈2.145B (CoinGecko, Tokenomist) to 2.51B (CMC)</div></div><div class="stat"><div class="label">% Unlocked (Tokenomist)</div><div class="value">≈64.6%</div></div><div class="stat"><div class="label">Fully Diluted Valuation</div><div class="value">≈$78–79M</div></div><div class="stat"><div class="label">Largest Allocation</div><div class="value">Ecosystem Incentives 25% (830M)</div></div><div class="stat"><div class="label">Core Contributors</div><div class="value">21.2% (703.84M), 1-yr cliff then 6-yr vest</div></div><div class="stat"><div class="label">Burn / Buyback</div><div class="value">None found</div></div></div>
+<div style="margin-top:24px;"><div class="card"><h3><span class="dot n"></span>How the Supply Actually Works</h3><ul><li><b>Allocation.</b> Per the Blockworks filing: Ecosystem Incentives 25%, Community Auction 20%, Core Contributors 21.2%, Investors 13.6%, Community Airdrop 6%, Molecule 5%, Molecule Ecosystem Fund 5% and Advisors 4.2%. Tokenomist shows the same percentages.</li><li><b>Vesting.</b> Investors have a 1-year cliff then a 4-year vest; core contributors and advisors a 1-year cliff then 6 years; the Molecule allocations 4 years; the community auction was 50% liquid at launch with 50% vesting over a year. Tokenomist says the full schedule extends into 2030. With a token launched in January 2025, the investor and contributor cliffs ended around January 2026, so linear releases are likely ongoing; no dated unlock calendar or next-unlock amount was found.</li><li><b>Circulating supply differs by source.</b> CoinGecko and Tokenomist show 2.145B, while CoinMarketCap shows 2.51B (about 75.7% of max). That is a gap of roughly 17%, which changes market cap by about $9M. This report shows both ranges rather than picking one.</li><li><b>The supply cap is contested.</b> Trackers list a 3.32B max, but the Blockworks filing states BIO has no max supply and that new tokens would require deploying a new token contract. This report treats 3.32B as the starting supply and flags that a hard cap is not confirmed by the issuer.</li><li><b>No sink for the token found.</b> No burn or buyback was found (Tokenomist shows none). Treasury inflow comes from the pool fee split noted in Section 01. Tokens are used for governance, BioXP staking rewards and access to launchpad sales, so demand depends on those products being used.</li></ul></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">03</span><h2>Team &amp; Funding — Who's Behind It, and Who's Backing Them?</h2></div>
+<div class="framework-banner"><div class="label">Framework Check</div><p>Real names with a track record and transparent funding, with some data gaps: round valuations and several investor amounts were not disclosed.</p></div>
+<div class="stat-grid" style="margin-top:24px;"><div class="stat"><div class="label">Founder / CEO</div><div class="value">Paul Kohlhaas (also Molecule CEO, VitaDAO founding steward)</div></div><div class="stat"><div class="label">Strategy Lead</div><div class="value">William Fang</div></div><div class="stat"><div class="label">Legal Counsel (Labs)</div><div class="value">Jose Pinto</div></div><div class="stat"><div class="label">Issuer</div><div class="value">Bio.xyz Association (Swiss non-profit)</div></div><div class="stat"><div class="label">Binance Labs (Nov 2024)</div><div class="value">First DeSci investment; amount undisclosed</div></div><div class="stat"><div class="label">Genesis Raise (by Q1 2025)</div><div class="value">&gt;$33M (1kx, Boost VC, Northpond)</div></div><div class="stat"><div class="label">Seed Round (17 Sep 2025)</div><div class="value">$6.9M led by Maelstrom Fund</div></div><div class="stat"><div class="label">Round Valuation</div><div class="value">Not disclosed</div></div></div>
+<div class="alert-box"><div class="label">Notable Finding — Funding Totals Mix Tokens, Auctions and Equity-Style Rounds</div><p>Funding figures cannot be added together cleanly. The $33M+ genesis raise (Q1 2025) and the 20% community auction (capped at a $100M fully diluted valuation, August 2024) are token sales, while the $6.9M round led by Arthur Hayes' Maelstrom Fund (September 2025) was declined to be described as equity, tokens or a mix by the head of strategy. Binance Labs' November 2024 amount and vesting were not disclosed. Investors hold 13.6% of supply under a 1-year cliff and 4-year vest.</p></div>
+<div style="margin-top:24px;"><div class="card"><h3><span class="dot n"></span>What Stands Out</h3><ul><li><b>Founder track record is deep.</b> Kohlhaas co-founded Molecule (IP-NFTs, from 2018-2019) and was a founding steward of VitaDAO, which Pfizer Ventures backed in a $4.1M round in December 2022 per the earlier Asset Review. That is pharma-adjacent credibility few crypto teams have.</li><li><b>Strong backer list.</b> Binance Labs, Maelstrom Fund, Animoca Brands, Mechanism Capital, Zee Prime, Boost VC, Northpond Ventures, 1kx and Pfizer Ventures (via VitaDAO) are named across sources. Backer lists on tracker pages are promotional, so the primary reports above are the more reliable ones.</li><li><b>Structure is a foundation-style entity.</b> The issuer is a Swiss not-for-profit, with Bio Protocol Labs handling development. Bio.xyz Association officers and the DAO and Snapshot officeholders are not named in the filing.</li><li><b>Founding date differs.</b> One directory lists the project as founded May 2022; the BIO token launched on Ethereum on 3 Jan 2025 and the community auction ran in August 2024. This report uses the token dates.</li></ul></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">04</span><h2>Competitive Position — Is This Actually Differentiated?</h2></div>
+<div class="framework-banner"><div class="label">Framework Check</div><p>Genuinely unique positioning versus one of many similar projects fighting for the same use case.</p></div>
+<div class="two-col" style="margin-top:24px;"><div class="card"><h3><span class="dot g"></span>Where BIO Has an Edge</h3><ul><li><b>Aggregator position.</b> BIO sits above individual BioDAOs (VitaDAO, ValleyDAO, CryoDAO, AthenaDAO, HairDAO, CerebrumDAO and others) rather than competing with them, and takes a share of liquidity-pool fees from tokens launched through the platform.</li><li><b>Institutional lineage.</b> Pfizer Ventures backed VitaDAO, and Binance Labs made its first DeSci investment in BIO (Nov 2024). The Molecule collaboration with Pfizer is cited in peer coverage.</li><li><b>AI-agent layer.</b> BioAgents (Aubrai, PeptAI) and Ignition Sales give a second product line beyond DAOs. Aubrai is reported to have raised over $900K.</li><li><b>Exchange access.</b> Listed on Binance (as its 63rd Launchpool project), Uniswap and Jupiter per the sources found; a Robinhood listing is mentioned on CoinGecko.</li><li><b>Multi-chain.</b> Contracts exist on Ethereum, Solana, Base and BNB Smart Chain per The Block.</li></ul></div><div class="card"><h3><span class="dot r"></span>Where the Competition Bites</h3><ul><li><b>Direct DeSci peers.</b> VitaDAO (VITA), Molecule, ResearchHub (RSC, founded by Brian Armstrong) and Pump.science on Solana, which Molecule and Bio teamed up with, cover overlapping ground. Token metrics for most were not found.</li><li><b>Capital pools elsewhere.</b> Sei Foundation's $65M Sapien Open Science Fund I (early 2026, check sizes $100K-$2M, 3-4 year deployment) is a large new funder that is not routed through BIO.</li><li><b>Small total market.</b> About 50 DeSci efforts with over $60M of historical funding were cited in a May 2026 article, and total DeSci flows are described as smaller than other sectors.</li><li><b>Biotech outcomes are binary.</b> Value depends on research results, which are slow and fail more often than they succeed. No clinical-stage outcome for a BioDAO asset was found in this pass.</li><li><b>Traditional funding competes.</b> A funded startup such as NanoVita closed a $20M post-money Series A in April 2026 through conventional investors, an example of capital going around the token model.</li></ul></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">05</span><h2>Price Context — Cheap, or Correctly Priced?</h2></div>
+<div class="framework-banner"><div class="label">Framework Check</div><p>Where price sits relative to history, and whether the drawdown reflects opportunity or a fair repricing given the usage data in Section 01.</p></div>
+<div class="timeline" style="margin-top:24px;"><div class="t-item"><div class="t-year">Aug 2024</div><div class="t-desc">Community auction of 664M BIO (20% of supply) runs up to 45 days or a $100M fully diluted valuation cap.</div></div><div class="t-item"><div class="t-year">Nov 2024</div><div class="t-desc">Binance Labs announces its first DeSci investment, in Bio Protocol (reported 8 Nov).</div></div><div class="t-item"><div class="t-year">3 Jan 2025</div><div class="t-desc">BIO trades on Ethereum and records its all-time high of $0.8890-0.9226 (CoinGecko / CoinMarketCap, the latter dated 3 Jan 2025). Other pages and the earlier review cite $0.32-$0.997.</div></div><div class="t-item"><div class="t-year">Feb-Sep 2025</div><div class="t-desc">V1 launchpad on Solana (Feb 2025); Aubrai BioAgent launches (Aug 2025); $6.9M round announced 17 Sep 2025.</div></div><div class="t-item"><div class="t-year">29 Mar 2026</div><div class="t-desc">All-time low of $0.01588 (CoinMarketCap); CoinGecko shows $0.01580.</div></div><div class="t-item"><div class="t-year">Aug 2026</div><div class="t-desc">Late-August Asset Review reference price about $0.027 with a market cap of $56-72M.</div></div><div class="t-item"><div class="t-year">Oct 2026 (now)</div><div class="t-desc">About $0.0236, a market cap of $50.6-59.2M, down about 97% from the high and about 48-49% above the low. CoinGecko shows -20.7% over 7 days.</div></div></div>
+<div style="margin-top:24px;"><div class="card"><h3><span class="dot n"></span>Reading the Price</h3><ul><li><b>Data has moved since the Asset Review.</b> The 30 Aug review used about $0.027 and flagged $0.0265 as short-term support, $0.025 as a pullback trigger and $0.029 as a breakout level. Price is now about $0.0236, roughly 13% lower, and below both support levels. The all-time low of about $0.0158 is unchanged and about 49% below spot. The review's $0.32 ATH low-end is not supported by the trackers fetched here (about $0.89-0.92).</li><li><b>Market cap is more informative than price.</b> At $50-59M, BIO's network claims ($40M+ in tokenized IP, $65M+ in treasuries) are similar in scale to the token's own value. The fully diluted value is about $78-79M.</li><li><b>Volatility cuts both ways.</b> A KuCoin blog from May 2026 cites BIO rallies of 31.5% to 90% over short periods, and the 7-day drop is -20.7%. Perpetual open interest is about $19M (CoinGecko), large relative to a $8-14M daily spot volume, which can magnify moves.</li><li><b>No fundamental anchor.</b> No revenue, treasury or launchpad volume was disclosed (see Section 01), so any valuation multiple would be a guess. This report does not give one.</li></ul></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">06</span><h2>Liquidity &amp; Market Structure</h2></div>
+<div class="framework-banner"><div class="label">Framework Check</div><p>Can you actually get in and out at the price you expect?</p></div>
+<div class="stat-grid" style="margin-top:24px;"><div class="stat"><div class="label">Market Cap</div><div class="value">≈$50.6M (CoinGecko) to $59.2M (CoinMarketCap)</div></div><div class="stat"><div class="label">Cap Rank</div><div class="value">#335 (CMC) to #439 (CoinGecko)</div></div><div class="stat"><div class="label">24h Volume</div><div class="value">≈$7.9M (CoinGecko) to $13.6M (CMC)</div></div><div class="stat"><div class="label">Volume / Market Cap</div><div class="value">≈16-23%</div></div><div class="stat"><div class="label">Perpetuals Open Interest</div><div class="value">≈$19.0M (funding -0.0441% per 8h)</div></div><div class="stat"><div class="label">US Spot ETF / Regulated Wrapper</div><div class="value">Not found in sources</div></div></div>
+<div style="margin-top:24px;"><div class="card"><h3><span class="dot n"></span>Bottom Line on Liquidity</h3><ul><li><b>Thin for a top-400 asset.</b> A daily volume of $8-14M on a $50-59M market cap is active relative to size but shallow in absolute terms; orders of a few hundred thousand dollars can move the price, and the 7-day swing of -20.7% shows how fast it moves.</li><li><b>Listings.</b> Binance (Launchpool, 2025), Uniswap, Jupiter and a Robinhood listing are mentioned in sources; contracts exist on Ethereum, Solana, Base and BNB Smart Chain. CMC reports about 48.87K holders. The exchange table on CoinGecko showed one identical price across ten markets, which looks like a data error, so no per-exchange volume is given.</li><li><b>Data quality.</b> Trackers disagree on circulating supply, market cap, rank and volume (see Section 02), and one KuCoin page showed 24h volume as both about A$1.02M and 0 USDT. Use the ranges here, not any single figure.</li><li><b>Derivatives matter.</b> With perpetual open interest around $19M and a negative funding rate, positioning is skewed toward shorts at the time of the CoinGecko snapshot; this can cause sharp squeezes in either direction.</li></ul></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">07</span><h2>Regulatory &amp; Counterparty Risk</h2></div>
+<div class="framework-banner"><div class="label">Framework Check</div><p>Legal clarity versus open exposure that could move price overnight.</p></div>
+<div style="margin-top:24px;"><div class="card"><h3><span class="dot n"></span>No Enforcement Found, But the Structure Is Untested</h3><ul><li><b>Issuer and jurisdiction.</b> BIO is issued by Bio.xyz Association, a Swiss not-for-profit. The Blockworks filing lists no specific enforcement actions or regulatory proceedings, and none were found in this pass. It names general risks only: launch-access changes, entity-level exposure, tax uncertainty and jurisdictional restrictions.</li><li><b>Securities-law grey area.</b> The platform sells tokens tied to research IP (IP-Tokens, Ignition Sales) with fixed-price sales and liquidity seeding. No SEC or other regulator statement on BIO or on IP-Tokens was found, so classification is unresolved rather than cleared.</li><li><b>Biotech and clinical regulation.</b> BioDAO projects that move toward treatments fall under drug-development regulators such as the FDA and EMA. No regulatory filing or approval linked to a BioDAO asset was found.</li><li><b>Counterparty and concentration.</b> Core contributors (21.2%) and investors (13.6%) hold about 35% of supply under multi-year vests, and Bio.xyz takes 30% of the pool-fee stream. Funding and development depend on one Labs team led by one founder.</li><li><b>Contracts and disclosure.</b> Launchpad contracts were audited (Pashov, FYEO), with 1 critical and 2 high findings in the March 2025 report; the filing's current status of those findings was not stated. The Blockworks filing is self-submitted and partial.</li></ul></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">08</span><h2>Putting It Together</h2></div>
+<div class="verdict-box"><p><b>This is a synthesis of the research above, not a recommendation to buy, hold, or sell.</b> The decision on whether and how much to hold is yours, based on your own risk tolerance and time horizon.</p><p><b>What the data supports:</b> Bio Protocol has a credible origin (Molecule, VitaDAO, Pfizer Ventures' backing of VitaDAO), named investors including Binance Labs and Maelstrom Fund, an audited launchpad, and a second product line in BioAgents. The ecosystem claims over $40M of tokenized IP and 60 funded projects. Major exchange access exists and no regulatory action was found.</p><p><b>What the data flags as risk:</b> Price is about 97% below its January 2025 peak and fell about 20% in the latest week at a market cap near $51-59M. Disclosure is thin: no launchpad volume, treasury balance or BioDAO count in the issuer's partial filing, and trackers disagree on supply (2.145B vs 2.51B) and on whether supply is capped. About 35% of supply sits with contributors and investors on multi-year vests running into 2030. Peers and new funds (Sei's $65M) compete for the same research budgets, and biotech outcomes are slow and binary.</p><p><b>The honest takeaway:</b> BIO is a high-risk micro-cap bet on whether DeSci becomes a real funding channel and whether that value flows back to the BIO token rather than to the individual BioDAO tokens. The evidence for that link is currently self-reported and thin. The things to watch are independently verifiable launchpad volume, treasury disclosure, a clear answer on the supply cap, and whether any BioDAO asset reaches a clinical or commercial milestone.</p></div>
+</section>
+  <footer>
+    <div class="disclaimer">
+      <div class="footer-brand"><img src="ttm_logo.png" alt="TTM"><span>TTM · TRADE THE MOVE — DEEP DIVE RESEARCH SERIES</span></div>
+      This document is for informational and educational purposes only and does not constitute financial, investment, or trading advice. Data points are reference figures as of the dates noted and can change materially, and some figures vary across sources. Cryptocurrency markets are highly volatile and carry risk of substantial or total capital loss. Always do your own research and consult a licensed financial advisor before making investment decisions. Not a recommendation to buy or sell BIO or any other asset.
+    </div>
+  </footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,173 @@
+{
+ "kind": "deep",
+ "ticker": "BIO",
+ "ticker_display": "BIO",
+ "name": "Bio Protocol",
+ "file": "BIO_Deep_Dive_TTM.html",
+ "date": "19 Oct 2026",
+ "subhead": "A full research pass on Bio Protocol using the same 7-point framework: a rare, institutionally-seeded DeSci thesis with credible backers, set against micro-cap liquidity, thin disclosed usage data, a 97% drawdown and a token supply that the issuer's own filing describes as uncapped.",
+ "price": "≈$0.0236",
+ "chg": "-1.7% to -2% (24h) · -20.7% (7d, CoinGecko) · 24h range ≈ $0.0226–0.0240 · ≈97% below Jan 2025 all-time high",
+ "chg_up": false,
+ "price_meta": "Market Cap ≈ $50.6–59.2M · Rank #335–439 (varies by tracker) · Reference: Oct 2026",
+ "sections": [
+  {
+   "title": "01 Real Usage — Is Anyone Actually Using It?",
+   "banner": "Past the narrative: is there measurable, growing on-chain activity, or is price driven by speculation alone? For Bio Protocol most usage figures are self-reported or dated, and no current launchpad volume or BioDAO count was found from an independent source.",
+   "blocks": [
+    {"type": "stats", "rows": [
+     ["BioDAOs (sources differ)", "7 (Apr 2026 article) to 10 (The Grid directory)"],
+     ["Tokenized IP (early 2026)", "&gt;$40M, 60 funded projects"],
+     ["Token Holders (early 2026)", "&gt;27,000 (BioDAO ecosystem)"],
+     ["BIO Holders (CoinMarketCap)", "≈48.87K"],
+     ["Deals Facilitated (mid-2025, self-reported)", "$50M+ across 200+ deals"],
+     ["DeFi TVL (CoinGecko)", "≈$3.16M"],
+     ["Aubrai BioAgent Funding", "&gt;$900K raised, ~1,000 hypotheses"],
+     ["Launchpad Volume / Treasury Balance", "Not found / not disclosed"]
+    ]},
+    {"type": "card", "title": "What the Data Actually Shows", "dot": "n", "items": [
+     "<b>The ecosystem is real but small.</b> An April 2026 analysis cites over $40M in tokenized IP, 60 funded research projects and more than 27,000 token holders across the BioDAO network. A profile page cites a $300M+ ecosystem market cap and $65M+ in BioDAO treasuries, but dates these to the token-launch period and they are self-reported. These are the numbers the project supplies, not independently audited totals.",
+     "<b>On-chain value locked is tiny.</b> CoinGecko shows about $3.16M total value locked against a roughly $51M market cap. Most of the economic activity (IP tokens, DAO treasuries) lives in other tokens, not in BIO contracts, so TVL understates the network but also shows BIO itself does not hold much.",
+     "<b>BioAgents are the newest growth line.</b> Aubrai, the first BioAgent (built with VitaDAO and Aubrey de Grey, launched Aug 2025), is reported to have raised over $900K and generated 1,000 or so on-chain hypotheses in its first weeks. Sources give slightly different hypothesis counts (nearly 1,000 versus over 1,000). A PeptAI launch on Base and a move to wet-lab experimentation (mid-2026) are noted, with no volumes found.",
+     "<b>Disclosure gaps.</b> The Blockworks Token Transparency filing (24 Aug 2026, marked Partial with 10 gaps) lists no launch counts, no volumes, no revenue, no treasury balance and no BioDAO count. The one revenue-related fact: 70% of a 1% fee on BIO/Token liquidity-pool trading goes to the treasury and 30% to Bio.xyz.",
+     "<b>Peers are small too.</b> VitaDAO has invested about $4.6-4.7M across 30+ longevity projects since 2021, and Molecule reported 46 IP-NFT projects with a combined market cap above $16M at end of January 2026. The whole DeSci category is described as having far smaller flows than other crypto sectors.",
+     "<b>Security record.</b> Pashov Audit Group reviewed the Launchpad Curation Contracts (12 Mar 2025: 1 critical, 2 high, 2 medium, 3 low findings) and FYEO reviewed Launchpad v2 contracts. The filing states no exploit affecting tokenholders or protocol funds was identified as of 22 Apr 2026."
+    ]}
+   ]
+  },
+  {
+   "title": "02 Tokenomics — Large Unlocked Float, and an Uncapped Supply Question",
+   "banner": "Circulating vs. max supply, the unlock schedule, and whether network growth feeds back into the token. Most of BIO's supply is already liquid; the open questions are the supply cap and how much remains vested.",
+   "blocks": [
+    {"type": "stats", "rows": [
+     ["Starting / Total Supply", "3.32B BIO"],
+     ["Max Supply (sources conflict)", "3.32B (CoinGecko, CMC) vs. none (issuer filing)"],
+     ["Circulating Supply", "≈2.145B (CoinGecko, Tokenomist) to 2.51B (CMC)"],
+     ["% Unlocked (Tokenomist)", "≈64.6%"],
+     ["Fully Diluted Valuation", "≈$78–79M"],
+     ["Largest Allocation", "Ecosystem Incentives 25% (830M)"],
+     ["Core Contributors", "21.2% (703.84M), 1-yr cliff then 6-yr vest"],
+     ["Burn / Buyback", "None found"]
+    ]},
+    {"type": "card", "title": "How the Supply Actually Works", "dot": "n", "items": [
+     "<b>Allocation.</b> Per the Blockworks filing: Ecosystem Incentives 25%, Community Auction 20%, Core Contributors 21.2%, Investors 13.6%, Community Airdrop 6%, Molecule 5%, Molecule Ecosystem Fund 5% and Advisors 4.2%. Tokenomist shows the same percentages.",
+     "<b>Vesting.</b> Investors have a 1-year cliff then a 4-year vest; core contributors and advisors a 1-year cliff then 6 years; the Molecule allocations 4 years; the community auction was 50% liquid at launch with 50% vesting over a year. Tokenomist says the full schedule extends into 2030. With a token launched in January 2025, the investor and contributor cliffs ended around January 2026, so linear releases are likely ongoing; no dated unlock calendar or next-unlock amount was found.",
+     "<b>Circulating supply differs by source.</b> CoinGecko and Tokenomist show 2.145B, while CoinMarketCap shows 2.51B (about 75.7% of max). That is a gap of roughly 17%, which changes market cap by about $9M. This report shows both ranges rather than picking one.",
+     "<b>The supply cap is contested.</b> Trackers list a 3.32B max, but the Blockworks filing states BIO has no max supply and that new tokens would require deploying a new token contract. This report treats 3.32B as the starting supply and flags that a hard cap is not confirmed by the issuer.",
+     "<b>No sink for the token found.</b> No burn or buyback was found (Tokenomist shows none). Treasury inflow comes from the pool fee split noted in Section 01. Tokens are used for governance, BioXP staking rewards and access to launchpad sales, so demand depends on those products being used."
+    ]}
+   ]
+  },
+  {
+   "title": "03 Team &amp; Funding — Who's Behind It, and Who's Backing Them?",
+   "banner": "Real names with a track record and transparent funding, with some data gaps: round valuations and several investor amounts were not disclosed.",
+   "blocks": [
+    {"type": "stats", "rows": [
+     ["Founder / CEO", "Paul Kohlhaas (also Molecule CEO, VitaDAO founding steward)"],
+     ["Strategy Lead", "William Fang"],
+     ["Legal Counsel (Labs)", "Jose Pinto"],
+     ["Issuer", "Bio.xyz Association (Swiss non-profit)"],
+     ["Binance Labs (Nov 2024)", "First DeSci investment; amount undisclosed"],
+     ["Genesis Raise (by Q1 2025)", "&gt;$33M (1kx, Boost VC, Northpond)"],
+     ["Seed Round (17 Sep 2025)", "$6.9M led by Maelstrom Fund"],
+     ["Round Valuation", "Not disclosed"]
+    ]},
+    {"type": "alert", "label": "Notable Finding — Funding Totals Mix Tokens, Auctions and Equity-Style Rounds",
+     "text": "Funding figures cannot be added together cleanly. The $33M+ genesis raise (Q1 2025) and the 20% community auction (capped at a $100M fully diluted valuation, August 2024) are token sales, while the $6.9M round led by Arthur Hayes' Maelstrom Fund (September 2025) was declined to be described as equity, tokens or a mix by the head of strategy. Binance Labs' November 2024 amount and vesting were not disclosed. Investors hold 13.6% of supply under a 1-year cliff and 4-year vest."},
+    {"type": "card", "title": "What Stands Out", "dot": "n", "items": [
+     "<b>Founder track record is deep.</b> Kohlhaas co-founded Molecule (IP-NFTs, from 2018-2019) and was a founding steward of VitaDAO, which Pfizer Ventures backed in a $4.1M round in December 2022 per the earlier Asset Review. That is pharma-adjacent credibility few crypto teams have.",
+     "<b>Strong backer list.</b> Binance Labs, Maelstrom Fund, Animoca Brands, Mechanism Capital, Zee Prime, Boost VC, Northpond Ventures, 1kx and Pfizer Ventures (via VitaDAO) are named across sources. Backer lists on tracker pages are promotional, so the primary reports above are the more reliable ones.",
+     "<b>Structure is a foundation-style entity.</b> The issuer is a Swiss not-for-profit, with Bio Protocol Labs handling development. Bio.xyz Association officers and the DAO and Snapshot officeholders are not named in the filing.",
+     "<b>Founding date differs.</b> One directory lists the project as founded May 2022; the BIO token launched on Ethereum on 3 Jan 2025 and the community auction ran in August 2024. This report uses the token dates."
+    ]}
+   ]
+  },
+  {
+   "title": "04 Competitive Position — Is This Actually Differentiated?",
+   "banner": "Genuinely unique positioning versus one of many similar projects fighting for the same use case.",
+   "blocks": [
+    {"type": "twocol", "cards": [
+     {"title": "Where BIO Has an Edge", "dot": "g", "items": [
+      "<b>Aggregator position.</b> BIO sits above individual BioDAOs (VitaDAO, ValleyDAO, CryoDAO, AthenaDAO, HairDAO, CerebrumDAO and others) rather than competing with them, and takes a share of liquidity-pool fees from tokens launched through the platform.",
+      "<b>Institutional lineage.</b> Pfizer Ventures backed VitaDAO, and Binance Labs made its first DeSci investment in BIO (Nov 2024). The Molecule collaboration with Pfizer is cited in peer coverage.",
+      "<b>AI-agent layer.</b> BioAgents (Aubrai, PeptAI) and Ignition Sales give a second product line beyond DAOs. Aubrai is reported to have raised over $900K.",
+      "<b>Exchange access.</b> Listed on Binance (as its 63rd Launchpool project), Uniswap and Jupiter per the sources found; a Robinhood listing is mentioned on CoinGecko.",
+      "<b>Multi-chain.</b> Contracts exist on Ethereum, Solana, Base and BNB Smart Chain per The Block."
+     ]},
+     {"title": "Where the Competition Bites", "dot": "r", "items": [
+      "<b>Direct DeSci peers.</b> VitaDAO (VITA), Molecule, ResearchHub (RSC, founded by Brian Armstrong) and Pump.science on Solana, which Molecule and Bio teamed up with, cover overlapping ground. Token metrics for most were not found.",
+      "<b>Capital pools elsewhere.</b> Sei Foundation's $65M Sapien Open Science Fund I (early 2026, check sizes $100K-$2M, 3-4 year deployment) is a large new funder that is not routed through BIO.",
+      "<b>Small total market.</b> About 50 DeSci efforts with over $60M of historical funding were cited in a May 2026 article, and total DeSci flows are described as smaller than other sectors.",
+      "<b>Biotech outcomes are binary.</b> Value depends on research results, which are slow and fail more often than they succeed. No clinical-stage outcome for a BioDAO asset was found in this pass.",
+      "<b>Traditional funding competes.</b> A funded startup such as NanoVita closed a $20M post-money Series A in April 2026 through conventional investors, an example of capital going around the token model."
+     ]}
+    ]}
+   ]
+  },
+  {
+   "title": "05 Price Context — Cheap, or Correctly Priced?",
+   "banner": "Where price sits relative to history, and whether the drawdown reflects opportunity or a fair repricing given the usage data in Section 01.",
+   "blocks": [
+    {"type": "timeline", "items": [
+     ["Aug 2024", "Community auction of 664M BIO (20% of supply) runs up to 45 days or a $100M fully diluted valuation cap."],
+     ["Nov 2024", "Binance Labs announces its first DeSci investment, in Bio Protocol (reported 8 Nov)."],
+     ["3 Jan 2025", "BIO trades on Ethereum and records its all-time high of $0.8890-0.9226 (CoinGecko / CoinMarketCap, the latter dated 3 Jan 2025). Other pages and the earlier review cite $0.32-$0.997."],
+     ["Feb-Sep 2025", "V1 launchpad on Solana (Feb 2025); Aubrai BioAgent launches (Aug 2025); $6.9M round announced 17 Sep 2025."],
+     ["29 Mar 2026", "All-time low of $0.01588 (CoinMarketCap); CoinGecko shows $0.01580."],
+     ["Aug 2026", "Late-August Asset Review reference price about $0.027 with a market cap of $56-72M."],
+     ["Oct 2026 (now)", "About $0.0236, a market cap of $50.6-59.2M, down about 97% from the high and about 48-49% above the low. CoinGecko shows -20.7% over 7 days."]
+    ]},
+    {"type": "card", "title": "Reading the Price", "dot": "n", "items": [
+     "<b>Data has moved since the Asset Review.</b> The 30 Aug review used about $0.027 and flagged $0.0265 as short-term support, $0.025 as a pullback trigger and $0.029 as a breakout level. Price is now about $0.0236, roughly 13% lower, and below both support levels. The all-time low of about $0.0158 is unchanged and about 49% below spot. The review's $0.32 ATH low-end is not supported by the trackers fetched here (about $0.89-0.92).",
+     "<b>Market cap is more informative than price.</b> At $50-59M, BIO's network claims ($40M+ in tokenized IP, $65M+ in treasuries) are similar in scale to the token's own value. The fully diluted value is about $78-79M.",
+     "<b>Volatility cuts both ways.</b> A KuCoin blog from May 2026 cites BIO rallies of 31.5% to 90% over short periods, and the 7-day drop is -20.7%. Perpetual open interest is about $19M (CoinGecko), large relative to a $8-14M daily spot volume, which can magnify moves.",
+     "<b>No fundamental anchor.</b> No revenue, treasury or launchpad volume was disclosed (see Section 01), so any valuation multiple would be a guess. This report does not give one."
+    ]}
+   ]
+  },
+  {
+   "title": "06 Liquidity &amp; Market Structure",
+   "banner": "Can you actually get in and out at the price you expect?",
+   "blocks": [
+    {"type": "stats", "rows": [
+     ["Market Cap", "≈$50.6M (CoinGecko) to $59.2M (CoinMarketCap)"],
+     ["Cap Rank", "#335 (CMC) to #439 (CoinGecko)"],
+     ["24h Volume", "≈$7.9M (CoinGecko) to $13.6M (CMC)"],
+     ["Volume / Market Cap", "≈16-23%"],
+     ["Perpetuals Open Interest", "≈$19.0M (funding -0.0441% per 8h)"],
+     ["US Spot ETF / Regulated Wrapper", "Not found in sources"]
+    ]},
+    {"type": "card", "title": "Bottom Line on Liquidity", "dot": "n", "items": [
+     "<b>Thin for a top-400 asset.</b> A daily volume of $8-14M on a $50-59M market cap is active relative to size but shallow in absolute terms; orders of a few hundred thousand dollars can move the price, and the 7-day swing of -20.7% shows how fast it moves.",
+     "<b>Listings.</b> Binance (Launchpool, 2025), Uniswap, Jupiter and a Robinhood listing are mentioned in sources; contracts exist on Ethereum, Solana, Base and BNB Smart Chain. CMC reports about 48.87K holders. The exchange table on CoinGecko showed one identical price across ten markets, which looks like a data error, so no per-exchange volume is given.",
+     "<b>Data quality.</b> Trackers disagree on circulating supply, market cap, rank and volume (see Section 02), and one KuCoin page showed 24h volume as both about A$1.02M and 0 USDT. Use the ranges here, not any single figure.",
+     "<b>Derivatives matter.</b> With perpetual open interest around $19M and a negative funding rate, positioning is skewed toward shorts at the time of the CoinGecko snapshot; this can cause sharp squeezes in either direction."
+    ]}
+   ]
+  },
+  {
+   "title": "07 Regulatory &amp; Counterparty Risk",
+   "banner": "Legal clarity versus open exposure that could move price overnight.",
+   "blocks": [
+    {"type": "card", "title": "No Enforcement Found, But the Structure Is Untested", "dot": "n", "items": [
+     "<b>Issuer and jurisdiction.</b> BIO is issued by Bio.xyz Association, a Swiss not-for-profit. The Blockworks filing lists no specific enforcement actions or regulatory proceedings, and none were found in this pass. It names general risks only: launch-access changes, entity-level exposure, tax uncertainty and jurisdictional restrictions.",
+     "<b>Securities-law grey area.</b> The platform sells tokens tied to research IP (IP-Tokens, Ignition Sales) with fixed-price sales and liquidity seeding. No SEC or other regulator statement on BIO or on IP-Tokens was found, so classification is unresolved rather than cleared.",
+     "<b>Biotech and clinical regulation.</b> BioDAO projects that move toward treatments fall under drug-development regulators such as the FDA and EMA. No regulatory filing or approval linked to a BioDAO asset was found.",
+     "<b>Counterparty and concentration.</b> Core contributors (21.2%) and investors (13.6%) hold about 35% of supply under multi-year vests, and Bio.xyz takes 30% of the pool-fee stream. Funding and development depend on one Labs team led by one founder.",
+     "<b>Contracts and disclosure.</b> Launchpad contracts were audited (Pashov, FYEO), with 1 critical and 2 high findings in the March 2025 report; the filing's current status of those findings was not stated. The Blockworks filing is self-submitted and partial."
+    ]}
+   ]
+  },
+  {
+   "title": "08 Putting It Together",
+   "blocks": [
+    {"type": "verdict", "paras": [
+     "<b>This is a synthesis of the research above, not a recommendation to buy, hold, or sell.</b> The decision on whether and how much to hold is yours, based on your own risk tolerance and time horizon.",
+     "<b>What the data supports:</b> Bio Protocol has a credible origin (Molecule, VitaDAO, Pfizer Ventures' backing of VitaDAO), named investors including Binance Labs and Maelstrom Fund, an audited launchpad, and a second product line in BioAgents. The ecosystem claims over $40M of tokenized IP and 60 funded projects. Major exchange access exists and no regulatory action was found.",
+     "<b>What the data flags as risk:</b> Price is about 97% below its January 2025 peak and fell about 20% in the latest week at a market cap near $51-59M. Disclosure is thin: no launchpad volume, treasury balance or BioDAO count in the issuer's partial filing, and trackers disagree on supply (2.145B vs 2.51B) and on whether supply is capped. About 35% of supply sits with contributors and investors on multi-year vests running into 2030. Peers and new funds (Sei's $65M) compete for the same research budgets, and biotech outcomes are slow and binary.",
+     "<b>The honest takeaway:</b> BIO is a high-risk micro-cap bet on whether DeSci becomes a real funding channel and whether that value flows back to the BIO token rather than to the individual BioDAO tokens. The evidence for that link is currently self-reported and thin. The things to watch are independently verifiable launchpad volume, treasury disclosure, a clear answer on the supply cap, and whether any BioDAO asset reaches a clinical or commercial milestone."
+    ]}
+   ]
+  }
+ ]
+}

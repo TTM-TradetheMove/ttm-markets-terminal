@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aptos (APT) Deep Dive — TTM | Trade The Move</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+  :root{
+    --bg:#09080a; --bg-panel:#131110; --bg-panel-2:#1a1714; --hairline:#2c2620;
+    --gold:#d4af37; --gold-bright:#f4d375; --gold-dim:#9a7c2c;
+    --ink:#eae6da; --ink-dim:#9c9484; --up:#4caf7d; --down:#d9534f;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:var(--bg); color:var(--ink); font-family:'Inter',sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased; }
+  .wrap{ max-width:980px; margin:0 auto; padding:0 28px 80px; }
+  .hero{ position:relative; padding:56px 28px 40px; border-bottom:1px solid var(--hairline);
+    background: radial-gradient(ellipse at top left, rgba(212,175,55,0.08), transparent 60%), linear-gradient(180deg,#0d0b09 0%,#09080a 100%); overflow:hidden; }
+  .hero::after{ content:""; position:absolute; inset:0;
+    background-image: linear-gradient(rgba(212,175,55,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(212,175,55,0.04) 1px, transparent 1px);
+    background-size:42px 42px; mask-image: radial-gradient(ellipse at top left, black, transparent 70%); pointer-events:none; }
+  .hero-inner{ max-width:980px; margin:0 auto; position:relative; z-index:1; }
+  .logo-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:44px; flex-wrap:wrap; gap:16px; }
+  .logo-row img{ height:140px; width:auto; display:block; }
+  .brief-tag{ font-family:'Space Mono',monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-dim);
+    border:1px solid var(--hairline); padding:6px 12px; border-radius:3px; }
+  .eyebrow{ font-family:'Space Mono',monospace; font-size:12px; letter-spacing:0.18em; text-transform:uppercase; color:var(--gold); margin-bottom:14px; }
+  h1.title{ font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:clamp(38px,6vw,62px); letter-spacing:0.01em; line-height:1.02; color:var(--ink); }
+  h1.title span{ color:var(--gold); }
+  .subhead{ margin-top:14px; color:var(--ink-dim); font-size:16px; max-width:600px; }
+  .price-strip{ display:flex; align-items:baseline; gap:18px; margin-top:36px; flex-wrap:wrap; }
+  .price-strip .px{ font-family:'Oswald',sans-serif; font-size:54px; font-weight:600; color:var(--gold-bright); }
+  .price-strip .chg{ font-family:'Space Mono',monospace; font-size:16px; color:var(--down); padding:4px 10px; border:1px solid rgba(217,83,79,0.4); border-radius:3px; }
+  .price-strip .chg.up{ color:var(--up); border-color:rgba(76,175,125,0.4); }
+  .price-meta{ color:var(--ink-dim); font-size:13px; font-family:'Space Mono',monospace; }
+  section{ padding:46px 0; border-bottom:1px solid var(--hairline); }
+  section:last-of-type{ border-bottom:none; }
+  .sec-head{ display:flex; align-items:baseline; gap:14px; margin-bottom:26px; }
+  .sec-num{ font-family:'Space Mono',monospace; color:var(--gold-dim); font-size:13px; }
+  h2{ font-family:'Oswald',sans-serif; text-transform:uppercase; font-weight:600; font-size:24px; letter-spacing:0.02em; }
+  .sec-sub{ color:var(--ink-dim); font-size:14px; margin-top:-14px; margin-bottom:22px; max-width:680px; }
+  .framework-banner{ background:linear-gradient(135deg,var(--bg-panel-2),var(--bg-panel)); border:1px solid var(--hairline); border-left:3px solid var(--gold);
+    padding:22px 26px; margin-bottom:8px; }
+  .framework-banner .label{ font-family:'Space Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--gold-bright); margin-bottom:8px; }
+  .framework-banner p{ font-size:14px; color:var(--ink-dim); max-width:700px; }
+  .stat-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--hairline); border:1px solid var(--hairline); }
+  .stat{ background:var(--bg-panel); padding:20px 18px; }
+  .stat .label{ font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-dim); }
+  .stat .value{ font-family:'Oswald',sans-serif; font-size:22px; font-weight:600; margin-top:8px; color:var(--ink); }
+  .stat .value.gold{ color:var(--gold-bright); }
+  @media (max-width:700px){ .stat-grid{ grid-template-columns:repeat(2,1fr); } }
+  .timeline{ position:relative; padding-left:26px; }
+  .timeline::before{ content:""; position:absolute; left:5px; top:6px; bottom:6px; width:1px; background:linear-gradient(180deg,var(--gold),var(--hairline) 90%); }
+  .t-item{ position:relative; padding-bottom:26px; }
+  .t-item:last-child{ padding-bottom:0; }
+  .t-item::before{ content:""; position:absolute; left:-26px; top:4px; width:11px; height:11px; border-radius:50%; background:var(--bg); border:2px solid var(--gold); }
+  .t-year{ font-family:'Space Mono',monospace; color:var(--gold); font-size:13px; letter-spacing:0.05em; }
+  .t-desc{ font-size:14.5px; color:var(--ink); margin-top:4px; max-width:660px; }
+  table.levels{ width:100%; border-collapse:collapse; font-size:14px; }
+  table.levels th{ text-align:left; font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-dim);
+    padding:10px 12px; border-bottom:1px solid var(--hairline); }
+  table.levels td{ padding:12px; border-bottom:1px solid var(--hairline); color:var(--ink); }
+  table.levels tr:last-child td{ border-bottom:none; }
+  .tag{ font-family:'Space Mono',monospace; font-size:11px; padding:3px 8px; border-radius:3px; }
+  .tag.res{ background:rgba(217,83,79,0.12); color:#e8837f; border:1px solid rgba(217,83,79,0.3); }
+  .tag.sup{ background:rgba(76,175,125,0.12); color:#7fd1a5; border:1px solid rgba(76,175,125,0.3); }
+  .tag.piv{ background:rgba(212,175,55,0.14); color:var(--gold-bright); border:1px solid rgba(212,175,55,0.35); }
+  .two-col{ display:grid; grid-template-columns:1fr 1fr; gap:28px; }
+  @media (max-width:760px){ .two-col{ grid-template-columns:1fr; } }
+  .card{ background:var(--bg-panel); border:1px solid var(--hairline); padding:22px 22px; }
+  .card h3{ font-family:'Oswald',sans-serif; text-transform:uppercase; font-size:15px; letter-spacing:0.05em; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .dot.g{ background:var(--up); }
+  .dot.r{ background:var(--down); }
+  .dot.n{ background:var(--gold); }
+  .card ul{ list-style:none; }
+  .card li{ font-size:13.8px; color:var(--ink); padding:9px 0; border-bottom:1px dashed var(--hairline); }
+  .card li:last-child{ border-bottom:none; }
+  .card li b{ color:var(--gold-bright); font-weight:600; }
+  .verdict-box{ background:linear-gradient(135deg,var(--bg-panel-2),var(--bg-panel)); border:1px solid var(--hairline); border-left:3px solid var(--gold-bright); padding:24px 26px; }
+  .verdict-box p{ font-size:14.5px; color:var(--ink); margin-top:10px; }
+  .verdict-box p:first-of-type{ margin-top:0; }
+  .alert-box{ background:rgba(217,83,79,0.08); border:1px solid rgba(217,83,79,0.35); border-left:3px solid var(--down); padding:20px 24px; margin-bottom:24px; }
+  .alert-box .label{ font-family:'Space Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:#e8837f; margin-bottom:8px; }
+  .alert-box p{ font-size:14px; color:var(--ink); }
+  footer{ padding:34px 0 10px; }
+  .disclaimer{ font-family:'Space Mono',monospace; font-size:11.5px; line-height:1.7; color:var(--ink-dim); border-top:1px solid var(--hairline); padding-top:22px; }
+  .footer-brand{ display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+  .footer-brand img{ height:52px; opacity:0.85; }
+  .footer-brand span{ font-family:'Space Mono',monospace; font-size:11px; color:var(--ink-dim); letter-spacing:0.08em; }
+</style>
+<style id="ttm-return-css">.ttm-return{position:fixed;top:14px;left:14px;z-index:9999;display:inline-flex;align-items:center;gap:8px;padding:9px 16px;background:rgba(9,8,10,.92);border:1px solid #d4af37;color:#f4d375;border-radius:999px;font:600 13px/1 Inter,system-ui,sans-serif;letter-spacing:.04em;text-decoration:none;cursor:pointer;backdrop-filter:blur(6px);box-shadow:0 4px 18px rgba(0,0,0,.5)}.ttm-return:hover{background:#d4af37;color:#09080a}@media print{.ttm-return{display:none}}</style></head>
+<body><a class="ttm-return" id="ttm-return" href="index.html#library">&larr; Return</a><script>document.getElementById("ttm-return").addEventListener("click",function(e){try{if(window.opener&&!window.opener.closed){e.preventDefault();window.opener.focus();window.close();setTimeout(function(){location.href=this.href}.bind(this),150);}}catch(x){}});</script>
+<div class="hero">
+  <div class="hero-inner">
+    <div class="logo-row">
+      <img src="ttm_logo.png" alt="TTM — Trade The Move">
+      <div class="brief-tag">Deep Dive Research · 19 Oct 2026</div>
+    </div>
+    <div class="eyebrow">Full Research Report</div>
+    <h1 class="title">Aptos <span>/ APT Deep Dive</span></h1>
+    <p class="subhead">A full research pass on Aptos using the same 7-point framework: a rebuilt token model (hard cap, fee burn, lower staking yield) and a finished investor unlock cycle, set against a price still about 96% below its 2023 high, very small fee revenue and an ETF filing with no found approval.</p>
+    <div class="price-strip">
+      <div class="px">≈$0.77–0.78</div>
+      <div class="chg">-7% to +1.4% (24h, varies by tracker) · 7d: +0.5% (KuCoin, 15 Oct) to -13% (MEXC, 19 Oct) · ≈96% below Jan 2023 high · ≈+51% above 30 Aug 2026 low</div>
+    </div>
+    <div class="price-meta" style="margin-top:10px;">Market Cap ≈ $682–689M · Rank #76–79 (varies by tracker) · Reference: Oct 2026</div>
+  </div>
+</div>
+<div class="wrap">
+<section>
+<div class="sec-head"><span class="sec-num">01</span><h2>Real Usage — Is Anyone Actually Using It?</h2></div>
+<div class="framework-banner"><div class="label">Framework Check</div><p>Past the narrative: is there measurable, growing on-chain activity, or is price driven by speculation alone? Aptos shows large stablecoin and RWA balances and heavy transaction counts, but the chain's own fee income and DeFi TVL are very small, and sources disagree sharply on the size of the ecosystem.</p></div>
+<div class="stat-grid" style="margin-top:24px;"><div class="stat"><div class="label">Active Addresses (24h, DefiLlama)</div><div class="value">43,471 (3,637 new)</div></div><div class="stat"><div class="label">Transactions (24h)</div><div class="value">≈12.52M</div></div><div class="stat"><div class="label">DeFi TVL (DefiLlama)</div><div class="value">≈$43.9M</div></div><div class="stat"><div class="label">Stablecoin Market Cap</div><div class="value">≈$943M (DefiLlama) / ≈$1.66B (Aptos, May)</div></div><div class="stat"><div class="label">RWA Active AUM (DefiLlama)</div><div class="value">≈$760.6M</div></div><div class="stat"><div class="label">DEX Volume (24h / 7d)</div><div class="value">≈$4.7M / ≈$41.9M</div></div><div class="stat"><div class="label">Perps Volume (24h / 7d)</div><div class="value">≈$47.8M / ≈$398.8M</div></div><div class="stat"><div class="label">Chain Fees (24h) / App Fees (24h)</div><div class="value">≈$4,190 / ≈$36,987</div></div></div>
+<div style="margin-top:24px;"><div class="card"><h3><span class="dot n"></span>What the Data Actually Shows</h3><ul><li><b>Transactions are high, money measures are small.</b> About 12.5M transactions a day from roughly 43K active addresses is a very high ratio, which points to automated or high-frequency activity rather than a broad retail base. Chain fees of about $4,190 a day (about $1.5M annualised at that rate) are small against a $0.69B market cap.</li><li><b>DeFi TVL is a fraction of the headline claims.</b> DefiLlama shows about $43.9M of TVL, led by Decibel (≈$29.7M), KAIO (≈$6.6M), Echelon (≈$6.6M), Thala (≈$4.3M) and Amnis (≈$3.8M). A single April 2026 article claimed TVL had passed $1B; that figure is not supported by DefiLlama's current number, and the two measure different things or one is wrong. This report uses DefiLlama and treats the $1B claim as unverified.</li><li><b>Stablecoins are the strongest metric, but sources differ.</b> DefiLlama shows about $943M (up 3.2% over 7 days, USDT about 49%), while an Aptos Foundation announcement dated 8 May 2026 cited about $1.66B. The gap is large and unexplained in the sources; either way it is far above the figure from late 2024, which the Foundation says is nearly a tenfold rise.</li><li><b>RWA is a real line item.</b> DefiLlama lists about $760.6M of active RWA AUM, with bridged RWAs of about $15.6M. The AUM figure is much larger than the bridged figure and the sources do not reconcile them, so treat it as a headline number.</li><li><b>Perps lead, spot DEX lags.</b> Perpetuals volume (about $399M over 7 days, +27.7% week on week) is roughly ten times spot DEX volume. Decibel, the on-chain perps exchange launched on mainnet on 27 Feb 2026, has recorded over $1B in cumulative volume per the Foundation. DEX volume is only 0.03% of combined DEX and CEX volume on DefiLlama.</li><li><b>Not found.</b> A verified monthly-active-user count was not found. A single article cited about 15M monthly users and $9.0B of Q2 2026 DEX volume, but it was dated before the quarter ended and conflicts with DefiLlama's DEX data, so it is not relied on.</li></ul></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">02</span><h2>Tokenomics — Capped Supply, Fee Burn, Unlocks Now Reduced</h2></div>
+<div class="framework-banner"><div class="label">Framework Check</div><p>Circulating vs. max supply, the unlock schedule, and whether network growth feeds back into the token. Aptos has changed the model in 2026, and the main investor unlock cycle ended this month.</p></div>
+<div class="stat-grid" style="margin-top:24px;"><div class="stat"><div class="label">Max Supply (hard cap)</div><div class="value">2.1B APT (Proposal 183, passed 1 Mar 2026)</div></div><div class="stat"><div class="label">Circulating Supply</div><div class="value">≈883M (KuCoin) · ≈858M (earlier review) · ≈1.03–1.20B (other sources)</div></div><div class="stat"><div class="label">Total Supply</div><div class="value">≈1.21B APT (MEXC)</div></div><div class="stat"><div class="label">Fully Diluted Value</div><div class="value">≈$0.94B (DefiLlama) – $1.64B (MEXC)</div></div><div class="stat"><div class="label">Staking Yield</div><div class="value">Cut from 5.19% toward ≈2.6%</div></div><div class="stat"><div class="label">Gas Fee Burn</div><div class="value">100% of gas fees (fees raised 10x; rollout 2026–27)</div></div><div class="stat"><div class="label">Foundation Lock</div><div class="value">210M APT permanently locked and staked</div></div><div class="stat"><div class="label">Monthly Unlock</div><div class="value">≈11.3M APT, falling to ≈4.5M from Nov 2026</div></div></div>
+<div style="margin-top:24px;"><div class="card"><h3><span class="dot n"></span>How the Supply Actually Works</h3><ul><li><b>Circulating supply is the least reliable number.</b> Trackers range from about 858M to about 1.2B APT: KuCoin shows 883M, the 30 Aug Asset Review used 858M, an April article said 1.03B, and the Foundation's own February post said 1.196B. Market cap depends directly on which is used. This report uses the KuCoin-implied ≈$0.68–0.69B and flags the range as an open data issue.</li><li><b>The investor unlock cycle ended.</b> The four-year schedule for early investors and core contributors ran to October 2026; a CoinMarketCap-based summary puts the last tranche on 12–13 Oct (sources differ by a day). The Foundation said this cuts annualised unlocks by about 60%, and monthly issuance is reported to fall from about 11.31M to about 4.54M APT. The 30 Aug review listed this as an upcoming catalyst; it has now happened and, on the prices found, was absorbed without a break below the late-August low.</li><li><b>Burn exists but is tiny today.</b> All gas fees are burned, but chain fees are only about $4K a day on DefiLlama, so at the current price the burn is negligible against issuance. The Foundation projected Decibel could burn over 32M APT a year at 100+ markets; that is a forecast, not a found result.</li><li><b>Lower yield, lower security budget.</b> Staking rewards are being cut from 5.19% to about 2.6%. One source cites 60-70% of APT staked; an earlier statement says staking will become the main source of new tokens. A CoinMarketCap-based summary warns lower yield could reduce validator participation if fees do not offset it.</li><li><b>Foundation lock is a real change.</b> 210M APT (about 18% of circulating supply at the time and about 37% of the Foundation's original mainnet holdings, per the Foundation) is locked and staked permanently. This is a self-reported commitment by the Foundation.</li></ul></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">03</span><h2>Team &amp; Funding — Who's Behind It, and Who's Backing Them?</h2></div>
+<div class="framework-banner"><div class="label">Framework Check</div><p>Real names with a track record and a transparent, large, but dated funding history. Backers from the 2022 raise were large and included a firm that later failed.</p></div>
+<div class="stat-grid" style="margin-top:24px;"><div class="stat"><div class="label">Founded</div><div class="value">2021 (mainnet Oct 2022)</div></div><div class="stat"><div class="label">Founders</div><div class="value">Mo Shaikh and Avery Ching (ex-Meta Diem)</div></div><div class="stat"><div class="label">CEO (Aptos Labs)</div><div class="value">Avery Ching (since Dec 2024)</div></div><div class="stat"><div class="label">Total Disclosed Raise</div><div class="value">$350M (2022)</div></div><div class="stat"><div class="label">Mar 2022 Round</div><div class="value">$200M (a16z, Tiger Global, Multicoin; FTX Ventures)</div></div><div class="stat"><div class="label">Jul 2022 Round</div><div class="value">$150M (led by FTX Ventures and Jump Crypto)</div></div><div class="stat"><div class="label">Other Round Investors</div><div class="value">Griffin Gaming, Franklin Templeton, Circle Ventures</div></div><div class="stat"><div class="label">May 2026 Commitment</div><div class="value">$50M (Aptos Foundation and Aptos Labs)</div></div></div>
+<div class="alert-box"><div class="label">Notable Finding — Founder Departure and Ecosystem Disclosure Gaps</div><p>Co-founder Mo Shaikh stepped down as CEO on 19-20 Dec 2024 and became a strategic adviser; Avery Ching, co-founder and CTO, took over. The earlier Asset Review described the founding team but not this change. A recent rumor of a possible chain shutdown circulated on X on 3 Oct 2026 and was dismissed by Ching, per Cryptoast. No evidence supporting the rumor was found. Current Foundation leadership, treasury size and runway were not found in this pass.</p></div>
+<div style="margin-top:24px;"><div class="card"><h3><span class="dot n"></span>What Stands Out</h3><ul><li><b>Pedigree and backers are strong on paper.</b> The two rounds in 2022 totalled $350M from a16z, Multicoin, Tiger Global, Jump Crypto, Franklin Templeton and Circle Ventures, among others. No valuation was disclosed in the sources found. FTX Ventures co-led the July round; the earlier review also named it as a backer.</li><li><b>Corporate partners are named but loosely sourced.</b> A single secondary source says Microsoft collaborates on 'Aptos Ascend' with BCG and Brevan Howard as partners; this was not confirmed in a primary source in this pass.</li><li><b>New funding pool.</b> The $50M commitment of 8 May 2026 targets protocol infrastructure, research and a strategic fund for trading and AI partners (Decibel, Shelby, NETSTARS named). The split is not disclosed.</li><li><b>Founder concentration of attention.</b> With the CEO also the original CTO, product direction and technical credibility sit with one person; this is an observation, not a found problem.</li></ul></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">04</span><h2>Competitive Position — Is This Actually Differentiated?</h2></div>
+<div class="framework-banner"><div class="label">Framework Check</div><p>Genuinely unique positioning versus one of many similar projects fighting for the same use case. Aptos has a distinct execution and language story, but a crowded field and a small developer base.</p></div>
+<div class="two-col" style="margin-top:24px;"><div class="card"><h3><span class="dot g"></span>Where APT Has an Edge</h3><ul><li><b>Technology stack.</b> Move language and parallel execution (Block-STM, with Block-STM v2 enabled by default on 15 Oct 2026 per a CoinMarketCap-based summary). This is covered in the earlier Asset Review and has not changed in kind.</li><li><b>Privacy features shipped.</b> Optional Keyless Accounts, Confidential APT and an Encrypted Mempool went live on mainnet on 13 Oct 2026; Petra Wallet added encrypted-mempool support on 15 Oct.</li><li><b>Stablecoin and RWA base.</b> About $0.9-1.7B of stablecoins and about $760M of RWA AUM is a bigger money base than several chains of similar market cap in this series.</li><li><b>Perps venue with a burn link.</b> Decibel is a fully on-chain order-book exchange; the Foundation says every trade feeds a permanent APT burn.</li><li><b>Regulatory footing.</b> APT appears on a reported SEC/CFTC list of digital commodities (17 Mar 2026).</li></ul></div><div class="card"><h3><span class="dot r"></span>Where the Competition Bites</h3><ul><li><b>DeFi scale.</b> About $44M of TVL is small. The Foundation-reported large figures are not matched by DefiLlama.</li><li><b>Fee revenue.</b> Chain fees of about $4K a day are minimal, so the new burn model has little to burn today.</li><li><b>Many similar L1s.</b> Solana, Sui and others compete for the same developers and capital; a head-to-head comparison with current figures was not performed in this pass, so no ranking is claimed.</li><li><b>Weak price record.</b> APT is down about 96% from its high and was near an all-time low six weeks ago.</li><li><b>Perps concentration.</b> Decibel is about two-thirds of TVL (≈$29.7M of ≈$43.9M), so one app drives much of the ecosystem's measured value.</li></ul></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">05</span><h2>Price Context — Cheap, or Correctly Priced?</h2></div>
+<div class="framework-banner"><div class="label">Framework Check</div><p>Where price sits relative to history, and whether the drawdown reflects opportunity or a fair repricing given the usage data above.</p></div>
+<div class="timeline" style="margin-top:24px;"><div class="t-item"><div class="t-year">Oct 2022</div><div class="t-desc">Mainnet launches with heavy venture backing and immediate listings on major exchanges.</div></div><div class="t-item"><div class="t-year">Jan 2023</div><div class="t-desc">All-time high of about $19.87-19.92 (trackers differ by a few cents), three months after mainnet.</div></div><div class="t-item"><div class="t-year">2025</div><div class="t-desc">Earlier review recorded a fall from about $8.72 to about $1.42 over the year, a drop of more than 80%.</div></div><div class="t-item"><div class="t-year">Mar-Apr 2026</div><div class="t-desc">Tokenomics proposals pass (1 Mar); SEC/CFTC list names APT (17 Mar); price about $0.83 on 11 Apr per one source.</div></div><div class="t-item"><div class="t-year">30 Aug 2026</div><div class="t-desc">All-time low of about $0.509-0.513 (trackers differ), the same day as the earlier review, which gave about $0.55.</div></div><div class="t-item"><div class="t-year">Sep 2026</div><div class="t-desc">Best month since late 2024: breaks above the Ichimoku cloud on 18 Sep and tops about $0.89 on 26 Sep (Cryptoast).</div></div><div class="t-item"><div class="t-year">Oct 2026 (now)</div><div class="t-desc">About $0.77-0.78 and $682-689M market cap; $0.75 (200-day average) and $0.80-0.90 resistance are the levels the Cryptoast article watches.</div></div></div>
+<div style="margin-top:24px;"><div class="card"><h3><span class="dot n"></span>Reading the Price</h3><ul><li><b>Data has moved since the Asset Review.</b> The 30 Aug review used about $0.55 and a $460-490M market cap; price is about 40% higher and the market cap about 40-45% higher. The review's $0.58 pivot and $0.63-0.65 resistance have been cleared; its $0.75 'recent swing high' is now near the 200-day average and support. The unlock cliff it named as a catalyst has passed.</li><li><b>A bounce from the low, not a trend change.</b> Cryptoast notes the weekly chart is still below the cloud and calls a daily close above $0.90 the confirmation; price is below that. Its $1.07-1.12 target is an author's view, not a forecast this report endorses.</li><li><b>Valuation context.</b> At roughly $0.69B market cap against about $1.5M annualised chain fees and about $44M of TVL, multiples on chain economics are very high; stablecoin and RWA balances are the supportive numbers. Sources on supply differ by up to about 40%, so all per-token multiples carry that uncertainty.</li></ul></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">06</span><h2>Liquidity &amp; Market Structure</h2></div>
+<div class="framework-banner"><div class="label">Framework Check</div><p>Can you actually get in and out at the price you expect?</p></div>
+<div class="stat-grid" style="margin-top:24px;"><div class="stat"><div class="label">Market Cap</div><div class="value">≈$682–689M</div></div><div class="stat"><div class="label">Cap Rank</div><div class="value">#76–79 (varies by tracker)</div></div><div class="stat"><div class="label">24h Volume</div><div class="value">Not reliable: ≈$0.3M–1.2M on two exchange pages; not found elsewhere</div></div><div class="stat"><div class="label">Fully Diluted Value</div><div class="value">≈$0.94B–1.64B (depends on supply used)</div></div><div class="stat"><div class="label">Spot ETF (US)</div><div class="value">S-1 filed by Bitwise (Oct 2025); approval not found</div></div><div class="stat"><div class="label">Other Wrapper</div><div class="value">Bitwise product on SIX Swiss Exchange (per Yahoo)</div></div></div>
+<div style="margin-top:24px;"><div class="card"><h3><span class="dot n"></span>Bottom Line on Liquidity</h3><ul><li><b>Volume data is not usable.</b> The two exchange pages that returned figures showed $0.34M (MEXC) and $1.19M (KuCoin, with a $0 field in the footer); these are single-exchange numbers and not market-wide. The earlier review's $27-60M range could not be re-confirmed. Treat depth as unverified.</li><li><b>ETF status is unresolved.</b> Bitwise filed a spot Aptos ETF S-1 and the filing was reported on 5 Oct 2025, with the CEO confirming it on X; later S-1/A amendments exist on EDGAR. No approval or launch date was found in the sources, so this report does not treat a US ETF as live.</li><li><b>Single-venue pages can mislead.</b> The 7-day change reads +0.5% on one page (15 Oct) and -13.1% on another (19 Oct), which reflects different dates and windows as well as different prices.</li></ul></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">07</span><h2>Regulatory &amp; Counterparty Risk</h2></div>
+<div class="framework-banner"><div class="label">Framework Check</div><p>Legal clarity versus open exposure that could move price overnight.</p></div>
+<div style="margin-top:24px;"><div class="card"><h3><span class="dot n"></span>A Positive Classification, With Verification Gaps</h3><ul><li><b>Commodity status.</b> A Genfinity report of 17 Mar 2026 lists APT among tokens named digital commodities in a joint SEC/CFTC final rule, citing SEC release 33-11412. The article is internally inconsistent on the count (16 vs 17 tokens), and the primary document was not read in this pass, so check it directly. No enforcement action against Aptos was found.</li><li><b>ETF and product path.</b> A Bitwise US spot ETF is filed but not found approved; commodity classification could ease that path, but that is inference, not a found fact.</li><li><b>Counterparty and concentration.</b> A 2022 lead investor (FTX Ventures) later collapsed; the effect on current holdings was not found. The Foundation controls large locked and staked holdings (210M APT) and Decibel dominates measured TVL.</li><li><b>Data and transparency.</b> Many headline usage numbers (stablecoins, TVL, users) come from Foundation posts or secondary articles and disagree with DefiLlama; independent checks matter here.</li></ul></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">08</span><h2>Putting It Together</h2></div>
+<div class="verdict-box"><p><b>This is a synthesis of the research above, not a recommendation to buy, hold, or sell.</b> The decision on whether and how much to hold is yours, based on your own risk tolerance and time horizon.</p><p><b>What the data supports:</b> Aptos is a technically distinctive chain (Move, parallel execution) that rebuilt its token model in 2026 with a 2.1B hard cap, fee burn, lower staking yield and a permanent 210M APT Foundation lock. The four-year investor unlock cycle ended this month, cutting monthly issuance by about 60%. It carries roughly $0.9-1.7B of stablecoins, about $760M of RWA AUM, a perps venue with over $1B of cumulative volume, and a reported SEC/CFTC digital-commodity listing.</p><p><b>What the data flags as risk:</b> Fee income is tiny (about $4K a day), so the burn does not yet offset issuance; DeFi TVL is about $44M and mostly one app; no verified market-wide volume was found; circulating supply varies by roughly 40% across sources, which makes market cap and valuation uncertain; and the Bitwise ETF has no found approval. Price is about 96% below its high and hit an all-time low on 30 Aug 2026.</p><p><b>The honest takeaway:</b> Since the Asset Review the price has risen about 40% off the low and the unlock overhang has gone, which are real changes. The open question is whether stablecoin, RWA and perps activity turns into fee revenue and burn; until fees rise, the token model's deflation case is theory. Watch a daily close above $0.90, the $0.75 support, DefiLlama fees and TVL, and any ETF decision.</p></div>
+</section>
+  <footer>
+    <div class="disclaimer">
+      <div class="footer-brand"><img src="ttm_logo.png" alt="TTM"><span>TTM · TRADE THE MOVE — DEEP DIVE RESEARCH SERIES</span></div>
+      This document is for informational and educational purposes only and does not constitute financial, investment, or trading advice. Data points are reference figures as of the dates noted and can change materially, and some figures vary across sources. Cryptocurrency markets are highly volatile and carry risk of substantial or total capital loss. Always do your own research and consult a licensed financial advisor before making investment decisions. Not a recommendation to buy or sell APT or any other asset.
+    </div>
+  </footer>
+</div>
+</body>
+</html>

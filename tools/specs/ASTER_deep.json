@@ -1,0 +1,172 @@
+{
+ "kind": "deep",
+ "ticker": "ASTER",
+ "ticker_display": "ASTER",
+ "name": "Aster",
+ "file": "ASTER_Deep_Dive_TTM.html",
+ "date": "19 Oct 2026",
+ "subhead": "A full research pass on Aster using the same 7-point framework: a perp DEX with an unusually aggressive 99% fee-to-buyback design and a shipped privacy chain, set against a sharp fall in daily volume from its 2025 peak, unresolved wash-trading questions, a pseudonymous CEO and a team-token cliff whose status is unclear.",
+ "price": "≈$0.70",
+ "chg": "-0.5% to -1.7% (24h) · -2.3% (7d) · 24h range ≈ $0.678–0.715 · ≈71% below the Sep 2025 all-time high of $2.41",
+ "chg_up": false,
+ "price_meta": "Market Cap ≈ $1.88B · Rank #41 (KuCoin; #48 cited in June) · Reference: Oct 2026",
+ "sections": [
+  {
+   "title": "Real Usage — Is Anyone Actually Using It?",
+   "banner": "Past the narrative: is there measurable, sustained trading activity, or was the headline volume a points-farming spike? Aster's DefiLlama figures today are a fraction of what its own launch-era numbers implied.",
+   "blocks": [
+    {"type": "stats", "rows": [
+     ["Perp Volume, 24h (19 Oct)", "≈$1.10B (normalized ≈$1.08B)", "gold"],
+     ["Open Interest (19 Oct)", "≈$1.32B (USD perps)"],
+     ["DefiLlama Exchange Rank", "#5 of DEXs, #18 overall (score B, 56.6/100)"],
+     ["Markets Listed", "675 (600 perps, 75 spot)"],
+     ["Depth within ±2%", "≈$381M (perps ≈$378M)"],
+     ["Daily Volume, Mar 2026", "≈$3.2–3.3B (Hyperliquid ≈$8.4B)"],
+     ["Peak Claims, late 2025", "30-day ≈$185–188B; daily &gt;$6B; cumulative &gt;$2.85T"],
+     ["Fees / Revenue / Users", "Not found in sources used (5M+ users is a prior-review claim)"]
+    ]},
+    {"type": "card", "title": "What the Data Actually Shows", "dot": "n", "items": [
+     "<b>Volume has fallen sharply from the peak.</b> DefiLlama shows about $1.1B of perp volume over 24 hours on 19 Oct 2026. In March 2026 Crypto Briefing cited about $3.2-3.3B a day, and January-2026 data showed about $31.7B over seven days (roughly $4.5B a day). Late-2025 reports cited 30-day volume near $185-188B. Today's daily figure is roughly a quarter of the March level. Single-day readings are noisy (the page shows +19% on the prior day), but the direction is clear.",
+     "<b>Open interest is also lower.</b> Open interest of about $1.32B compares with about $2.6B in the January 2026 blockeden summary and about $3B in October 2025 (21Shares). Hyperliquid's open interest reached $14.3B on 6 Sep 2026 (The Block), roughly ten times Aster's today.",
+     "<b>Wash-trading concern is documented, not proven.</b> 21Shares (6 Oct 2025) flagged a volume-to-TVL ratio above 70:1 against a 3-7 range it calls healthy, a roughly tenfold volume jump in a week, and a points-based reward system that may incentivize self-trading. It called growth possibly 'artificially inflated'. No audit or confirmation was found. DefiLlama's normalized figure is only about 2% below reported, which is not a sign of heavy distortion in today's data but does not address the 2025 spike.",
+     "<b>The token's own market is thin.</b> On DefiLlama's table the ASTER perp itself has only about $64.5M of open interest and $32.7M of 24h volume, a small share of the venue. BTC ($472M OI) and ETH ($215M OI) dominate.",
+     "<b>Spot is negligible.</b> About $2.8M of 24h spot volume against $1.1B in perps. Aster is a derivatives venue.",
+     "<b>The 5M+ users and $2.85-3.8T cumulative volume in the prior Asset Review were not re-verified.</b> No user count, fee total or revenue figure was found in the sources reached this pass, so claims that revenue funds buybacks cannot be sized here."
+    ]}
+   ]
+  },
+  {
+   "title": "Tokenomics — Aggressive Buyback and Burn, Heavy Remaining Overhang",
+   "banner": "Circulating vs. max supply, the unlock schedule, and whether trading activity feeds back into the token. Aster's value-capture design is the strongest in this series on paper; the open questions are fee size and future supply.",
+   "blocks": [
+    {"type": "stats", "rows": [
+     ["Max Supply (minted at launch)", "8B ASTER"],
+     ["Total Supply (after burns)", "≈7.82–7.92B (burn target 3B)"],
+     ["Circulating Supply", "≈2.68–2.70B ASTER"],
+     ["% of Max Circulating", "≈34%"],
+     ["Buyback Rate (from 17 Jun 2026)", "99% of daily platform fees"],
+     ["Burned to Dec 2025", "77.86M ASTER"],
+     ["Team and Advisors", "400M (5%), 12-month cliff, then 10M/month"],
+     ["Token Holders (15 Jan 2026)", "207,176 (BscScan)"]
+    ]},
+    {"type": "card", "title": "How the Supply Actually Works", "dot": "n", "items": [
+     "<b>Launch allocation.</b> Per Blockworks' transparency filing: airdrop 53.5% (4.28B, with 704M unlocked at TGE and the rest over about 80 months), ecosystem and community 30%, treasury 7% (locked), team and advisors 5%, liquidity and listing 4.5% (unlocked at TGE). TGE was 17 Sep 2025. The earlier Asset Review gave 17 Oct 2025 as the listing date; sources agree the airdrop claim window ran 17 Sep to 17 Oct 2025.",
+     "<b>Buyback is now close to total.</b> On 17 Jun 2026 Aster raised the fee share used for buybacks from 80% (December 2025 plan) to 99% of daily platform fees, bought by TWAP and paid to veASTER stakers. Each token bought back triggers an equal burn from reserve, with team allocation burned first, every two weeks until total supply reaches 3B. Aster calls this a '198% buyback'. The earlier Asset Review quoted 70-80%, which is now out of date.",
+     "<b>The size of the buyback is unknown.</b> No dollar figure for fees or buybacks in 2026 was found. For scale, Season 3 (to 9 Nov 2025) reportedly spent over $280M of fees for about 155.7M ASTER bought and 77.9M burned, but that was at the 2025 volume peak and today's volume is far lower.",
+     "<b>Dilution is still a live risk.</b> Tokenomist (Dec 2025) projected about +27% circulating supply in one year and about +120% in four, from emissions and unlocks, and a scheduled 78.1M unlock was reported for 17 Feb 2026. The ecosystem allocation moved from linear vesting (ended Jan 2026) to a staking emission of about 450,000 ASTER a week (about 23M a year, a derived figure). Roughly two thirds of max supply is not yet circulating.",
+     "<b>The team cliff is uncertain.</b> Blockworks and Tokenomist put the end of the 12-month cliff around Sep 2026. A 2 Sep 2026 Spanish-language report said the team extended it by 12 months, citing unnamed industry sources and no official post. This is not confirmed. If true it removes a near-term unlock; if false, 10M ASTER a month (about $7M at today's price) is now vesting.",
+     "<b>Sources differ on supply.</b> Circulating is about 2.68B (CoinGecko, June), 2.70B (KuCoin) and 2.09B in a December 2025 Tokenomist snapshot. This report uses 2.68-2.70B."
+    ]}
+   ]
+  },
+  {
+   "title": "Team &amp; Funding — Who's Behind It, and Who's Backing Them?",
+   "banner": "Named people with a track record, transparent funding, and, in Aster's case, a pseudonymous CEO and a financial backer whose size is undisclosed.",
+   "blocks": [
+    {"type": "stats", "rows": [
+     ["CEO / Co-founder", "'Leonard' (pseudonymous)"],
+     ["Background (IQ.wiki)", "HFT and risk engines; Binance project manager from 2019"],
+     ["Lineage", "ApolloX plus Astherus, rebranded Aster 31 Mar 2025"],
+     ["Disclosed Backer", "YZi Labs (CZ family office), equity stake"],
+     ["Investment Amount", "Not disclosed in sources found"],
+     ["ApolloX Seed Round", "Announced 7 Jun 2022 (amount not found)"],
+     ["Public Token Sale", "None disclosed"],
+     ["Aster Chain Mainnet", "17 Mar 2026 (ZK privacy L1)"]
+    ]},
+    {"type": "alert", "label": "Notable Finding — CZ Connection, Pseudonymous Leadership, Unclear Entity",
+     "text": "Aster's CEO is known only as Leonard. Sources describe him as a former Binance project manager who worked with Changpeng Zhao, and CZ's family office YZi Labs holds an equity stake. In June 2026 a commentary piece reported a claim by Star Xu that Binance 'secretly backed' Aster, and CZ has said Aster operates globally and does not target the United States. Blockworks' filing does not name the legal entity behind the team allocation. None of this is evidence of wrongdoing, but it means counterparty accountability is weaker than for a team with named, doxxed founders. The IQ.wiki page also contradicts itself on when Leonard met CZ (2019 vs 2021)."},
+    {"type": "card", "title": "What Stands Out", "dot": "n", "items": [
+     "<b>Delivery on the roadmap has been decent.</b> The December 2025 roadmap targeted a Q1 2026 Layer 1 launch; Aster Chain mainnet launched on 17 Mar 2026, with ZK encryption and stealth addresses, and the token rose about 8% before giving back gains. Q2 2026 targets (staking, governance) were not verified as shipped; Blockworks still lists governance as scheduled and decisions as resting with the core team.",
+     "<b>Performance claims are the company's own.</b> The chain's 50ms blocks, 100,000+ TPS and zero gas are company claims not independently verified.",
+     "<b>An early operational incident.</b> On 24 Sep 2025 an XPL perpetual pricing incident occurred and affected users were reimbursed in USDT, per Blockworks. No exploit of the ASTER contract was recorded as of 15 Jan 2026.",
+     "<b>Funding data is thin.</b> No dollar amount for YZi Labs' investment was found and the IQ.wiki page gives 2023 for the seed investment, which is a secondary source."
+    ]}
+   ]
+  },
+  {
+   "title": "Competitive Position — Is This Actually Differentiated?",
+   "banner": "Genuinely distinct positioning versus a crowded perp DEX category where market-share leadership has changed hands within weeks.",
+   "blocks": [
+    {"type": "twocol", "cards": [
+     {"title": "Where ASTER Has an Edge", "dot": "g", "items": [
+      "<b>Value accrual design.</b> 99% of daily fees to buybacks plus an equal burn is more aggressive than Hyperliquid's roughly 97% routing on core crypto perps (The Block, Sep 2026), and it is paired with a stated 3B supply target.",
+      "<b>Privacy chain.</b> Aster Chain (mainnet 17 Mar 2026) uses built-in ZK encryption with optional disclosure through a 'viewer pass'. Few perp venues offer private trading.",
+      "<b>Breadth and distribution.</b> 600 perp markets, multi-chain deposits (Ethereum, Arbitrum, Solana, BNB Chain), 24/7 stock perps and wide CEX listings. DefiLlama still ranks it #5 among DEXs.",
+      "<b>Pricing.</b> Blockworks lists 0% maker and 0.04% taker on USDT perps, with 0.005% taker on USD1 perps.",
+      "<b>Backer network.</b> YZi Labs and CZ association bring exchange relationships few new DEXs have."
+     ]},
+     {"title": "Where the Competition Bites", "dot": "r", "items": [
+      "<b>Hyperliquid has pulled ahead.</b> Open interest reached $14.3B (6 Sep 2026) and HYPE hit an all-time high near $88; Coinbase began routing Base App users to it in mid-August. Aster's open interest is about $1.3B. Hyperliquid's own gross revenue did fall from $457M (Q3 2025) to $202M (Q2 2026), so the whole sector has cooled.",
+      "<b>Lighter and others.</b> In January 2026 Lighter ran about $25.3B of weekly volume against Aster's $31.7B, and zero-fee competitors (Lighter, Paradex) undercut on price. Current Lighter figures were not found.",
+      "<b>Market share is volatile.</b> Per 21Shares, Aster rose to nearly 70% of perp DEX volume in September 2025 while Hyperliquid fell to about 10%. In March 2026 Aster's daily volume was about $3.3B against Hyperliquid's $8.4B. Share is driven by incentives and does not persist.",
+      "<b>Volume quality.</b> Incentive-driven volume and the 70:1 volume-to-TVL flag mean headline rank may overstate organic demand.",
+      "<b>Extreme leverage.</b> 1001x leverage (Simple Mode) attracts speculators but is a reputational and liquidation-event risk."
+     ]}
+    ]}
+   ]
+  },
+  {
+   "title": "Price Context — Cheap, or Correctly Priced?",
+   "banner": "Where price sits relative to history, and whether the drawdown reflects opportunity or a fair repricing given the usage data in Section 01.",
+   "blocks": [
+    {"type": "timeline", "items": [
+     ["17 Sep 2025", "Token generation event and airdrop claims open. Trackers show an all-time low of about $0.084 in the earliest pre-market trading (the earlier review quoted $0.0844-0.0997)."],
+     ["24 Sep 2025", "All-time high of $2.41 (all sources agree on this date)."],
+     ["Dec 2025", "Spike to about $1.30 (+30%) on news CZ held over $2.5M of ASTER; Season 3 burn of about 77.9M tokens announced 5 Dec."],
+     ["Jan–Feb 2026", "Falls about 75% from peak: about $0.62 on 19 Jan and about $0.60 on 9 Feb (market cap about $1.47B), ahead of a 78.1M unlock reported for 17 Feb."],
+     ["17 Mar 2026", "Aster Chain mainnet launches; token jumps about 8% then trades near $0.77."],
+     ["17 Jun 2026", "99% buyback upgrade lifts price from about $0.64 to $0.79-0.80, the highest since January, then fades to $0.65-0.68 the same day."],
+     ["2 Sep / 19 Oct 2026", "$0.734 on 2 Sep (market cap about $1.98B); about $0.70 now, with a market cap near $1.88B and about 71% below the peak."]
+    ]},
+    {"type": "card", "title": "Reading the Price", "dot": "n", "items": [
+     "<b>Data has moved since the Asset Review.</b> The 30 Aug review gave $0.60-0.70 and a $1.63-1.90B market cap; today's $0.70 and about $1.88B sit at the top of that range. Price is broadly flat over eight months in a $0.60-0.80 band, while the reviewed volume and open interest numbers have fallen.",
+     "<b>Price has held up better than activity.</b> Daily perp volume is roughly a quarter of its March level and open interest about half of January's, yet market cap has not fallen. The 99% buyback announcement is the likeliest support, but its dollar size is not disclosed.",
+     "<b>Valuation context.</b> At about $1.88B market cap and a fully diluted value near $5.6B (8B x $0.70), the token is priced on future volume and burns. Without a found fee figure, no revenue multiple can be calculated. This is a gap, not a verdict. Prior ranges in this series show a $0.60-0.65 pivot and $0.80 as resistance; the June and September highs ($0.79-0.80, $0.737 intraday) are consistent with that."
+    ]}
+   ]
+  },
+  {
+   "title": "Liquidity &amp; Market Structure",
+   "banner": "Can you actually get in and out at the price you expect?",
+   "blocks": [
+    {"type": "stats", "rows": [
+     ["Market Cap", "≈$1.88B (≈$1.98B on 2 Sep)"],
+     ["Cap Rank", "#41 (KuCoin); #48 cited in June"],
+     ["24h Volume", "≈$30M (KuCoin) to ≈$118M (2 Sep); varies widely"],
+     ["Major CEX Listings", "Bybit, KuCoin, OKX, Bitget, HTX, Kraken, BingX, BitMart, CoinEx"],
+     ["Coinbase / US Spot ETF", "Not found in sources"],
+     ["ASTER Perp on Aster", "OI ≈$64.5M; 24h volume ≈$32.7M; $100k costs ≈$7–99 in slippage"]
+    ]},
+    {"type": "card", "title": "Bottom Line on Liquidity", "dot": "n", "items": [
+     "<b>Adequate for retail and mid-size orders.</b> Exchange volume of roughly $30-120M a day on a $1.9B market cap is workable, but the range across trackers is wide and one KuCoin page showed 0 in a second volume field. Expect depth to thin quickly on size.",
+     "<b>On-venue ASTER perp is shallow.</b> DefiLlama shows active perp liquidity of about $4.3M and spot liquidity of about $0.44M for the ASTER market on Aster itself, with a large spread between its two quoted $100k cost figures ($99.40 vs $7.40).",
+     "<b>Listings are broad.</b> Blockworks lists listings on major CEXs from 19 Sep to 20 Oct 2025, including Bybit, OKX, Bitget, Kraken and KuCoin. No Coinbase listing or regulated ETP was found.",
+     "<b>Concentration.</b> Holder count was 207,176 at 15 Jan 2026 (BscScan). Leonard said in Sep 2025 about 80% of supply was locked on-chain; this is a team statement. Large treasury and reserve wallets (one held about 3.13B ASTER in Dec 2025) mean on-chain concentration data needs interpretation."
+    ]}
+   ]
+  },
+  {
+   "title": "Regulatory &amp; Counterparty Risk",
+   "banner": "Legal clarity versus open exposure that could move price overnight.",
+   "blocks": [
+    {"type": "card", "title": "Unclear Footing, No Found Enforcement", "dot": "n", "items": [
+     "<b>No Aster-specific enforcement found.</b> A June 2026 commentary piece named no Aster enforcement, filing or regulator statement. It recorded CZ's statement that Aster does not target the United States, and discussed CFTC and SEC precedents (Uniswap Labs, Opyn, ZeroEx, Ooki DAO) for DEXs serving US users. Whether Aster geoblocks or applies KYC was not established.",
+     "<b>Licensing.</b> DefiLlama lists Aster as not MiCA licensed. A perp DEX with up to 1001x leverage and stock perpetuals sits in a regulatory grey zone in most major jurisdictions; that is a risk assessment, not a found action.",
+     "<b>Counterparty and governance risk.</b> Protocol decisions rest with the core team until governance goes live, the CEO is pseudonymous and the legal entity behind the team allocation is not named. Hyperliquid, by contrast, has seen US officials publicly discuss bringing it onshore (The Block, Sep 2026), which could advance a compliant rival.",
+     "<b>Operational history.</b> One pricing incident (24 Sep 2025, XPL perp) was compensated; no smart-contract exploit of the token was recorded to 15 Jan 2026. Later incidents were not searched exhaustively."
+    ]}
+   ]
+  },
+  {
+   "title": "Putting It Together",
+   "blocks": [
+    {"type": "verdict", "paras": [
+     "<b>This is a synthesis of the research above, not a recommendation to buy, hold, or sell.</b> The decision on whether and how much to hold is yours, based on your own risk tolerance and time horizon.",
+     "<b>What the data supports:</b> Aster is still a top-five DEX by DefiLlama's ranking, with about $1.1B of daily perp volume, about $1.3B of open interest and 600 perp markets. Its token design is among the strongest in the category on paper: 99% of daily fees to buybacks since 17 Jun 2026, an equal reserve burn and a 3B supply target. It shipped its privacy chain on 17 Mar 2026 as planned.",
+     "<b>What the data flags as risk:</b> Volume is down to roughly a quarter of March levels and open interest is about one tenth of Hyperliquid's. No fee or revenue figure was found, so the buyback cannot be sized. Roughly two thirds of max supply is not circulating, the team cliff status is unconfirmed, and wash-trading concerns from the 2025 volume spike were never resolved. Leadership is pseudonymous, the legal entity is unnamed and the regulatory position is untested.",
+     "<b>The honest takeaway:</b> The price is basically unchanged since the Asset Review, but the activity behind it has shrunk. The thing to watch is disclosed fee revenue: if 99% of a small fee base is bought back, the support is modest; if volume recovers, the design is unusually direct. Until fees, buyback totals and the team-token schedule are verifiable, the data supports a watchlist stance rather than a conclusion."
+    ]}
+   ]
+  }
+ ]
+}

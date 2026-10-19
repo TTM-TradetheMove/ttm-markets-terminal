@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aster (ASTER) Deep Dive — TTM | Trade The Move</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+  :root{
+    --bg:#09080a; --bg-panel:#131110; --bg-panel-2:#1a1714; --hairline:#2c2620;
+    --gold:#d4af37; --gold-bright:#f4d375; --gold-dim:#9a7c2c;
+    --ink:#eae6da; --ink-dim:#9c9484; --up:#4caf7d; --down:#d9534f;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:var(--bg); color:var(--ink); font-family:'Inter',sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased; }
+  .wrap{ max-width:980px; margin:0 auto; padding:0 28px 80px; }
+  .hero{ position:relative; padding:56px 28px 40px; border-bottom:1px solid var(--hairline);
+    background: radial-gradient(ellipse at top left, rgba(212,175,55,0.08), transparent 60%), linear-gradient(180deg,#0d0b09 0%,#09080a 100%); overflow:hidden; }
+  .hero::after{ content:""; position:absolute; inset:0;
+    background-image: linear-gradient(rgba(212,175,55,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(212,175,55,0.04) 1px, transparent 1px);
+    background-size:42px 42px; mask-image: radial-gradient(ellipse at top left, black, transparent 70%); pointer-events:none; }
+  .hero-inner{ max-width:980px; margin:0 auto; position:relative; z-index:1; }
+  .logo-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:44px; flex-wrap:wrap; gap:16px; }
+  .logo-row img{ height:140px; width:auto; display:block; }
+  .brief-tag{ font-family:'Space Mono',monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-dim);
+    border:1px solid var(--hairline); padding:6px 12px; border-radius:3px; }
+  .eyebrow{ font-family:'Space Mono',monospace; font-size:12px; letter-spacing:0.18em; text-transform:uppercase; color:var(--gold); margin-bottom:14px; }
+  h1.title{ font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:clamp(38px,6vw,62px); letter-spacing:0.01em; line-height:1.02; color:var(--ink); }
+  h1.title span{ color:var(--gold); }
+  .subhead{ margin-top:14px; color:var(--ink-dim); font-size:16px; max-width:600px; }
+  .price-strip{ display:flex; align-items:baseline; gap:18px; margin-top:36px; flex-wrap:wrap; }
+  .price-strip .px{ font-family:'Oswald',sans-serif; font-size:54px; font-weight:600; color:var(--gold-bright); }
+  .price-strip .chg{ font-family:'Space Mono',monospace; font-size:16px; color:var(--down); padding:4px 10px; border:1px solid rgba(217,83,79,0.4); border-radius:3px; }
+  .price-strip .chg.up{ color:var(--up); border-color:rgba(76,175,125,0.4); }
+  .price-meta{ color:var(--ink-dim); font-size:13px; font-family:'Space Mono',monospace; }
+  section{ padding:46px 0; border-bottom:1px solid var(--hairline); }
+  section:last-of-type{ border-bottom:none; }
+  .sec-head{ display:flex; align-items:baseline; gap:14px; margin-bottom:26px; }
+  .sec-num{ font-family:'Space Mono',monospace; color:var(--gold-dim); font-size:13px; }
+  h2{ font-family:'Oswald',sans-serif; text-transform:uppercase; font-weight:600; font-size:24px; letter-spacing:0.02em; }
+  .sec-sub{ color:var(--ink-dim); font-size:14px; margin-top:-14px; margin-bottom:22px; max-width:680px; }
+  .framework-banner{ background:linear-gradient(135deg,var(--bg-panel-2),var(--bg-panel)); border:1px solid var(--hairline); border-left:3px solid var(--gold);
+    padding:22px 26px; margin-bottom:8px; }
+  .framework-banner .label{ font-family:'Space Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--gold-bright); margin-bottom:8px; }
+  .framework-banner p{ font-size:14px; color:var(--ink-dim); max-width:700px; }
+  .stat-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--hairline); border:1px solid var(--hairline); }
+  .stat{ background:var(--bg-panel); padding:20px 18px; }
+  .stat .label{ font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-dim); }
+  .stat .value{ font-family:'Oswald',sans-serif; font-size:22px; font-weight:600; margin-top:8px; color:var(--ink); }
+  .stat .value.gold{ color:var(--gold-bright); }
+  @media (max-width:700px){ .stat-grid{ grid-template-columns:repeat(2,1fr); } }
+  .timeline{ position:relative; padding-left:26px; }
+  .timeline::before{ content:""; position:absolute; left:5px; top:6px; bottom:6px; width:1px; background:linear-gradient(180deg,var(--gold),var(--hairline) 90%); }
+  .t-item{ position:relative; padding-bottom:26px; }
+  .t-item:last-child{ padding-bottom:0; }
+  .t-item::before{ content:""; position:absolute; left:-26px; top:4px; width:11px; height:11px; border-radius:50%; background:var(--bg); border:2px solid var(--gold); }
+  .t-year{ font-family:'Space Mono',monospace; color:var(--gold); font-size:13px; letter-spacing:0.05em; }
+  .t-desc{ font-size:14.5px; color:var(--ink); margin-top:4px; max-width:660px; }
+  table.levels{ width:100%; border-collapse:collapse; font-size:14px; }
+  table.levels th{ text-align:left; font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-dim);
+    padding:10px 12px; border-bottom:1px solid var(--hairline); }
+  table.levels td{ padding:12px; border-bottom:1px solid var(--hairline); color:var(--ink); }
+  table.levels tr:last-child td{ border-bottom:none; }
+  .tag{ font-family:'Space Mono',monospace; font-size:11px; padding:3px 8px; border-radius:3px; }
+  .tag.res{ background:rgba(217,83,79,0.12); color:#e8837f; border:1px solid rgba(217,83,79,0.3); }
+  .tag.sup{ background:rgba(76,175,125,0.12); color:#7fd1a5; border:1px solid rgba(76,175,125,0.3); }
+  .tag.piv{ background:rgba(212,175,55,0.14); color:var(--gold-bright); border:1px solid rgba(212,175,55,0.35); }
+  .two-col{ display:grid; grid-template-columns:1fr 1fr; gap:28px; }
+  @media (max-width:760px){ .two-col{ grid-template-columns:1fr; } }
+  .card{ background:var(--bg-panel); border:1px solid var(--hairline); padding:22px 22px; }
+  .card h3{ font-family:'Oswald',sans-serif; text-transform:uppercase; font-size:15px; letter-spacing:0.05em; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .dot.g{ background:var(--up); }
+  .dot.r{ background:var(--down); }
+  .dot.n{ background:var(--gold); }
+  .card ul{ list-style:none; }
+  .card li{ font-size:13.8px; color:var(--ink); padding:9px 0; border-bottom:1px dashed var(--hairline); }
+  .card li:last-child{ border-bottom:none; }
+  .card li b{ color:var(--gold-bright); font-weight:600; }
+  .verdict-box{ background:linear-gradient(135deg,var(--bg-panel-2),var(--bg-panel)); border:1px solid var(--hairline); border-left:3px solid var(--gold-bright); padding:24px 26px; }
+  .verdict-box p{ font-size:14.5px; color:var(--ink); margin-top:10px; }
+  .verdict-box p:first-of-type{ margin-top:0; }
+  .alert-box{ background:rgba(217,83,79,0.08); border:1px solid rgba(217,83,79,0.35); border-left:3px solid var(--down); padding:20px 24px; margin-bottom:24px; }
+  .alert-box .label{ font-family:'Space Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:#e8837f; margin-bottom:8px; }
+  .alert-box p{ font-size:14px; color:var(--ink); }
+  footer{ padding:34px 0 10px; }
+  .disclaimer{ font-family:'Space Mono',monospace; font-size:11.5px; line-height:1.7; color:var(--ink-dim); border-top:1px solid var(--hairline); padding-top:22px; }
+  .footer-brand{ display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+  .footer-brand img{ height:52px; opacity:0.85; }
+  .footer-brand span{ font-family:'Space Mono',monospace; font-size:11px; color:var(--ink-dim); letter-spacing:0.08em; }
+</style>
+<style id="ttm-return-css">.ttm-return{position:fixed;top:14px;left:14px;z-index:9999;display:inline-flex;align-items:center;gap:8px;padding:9px 16px;background:rgba(9,8,10,.92);border:1px solid #d4af37;color:#f4d375;border-radius:999px;font:600 13px/1 Inter,system-ui,sans-serif;letter-spacing:.04em;text-decoration:none;cursor:pointer;backdrop-filter:blur(6px);box-shadow:0 4px 18px rgba(0,0,0,.5)}.ttm-return:hover{background:#d4af37;color:#09080a}@media print{.ttm-return{display:none}}</style></head>
+<body><a class="ttm-return" id="ttm-return" href="index.html#library">&larr; Return</a><script>document.getElementById("ttm-return").addEventListener("click",function(e){try{if(window.opener&&!window.opener.closed){e.preventDefault();window.opener.focus();window.close();setTimeout(function(){location.href=this.href}.bind(this),150);}}catch(x){}});</script>
+<div class="hero">
+  <div class="hero-inner">
+    <div class="logo-row">
+      <img src="ttm_logo.png" alt="TTM — Trade The Move">
+      <div class="brief-tag">Deep Dive Research · 19 Oct 2026</div>
+    </div>
+    <div class="eyebrow">Full Research Report</div>
+    <h1 class="title">Aster <span>/ ASTER Deep Dive</span></h1>
+    <p class="subhead">A full research pass on Aster using the same 7-point framework: a perp DEX with an unusually aggressive 99% fee-to-buyback design and a shipped privacy chain, set against a sharp fall in daily volume from its 2025 peak, unresolved wash-trading questions, a pseudonymous CEO and a team-token cliff whose status is unclear.</p>
+    <div class="price-strip">
+      <div class="px">≈$0.70</div>
+      <div class="chg">-0.5% to -1.7% (24h) · -2.3% (7d) · 24h range ≈ $0.678–0.715 · ≈71% below the Sep 2025 all-time high of $2.41</div>
+    </div>
+    <div class="price-meta" style="margin-top:10px;">Market Cap ≈ $1.88B · Rank #41 (KuCoin; #48 cited in June) · Reference: Oct 2026</div>
+  </div>
+</div>
+<div class="wrap">
+<section>
+<div class="sec-head"><span class="sec-num">01</span><h2>Real Usage — Is Anyone Actually Using It?</h2></div>
+<div class="framework-banner"><div class="label">Framework Check</div><p>Past the narrative: is there measurable, sustained trading activity, or was the headline volume a points-farming spike? Aster's DefiLlama figures today are a fraction of what its own launch-era numbers implied.</p></div>
+<div class="stat-grid" style="margin-top:24px;"><div class="stat"><div class="label">Perp Volume, 24h (19 Oct)</div><div class="value gold">≈$1.10B (normalized ≈$1.08B)</div></div><div class="stat"><div class="label">Open Interest (19 Oct)</div><div class="value">≈$1.32B (USD perps)</div></div><div class="stat"><div class="label">DefiLlama Exchange Rank</div><div class="value">#5 of DEXs, #18 overall (score B, 56.6/100)</div></div><div class="stat"><div class="label">Markets Listed</div><div class="value">675 (600 perps, 75 spot)</div></div><div class="stat"><div class="label">Depth within ±2%</div><div class="value">≈$381M (perps ≈$378M)</div></div><div class="stat"><div class="label">Daily Volume, Mar 2026</div><div class="value">≈$3.2–3.3B (Hyperliquid ≈$8.4B)</div></div><div class="stat"><div class="label">Peak Claims, late 2025</div><div class="value">30-day ≈$185–188B; daily &gt;$6B; cumulative &gt;$2.85T</div></div><div class="stat"><div class="label">Fees / Revenue / Users</div><div class="value">Not found in sources used (5M+ users is a prior-review claim)</div></div></div>
+<div style="margin-top:24px;"><div class="card"><h3><span class="dot n"></span>What the Data Actually Shows</h3><ul><li><b>Volume has fallen sharply from the peak.</b> DefiLlama shows about $1.1B of perp volume over 24 hours on 19 Oct 2026. In March 2026 Crypto Briefing cited about $3.2-3.3B a day, and January-2026 data showed about $31.7B over seven days (roughly $4.5B a day). Late-2025 reports cited 30-day volume near $185-188B. Today's daily figure is roughly a quarter of the March level. Single-day readings are noisy (the page shows +19% on the prior day), but the direction is clear.</li><li><b>Open interest is also lower.</b> Open interest of about $1.32B compares with about $2.6B in the January 2026 blockeden summary and about $3B in October 2025 (21Shares). Hyperliquid's open interest reached $14.3B on 6 Sep 2026 (The Block), roughly ten times Aster's today.</li><li><b>Wash-trading concern is documented, not proven.</b> 21Shares (6 Oct 2025) flagged a volume-to-TVL ratio above 70:1 against a 3-7 range it calls healthy, a roughly tenfold volume jump in a week, and a points-based reward system that may incentivize self-trading. It called growth possibly 'artificially inflated'. No audit or confirmation was found. DefiLlama's normalized figure is only about 2% below reported, which is not a sign of heavy distortion in today's data but does not address the 2025 spike.</li><li><b>The token's own market is thin.</b> On DefiLlama's table the ASTER perp itself has only about $64.5M of open interest and $32.7M of 24h volume, a small share of the venue. BTC ($472M OI) and ETH ($215M OI) dominate.</li><li><b>Spot is negligible.</b> About $2.8M of 24h spot volume against $1.1B in perps. Aster is a derivatives venue.</li><li><b>The 5M+ users and $2.85-3.8T cumulative volume in the prior Asset Review were not re-verified.</b> No user count, fee total or revenue figure was found in the sources reached this pass, so claims that revenue funds buybacks cannot be sized here.</li></ul></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">02</span><h2>Tokenomics — Aggressive Buyback and Burn, Heavy Remaining Overhang</h2></div>
+<div class="framework-banner"><div class="label">Framework Check</div><p>Circulating vs. max supply, the unlock schedule, and whether trading activity feeds back into the token. Aster's value-capture design is the strongest in this series on paper; the open questions are fee size and future supply.</p></div>
+<div class="stat-grid" style="margin-top:24px;"><div class="stat"><div class="label">Max Supply (minted at launch)</div><div class="value">8B ASTER</div></div><div class="stat"><div class="label">Total Supply (after burns)</div><div class="value">≈7.82–7.92B (burn target 3B)</div></div><div class="stat"><div class="label">Circulating Supply</div><div class="value">≈2.68–2.70B ASTER</div></div><div class="stat"><div class="label">% of Max Circulating</div><div class="value">≈34%</div></div><div class="stat"><div class="label">Buyback Rate (from 17 Jun 2026)</div><div class="value">99% of daily platform fees</div></div><div class="stat"><div class="label">Burned to Dec 2025</div><div class="value">77.86M ASTER</div></div><div class="stat"><div class="label">Team and Advisors</div><div class="value">400M (5%), 12-month cliff, then 10M/month</div></div><div class="stat"><div class="label">Token Holders (15 Jan 2026)</div><div class="value">207,176 (BscScan)</div></div></div>
+<div style="margin-top:24px;"><div class="card"><h3><span class="dot n"></span>How the Supply Actually Works</h3><ul><li><b>Launch allocation.</b> Per Blockworks' transparency filing: airdrop 53.5% (4.28B, with 704M unlocked at TGE and the rest over about 80 months), ecosystem and community 30%, treasury 7% (locked), team and advisors 5%, liquidity and listing 4.5% (unlocked at TGE). TGE was 17 Sep 2025. The earlier Asset Review gave 17 Oct 2025 as the listing date; sources agree the airdrop claim window ran 17 Sep to 17 Oct 2025.</li><li><b>Buyback is now close to total.</b> On 17 Jun 2026 Aster raised the fee share used for buybacks from 80% (December 2025 plan) to 99% of daily platform fees, bought by TWAP and paid to veASTER stakers. Each token bought back triggers an equal burn from reserve, with team allocation burned first, every two weeks until total supply reaches 3B. Aster calls this a '198% buyback'. The earlier Asset Review quoted 70-80%, which is now out of date.</li><li><b>The size of the buyback is unknown.</b> No dollar figure for fees or buybacks in 2026 was found. For scale, Season 3 (to 9 Nov 2025) reportedly spent over $280M of fees for about 155.7M ASTER bought and 77.9M burned, but that was at the 2025 volume peak and today's volume is far lower.</li><li><b>Dilution is still a live risk.</b> Tokenomist (Dec 2025) projected about +27% circulating supply in one year and about +120% in four, from emissions and unlocks, and a scheduled 78.1M unlock was reported for 17 Feb 2026. The ecosystem allocation moved from linear vesting (ended Jan 2026) to a staking emission of about 450,000 ASTER a week (about 23M a year, a derived figure). Roughly two thirds of max supply is not yet circulating.</li><li><b>The team cliff is uncertain.</b> Blockworks and Tokenomist put the end of the 12-month cliff around Sep 2026. A 2 Sep 2026 Spanish-language report said the team extended it by 12 months, citing unnamed industry sources and no official post. This is not confirmed. If true it removes a near-term unlock; if false, 10M ASTER a month (about $7M at today's price) is now vesting.</li><li><b>Sources differ on supply.</b> Circulating is about 2.68B (CoinGecko, June), 2.70B (KuCoin) and 2.09B in a December 2025 Tokenomist snapshot. This report uses 2.68-2.70B.</li></ul></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">03</span><h2>Team &amp; Funding — Who's Behind It, and Who's Backing Them?</h2></div>
+<div class="framework-banner"><div class="label">Framework Check</div><p>Named people with a track record, transparent funding, and, in Aster's case, a pseudonymous CEO and a financial backer whose size is undisclosed.</p></div>
+<div class="stat-grid" style="margin-top:24px;"><div class="stat"><div class="label">CEO / Co-founder</div><div class="value">'Leonard' (pseudonymous)</div></div><div class="stat"><div class="label">Background (IQ.wiki)</div><div class="value">HFT and risk engines; Binance project manager from 2019</div></div><div class="stat"><div class="label">Lineage</div><div class="value">ApolloX plus Astherus, rebranded Aster 31 Mar 2025</div></div><div class="stat"><div class="label">Disclosed Backer</div><div class="value">YZi Labs (CZ family office), equity stake</div></div><div class="stat"><div class="label">Investment Amount</div><div class="value">Not disclosed in sources found</div></div><div class="stat"><div class="label">ApolloX Seed Round</div><div class="value">Announced 7 Jun 2022 (amount not found)</div></div><div class="stat"><div class="label">Public Token Sale</div><div class="value">None disclosed</div></div><div class="stat"><div class="label">Aster Chain Mainnet</div><div class="value">17 Mar 2026 (ZK privacy L1)</div></div></div>
+<div class="alert-box"><div class="label">Notable Finding — CZ Connection, Pseudonymous Leadership, Unclear Entity</div><p>Aster's CEO is known only as Leonard. Sources describe him as a former Binance project manager who worked with Changpeng Zhao, and CZ's family office YZi Labs holds an equity stake. In June 2026 a commentary piece reported a claim by Star Xu that Binance 'secretly backed' Aster, and CZ has said Aster operates globally and does not target the United States. Blockworks' filing does not name the legal entity behind the team allocation. None of this is evidence of wrongdoing, but it means counterparty accountability is weaker than for a team with named, doxxed founders. The IQ.wiki page also contradicts itself on when Leonard met CZ (2019 vs 2021).</p></div>
+<div style="margin-top:24px;"><div class="card"><h3><span class="dot n"></span>What Stands Out</h3><ul><li><b>Delivery on the roadmap has been decent.</b> The December 2025 roadmap targeted a Q1 2026 Layer 1 launch; Aster Chain mainnet launched on 17 Mar 2026, with ZK encryption and stealth addresses, and the token rose about 8% before giving back gains. Q2 2026 targets (staking, governance) were not verified as shipped; Blockworks still lists governance as scheduled and decisions as resting with the core team.</li><li><b>Performance claims are the company's own.</b> The chain's 50ms blocks, 100,000+ TPS and zero gas are company claims not independently verified.</li><li><b>An early operational incident.</b> On 24 Sep 2025 an XPL perpetual pricing incident occurred and affected users were reimbursed in USDT, per Blockworks. No exploit of the ASTER contract was recorded as of 15 Jan 2026.</li><li><b>Funding data is thin.</b> No dollar amount for YZi Labs' investment was found and the IQ.wiki page gives 2023 for the seed investment, which is a secondary source.</li></ul></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">04</span><h2>Competitive Position — Is This Actually Differentiated?</h2></div>
+<div class="framework-banner"><div class="label">Framework Check</div><p>Genuinely distinct positioning versus a crowded perp DEX category where market-share leadership has changed hands within weeks.</p></div>
+<div class="two-col" style="margin-top:24px;"><div class="card"><h3><span class="dot g"></span>Where ASTER Has an Edge</h3><ul><li><b>Value accrual design.</b> 99% of daily fees to buybacks plus an equal burn is more aggressive than Hyperliquid's roughly 97% routing on core crypto perps (The Block, Sep 2026), and it is paired with a stated 3B supply target.</li><li><b>Privacy chain.</b> Aster Chain (mainnet 17 Mar 2026) uses built-in ZK encryption with optional disclosure through a 'viewer pass'. Few perp venues offer private trading.</li><li><b>Breadth and distribution.</b> 600 perp markets, multi-chain deposits (Ethereum, Arbitrum, Solana, BNB Chain), 24/7 stock perps and wide CEX listings. DefiLlama still ranks it #5 among DEXs.</li><li><b>Pricing.</b> Blockworks lists 0% maker and 0.04% taker on USDT perps, with 0.005% taker on USD1 perps.</li><li><b>Backer network.</b> YZi Labs and CZ association bring exchange relationships few new DEXs have.</li></ul></div><div class="card"><h3><span class="dot r"></span>Where the Competition Bites</h3><ul><li><b>Hyperliquid has pulled ahead.</b> Open interest reached $14.3B (6 Sep 2026) and HYPE hit an all-time high near $88; Coinbase began routing Base App users to it in mid-August. Aster's open interest is about $1.3B. Hyperliquid's own gross revenue did fall from $457M (Q3 2025) to $202M (Q2 2026), so the whole sector has cooled.</li><li><b>Lighter and others.</b> In January 2026 Lighter ran about $25.3B of weekly volume against Aster's $31.7B, and zero-fee competitors (Lighter, Paradex) undercut on price. Current Lighter figures were not found.</li><li><b>Market share is volatile.</b> Per 21Shares, Aster rose to nearly 70% of perp DEX volume in September 2025 while Hyperliquid fell to about 10%. In March 2026 Aster's daily volume was about $3.3B against Hyperliquid's $8.4B. Share is driven by incentives and does not persist.</li><li><b>Volume quality.</b> Incentive-driven volume and the 70:1 volume-to-TVL flag mean headline rank may overstate organic demand.</li><li><b>Extreme leverage.</b> 1001x leverage (Simple Mode) attracts speculators but is a reputational and liquidation-event risk.</li></ul></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">05</span><h2>Price Context — Cheap, or Correctly Priced?</h2></div>
+<div class="framework-banner"><div class="label">Framework Check</div><p>Where price sits relative to history, and whether the drawdown reflects opportunity or a fair repricing given the usage data in Section 01.</p></div>
+<div class="timeline" style="margin-top:24px;"><div class="t-item"><div class="t-year">17 Sep 2025</div><div class="t-desc">Token generation event and airdrop claims open. Trackers show an all-time low of about $0.084 in the earliest pre-market trading (the earlier review quoted $0.0844-0.0997).</div></div><div class="t-item"><div class="t-year">24 Sep 2025</div><div class="t-desc">All-time high of $2.41 (all sources agree on this date).</div></div><div class="t-item"><div class="t-year">Dec 2025</div><div class="t-desc">Spike to about $1.30 (+30%) on news CZ held over $2.5M of ASTER; Season 3 burn of about 77.9M tokens announced 5 Dec.</div></div><div class="t-item"><div class="t-year">Jan–Feb 2026</div><div class="t-desc">Falls about 75% from peak: about $0.62 on 19 Jan and about $0.60 on 9 Feb (market cap about $1.47B), ahead of a 78.1M unlock reported for 17 Feb.</div></div><div class="t-item"><div class="t-year">17 Mar 2026</div><div class="t-desc">Aster Chain mainnet launches; token jumps about 8% then trades near $0.77.</div></div><div class="t-item"><div class="t-year">17 Jun 2026</div><div class="t-desc">99% buyback upgrade lifts price from about $0.64 to $0.79-0.80, the highest since January, then fades to $0.65-0.68 the same day.</div></div><div class="t-item"><div class="t-year">2 Sep / 19 Oct 2026</div><div class="t-desc">$0.734 on 2 Sep (market cap about $1.98B); about $0.70 now, with a market cap near $1.88B and about 71% below the peak.</div></div></div>
+<div style="margin-top:24px;"><div class="card"><h3><span class="dot n"></span>Reading the Price</h3><ul><li><b>Data has moved since the Asset Review.</b> The 30 Aug review gave $0.60-0.70 and a $1.63-1.90B market cap; today's $0.70 and about $1.88B sit at the top of that range. Price is broadly flat over eight months in a $0.60-0.80 band, while the reviewed volume and open interest numbers have fallen.</li><li><b>Price has held up better than activity.</b> Daily perp volume is roughly a quarter of its March level and open interest about half of January's, yet market cap has not fallen. The 99% buyback announcement is the likeliest support, but its dollar size is not disclosed.</li><li><b>Valuation context.</b> At about $1.88B market cap and a fully diluted value near $5.6B (8B x $0.70), the token is priced on future volume and burns. Without a found fee figure, no revenue multiple can be calculated. This is a gap, not a verdict. Prior ranges in this series show a $0.60-0.65 pivot and $0.80 as resistance; the June and September highs ($0.79-0.80, $0.737 intraday) are consistent with that.</li></ul></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">06</span><h2>Liquidity &amp; Market Structure</h2></div>
+<div class="framework-banner"><div class="label">Framework Check</div><p>Can you actually get in and out at the price you expect?</p></div>
+<div class="stat-grid" style="margin-top:24px;"><div class="stat"><div class="label">Market Cap</div><div class="value">≈$1.88B (≈$1.98B on 2 Sep)</div></div><div class="stat"><div class="label">Cap Rank</div><div class="value">#41 (KuCoin); #48 cited in June</div></div><div class="stat"><div class="label">24h Volume</div><div class="value">≈$30M (KuCoin) to ≈$118M (2 Sep); varies widely</div></div><div class="stat"><div class="label">Major CEX Listings</div><div class="value">Bybit, KuCoin, OKX, Bitget, HTX, Kraken, BingX, BitMart, CoinEx</div></div><div class="stat"><div class="label">Coinbase / US Spot ETF</div><div class="value">Not found in sources</div></div><div class="stat"><div class="label">ASTER Perp on Aster</div><div class="value">OI ≈$64.5M; 24h volume ≈$32.7M; $100k costs ≈$7–99 in slippage</div></div></div>
+<div style="margin-top:24px;"><div class="card"><h3><span class="dot n"></span>Bottom Line on Liquidity</h3><ul><li><b>Adequate for retail and mid-size orders.</b> Exchange volume of roughly $30-120M a day on a $1.9B market cap is workable, but the range across trackers is wide and one KuCoin page showed 0 in a second volume field. Expect depth to thin quickly on size.</li><li><b>On-venue ASTER perp is shallow.</b> DefiLlama shows active perp liquidity of about $4.3M and spot liquidity of about $0.44M for the ASTER market on Aster itself, with a large spread between its two quoted $100k cost figures ($99.40 vs $7.40).</li><li><b>Listings are broad.</b> Blockworks lists listings on major CEXs from 19 Sep to 20 Oct 2025, including Bybit, OKX, Bitget, Kraken and KuCoin. No Coinbase listing or regulated ETP was found.</li><li><b>Concentration.</b> Holder count was 207,176 at 15 Jan 2026 (BscScan). Leonard said in Sep 2025 about 80% of supply was locked on-chain; this is a team statement. Large treasury and reserve wallets (one held about 3.13B ASTER in Dec 2025) mean on-chain concentration data needs interpretation.</li></ul></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">07</span><h2>Regulatory &amp; Counterparty Risk</h2></div>
+<div class="framework-banner"><div class="label">Framework Check</div><p>Legal clarity versus open exposure that could move price overnight.</p></div>
+<div style="margin-top:24px;"><div class="card"><h3><span class="dot n"></span>Unclear Footing, No Found Enforcement</h3><ul><li><b>No Aster-specific enforcement found.</b> A June 2026 commentary piece named no Aster enforcement, filing or regulator statement. It recorded CZ's statement that Aster does not target the United States, and discussed CFTC and SEC precedents (Uniswap Labs, Opyn, ZeroEx, Ooki DAO) for DEXs serving US users. Whether Aster geoblocks or applies KYC was not established.</li><li><b>Licensing.</b> DefiLlama lists Aster as not MiCA licensed. A perp DEX with up to 1001x leverage and stock perpetuals sits in a regulatory grey zone in most major jurisdictions; that is a risk assessment, not a found action.</li><li><b>Counterparty and governance risk.</b> Protocol decisions rest with the core team until governance goes live, the CEO is pseudonymous and the legal entity behind the team allocation is not named. Hyperliquid, by contrast, has seen US officials publicly discuss bringing it onshore (The Block, Sep 2026), which could advance a compliant rival.</li><li><b>Operational history.</b> One pricing incident (24 Sep 2025, XPL perp) was compensated; no smart-contract exploit of the token was recorded to 15 Jan 2026. Later incidents were not searched exhaustively.</li></ul></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">08</span><h2>Putting It Together</h2></div>
+<div class="verdict-box"><p><b>This is a synthesis of the research above, not a recommendation to buy, hold, or sell.</b> The decision on whether and how much to hold is yours, based on your own risk tolerance and time horizon.</p><p><b>What the data supports:</b> Aster is still a top-five DEX by DefiLlama's ranking, with about $1.1B of daily perp volume, about $1.3B of open interest and 600 perp markets. Its token design is among the strongest in the category on paper: 99% of daily fees to buybacks since 17 Jun 2026, an equal reserve burn and a 3B supply target. It shipped its privacy chain on 17 Mar 2026 as planned.</p><p><b>What the data flags as risk:</b> Volume is down to roughly a quarter of March levels and open interest is about one tenth of Hyperliquid's. No fee or revenue figure was found, so the buyback cannot be sized. Roughly two thirds of max supply is not circulating, the team cliff status is unconfirmed, and wash-trading concerns from the 2025 volume spike were never resolved. Leadership is pseudonymous, the legal entity is unnamed and the regulatory position is untested.</p><p><b>The honest takeaway:</b> The price is basically unchanged since the Asset Review, but the activity behind it has shrunk. The thing to watch is disclosed fee revenue: if 99% of a small fee base is bought back, the support is modest; if volume recovers, the design is unusually direct. Until fees, buyback totals and the team-token schedule are verifiable, the data supports a watchlist stance rather than a conclusion.</p></div>
+</section>
+  <footer>
+    <div class="disclaimer">
+      <div class="footer-brand"><img src="ttm_logo.png" alt="TTM"><span>TTM · TRADE THE MOVE — DEEP DIVE RESEARCH SERIES</span></div>
+      This document is for informational and educational purposes only and does not constitute financial, investment, or trading advice. Data points are reference figures as of the dates noted and can change materially, and some figures vary across sources. Cryptocurrency markets are highly volatile and carry risk of substantial or total capital loss. Always do your own research and consult a licensed financial advisor before making investment decisions. Not a recommendation to buy or sell ASTER or any other asset.
+    </div>
+  </footer>
+</div>
+</body>
+</html>
