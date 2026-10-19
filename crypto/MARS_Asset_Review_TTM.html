@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marscoin (MARS) Asset Review — TTM | Trade The Move</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+  :root{
+    --bg: #09080a;
+    --bg-panel: #131110;
+    --bg-panel-2: #1a1714;
+    --hairline: #2c2620;
+    --gold: #d4af37;
+    --gold-bright: #f4d375;
+    --gold-dim: #9a7c2c;
+    --ink: #eae6da;
+    --ink-dim: #9c9484;
+    --up: #4caf7d;
+    --down: #d9534f;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap{ max-width: 980px; margin: 0 auto; padding: 0 28px 80px; }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    position: relative;
+    padding: 56px 28px 40px;
+    border-bottom: 1px solid var(--hairline);
+    background:
+      radial-gradient(ellipse at top left, rgba(212,175,55,0.08), transparent 60%),
+      linear-gradient(180deg, #0d0b09 0%, #09080a 100%);
+    overflow:hidden;
+  }
+  .hero::after{
+    content:"";
+    position:absolute; inset:0;
+    background-image: linear-gradient(rgba(212,175,55,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(212,175,55,0.04) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: radial-gradient(ellipse at top left, black, transparent 70%);
+    pointer-events:none;
+  }
+  .hero-inner{ max-width: 980px; margin: 0 auto; position:relative; z-index:1; }
+  .logo-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:44px; flex-wrap:wrap; gap:16px; }
+  .logo-row img{ height: 140px; width:auto; display:block; }
+  .brief-tag{
+    font-family:'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    border: 1px solid var(--hairline);
+    padding: 6px 12px;
+    border-radius: 3px;
+  }
+
+  .eyebrow{
+    font-family:'Space Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 14px;
+  }
+  h1.title{
+    font-family:'Oswald', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: clamp(38px, 6vw, 62px);
+    letter-spacing: 0.01em;
+    line-height: 1.02;
+    color: var(--ink);
+  }
+  h1.title span{ color: var(--gold); }
+  .subhead{
+    margin-top:14px;
+    color: var(--ink-dim);
+    font-size: 16px;
+    max-width: 560px;
+  }
+
+  .price-strip{
+    display:flex; align-items:baseline; gap:18px;
+    margin-top:36px; flex-wrap:wrap;
+  }
+  .price-strip .px{
+    font-family:'Oswald', sans-serif;
+    font-size: 54px;
+    font-weight:600;
+    color: var(--gold-bright);
+  }
+  .price-strip .chg{
+    font-family:'Space Mono', monospace;
+    font-size: 16px;
+    color: var(--down);
+    padding: 4px 10px;
+    border: 1px solid rgba(217,83,79,0.4);
+    border-radius: 3px;
+  }
+  .price-strip .chg.up{ color: var(--up); border-color: rgba(76,175,125,0.4); }
+  .price-meta{ color: var(--ink-dim); font-size: 13px; font-family:'Space Mono', monospace; }
+
+  /* ---------- SECTION SHELL ---------- */
+  section{ padding: 46px 0; border-bottom: 1px solid var(--hairline); }
+  section:last-of-type{ border-bottom:none; }
+  .sec-head{ display:flex; align-items:baseline; gap: 14px; margin-bottom: 26px; }
+  .sec-num{ font-family:'Space Mono', monospace; color: var(--gold-dim); font-size: 13px; }
+  h2{
+    font-family:'Oswald', sans-serif;
+    text-transform: uppercase;
+    font-weight:600;
+    font-size: 24px;
+    letter-spacing: 0.02em;
+  }
+  .sec-sub{ color: var(--ink-dim); font-size: 14px; margin-top: -14px; margin-bottom: 22px; }
+
+  /* ---------- TIMELINE (longevity) ---------- */
+  .age-callout{
+    display:flex; align-items:center; gap: 28px;
+    background: linear-gradient(135deg, var(--bg-panel-2), var(--bg-panel));
+    border: 1px solid var(--hairline);
+    border-left: 3px solid var(--gold);
+    padding: 26px 28px;
+    margin-bottom: 34px;
+    flex-wrap: wrap;
+  }
+  .age-callout .num{
+    font-family:'Oswald', sans-serif;
+    font-size: 56px;
+    font-weight:700;
+    color: var(--gold);
+    line-height:1;
+  }
+  .age-callout .txt{ flex:1; min-width: 220px; }
+  .age-callout .txt .label{ font-family:'Space Mono', monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--ink-dim); }
+  .age-callout .txt p{ margin-top:6px; font-size: 14.5px; color: var(--ink); max-width: 520px; }
+
+  .timeline{ position:relative; padding-left: 26px; }
+  .timeline::before{
+    content:""; position:absolute; left:5px; top:6px; bottom:6px; width:1px;
+    background: linear-gradient(180deg, var(--gold), var(--hairline) 90%);
+  }
+  .t-item{ position:relative; padding-bottom: 26px; }
+  .t-item:last-child{ padding-bottom:0; }
+  .t-item::before{
+    content:""; position:absolute; left:-26px; top:4px; width:11px; height:11px;
+    border-radius:50%; background: var(--bg); border: 2px solid var(--gold);
+  }
+  .t-year{ font-family:'Space Mono', monospace; color: var(--gold); font-size: 13px; letter-spacing:0.05em; }
+  .t-desc{ font-size: 14.5px; color: var(--ink); margin-top: 4px; max-width: 640px; }
+
+  /* ---------- STAT GRID ---------- */
+  .stat-grid{
+    display:grid; grid-template-columns: repeat(4, 1fr); gap:1px;
+    background: var(--hairline); border: 1px solid var(--hairline);
+  }
+  .stat{ background: var(--bg-panel); padding: 20px 18px; }
+  .stat .label{ font-family:'Space Mono', monospace; font-size: 10.5px; text-transform:uppercase; letter-spacing:0.08em; color: var(--ink-dim); }
+  .stat .value{ font-family:'Oswald', sans-serif; font-size: 22px; font-weight:600; margin-top:8px; color: var(--ink); }
+  .stat .value.gold{ color: var(--gold-bright); }
+  @media (max-width: 700px){ .stat-grid{ grid-template-columns: repeat(2,1fr); } }
+
+  /* ---------- TECHNICALS ---------- */
+  .tech-grid{ display:grid; grid-template-columns: 1.1fr 1fr; gap: 32px; }
+  @media (max-width: 760px){ .tech-grid{ grid-template-columns: 1fr; } }
+
+  table.levels{ width:100%; border-collapse: collapse; font-size: 14px; }
+  table.levels th{
+    text-align:left; font-family:'Space Mono', monospace; font-size: 10.5px;
+    text-transform:uppercase; letter-spacing:0.08em; color: var(--ink-dim);
+    padding: 10px 12px; border-bottom: 1px solid var(--hairline);
+  }
+  table.levels td{ padding: 12px; border-bottom: 1px solid var(--hairline); color: var(--ink); }
+  table.levels tr:last-child td{ border-bottom:none; }
+  .tag{ font-family:'Space Mono', monospace; font-size: 11px; padding: 3px 8px; border-radius: 3px; }
+  .tag.res{ background: rgba(217,83,79,0.12); color:#e8837f; border:1px solid rgba(217,83,79,0.3); }
+  .tag.sup{ background: rgba(76,175,125,0.12); color:#7fd1a5; border:1px solid rgba(76,175,125,0.3); }
+  .tag.piv{ background: rgba(212,175,55,0.14); color: var(--gold-bright); border:1px solid rgba(212,175,55,0.35); }
+
+  .momentum-list{ list-style:none; }
+  .momentum-list li{ display:flex; justify-content:space-between; padding: 12px 0; border-bottom: 1px solid var(--hairline); font-size:14px; }
+  .momentum-list li:last-child{ border-bottom:none; }
+  .momentum-list .k{ color: var(--ink-dim); }
+  .momentum-list .v{ font-family:'Space Mono', monospace; color: var(--gold-bright); }
+
+  /* ---------- CATALYSTS / RISKS ---------- */
+  .two-col{ display:grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  @media (max-width: 760px){ .two-col{ grid-template-columns: 1fr; } }
+  .card{ background: var(--bg-panel); border: 1px solid var(--hairline); padding: 22px 22px; }
+  .card h3{
+    font-family:'Oswald', sans-serif; text-transform:uppercase; font-size:15px;
+    letter-spacing:0.05em; margin-bottom: 14px; display:flex; align-items:center; gap:8px;
+  }
+  .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .dot.g{ background: var(--up); }
+  .dot.r{ background: var(--down); }
+  .card ul{ list-style:none; }
+  .card li{ font-size: 13.8px; color: var(--ink); padding: 9px 0; border-bottom: 1px dashed var(--hairline); }
+  .card li:last-child{ border-bottom:none; }
+  .card li b{ color: var(--gold-bright); font-weight:600; }
+
+  /* ---------- FOOTER / DISCLAIMER ---------- */
+  footer{ padding: 34px 0 10px; }
+  .disclaimer{
+    font-family:'Space Mono', monospace;
+    font-size: 11.5px;
+    line-height:1.7;
+    color: var(--ink-dim);
+    border-top: 1px solid var(--hairline);
+    padding-top: 22px;
+  }
+  .footer-brand{ display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+  .footer-brand img{ height:52px; opacity:0.85; }
+  .footer-brand span{ font-family:'Space Mono', monospace; font-size:11px; color:var(--ink-dim); letter-spacing:0.08em; }
+</style>
+<style id="ttm-return-css">.ttm-return{position:fixed;top:14px;left:14px;z-index:9999;display:inline-flex;align-items:center;gap:8px;padding:9px 16px;background:rgba(9,8,10,.92);border:1px solid #d4af37;color:#f4d375;border-radius:999px;font:600 13px/1 Inter,system-ui,sans-serif;letter-spacing:.04em;text-decoration:none;cursor:pointer;backdrop-filter:blur(6px);box-shadow:0 4px 18px rgba(0,0,0,.5)}.ttm-return:hover{background:#d4af37;color:#09080a}@media print{.ttm-return{display:none}}</style></head>
+<body><a class="ttm-return" id="ttm-return" href="index.html#library">&larr; Return</a><script>document.getElementById("ttm-return").addEventListener("click",function(e){try{if(window.opener&&!window.opener.closed){e.preventDefault();window.opener.focus();window.close();setTimeout(function(){location.href=this.href}.bind(this),150);}}catch(x){}});</script>
+<div class="hero">
+  <div class="hero-inner">
+    <div class="logo-row">
+      <img src="ttm_logo.png" alt="TTM — Trade The Move">
+      <div class="brief-tag">Asset Review · 18 Oct 2026</div>
+    </div>
+    <div class="eyebrow">Digital Asset Review</div>
+    <h1 class="title">Marscoin <span>/ MARS</span></h1>
+    <p class="subhead">A 2014 proof-of-work Litecoin-family coin built around Mars-colonization advocacy — a named founder and fixed supply, but a market so thin that one exchange and roughly $10K of daily volume is the whole story. Note the name collision with unrelated Marscoin tokens.</p>
+    <div class="price-strip">
+      <div class="px">$0.0715</div>
+      <div class="chg">-0.1% (24h) · 7d range ≈ $0.0714–$0.0744</div>
+    </div>
+    <div class="price-meta" style="margin-top:10px;">Market Cap not reliably reported (FDV ≈ $2.9–3.0M) · Rank not found · Reference: Oct 2026</div>
+  </div>
+</div>
+<div class="wrap">
+<section>
+<div class="sec-head"><span class="sec-num">01</span><h2>What Is Marscoin</h2></div>
+<p class="sec-sub" style="max-width:680px;">The original 2014 Marscoin — not the BSC meme token or other similarly named tokens — and what it is actually for.</p>
+<div class="two-col" style="margin-top:24px;"><div class="card"><h3><span class="dot n"></span>The Basics</h3><ul><li>Marscoin is a <b>proof-of-work cryptocurrency</b> launched in <b>January 2014</b> by <b>Lennart Lopin</b>, a software architect and Mars Society member, with <b>James Burk</b> listed as co-founder. It markets itself as the first cryptocurrency dedicated to supporting Mars colonization.</li><li>The whitepaper argues that 4 to 24 minute Earth–Mars communication delays make conventional banking impractical, so the coin was designed to work without a central authority on Earth.</li><li>Per Bitrue and Bittime explainers, it uses <b>Scrypt</b> proof-of-work with roughly <b>2-minute blocks</b>. One tracker (CoinLore) lists the algorithm as X11 instead — sources disagree, so verify against the project's own documentation.</li><li>Fixed supply of <b>39,569,900 MARS</b> (some trackers round to 40M).</li><li><b>Name-collision warning:</b> an unrelated BSC meme token ($MARSCOIN, 1B supply) and other small tokens share the name. Aster DEX perpetuals announced in Aug 2026 were for the BSC meme token, not this coin.</li></ul></div><div class="card"><h3><span class="dot n"></span>What the token does</h3><ul><li><b>Peer-to-peer currency</b> — the coin is a payments-style asset with no smart-contract ecosystem or DeFi layer identified.</li><li><b>Mining security</b> — block rewards pay miners. AuxPoW merged mining (reported as activated in 2025) lets miners secure Marscoin using hash power from Litecoin and other Scrypt chains.</li><li><b>Martian Republic layer</b> — a citizen-registration and voting concept using CoinShuffle for voter privacy and IPFS for resource records, per Bittime.</li><li><b>Symbolic donations</b> — 500,000 MARS went to the Mars Society at launch, and Bittime reports a further 500,000 from Mars One in 2019.</li><li>No staking, fee burn or buyback mechanism was found.</li></ul></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">02</span><h2>Tokenomics &amp; Supply</h2></div>
+<p class="sec-sub" style="max-width:680px;">Small, fixed and mined rather than pre-sold — but circulating supply is not verified by the major trackers, so market cap is not reliable.</p>
+<div class="stat-grid" style="margin-top:24px;"><div class="stat"><div class="label">Max Supply</div><div class="value">39,569,900 MARS</div></div><div class="stat"><div class="label">Total Supply</div><div class="value">39,569,900 (CoinLore)</div></div><div class="stat"><div class="label">Circulating Supply</div><div class="value">Not reported / not verified</div></div><div class="stat"><div class="label">Fully Diluted Value</div><div class="value">≈ $2.9M (CoinGecko) – $3.0M (CoinLore)</div></div><div class="stat"><div class="label">Issuance Model</div><div class="value">Proof-of-work mining</div></div><div class="stat"><div class="label">Pre-sale / VC Allocation</div><div class="value">None identified</div></div><div class="stat"><div class="label">Fee Burn / Buyback</div><div class="value">None identified</div></div><div class="stat"><div class="label">Governing Entity</div><div class="value">Marscoin Foundation (Florida)</div></div></div>
+<div style="margin-top:22px; font-size:13.5px; color:var(--ink-dim); max-width:680px; line-height:1.7;">CoinGecko reports no circulating supply and therefore no market cap; CoinLore shows 'No Data' in its table while estimating about $2.8M using total supply. The $2.9–3.0M figure above is a <b>fully diluted</b> value, not a verified market cap. Because distribution was by mining with no identified insider allocation, there is no unlock schedule to track, but the halving schedule and current block reward were not found in the sources reviewed. The entity name also varies: Florida records cited by Bittime show 'The Marscoin Foundation, Inc.' (nonprofit, founded 17 Jul 2014) while the project site uses 'Marscoin Foundation LLC'.</div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">03</span><h2>Track Record — How Long It's Been Around</h2></div>
+<div class="age-callout"><div class="num">~12 yrs</div><div class="txt"><div class="label">Live Since January 2014</div><p>One of the older niche coins still operating, with a named founder and a continuous codebase — Marscoin Core 28.1.2 was released in April 2026. Longevity has not translated into liquidity: a single exchange pair carries essentially all reported trading.</p></div></div>
+<div class="timeline" style="margin-top:24px;"><div class="t-item"><div class="t-year">Jan 2014</div><div class="t-desc">Marscoin launches as a Scrypt proof-of-work coin themed around Mars colonization; 500,000 MARS donated to the Mars Society.</div></div><div class="t-item"><div class="t-year">Jul 2014</div><div class="t-desc">Florida nonprofit entity reported founded (17 Jul 2014), with Lennart Lopin as president per Bittime's records check.</div></div><div class="t-item"><div class="t-year">2019</div><div class="t-desc">Mars One reportedly donates a further 500,000 MARS (per Bittime). CoinLore lists an all-time low of about $0.0000021 this year — an extreme illiquid-market print.</div></div><div class="t-item"><div class="t-year">16–17 Feb 2021</div><div class="t-desc">All-time high of <b>$3.33</b> per CoinGecko (Bittime dates it 16 Feb 2021), during the 2021 bull market and heavy Mars/space attention. Other trackers cite $2.50–3.33.</div></div><div class="t-item"><div class="t-year">2023</div><div class="t-desc">'Marscoin' trademark registered with the USPTO (registration 7,227,237, per Bittime).</div></div><div class="t-item"><div class="t-year">2024–2025</div><div class="t-desc">ASERT difficulty adjustment adopted in 2024; AuxPoW merged mining activated in 2025, per Bitrue and Bittime.</div></div><div class="t-item"><div class="t-year">Apr 2026</div><div class="t-desc">Marscoin Core 28.1.2 released, per Bittime's Aug 2026 transparency check.</div></div><div class="t-item"><div class="t-year">Aug 2026</div><div class="t-desc">Aster DEX lists perpetuals for a <i>different</i> BSC meme token named MarsCoin; unrelated to the 2014 project but a source of data contamination.</div></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">04</span><h2>Market Snapshot</h2></div>
+<div class="stat-grid" style="margin-top:24px;"><div class="stat"><div class="label">Price (18 Oct 2026)</div><div class="value">$0.0715</div></div><div class="stat"><div class="label">Market Cap</div><div class="value">Not reliably reported (FDV ≈ $2.9–3.0M)</div></div><div class="stat"><div class="label">Cap Rank</div><div class="value">Not found (volume rank #1530 on CoinLore)</div></div><div class="stat"><div class="label">24h Volume</div><div class="value">≈ $10,000 (CoinGecko: $9,681)</div></div><div class="stat"><div class="label">All-Time High</div><div class="value gold">$3.33 (Feb 2021)</div></div><div class="stat"><div class="label">% Below ATH</div><div class="value" style="color:var(--down);">≈ -98%</div></div><div class="stat"><div class="label">7-Day Change</div><div class="value" style="color:var(--down);">≈ -3.4% to -3.6%</div></div><div class="stat"><div class="label">30-Day Change</div><div class="value" style="color:var(--down);">≈ -3.7% (CoinLore)</div></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">05</span><h2>Technical Read</h2></div>
+<p class="sec-sub" style="max-width:680px;">Flat, ultra-thin tape. Levels are approximate, drawn from recent ranges and automated tracker levels — on about $10K of daily volume, treat them as loose reference points only.</p>
+<div class="tech-grid"><div><table class="levels"><tr><th>Level</th><th>Price</th><th>Type</th></tr><tr><td>52-Week High (CoinLore)</td><td>≈ $0.0856</td><td><span class="tag res">Resistance</span></td></tr><tr><td>Tracker Auto-Resistance (CoinLore)</td><td>≈ $0.0881</td><td><span class="tag res">Resistance</span></td></tr><tr><td>7-Day Range High</td><td>≈ $0.0744</td><td><span class="tag res">Resistance</span></td></tr><tr><td>Current Pivot Zone</td><td>≈ $0.0714 – $0.0718</td><td><span class="tag piv">Pivot</span></td></tr><tr><td>All-Time Low (CoinGecko)</td><td>≈ $0.0521</td><td><span class="tag sup">Support</span></td></tr><tr><td>Tracker Auto-Support (CoinLore)</td><td>≈ $0.0382</td><td><span class="tag sup">Support</span></td></tr></table></div><div><ul class="momentum-list"><li><span class="k">Weekly Trend</span><span class="v">Sideways to slightly lower</span></li><li><span class="k">Short-Term MAs</span><span class="v">Mostly 'sell' signals (CoinLore)</span></li><li><span class="k">100/200-Day MAs</span><span class="v">'Buy' signals (CoinLore)</span></li><li><span class="k">Indicator Tally</span><span class="v">9 bearish / 8 bullish / 2 neutral</span></li><li><span class="k">7-Day Trend</span><span class="v">≈ -3.4% to -3.6%</span></li><li><span class="k">30-Day Trend</span><span class="v">≈ -3.7%</span></li></ul></div></div>
+</section>
+<section>
+<div class="sec-head"><span class="sec-num">06</span><h2>Catalysts &amp; Risks</h2></div>
+<div class="two-col" style="margin-top:24px;"><div class="card"><h3><span class="dot g"></span>Potential Catalysts</h3><ul><li><b>Active maintenance</b> — Core 28.1.2 (Apr 2026), ASERT (2024) and AuxPoW merged mining (2025) show the codebase is still being updated.</li><li><b>Merged-mining security</b> — sharing Scrypt hash power with Litecoin could improve network security without extra issuance.</li><li><b>Named, traceable team</b> and a USPTO trademark (2023) give it more legitimacy than most novelty coins.</li><li><b>Mars/space headlines</b> historically drove its 2021 spike, though it has no connection to SpaceX or Elon Musk.</li><li>A 1-year gain of about +37% (CoinLore) shows price can move sharply on tiny volume.</li></ul></div><div class="card"><h3><span class="dot r"></span>Key Risks</h3><ul><li><b>Extreme illiquidity</b> — roughly $10K daily volume, one exchange (LBank, MARS/USDC). Slippage can be severe and exits difficult.</li><li><b>No verified circulating supply</b>, so market cap and valuation cannot be reliably measured.</li><li><b>Name confusion</b> — BSC and Solana tokens with similar names exist; wrong-token purchases and contaminated data are realistic hazards. Verify via the original chain/explorer.</li><li>About <b>98% below</b> its Feb 2021 high, with no identified usage beyond symbolic donations.</li><li>Weak financial transparency and no recent full independent audit found (per Bittime); entity naming (Inc. vs LLC) is inconsistent.</li></ul></div></div>
+</section>
+  <footer>
+    <div class="disclaimer">
+      <div class="footer-brand"><img src="ttm_logo.png" alt="TTM"><span>TTM · TRADE THE MOVE — ASSET REVIEW SERIES</span></div>
+      This document is for informational and educational purposes only and does not constitute financial, investment, or trading advice. Data points are reference figures as of the dates noted and can change materially, and some figures vary across sources. Cryptocurrency markets are highly volatile and carry risk of substantial or total capital loss. Always do your own research and consult a licensed financial advisor before making investment decisions. Not a recommendation to buy or sell MARS or any other asset.
+    </div>
+  </footer>
+</div>
+</body>
+</html>

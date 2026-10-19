@@ -48,7 +48,12 @@ def block(b):
     if t == "verdict": return '<div class="verdict-box">' + "".join(f"<p>{p}</p>" for p in b["paras"]) + "</div>"
     raise ValueError("unknown block " + t)
 
+def clean_title(t):
+    t = re.sub(r"^\d{1,2}\s+", "", t)
+    return re.sub(r"&(?!amp;|lt;|gt;|#)", "&amp;", t)
+
 def section(i, s, kind):
+    s = dict(s, title=clean_title(s["title"]))
     out = [f'<section>\n<div class="sec-head"><span class="sec-num">{i:02d}</span><h2>{s["title"]}</h2></div>']
     if s.get("sub"): out.append(f'<p class="sec-sub" style="max-width:680px;">{s["sub"]}</p>')
     if s.get("banner"): out.append(f'<div class="framework-banner"><div class="label">Framework Check</div><p>{s["banner"]}</p></div>')

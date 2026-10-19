@@ -1,0 +1,168 @@
+{
+ "kind": "deep",
+ "ticker": "ALGO",
+ "ticker_display": "ALGO",
+ "name": "Algorand",
+ "file": "ALGO_Deep_Dive_TTM.html",
+ "date": "18 Oct 2026",
+ "subhead": "A full research pass on Algorand using the same 7-point framework: genuinely distinctive technology and a new regulatory footing, set against thin on-chain economics, a shrinking DeFi base and a leadership team that has turned over twice in two months.",
+ "price": "≈$0.111–0.113",
+ "chg": "-0.7% to -3% (24h) · -5% to -6% (7d) · 7d range ≈ $0.1075–0.1334 · ≈97% below 2019 all-time high",
+ "chg_up": false,
+ "price_meta": "Market Cap ≈ $1.01–1.02B · Rank #62–74 (varies by tracker) · Reference: Oct 2026",
+ "sections": [
+  {
+   "title": "01 Real Usage — Is Anyone Actually Using It?",
+   "banner": "Past the narrative: is there measurable, growing on-chain activity, or is price driven by speculation alone? Algorand's own reports show wallet and transaction counts rising while the money measures (TVL, stablecoins, fees) are small and falling.",
+   "blocks": [
+    {"type": "stats", "rows": [
+     ["Monthly Active Wallets (Aug 2026)", "677K (from 522K in Jul)"],
+     ["Transactions (Aug 2026)", "32.9M (36.8M in Jul)"],
+     ["Total Wallets (cumulative)", "52.55M"],
+     ["DeFi TVL (Foundation, Aug)", "≈$67M (Jun: $69M; May high $97M)"],
+     ["DeFi TVL (DefiLlama, Jun 30)", "≈$31.0M"],
+     ["Stablecoin Market Cap (Aug)", "≈$43M (USDC ≈$42M in Jul)"],
+     ["Network Fees (H1 2026)", "≈277K ALGO (≈$29K)"],
+     ["Nodes (Aug 2026)", "2,613 (from 2,676)"]
+    ]},
+    {"type": "card", "title": "What the Data Actually Shows", "dot": "n", "items": [
+     "<b>Activity is real but cheap.</b> Monthly active wallets reached 677K in August (up 29.6% month on month, with about 534K new wallets added) and total wallets passed 52 million. Algorand's fee is so low that users paid only about 277,000 ALGO (roughly $29,000) in network fees across all of H1 2026, which the Blockworks H1 report treats as a usage indicator, not a revenue line.",
+     "<b>Wallet counts are not user counts.</b> Cumulative wallets of 52.55M against 677K monthly actives is a reminder that most addresses are dormant, and the Foundation notes the largest single asset creator accounted for 3.8% of new-asset issuance in July. Contract deployments (603K) and new assets (305K, +40% in Aug) are counts of cheap on-chain actions, not of economic value.",
+     "<b>DeFi is small and shrinking.</b> Foundation TVL data shows $95M in January, a $97M high in May and $67M in August; DefiLlama reports a much lower $46.8M on 1 Jan to $31.0M on 30 Jun. The two sources disagree by roughly a factor of two on level, but agree on direction. In ALGO terms TVL is flat (about 790-807M ALGO), so much of the dollar decline is price.",
+     "<b>Stablecoins are tiny.</b> Stablecoin market cap slipped from about $49M to $43M between June and August, and the Foundation's own July report noted USDC transacted about $563M, over 13x its $42M market cap. High turnover on a small float, not a large parked balance.",
+     "<b>New narratives are early.</b> The x402 agentic-payments initiative (launched late July) settled $174K across 615K transfers in August, an average of about $0.28 per transfer. Quantum-resilient accounts went live 20 Aug and recorded 1,800 accounts and 1.24M transactions through 7 Sep. Both are real, dated, and very small so far.",
+     "<b>Real-world payments niche.</b> The Foundation cites humanitarian disbursements (HesabPay reached 1 million users in July). Interesting, but this is Foundation-reported and not independently verified in this pass. No RWA value or tokenized-asset total for Algorand was found in the sources used."
+    ]}
+   ]
+  },
+  {
+   "title": "02 Tokenomics — Nearly Fully Issued, No Burn Found",
+   "banner": "Circulating vs. max supply, the unlock schedule, and whether network growth feeds back into the token. Algorand's dilution risk is low; its value-capture story is the open question.",
+   "blocks": [
+    {"type": "stats", "rows": [
+     ["Max Supply", "10B ALGO"],
+     ["Circulating Supply", "≈9.04–9.10B ALGO"],
+     ["% of Max Circulating", "≈90–91%"],
+     ["Staked (online stake)", "&gt;2.0B ALGO (≈22% of circulating)"],
+     ["Stake Distribution (Aug)", "Community 80.6% / Foundation 19.4%"],
+     ["Staking Rewards (Aug)", "6.74M ALGO (2026 YTD: 53.63M)"],
+     ["Fee Burn Mechanism", "None found in sources"],
+     ["Circulating Growth (Jul to Aug)", "+0.76%"]
+    ]},
+    {"type": "card", "title": "How the Supply Actually Works", "dot": "n", "items": [
+     "<b>Little dilution left from unlocks.</b> Circulating supply rose from about 8.87B in January to 8.94B at 30 Jun, 8.97B at end of July and 9.04B at end of August (90.4% of max). That is consistent with the earlier Asset Review's roughly 90% figure. The remaining 10% is still a real overhang of about 0.96B tokens, but the pace is under 1% a month.",
+     "<b>Emission is the ongoing dilution.</b> Validator staking rewards were 40.15M ALGO in H1 2026 and 6.74M in each of July and August, about 53.63M year to date. At roughly $0.11 that is a few million dollars of annual issuance against about $29K of H1 fees, so fees do not come close to funding the security budget. The Blockworks report does not describe a burn mechanism, and none was found in this pass.",
+     "<b>Foundation holds a large staking block.</b> About 19% of online stake (roughly 0.4B ALGO) is the Foundation's. That is a concentration and governance point as well as a supply point; this report did not verify how or when that stake could be unwound.",
+     "<b>Sources differ on supply.</b> Trackers show circulating supply between about 8.3B (a stale-looking aggregator page) and 9.10B (Coinbase); CoinGecko shows 9.07B and the Foundation reports 9.04B at end-August. This report uses the Foundation and CoinGecko range.",
+     "<b>Token value capture is the real question.</b> With near-zero fees, no burn, and staking yield paid from newly issued supply, ALGO holders mostly depend on price demand rather than a revenue stream. This is a structural weakness shared with several low-fee chains in this series."
+    ]}
+   ]
+  },
+  {
+   "title": "03 Team &amp; Funding — Who's Behind It, and Who's Backing Them?",
+   "banner": "Real names with a track record, transparent funding history, and, in Algorand's case, a leadership turnover that is unusually recent and should be named directly.",
+   "blocks": [
+    {"type": "stats", "rows": [
+     ["Founded", "2017 (mainnet Jun 2019)"],
+     ["Founder", "Silvio Micali (MIT professor, Turing Award)"],
+     ["Disclosed Raise (Oct 2018)", "$62M (investors not named in the source found)"],
+     ["Foundation CEO", "William Herkelrath (from 31 Aug 2026; see note)"],
+     ["Prior CEO", "Staci Warden (stepped down, ~Aug 2026)"],
+     ["Mar 2026 Restructure", "$15M Foundation / Algorand Technologies deal"],
+     ["Q1 2026 Headcount Cut", "≈25% of Foundation staff"],
+     ["Foundation Board Chair (Mar 2026)", "Bill Barr"]
+    ]},
+    {"type": "alert", "label": "Notable Finding — Two Months of Leadership Turnover, and Conflicting Reports",
+     "text": "Reports dated 15 Oct 2026 say Algorand Foundation CEO Staci Warden stepped down around August; that William Herkelrath (previously associated with Chainlink) became CEO on 31 Aug (announced 9 Sep); that CTO Bruno Martins left around 9 Oct; and that Chief Strategy and Marketing Officer Marc Vanlerberghe resigned on 14 Oct. The board also changed (Alex Fowler joined; Rebecca Rettig and Michael Mosier left). Sources conflict: a report dated 9 Sep 2026 stated Herkelrath had not been appointed and Warden remained CEO, while the later October coverage and the Foundation's own August insights report (which lists him as CEO from 31 Aug) say he was. This report treats the appointment as confirmed, but the contradiction is worth noting. A CTO had also stepped down in March 2026 after a short tenure, per a 23 Mar report."},
+    {"type": "card", "title": "What Stands Out", "dot": "n", "items": [
+     "<b>Pedigree is genuinely deep.</b> Silvio Micali's cryptography background (Turing Award, MIT) is among the strongest founder credentials in this series, and the Foundation's post-quantum push draws on that heritage.",
+     "<b>Structure was consolidated in 2026.</b> In March 2026 the Foundation moved its base from Singapore to the United States, installed a new board led by Bill Barr, and agreed a $15M deal with Algorand Technologies to bring intellectual property and protocol development under one structure. A roughly 25% workforce cut came in Q1. These point to cost pressure.",
+     "<b>New CEO's stated agenda.</b> Per the reporting, Herkelrath is reviewing initiatives and partnerships, with institutional adoption and post-quantum security as priorities and a goal of making Algorand self-sustaining. 'Self-sustaining' implies the Foundation is not yet, and that existing programs may be cut.",
+     "<b>Funding data is old and thin.</b> Only the $62M round of Oct 2018 was found with a date and amount. Foundation treasury size and current runway were not found in this pass."
+    ]}
+   ]
+  },
+  {
+   "title": "04 Competitive Position — Is This Actually Differentiated?",
+   "banner": "Genuinely unique positioning versus one of many similar projects fighting for the same use case.",
+   "blocks": [
+    {"type": "twocol", "cards": [
+     {"title": "Where ALGO Has an Edge", "dot": "g", "items": [
+      "<b>Technical design.</b> Pure Proof-of-Stake with instant finality (about 3 seconds) and a flat fee of a fraction of a cent, with no forking. This is covered in the earlier Asset Review and has not changed.",
+      "<b>Early post-quantum position.</b> Native quantum-resilient accounts went live on 20 Aug 2026 (Algorand v5.0.0), with over 1.2M quantum-resilient transactions in the first 19 days. Few top-100 networks have shipped anything comparable.",
+      "<b>Regulatory footing.</b> The SEC's 17 Mar 2026 guidance named ALGO a digital commodity (footnote 51), per the Blockworks H1 report.",
+      "<b>Payments and humanitarian niche.</b> The Humanitarian Payments Council (Circle, Visa, Mastercard, UNDP) and HesabPay give Algorand a use case that most chains do not pursue.",
+      "<b>Institutional liquidity.</b> Flow Traders announced a partnership to deepen institutional liquidity (undated in the source)."
+     ]},
+     {"title": "Where the Competition Bites", "dot": "r", "items": [
+      "<b>DeFi scale.</b> About $31-67M of TVL (depending on source) is a rounding error beside Solana, Avalanche or Sui, covered elsewhere in this series. Stablecoins of about $43M are comparable to a mid-size memecoin ecosystem.",
+      "<b>Agentic payments is crowded.</b> The Foundation itself places Algorand behind Base in agentic transfer volume (about $80.9K for 27 Jul-2 Aug, Token Terminal), and $174K settled in August is small. Coinbase's x402 standard is open to every chain.",
+      "<b>Network contraction signals.</b> Nodes fell from 2,822 (Jun) to 2,613 (Aug); contract deployments dipped in July and August.",
+      "<b>Organizational disruption.</b> CTO, marketing chief, CEO and board changes in one quarter erode execution continuity just as the new roadmap starts.",
+      "<b>Technology has not translated into adoption before.</b> This pattern was flagged in the Asset Review and remains the central historical criticism."
+     ]}
+    ]}
+   ]
+  },
+  {
+   "title": "05 Price Context — Cheap, or Correctly Priced?",
+   "banner": "Where price sits relative to history, and whether the drawdown reflects opportunity or a fair repricing given the usage data in Section 01.",
+   "blocks": [
+    {"type": "timeline", "items": [
+     ["Jun 2019", "Mainnet launches; ALGO prints its all-time high of about $3.56 (CoinGecko and other trackers; some report $3.28-3.79). Sources differ and give no firm date on some pages."],
+     ["Nov 2021", "Cycle high of $2.82 on 18 Nov 2021 (Coinbase data), well below the 2019 spike."],
+     ["Late 2025 / Early 2026", "Multi-year downtrend ends near the all-time low of about $0.0757 (CoinGecko)."],
+     ["Mar 2026", "Price near $0.086 on 23 Mar with a low close near $0.081; the same month the SEC guidance named ALGO a digital commodity and the Foundation restructured."],
+     ["Jul-Aug 2026", "Trades mostly $0.078-0.091 in July, then breaks higher; the late-Aug Asset Review referenced about $0.088. A KuCoin page at 1 Aug showed about $0.119."],
+     ["Oct 2026 (now)", "About $0.111-0.113 with a $1.01-1.02B market cap, roughly 97% below the 2019 high, up about 22% over 30 days but down about 39% over one year (Coinbase)."]
+    ]},
+    {"type": "card", "title": "Reading the Price", "dot": "n", "items": [
+     "<b>Data has moved since the Asset Review.</b> The 30 Aug review used about $0.088 and named $0.10 as key resistance with a $0.21 trend-reversal level. Price has since cleared $0.10 and trades roughly 27% higher, but remains far below $0.21 and has pulled back over the past week (7d range about $0.1075-0.1334).",
+     "<b>Price has outpaced the metrics.</b> TVL and stablecoin balances fell over the same stretch that price rose, so the rally rests on sentiment (quantum roadmap, CEO change, agentic narrative) more than on measured economic growth.",
+     "<b>Valuation context.</b> At about $1.0B market cap against about $29K of H1 fees and roughly $67M of TVL, any multiple on usage is very high. This does not by itself make ALGO expensive; low fees are by design. But there is no fee revenue to anchor value."
+    ]}
+   ]
+  },
+  {
+   "title": "06 Liquidity &amp; Market Structure",
+   "banner": "Can you actually get in and out at the price you expect?",
+   "blocks": [
+    {"type": "stats", "rows": [
+     ["Market Cap", "≈$1.01–1.02B"],
+     ["Cap Rank", "#62–74 (Coinbase popularity / CoinGecko)"],
+     ["24h Volume", "≈$39–65M (varies by source)"],
+     ["Coinbase Listing", "Yes (ranked #17 by Coinbase-tradable cap)"],
+     ["Regulated Product", "21Shares ALGO ETP (Swiss, since Nov 2021)"],
+     ["US Spot ETF", "Not found in sources"]
+    ]},
+    {"type": "card", "title": "Bottom Line on Liquidity", "dot": "n", "items": [
+     "<b>Adequate, not deep.</b> A daily volume of roughly $39-65M on a $1B market cap gives meaningful but not large depth; a few hundred thousand dollars is easily done, multi-million orders will move the book. Volume differs considerably across trackers.",
+     "<b>Wrapper access is minimal.</b> The 21Shares ETP lists about $5.1M in assets, a 2.5% fee, and Coinbase Custody as custodian; no US spot ALGO ETF was found in the sources reviewed. The digital-commodity classification could in principle ease such filings but that is inference, not a found fact.",
+     "<b>Market backdrop.</b> One late-Oct-dated page showed BTC around $81K, which suggests a soft broader market, but that ticker was untimestamped and is not relied on here."
+    ]}
+   ]
+  },
+  {
+   "title": "07 Regulatory &amp; Counterparty Risk",
+   "banner": "Legal clarity versus open exposure that could move price overnight.",
+   "blocks": [
+    {"type": "card", "title": "A Clear Positive, and a Governance Question", "dot": "n", "items": [
+     "<b>Commodity status.</b> The Blockworks H1 2026 report, funded by the Algorand Foundation, states that SEC guidance on 17 Mar 2026 classified ALGO as a 'digital commodity' in footnote 51. This is a regulatory positive; the report is Foundation-funded, so the primary text of the guidance is worth checking. No specific enforcement action against Algorand was found in this pass.",
+     "<b>Counterparty and governance risk.</b> The Foundation now sits in the United States under a new board, has taken on a $15M arrangement with Algorand Technologies, and has just changed its CEO, CTO and marketing chief. A shrinking team and a large Foundation stake (about 19% of online stake) concentrate influence in one organization.",
+     "<b>Transparency.</b> The Foundation publishes monthly insights and quarterly transparency reports and plans a Blockworks Token Transparency Framework submission, which helps verification, but most data is self-reported."
+    ]}
+   ]
+  },
+  {
+   "title": "08 Putting It Together",
+   "blocks": [
+    {"type": "verdict", "paras": [
+     "<b>This is a synthesis of the research above, not a recommendation to buy, hold, or sell.</b> The decision on whether and how much to hold is yours, based on your own risk tolerance and time horizon.",
+     "<b>What the data supports:</b> Algorand is a technically credible, nearly fully distributed network (about 90% of 10B ALGO circulating) with real usage in transactions and wallets, a first-mover post-quantum feature set shipped in August 2026, a March 2026 SEC digital-commodity classification, and a payments and humanitarian niche with named partners.",
+     "<b>What the data flags as risk:</b> The money measures are weak and falling: TVL of about $31-67M, stablecoins around $43M, and H1 fees of about $29K, with no found burn to link usage to the token. Ongoing staking emission (about 6.7M ALGO a month) is multiples of fee income. The Foundation cut about 25% of staff in Q1, and CEO, CTO and marketing-chief changes followed in August-October, with one conflicting report on the CEO appointment. Price has risen about 27% since the Asset Review while those metrics fell.",
+     "<b>The honest takeaway:</b> Algorand has the best academic pedigree in this series and the first shipped quantum-resilient accounts, but the evidence that technology is becoming economic activity, or token demand, is still thin. The question to watch is whether the new CEO's institutional and sustainability agenda lifts TVL, stablecoin balances and fee income, not whether the technology works."
+    ]}
+   ]
+  }
+ ]
+}

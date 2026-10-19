@@ -1,0 +1,108 @@
+{
+ "kind": "review",
+ "ticker": "MARS", "ticker_display": "MARS", "name": "Marscoin",
+ "file": "MARS_Asset_Review_TTM.html",
+ "date": "18 Oct 2026",
+ "subhead": "A 2014 proof-of-work Litecoin-family coin built around Mars-colonization advocacy — a named founder and fixed supply, but a market so thin that one exchange and roughly $10K of daily volume is the whole story. Note the name collision with unrelated Marscoin tokens.",
+ "price": "$0.0715",
+ "chg": "-0.1% (24h) · 7d range ≈ $0.0714–$0.0744",
+ "chg_up": false,
+ "price_meta": "Market Cap not reliably reported (FDV ≈ $2.9–3.0M) · Rank not found · Reference: Oct 2026",
+ "sections": [
+  {"title": "What Is Marscoin",
+   "sub": "The original 2014 Marscoin — not the BSC meme token or other similarly named tokens — and what it is actually for.",
+   "blocks": [{"type": "twocol", "cards": [
+    {"title": "The Basics", "dot": "n", "items": [
+     "Marscoin is a <b>proof-of-work cryptocurrency</b> launched in <b>January 2014</b> by <b>Lennart Lopin</b>, a software architect and Mars Society member, with <b>James Burk</b> listed as co-founder. It markets itself as the first cryptocurrency dedicated to supporting Mars colonization.",
+     "The whitepaper argues that 4 to 24 minute Earth–Mars communication delays make conventional banking impractical, so the coin was designed to work without a central authority on Earth.",
+     "Per Bitrue and Bittime explainers, it uses <b>Scrypt</b> proof-of-work with roughly <b>2-minute blocks</b>. One tracker (CoinLore) lists the algorithm as X11 instead — sources disagree, so verify against the project's own documentation.",
+     "Fixed supply of <b>39,569,900 MARS</b> (some trackers round to 40M).",
+     "<b>Name-collision warning:</b> an unrelated BSC meme token ($MARSCOIN, 1B supply) and other small tokens share the name. Aster DEX perpetuals announced in Aug 2026 were for the BSC meme token, not this coin."
+    ]},
+    {"title": "What the token does", "dot": "n", "items": [
+     "<b>Peer-to-peer currency</b> — the coin is a payments-style asset with no smart-contract ecosystem or DeFi layer identified.",
+     "<b>Mining security</b> — block rewards pay miners. AuxPoW merged mining (reported as activated in 2025) lets miners secure Marscoin using hash power from Litecoin and other Scrypt chains.",
+     "<b>Martian Republic layer</b> — a citizen-registration and voting concept using CoinShuffle for voter privacy and IPFS for resource records, per Bittime.",
+     "<b>Symbolic donations</b> — 500,000 MARS went to the Mars Society at launch, and Bittime reports a further 500,000 from Mars One in 2019.",
+     "No staking, fee burn or buyback mechanism was found."
+    ]}
+   ]}]},
+  {"title": "Tokenomics & Supply",
+   "sub": "Small, fixed and mined rather than pre-sold — but circulating supply is not verified by the major trackers, so market cap is not reliable.",
+   "blocks": [
+    {"type": "stats", "rows": [
+     ["Max Supply", "39,569,900 MARS"],
+     ["Total Supply", "39,569,900 (CoinLore)"],
+     ["Circulating Supply", "Not reported / not verified"],
+     ["Fully Diluted Value", "≈ $2.9M (CoinGecko) – $3.0M (CoinLore)"],
+     ["Issuance Model", "Proof-of-work mining"],
+     ["Pre-sale / VC Allocation", "None identified"],
+     ["Fee Burn / Buyback", "None identified"],
+     ["Governing Entity", "Marscoin Foundation (Florida)"]
+    ]},
+    {"type": "para", "text": "CoinGecko reports no circulating supply and therefore no market cap; CoinLore shows 'No Data' in its table while estimating about $2.8M using total supply. The $2.9–3.0M figure above is a <b>fully diluted</b> value, not a verified market cap. Because distribution was by mining with no identified insider allocation, there is no unlock schedule to track, but the halving schedule and current block reward were not found in the sources reviewed. The entity name also varies: Florida records cited by Bittime show 'The Marscoin Foundation, Inc.' (nonprofit, founded 17 Jul 2014) while the project site uses 'Marscoin Foundation LLC'."}
+   ]},
+  {"title": "Track Record — How Long It's Been Around",
+   "blocks": [
+    {"type": "age", "num": "~12 yrs", "label": "Live Since January 2014",
+     "text": "One of the older niche coins still operating, with a named founder and a continuous codebase — Marscoin Core 28.1.2 was released in April 2026. Longevity has not translated into liquidity: a single exchange pair carries essentially all reported trading."},
+    {"type": "timeline", "items": [
+     ["Jan 2014", "Marscoin launches as a Scrypt proof-of-work coin themed around Mars colonization; 500,000 MARS donated to the Mars Society."],
+     ["Jul 2014", "Florida nonprofit entity reported founded (17 Jul 2014), with Lennart Lopin as president per Bittime's records check."],
+     ["2019", "Mars One reportedly donates a further 500,000 MARS (per Bittime). CoinLore lists an all-time low of about $0.0000021 this year — an extreme illiquid-market print."],
+     ["16–17 Feb 2021", "All-time high of <b>$3.33</b> per CoinGecko (Bittime dates it 16 Feb 2021), during the 2021 bull market and heavy Mars/space attention. Other trackers cite $2.50–3.33."],
+     ["2023", "'Marscoin' trademark registered with the USPTO (registration 7,227,237, per Bittime)."],
+     ["2024–2025", "ASERT difficulty adjustment adopted in 2024; AuxPoW merged mining activated in 2025, per Bitrue and Bittime."],
+     ["Apr 2026", "Marscoin Core 28.1.2 released, per Bittime's Aug 2026 transparency check."],
+     ["Aug 2026", "Aster DEX lists perpetuals for a <i>different</i> BSC meme token named MarsCoin; unrelated to the 2014 project but a source of data contamination."]
+    ]}
+   ]},
+  {"title": "Market Snapshot",
+   "blocks": [{"type": "stats", "rows": [
+     ["Price (18 Oct 2026)", "$0.0715"],
+     ["Market Cap", "Not reliably reported (FDV ≈ $2.9–3.0M)"],
+     ["Cap Rank", "Not found (volume rank #1530 on CoinLore)"],
+     ["24h Volume", "≈ $10,000 (CoinGecko: $9,681)"],
+     ["All-Time High", "$3.33 (Feb 2021)", "gold"],
+     ["% Below ATH", "≈ -98%", "down"],
+     ["7-Day Change", "≈ -3.4% to -3.6%", "down"],
+     ["30-Day Change", "≈ -3.7% (CoinLore)", "down"]
+   ]}]},
+  {"title": "Technical Read",
+   "sub": "Flat, ultra-thin tape. Levels are approximate, drawn from recent ranges and automated tracker levels — on about $10K of daily volume, treat them as loose reference points only.",
+   "blocks": [{"type": "levels",
+    "rows": [
+     ["52-Week High (CoinLore)", "≈ $0.0856", "res"],
+     ["Tracker Auto-Resistance (CoinLore)", "≈ $0.0881", "res"],
+     ["7-Day Range High", "≈ $0.0744", "res"],
+     ["Current Pivot Zone", "≈ $0.0714 – $0.0718", "piv"],
+     ["All-Time Low (CoinGecko)", "≈ $0.0521", "sup"],
+     ["Tracker Auto-Support (CoinLore)", "≈ $0.0382", "sup"]
+    ],
+    "momentum": [
+     ["Weekly Trend", "Sideways to slightly lower"],
+     ["Short-Term MAs", "Mostly 'sell' signals (CoinLore)"],
+     ["100/200-Day MAs", "'Buy' signals (CoinLore)"],
+     ["Indicator Tally", "9 bearish / 8 bullish / 2 neutral"],
+     ["7-Day Trend", "≈ -3.4% to -3.6%"],
+     ["30-Day Trend", "≈ -3.7%"]
+    ]}]},
+  {"title": "Catalysts & Risks",
+   "blocks": [{"type": "twocol", "cards": [
+    {"title": "Potential Catalysts", "dot": "g", "items": [
+     "<b>Active maintenance</b> — Core 28.1.2 (Apr 2026), ASERT (2024) and AuxPoW merged mining (2025) show the codebase is still being updated.",
+     "<b>Merged-mining security</b> — sharing Scrypt hash power with Litecoin could improve network security without extra issuance.",
+     "<b>Named, traceable team</b> and a USPTO trademark (2023) give it more legitimacy than most novelty coins.",
+     "<b>Mars/space headlines</b> historically drove its 2021 spike, though it has no connection to SpaceX or Elon Musk.",
+     "A 1-year gain of about +37% (CoinLore) shows price can move sharply on tiny volume."
+    ]},
+    {"title": "Key Risks", "dot": "r", "items": [
+     "<b>Extreme illiquidity</b> — roughly $10K daily volume, one exchange (LBank, MARS/USDC). Slippage can be severe and exits difficult.",
+     "<b>No verified circulating supply</b>, so market cap and valuation cannot be reliably measured.",
+     "<b>Name confusion</b> — BSC and Solana tokens with similar names exist; wrong-token purchases and contaminated data are realistic hazards. Verify via the original chain/explorer.",
+     "About <b>98% below</b> its Feb 2021 high, with no identified usage beyond symbolic donations.",
+     "Weak financial transparency and no recent full independent audit found (per Bittime); entity naming (Inc. vs LLC) is inconsistent."
+    ]}
+   ]}]}
+ ]
+}
