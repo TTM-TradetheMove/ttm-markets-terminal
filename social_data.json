@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-18T23:47:13+00:00",
+ "generated_at": "2026-10-19T01:53:46+00:00",
  "truth": [
   {
    "id": "https://www.trumpstruth.org/statuses/42409",
@@ -116,6 +116,13 @@
    "name": "Cointelegraph",
    "posts": [
     {
+     "id": "https://cointelegraph.com/news/qubic-freezes-chain-after-attacker-drains-14k-wallets-with-weak-seeds",
+     "title": "Qubic freezes chain after attacker drains 1.4K wallets with weak seeds",
+     "text": "Qubic says 87.1% of the stolen funds remain onchain and the rest were frozen at crypto exchange MEXC, as network validators prepare to vote on a recovery plan.",
+     "link": "https://cointelegraph.com/news/qubic-freezes-chain-after-attacker-drains-14k-wallets-with-weak-seeds?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+     "ts": 1792371807
+    },
+    {
      "id": "https://cointelegraph.com/magazine/richard-heart-caught-with-pants-down-qday-gets-even-closer-hodlers-digest",
      "title": "Richard Heart caught \u2018off-guard,\u2019 QDay gets even closer: Hodler\u2019s Digest",
      "text": "HEX founder Richard Heart detained in early morning raid in Istanbul, Starknet plunges almost 50% as it votes to become an L1, and Bitwise says all signs point to Crypto Spring.",
@@ -163,13 +170,6 @@
      "text": "Solana has had no reported mainnet outages in two years, but concentrations in stake, hosting and client software should be monitored, according to a report.",
      "link": "https://cointelegraph.com/news/solana-shows-resilience-but-some-areas-need-continued-observation-fidelity-says?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
      "ts": 1792242060
-    },
-    {
-     "id": "https://cointelegraph.com/news/circles-allaire-says-stablecoin-issuer-looking-to-enter-40-developing-markets-report",
-     "title": "Circle\u2019s Allaire says stablecoin issuer looking to enter 40 developing markets: Report",
-     "text": "Markets in Southeast Asia, Latin America, Africa and the Middle East see increasing demand for stablecoins.",
-     "link": "https://cointelegraph.com/news/circles-allaire-says-stablecoin-issuer-looking-to-enter-40-developing-markets-report?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
-     "ts": 1792231380
     }
    ],
    "ok": true
@@ -177,6 +177,13 @@
   {
    "name": "The Block",
    "posts": [
+    {
+     "id": "2e6ac7c0-afd7-5169-9d87-7c4bc971ce77",
+     "title": "World launches World ID suite for banks, makes Zoom deepfake check generally available",
+     "text": "World ID for Zoom is generally available after a beta that began in April, and is designed to spot deepfaked participants on Zoom calls.",
+     "link": "https://www.theblock.co/news/ecosystems/2026-10-18-world-launches-world-id-suite-banks-418869",
+     "ts": 1792372200
+    },
     {
      "id": "b30f6590-bbd7-5725-9f00-dc255e6b3685",
      "title": "Crypto.com, Novig sue Missouri over sports event contracts; Kalshi, Polymarket, Robinhood hold off",
@@ -225,13 +232,6 @@
      "text": "Circle breaks down its USDC revenue: about $1.4 billion in H1 2026, $819 million to partners and transaction costs, $473 million reinvested.",
      "link": "https://www.theblock.co/news/business/2026-10-16-circle-usdc-revenue-split-partners-418826",
      "ts": 1792162709
-    },
-    {
-     "id": "138d2452-821c-5a76-a255-190f434fda50",
-     "title": "How Ethereum Works",
-     "text": "The focus is how Ethereum works under the hood: how it tracks and updates state, how transactions flow through the network, how computation is priced through gas, how smart contracts and token standards make Ethereum programmable, and how other Layer 1 blockchains approach the sa",
-     "link": "https://www.theblock.co/learn/ethereum/how-ethereum-works-418525",
-     "ts": 1792157467
     }
    ],
    "ok": true
@@ -521,8 +521,8 @@
    "handle": "VitalikButerin",
    "name": "Vitalik Buterin",
    "why": "Ethereum",
-   "via": "syndication",
-   "seen": 90,
+   "via": null,
+   "seen": 0,
    "posts": [
     {
      "id": "1882649065139384600",
@@ -596,14 +596,14 @@
       "crypto"
      ]
     }
-   ]
+   ],
+   "stale": true
   },
   {
    "handle": "cz_binance",
    "name": "CZ",
    "why": "Binance founder",
-   "via": "syndication",
-   "seen": 99,
+   "via": null,
    "posts": [
     {
      "id": "2050391023034216808",
@@ -677,14 +677,14 @@
       "crypto"
      ]
     }
-   ]
+   ],
+   "stale": true
   },
   {
    "handle": "brian_armstrong",
    "name": "Brian Armstrong",
    "why": "Coinbase CEO",
-   "via": "syndication",
-   "seen": 91,
+   "via": null,
    "posts": [
     {
      "id": "2082921033649004786",
@@ -761,14 +761,14 @@
       "crypto"
      ]
     }
-   ]
+   ],
+   "stale": true
   },
   {
    "handle": "CryptoHayes",
    "name": "Arthur Hayes",
    "why": "Macro / liquidity views",
-   "via": "syndication",
-   "seen": 99,
+   "via": null,
    "posts": [
     {
      "id": "2102502536444047740",
@@ -845,14 +845,14 @@
       "macro"
      ]
     }
-   ]
+   ],
+   "stale": true
   },
   {
    "handle": "RaoulGMI",
    "name": "Raoul Pal",
    "why": "Macro / liquidity cycle",
-   "via": "syndication",
-   "seen": 94,
+   "via": null,
    "posts": [
     {
      "id": "1988767475899510914",
@@ -926,14 +926,14 @@
       "macro"
      ]
     }
-   ]
+   ],
+   "stale": true
   },
   {
    "handle": "SECGov",
    "name": "SEC",
    "why": "Regulation",
-   "via": "syndication",
-   "seen": 17,
+   "via": null,
    "posts": [
     {
      "id": "2111203232194101356",
@@ -980,14 +980,14 @@
       "crypto"
      ]
     }
-   ]
+   ],
+   "stale": true
   },
   {
    "handle": "federalreserve",
    "name": "Federal Reserve",
    "why": "Rates / policy",
-   "via": "syndication",
-   "seen": 17,
+   "via": null,
    "posts": [
     {
      "id": "2111189582213709997",
@@ -1061,10 +1061,11 @@
       "macro"
      ]
     }
-   ]
+   ],
+   "stale": true
   }
  ],
- "x_working": 7,
+ "x_working": 0,
  "x_state": {},
  "note": "Truth Social posts come from an independent public archive. X has no free API, so X accounts are best-effort."
 }
