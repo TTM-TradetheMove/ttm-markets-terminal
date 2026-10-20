@@ -841,6 +841,16 @@ body.view-section #backFab{display:block}
         </div>
       </div>
 
+      <div class="filter-row" id="liqTf" style="margin:2px 0 12px">
+        <span class="fl-label" style="margin-right:6px;align-self:center">Timeframe</span>
+        <button class="filter-chip" data-tf="1h">1H</button>
+        <button class="filter-chip" data-tf="4h">4H</button>
+        <button class="filter-chip" data-tf="8h">8H</button>
+        <button class="filter-chip" data-tf="12h">12H</button>
+        <button class="filter-chip active" data-tf="1d">Daily</button>
+        <button class="filter-chip" data-tf="1w">Weekly</button>
+      </div>
+
       <div class="liq-panel" id="liqPanelHeat">
         <div class="lh-controls">
           <span id="lhMeta" class="calendar-note"></span>
@@ -853,7 +863,7 @@ body.view-section #backFab{display:block}
       <div class="liq-panel" id="liqPanelMap" style="display:none">
         <div class="liq-legend" id="lmLegend"></div>
         <div class="liq-chart-wrap"><svg id="lmChart" viewBox="0 0 900 440" preserveAspectRatio="none" role="img" aria-label="Estimated liquidation map by price level and leverage tier"></svg><div id="lmTip" class="chart-tooltip" style="display:none"></div></div>
-        <p class="midterm-note">Bars show estimated liquidation notional at each price level, split by leverage tier. The red curve accumulates longs that would be liquidated as price falls; the green curve accumulates shorts as price rises. Modelled from the last 30 days of open-interest changes — an estimate, not real position data.</p>
+        <p class="midterm-note">Bars show estimated liquidation notional at each price level, split by leverage tier. The red curve accumulates longs that would be liquidated as price falls; the green curve accumulates shorts as price rises. Modelled from open-interest changes, counting only positions opened inside the timeframe you pick (longer timeframes include more positions) — an estimate, not real position data.</p>
       </div>
     </div>
   </div>
@@ -2521,9 +2531,25 @@ function color(t){
   return 'rgb(253,231,37)';
 }
 let HV = null; // view geometry for tooltip
+let LTF = '1d';
+const TFNAME = {'1h':'1 hour','4h':'4 hours','8h':'8 hours','12h':'12 hours','1d':'24 hours','1w':'7 days'};
+function heatView(){
+  const d0 = HM && HM[symKey()]; if(!d0) return null;
+  const w = d0.w && d0.w[LTF];
+  return w ? Object.assign({}, d0, {cols: w.cols, times: w.times, candles: w.candles, max_usd: w.max_usd}) : d0;
+}
+function mapView(){
+  const d0 = HM && HM[symKey()]; if(!d0) return null;
+  const m = d0.maps && d0.maps[LTF];
+  return m ? Object.assign({}, d0, {map: m}) : d0;
+}
+function axisLabel(ms){
+  const t = new Date(ms), hh = String(t.getHours()).padStart(2,'0'), mm = String(t.getMinutes()).padStart(2,'0');
+  return LTF === '1w' ? t.toLocaleDateString([], {weekday:'short'}) + ' ' + hh + 'h' : hh + ':' + mm;
+}
 function renderHeat(){
   const cv = $('lhCanvas'); if(!cv) return;
-  const d = HM && HM[symKey()];
+  const d = heatView();
   const ctx = cv.getContext('2d');
   const dpr = window.devicePixelRatio || 1, cssW = cv.clientWidth || 900, cssH = 470;
   cv.width = cssW * dpr; cv.height = cssH * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -2556,11 +2582,12 @@ function renderHeat(){
   const stepP = (pHi - pLo) / 8, nice = Math.pow(10, Math.floor(Math.log10(stepP))), ns = [1, 2, 5, 10].map(m => m * nice).find(v => v >= stepP) || stepP;
   for(let p = Math.ceil(pLo / ns) * ns; p < pHi; p += ns) ctx.fillText(fmtP(p), cssW - R + 6, y(p) + 4);
   ctx.textAlign = 'center';
-  for(let c = 0; c < nc; c += 12){ const t = new Date(d.times[c]); ctx.fillText(String(t.getHours()).padStart(2,'0') + ':' + String(t.getMinutes()).padStart(2,'0'), L + (c + 0.5) * cw, cssH - 7); }
+  const lstep = Math.max(1, Math.round(nc / (cssW < 560 ? 4 : 8)));
+  for(let c = 0; c < nc; c += lstep) ctx.fillText(axisLabel(d.times[c]), L + (c + 0.5) * cw, cssH - 7);
   // last price tag
   const lp = cands[cands.length - 1][4]; ctx.fillStyle = '#dba118'; ctx.fillRect(cssW - R, y(lp) - 8, R - 2, 16); ctx.fillStyle = '#1a1300'; ctx.textAlign = 'left'; ctx.font = 'bold 11px sans-serif'; ctx.fillText(fmtP(lp), cssW - R + 4, y(lp) + 4);
   HV = {d, L, T, pw, ph, cw, b0, b1, pLo, pHi, nc};
-  $('lhMeta').textContent = `${symKey()}/USDT perpetual · 24h · modelled from ${d.source} open interest · updated ${new Date(HM.generated_at).toLocaleTimeString()}`;
+  $('lhMeta').textContent = `${symKey()}/USDT perpetual · ${TFNAME[LTF]} · modelled from ${d.source} open interest · updated ${new Date(HM.generated_at).toLocaleTimeString()}`;
 }
 function heatTip(e){
   if(!HV) return;
@@ -2577,7 +2604,7 @@ function heatTip(e){
 const TCOL = {10:'#7dd3fc', 25:'#6366f1', 50:'#facc15', 100:'#fb923c'};
 function renderMap(){
   const svg = $('lmChart'); if(!svg) return;
-  const d = HM && HM[symKey()];
+  const d = mapView();
   if(!d){ svg.innerHTML = '<text x="20" y="40" fill="#cbd5e1" font-size="14">Map data is still being built — it appears after the first run of the heatmap job.</text>'; $('lmLegend').innerHTML = ''; return; }
   const m = d.map, nb = d.nb, W = 900, H = 440, L = 54, R = 64, T = 18, B = 34, pw = W - L - R, ph = H - T - B;
   const price = d.price, curBin = Math.floor((price - d.lo) / d.step);
@@ -2591,8 +2618,8 @@ function renderMap(){
   const yb = v => T + ph - v / mx * ph * 0.9, yc = v => T + ph - v / cmx * ph * 0.95, xb = i => L + i * bw;
   let s = '';
   [0, .25, .5, .75, 1].forEach(f => { const yy = T + ph - f * ph * 0.9;
-    s += `<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="var(--line)" stroke-dasharray="3 3"/><text x="${L-6}" y="${yy+3}" text-anchor="end" font-size="10" fill="var(--mute)">${(mx*f).toFixed(mx > 20 ? 0 : 1)}M</text>`;
-    const yr = T + ph - f * ph * 0.95; s += `<text x="${W-R+6}" y="${yr+3}" font-size="10" fill="var(--mute)">${(cmx*f).toFixed(cmx > 20 ? 0 : 1)}M</text>`; });
+    s += `<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="var(--line)" stroke-dasharray="3 3"/><text x="${L-6}" y="${yy+3}" text-anchor="end" font-size="10" fill="var(--mute)">${(mx*f).toFixed(mx > 20 ? 0 : mx > 2 ? 1 : 2)}M</text>`;
+    const yr = T + ph - f * ph * 0.95; s += `<text x="${W-R+6}" y="${yr+3}" font-size="10" fill="var(--mute)">${(cmx*f).toFixed(cmx > 20 ? 0 : cmx > 2 ? 1 : 2)}M</text>`; });
   for(let i = 0; i < nb; i++){
     let base = 0;
     m.tiers.forEach((t, k) => { const v = (m.long[k][i] || 0) + (m.short[k][i] || 0); if(v <= 0) return;
@@ -2606,6 +2633,7 @@ function renderMap(){
   for(let i = 0; i < nb; i += stepX) s += `<text x="${xb(i)}" y="${H - 12}" text-anchor="middle" font-size="10" fill="var(--mute)">${fmtP(d.lo + i * d.step)}</text>`;
   svg.innerHTML = s;
   $('lmLegend').innerHTML = m.tiers.map(t => `<span class="liq-legend-item"><span class="liq-swatch" style="background:${TCOL[t]}"></span>${t}x leverage</span>`).join('') +
+    `<span class="liq-legend-item" style="color:var(--gold2)">Positions opened in the last ${TFNAME[LTF]}</span>` +
     '<span class="liq-legend-item"><span class="liq-swatch" style="background:#e5534b"></span>Cumulative long liquidations</span><span class="liq-legend-item"><span class="liq-swatch" style="background:#2dd4a4"></span>Cumulative short liquidations</span>';
 }
 
@@ -2618,6 +2646,9 @@ function showTab(t){
   if(t === 'heat') renderHeat(); if(t === 'map') renderMap();
 }
 $('liqTabs').addEventListener('click', e => { const c = e.target.closest('.filter-chip'); if(c) showTab(c.dataset.ltab); });
+$('liqTf').addEventListener('click', e => { const c = e.target.closest('.filter-chip[data-tf]'); if(!c) return;
+  LTF = c.dataset.tf; document.querySelectorAll('#liqTf .filter-chip').forEach(x => x.classList.toggle('active', x === c));
+  if(tab === 'heat') renderHeat(); if(tab === 'map') renderMap(); });
 $('liqSymbolRow').addEventListener('click', () => setTimeout(() => { if(tab === 'heat') renderHeat(); if(tab === 'map') renderMap(); }, 0));
 $('ltScope').addEventListener('click', e => { const c = e.target.closest('.filter-chip'); if(!c) return;
   document.querySelectorAll('#ltScope .filter-chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); scope = Number(c.dataset.sc); renderTotals(); });

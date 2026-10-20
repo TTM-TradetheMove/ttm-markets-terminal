@@ -211,9 +211,18 @@ def fetch(sym, start_ms, end_ms):
 
 
 # ----------------------------------------------------------------------------
-def simulate(candles, oi, last_price):
+WINDOWS = [  # name, columns, 5-minute steps per column, hours of history behind the map
+    ("1h", 12, 1, 1), ("4h", 48, 1, 4), ("8h", 48, 2, 8),
+    ("12h", 48, 3, 12), ("1d", 96, 3, 24), ("1w", 84, 24, 168),
+]
+
+
+def simulate(candles, oi, last_price, snap_last=0):
+    """snap_last > 0 also records the last N 5-minute snapshots for the windowed heatmaps."""
     step = last_price * 2 * RANGE / NB
     lo = last_price * (1 - RANGE)
+    snaps = []
+    first_snap = len(candles) - snap_last
 
     def idx(p):
         return max(-1, min(NB, int((p - lo) // step)))
@@ -259,16 +268,18 @@ def simulate(candles, oi, last_price):
                             a[i] *= f
         if cur is not None:
             prev_oi = cur
+        if snap_last and n >= first_snap:
+            snaps.append((t + STEP5, [sum(longs[k][i] + shorts[k][i] for k in range(len(TIERS))) for i in range(NB)]))
         # 3) sample every 15 minutes
         if (t // STEP5) % 3 == 2:
             cols.append([sum(longs[k][i] + shorts[k][i] for k in range(len(TIERS))) for i in range(NB)])
             col_times.append(t + STEP5)
-    return lo, step, cols[-96:], col_times[-96:], longs, shorts
+    return lo, step, cols[-96:], col_times[-96:], longs, shorts, snaps
 
 
 def build(sym, source, candles, oi):
     last = candles[-1][4]
-    lo, step, cols, times, longs, shorts = simulate(candles, oi, last)
+    lo, step, cols, times, longs, shorts, snaps = simulate(candles, oi, last, snap_last=2016 + 24)
     mx = max((max(c) for c in cols), default=0) or 1.0
     enc = ["".join("%02x" % min(255, int(round(v / mx * 255))) for v in col) for col in cols]
     # 15-minute candles for the overlay
@@ -279,7 +290,28 @@ def build(sym, source, candles, oi):
         grp = [g for g in grp if g]
         if grp:
             c15.append([t - 3 * STEP5, grp[0][1], max(g[2] for g in grp), min(g[3] for g in grp), grp[-1][4]])
+    by5 = {c[0]: c for c in candles}
+    wins, maps = {}, {}
+    for name, ncols, stride, hours in WINDOWS:
+        pick = snaps[::-1][::stride][:ncols][::-1]
+        if not pick:
+            continue
+        wmx = max((max(col) for _, col in pick), default=0) or 1.0
+        wcands = []
+        for te, _col in pick:
+            grp = [by5.get(te - STEP5 * k) for k in range(stride, 0, -1)]
+            grp = [g for g in grp if g]
+            if grp:
+                wcands.append([te - stride * STEP5, grp[0][1], max(g[2] for g in grp), min(g[3] for g in grp), grp[-1][4]])
+        wins[name] = {"max_usd": round(wmx), "times": [te for te, _ in pick], "candles": wcands,
+                      "cols": ["".join("%02x" % min(255, int(round(v / wmx * 255))) for v in col) for _, col in pick]}
+        # map: only positions opened inside this window
+        n = hours * 12
+        _lo, _st, _c, _t, wl, ws, _s = simulate(candles[-n:], oi, last)
+        maps[name] = {"tiers": TIERS, "long": [[round(v / 1e6, 2) for v in a] for a in wl],
+                      "short": [[round(v / 1e6, 2) for v in a] for a in ws]}
     return {
+        "w": wins, "maps": maps,
         "symbol": sym, "price": last, "lo": round(lo, 4), "step": round(step, 4), "nb": NB,
         "max_usd": round(mx), "times": times, "cols": enc, "candles": c15,
         "map": {"tiers": TIERS, "long": [[round(v / 1e6, 3) for v in a] for a in longs],
