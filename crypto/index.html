@@ -553,6 +553,21 @@ body.view-section #backFab{display:block}
 .menu-tile span{display:block;font-size:13px;color:var(--mute);line-height:1.45}
 @media (max-width:860px){.menu-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:420px){.menu-tile{padding:14px}.menu-tile b{font-size:15px}.menu-tile span{font-size:12px}}
+
+/* ---------- FOMO finder + RSI chart ---------- */
+.fomo-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+.fomo-gauge{width:100%;max-width:640px;margin:0 auto;display:block}
+.fomo-bar{display:flex;flex-wrap:wrap;gap:10px 26px;align-items:center;justify-content:center;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 18px;margin:6px auto 0;max-width:760px;font-size:13px;color:var(--mute)}
+.fomo-bar b{color:var(--text);margin-left:4px}
+.fomo-bar .pos{color:#3fb97a}.fomo-bar .neg{color:#e5534b}
+.fomo-idx{font-weight:700}
+.fomo-note{margin-top:14px;font-size:12.5px;color:var(--mute);line-height:1.6;max-width:760px}
+.rc-wrap{position:relative;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.rc-wrap svg{width:100%;display:block}
+.rc-head{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.rc-stat{font-size:13px;color:var(--mute)}
+.rc-stat b{color:var(--gold2);font-size:15px}
+#rcCoin{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit}
 </style>
 </head>
 <body>
@@ -570,8 +585,10 @@ body.view-section #backFab{display:block}
       <a href="#calendar">Macro Watch</a>
       <a href="#tradinghours">Trading Hours</a>
       <a href="#marketpulse">Market Pulse</a>
+      <a href="#fomo">FOMO Finder</a>
       <a href="#btcmonthly">BTC Monthly</a>
       <a href="#rsimap">RSI Heatmap</a>
+      <a href="#rsichart">RSI Chart</a>
       <a href="#socialpulse">Social Pulse</a>
       <a href="#tokenevents">Token Events</a>
       <a href="#library">Reports</a>
@@ -616,7 +633,7 @@ body.view-section #backFab{display:block}
   </div>
 </div>
 
-<div id="menuHome"><div class="wrap"><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#marketpulse"><b>Market Pulse</b><span>Fear & Greed, funding, liquidations</span></a><a class="menu-tile" href="#btcmonthly"><b>BTC Monthly</b><span>Bitcoin returns month by month</span></a><a class="menu-tile" href="#rsimap"><b>RSI Heatmap</b><span>Overbought / oversold across 40 coins</span></a><a class="menu-tile" href="#socialpulse"><b>Social Pulse</b><span>Truth Social and crypto news feed</span></a><a class="menu-tile" href="#tokenevents"><b>Token Events</b><span>Unlocks, listings and airdrops</span></a><a class="menu-tile" href="#library"><b>Reports</b><span>Asset reviews and deep dives</span></a><a class="menu-tile" href="#transparency"><b>Transparency Watch</b><span>Congress and insider trading watch</span></a></div></div></div>
+<div id="menuHome"><div class="wrap"><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#marketpulse"><b>Market Pulse</b><span>Fear & Greed, funding, liquidations</span></a><a class="menu-tile" href="#btcmonthly"><b>BTC Monthly</b><span>Bitcoin returns month by month</span></a><a class="menu-tile" href="#fomo"><b>FOMO Finder</b><span>Gauge from futures premium and funding</span></a><a class="menu-tile" href="#rsimap"><b>RSI Heatmap</b><span>Overbought / oversold across 40 coins</span></a><a class="menu-tile" href="#rsichart"><b>RSI Chart</b><span>Price and RSI on any timeframe</span></a><a class="menu-tile" href="#socialpulse"><b>Social Pulse</b><span>Truth Social and crypto news feed</span></a><a class="menu-tile" href="#tokenevents"><b>Token Events</b><span>Unlocks, listings and airdrops</span></a><a class="menu-tile" href="#library"><b>Reports</b><span>Asset reviews and deep dives</span></a><a class="menu-tile" href="#transparency"><b>Transparency Watch</b><span>Congress and insider trading watch</span></a></div></div></div>
 <button id="backFab" type="button">&larr; Menu</button>
 <div id="backBar"><div class="wrap"><button id="backBtn" type="button">&larr; Back to menu</button><span id="backTitle"></span></div></div>
 <section id="calendar">
@@ -871,6 +888,27 @@ body.view-section #backFab{display:block}
   </div>
 </section>
 
+<section id="fomo">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">FOMO Finder</span>
+      <h2>Is the market panicking or getting greedy?</h2>
+      <p>A live gauge built from how far perpetual futures trade above or below spot (the premium) and the 8-hour funding rate. Futures at a discount with low funding reads as fear; a rich premium with high funding reads as greed.</p>
+    </div>
+    <div class="filter-row" id="fomoAsset" style="margin-bottom:14px">
+      <button class="filter-chip active" data-a="BTC">BTC</button>
+      <button class="filter-chip" data-a="ETH">ETH</button>
+      <button class="filter-chip" data-a="SOL">SOL</button>
+      <button class="filter-chip" data-a="XRP">XRP</button>
+    </div>
+    <div class="fomo-card">
+      <svg class="fomo-gauge" id="fomoSvg" viewBox="0 0 600 330" role="img" aria-label="FOMO gauge"></svg>
+      <div class="fomo-bar" id="fomoBar">Loading live prices…</div>
+      <p class="fomo-note" id="fomoNote"></p>
+    </div>
+  </div>
+</section>
+
 <section id="btcmonthly" class="alt">
   <div class="wrap">
     <div class="section-head">
@@ -924,6 +962,33 @@ body.view-section #backFab{display:block}
     <div class="rsi-tiles" id="rsiTiles"></div>
     <div class="rsi-wrap" id="rsiTblWrap" style="display:none"><table class="rsi-tbl" id="rsiTable"><tbody><tr><td class="na">Loading…</td></tr></tbody></table></div>
     <p class="calendar-note" style="margin-top:10px">RSI(14) with Wilder smoothing on OKX spot USDT candles, refreshed about every 10 minutes; the newest candle is still forming. The zones show momentum, and overbought or oversold readings are stretched momentum, not buy or sell calls: strong trends can stay overbought or oversold for a long time. Not financial advice.</p>
+  </div>
+</section>
+
+<section id="rsichart" class="alt">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">RSI Chart</span>
+      <h2>Price and RSI on any timeframe</h2>
+      <p>Candles on top, 14-period RSI underneath with the five zones shaded: Overbought (70+), Strong (60–70), Neutral (40–60), Weak (30–40) and Oversold (30 or below). Pick any coin and timeframe.</p>
+    </div>
+    <div class="filter-row" id="rcTf" style="margin-bottom:10px">
+      <button class="filter-chip" data-t="15m">15m</button>
+      <button class="filter-chip" data-t="1h">1H</button>
+      <button class="filter-chip active" data-t="4h">4H</button>
+      <button class="filter-chip" data-t="12h">12H</button>
+      <button class="filter-chip" data-t="1d">1D</button>
+      <button class="filter-chip" data-t="1w">1W</button>
+    </div>
+    <div class="rc-wrap">
+      <div class="rc-head">
+        <select id="rcCoin" aria-label="Coin"></select>
+        <span class="rc-stat" id="rcStat"></span>
+      </div>
+      <svg id="rcSvg" viewBox="0 0 900 470" preserveAspectRatio="none" role="img" aria-label="Price and RSI chart"></svg>
+      <div id="rcTip" class="chart-tooltip" style="display:none"></div>
+    </div>
+    <p class="calendar-note" style="margin-top:10px" id="rcNote">Live candles from OKX (Bybit as backup). RSI(14) with Wilder smoothing; the newest candle is still forming. Overbought and oversold show stretched momentum, not buy or sell calls. Not financial advice.</p>
   </div>
 </section>
 
@@ -2870,6 +2935,143 @@ load(); setInterval(() => { if(!document.hidden) load(); }, 300000);
 </script>
 
 
+<script>
+/* ---- FOMO finder ---- */
+(function(){
+const $ = id => document.getElementById(id);
+const ZONES = [['CAPITULATION','#d6336c'],['PANIC','#9b4dca'],['UNCERTAIN','#e0a010'],['BALANCE','#d4a017'],['CANARY','#d7b11f'],['GREED','#e07a1f'],['FOMO','#dc2f2f']];
+const CX = 300, CY = 270, RO = 230, RI = 150;
+let asset = 'BTC', timer = null;
+const pt = (r, deg) => { const a = deg * Math.PI / 180; return [CX - r * Math.cos(a), CY - r * Math.sin(a)]; };
+function drawGauge(score){
+  let g = '';
+  const seg = 180 / 7, gap = 1.6;
+  ZONES.forEach((z, i) => {
+    const a0 = i * seg + gap / 2, a1 = (i + 1) * seg - gap / 2, [x0, y0] = pt(RO, a0), [x1, y1] = pt(RO, a1), [x2, y2] = pt(RI, a1), [x3, y3] = pt(RI, a0);
+    g += `<path d="M${x0},${y0} A${RO},${RO} 0 0 1 ${x1},${y1} L${x2},${y2} A${RI},${RI} 0 0 0 ${x3},${y3} Z" fill="${z[1]}" opacity="${Math.round(score) === i - 3 ? 1 : .78}"/>`;
+    const mid = (a0 + a1) / 2, [tx, ty] = pt((RO + RI) / 2, mid);
+    g += `<text x="${tx}" y="${ty}" transform="rotate(${mid - 90} ${tx} ${ty})" text-anchor="middle" dominant-baseline="middle" font-size="${z[0].length > 10 ? 10 : 12}" font-weight="700" fill="#fff" letter-spacing=".3">${z[0]}</text>`;
+  });
+  const s = score == null ? 0 : Math.max(-3.5, Math.min(3.5, score)), ang = (s + 3.5) / 7 * 180, [nx, ny] = pt(RI - 14, ang);
+  g += score == null ? '' : `<line x1="${CX}" y1="${CY}" x2="${nx}" y2="${ny}" stroke="#f1f1f1" stroke-width="5" stroke-linecap="round"/>`;
+  g += `<circle cx="${CX}" cy="${CY}" r="17" fill="#1c1f2b" stroke="#6b7280" stroke-width="3"/>`;
+  $('fomoSvg').innerHTML = g;
+}
+const fmt = (v, d) => v == null ? '—' : v.toLocaleString(undefined, {minimumFractionDigits: d, maximumFractionDigits: d});
+async function j(url){ const r = await fetch(url, {cache:'no-store'}); if(!r.ok) throw new Error(r.status); return r.json(); }
+async function getData(a){
+  try {
+    const [sp, fu, fr] = await Promise.all([
+      j(`https://www.okx.com/api/v5/market/ticker?instId=${a}-USDT`),
+      j(`https://www.okx.com/api/v5/market/ticker?instId=${a}-USDT-SWAP`),
+      j(`https://www.okx.com/api/v5/public/funding-rate?instId=${a}-USDT-SWAP`)]);
+    return {spot: +sp.data[0].last, fut: +fu.data[0].last, fund: +fr.data[0].fundingRate * 100, src: 'OKX'};
+  } catch(e) {
+    const t = await j(`https://api.bybit.com/v5/market/tickers?category=linear&symbol=${a}USDT`);
+    const x = t.result.list[0];
+    return {spot: +x.indexPrice, fut: +x.lastPrice, fund: +x.fundingRate * 100, src: 'Bybit'};
+  }
+}
+// score = premium in units of 0.05% + funding above the 0.01% baseline in units of 0.01%
+const scoreOf = d => ((d.fut - d.spot) / d.spot * 100) / 0.05 + (d.fund - 0.01) / 0.01;
+async function refresh(){
+  try {
+    const d = await getData(asset), prem = (d.fut - d.spot) / d.spot * 100, sc = scoreOf(d), idx = Math.max(-3, Math.min(3, Math.round(sc))), z = ZONES[idx + 3];
+    drawGauge(sc);
+    const dp = asset === 'BTC' || asset === 'ETH' ? 2 : 4;
+    $('fomoBar').innerHTML = `<span>Spot <b>$${fmt(d.spot, dp)}</b></span><span>Futures <b>$${fmt(d.fut, dp)}</b></span><span>Premium <b class="${prem >= 0 ? 'pos' : 'neg'}">${prem >= 0 ? '+' : ''}${prem.toFixed(4)}%</b></span><span>Funding (8h) <b class="${d.fund >= 0 ? 'pos' : 'neg'}">${d.fund >= 0 ? '+' : ''}${d.fund.toFixed(4)}%</b></span><span>FOMO Index <b class="fomo-idx" style="color:${z[1]}">${idx > 0 ? '+' : ''}${idx} ${z[0]}</b></span>`;
+    $('fomoNote').textContent = `Live from ${d.src}, refreshed every 15 seconds. TTM's own scoring: premium counts 1 point per 0.05% and funding 1 point per 0.01% above the normal 0.01% baseline, added together and rounded to a −3 to +3 index. A reading of 0 is balanced; the further out, the more one side is crowded. It is a sentiment gauge, not a trade signal.`;
+  } catch(e) {
+    drawGauge(null);
+    $('fomoBar').textContent = 'Live prices are unavailable right now — check back shortly.';
+  }
+}
+drawGauge(null);
+$('fomoAsset').addEventListener('click', e => { const c = e.target.closest('.filter-chip'); if(!c) return;
+  document.querySelectorAll('#fomoAsset .filter-chip').forEach(x => x.classList.toggle('active', x === c)); asset = c.dataset.a; refresh(); });
+refresh(); setInterval(() => { if(!document.hidden && document.getElementById('fomo').classList.contains('active')) refresh(); }, 15000);
+window.addEventListener('hashchange', () => { if(location.hash === '#fomo') refresh(); });
+})();
+
+/* ---- RSI chart ---- */
+(function(){
+const $ = id => document.getElementById(id);
+const BAR = {'15m':['15m','15'],'1h':['1H','60'],'4h':['4H','240'],'12h':['12Hutc','720'],'1d':['1Dutc','D'],'1w':['1Wutc','W']};
+let coin = 'BTC', tf = '4h', V = null, load = 0;
+async function j(url){ const r = await fetch(url, {cache:'no-store'}); if(!r.ok) throw new Error(r.status); return r.json(); }
+async function candles(c, t){
+  try {
+    const d = await j(`https://www.okx.com/api/v5/market/candles?instId=${c}-USDT&bar=${BAR[t][0]}&limit=300`);
+    if(!d.data || d.data.length < 40) throw new Error('short');
+    return d.data.map(k => [+k[0], +k[1], +k[2], +k[3], +k[4]]).reverse();
+  } catch(e) {
+    const d = await j(`https://api.bybit.com/v5/market/kline?category=spot&symbol=${c}USDT&interval=${BAR[t][1]}&limit=300`);
+    return d.result.list.map(k => [+k[0], +k[1], +k[2], +k[3], +k[4]]).reverse();
+  }
+}
+function rsi(cl, n = 14){
+  const out = new Array(cl.length).fill(null); if(cl.length <= n) return out;
+  let g = 0, l = 0; for(let i = 1; i <= n; i++){ const d = cl[i] - cl[i-1]; if(d >= 0) g += d; else l -= d; }
+  g /= n; l /= n; out[n] = l === 0 ? 100 : 100 - 100 / (1 + g / l);
+  for(let i = n + 1; i < cl.length; i++){ const d = cl[i] - cl[i-1]; g = (g * (n-1) + Math.max(d, 0)) / n; l = (l * (n-1) + Math.max(-d, 0)) / n; out[i] = l === 0 ? 100 : 100 - 100 / (1 + g / l); }
+  return out;
+}
+const zone = v => v >= 70 ? 'Overbought' : v >= 60 ? 'Strong' : v > 40 ? 'Neutral' : v > 30 ? 'Weak' : 'Oversold';
+const zcol = v => v >= 70 ? '#d6453d' : v >= 60 ? '#d9822b' : v > 40 ? '#9ca3af' : v > 30 ? '#2f9a8c' : '#2f9e5f';
+const fp = p => p >= 1000 ? p.toLocaleString(undefined, {maximumFractionDigits: 0}) : p >= 1 ? p.toFixed(2) : p >= .01 ? p.toFixed(4) : p.toPrecision(3);
+function fmtT(ms){ const d = new Date(ms); return (tf === '1d' || tf === '1w') ? d.toLocaleDateString([], {day:'numeric', month:'short'}) : d.toLocaleString([], {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'}); }
+function draw(){
+  const svg = $('rcSvg'); if(!V){ svg.innerHTML = ''; return; }
+  const {c, r} = V, N = Math.min(c.length, 150), off = c.length - N, W = 900, H = 470, L = 8, R = 56, pw = W - L - R;
+  const pT = 8, pH = 270, rT = 298, rH = 140, cw = pw / N;
+  const hi = Math.max(...c.slice(off).map(k => k[2])), lo = Math.min(...c.slice(off).map(k => k[3])), pad = (hi - lo) * .05;
+  const y = p => pT + pH - (p - (lo - pad)) / (hi - lo + 2 * pad) * pH, yr = v => rT + rH - v / 100 * rH;
+  let s = '';
+  // rsi zones
+  [[70,100,'rgba(214,69,61,.16)'],[60,70,'rgba(217,130,43,.13)'],[40,60,'rgba(255,255,255,.03)'],[30,40,'rgba(47,154,140,.13)'],[0,30,'rgba(47,158,95,.16)']].forEach(([a, b, f]) => s += `<rect x="${L}" y="${yr(b)}" width="${pw}" height="${yr(a) - yr(b)}" fill="${f}"/>`);
+  [70,60,50,40,30].forEach(v => s += `<line x1="${L}" x2="${L + pw}" y1="${yr(v)}" y2="${yr(v)}" stroke="rgba(255,255,255,${v === 50 ? .12 : .2})" stroke-dasharray="${v === 50 ? '2 4' : '4 4'}"/><text x="${L + pw + 6}" y="${yr(v) + 4}" font-size="11" fill="#9ca3af">${v}</text>`);
+  // price grid
+  for(let i = 0; i <= 4; i++){ const p = lo - pad + (hi - lo + 2 * pad) * i / 4; s += `<line x1="${L}" x2="${L + pw}" y1="${y(p)}" y2="${y(p)}" stroke="rgba(255,255,255,.07)"/><text x="${L + pw + 6}" y="${y(p) + 4}" font-size="11" fill="#9ca3af">${fp(p)}</text>`; }
+  // candles
+  for(let i = 0; i < N; i++){ const k = c[off + i], x = L + (i + .5) * cw, up = k[4] >= k[1], col = up ? '#3fb97a' : '#e5534b';
+    s += `<line x1="${x}" x2="${x}" y1="${y(k[2])}" y2="${y(k[3])}" stroke="${col}"/><rect x="${x - cw * .35}" y="${Math.min(y(k[1]), y(k[4]))}" width="${cw * .7}" height="${Math.max(1, Math.abs(y(k[1]) - y(k[4])))}" fill="${col}"/>`; }
+  // rsi line
+  let d = ''; for(let i = 0; i < N; i++){ const v = r[off + i]; if(v == null) continue; d += (d ? 'L' : 'M') + (L + (i + .5) * cw).toFixed(1) + ',' + yr(v).toFixed(1); }
+  s += `<path d="${d}" fill="none" stroke="#f0b929" stroke-width="2"/>`;
+  const lv = r[r.length - 1]; if(lv != null) s += `<circle cx="${L + (N - .5) * cw}" cy="${yr(lv)}" r="4" fill="${zcol(lv)}" stroke="#fff"/>`;
+  // time labels
+  for(let i = 0; i < N; i += Math.round(N / 5)) s += `<text x="${L + (i + .5) * cw}" y="${H - 6}" font-size="11" fill="#9ca3af" text-anchor="middle">${fmtT(c[off + i][0])}</text>`;
+  s += `<text x="${L + 4}" y="${rT - 3}" font-size="11" fill="#9ca3af">RSI (14)</text><line id="rcX" x1="0" x2="0" y1="${pT}" y2="${rT + rH}" stroke="rgba(255,255,255,.35)" style="display:none"/>`;
+  svg.innerHTML = s; V.g = {L, pw, cw, N, off, pT, rT, rH, W, H};
+  const last = c[c.length - 1];
+  $('rcStat').innerHTML = `${coin}/USDT · last <b>$${fp(last[4])}</b> · RSI <b style="color:${zcol(lv)}">${lv == null ? '—' : lv.toFixed(1)} ${lv == null ? '' : zone(lv)}</b>`;
+}
+async function go(){
+  const my = ++load; $('rcStat').textContent = 'Loading…';
+  try { const c = await candles(coin, tf); if(my !== load) return; V = {c, r: rsi(c.map(k => k[4]))}; draw(); }
+  catch(e) { if(my !== load) return; V = null; draw(); $('rcStat').textContent = 'Candles unavailable for this coin or timeframe right now.'; }
+}
+$('rcTf').addEventListener('click', e => { const b = e.target.closest('.filter-chip'); if(!b) return;
+  document.querySelectorAll('#rcTf .filter-chip').forEach(x => x.classList.toggle('active', x === b)); tf = b.dataset.t; go(); });
+$('rcCoin').addEventListener('change', e => { coin = e.target.value; go(); });
+$('rcSvg').addEventListener('mousemove', e => {
+  if(!V || !V.g) return; const svg = $('rcSvg'), b = svg.getBoundingClientRect(), x = (e.clientX - b.left) / b.width * V.g.W;
+  const i = Math.floor((x - V.g.L) / V.g.cw); const tip = $('rcTip'), X = $('rcX');
+  if(i < 0 || i >= V.g.N){ tip.style.display = 'none'; if(X) X.style.display = 'none'; return; }
+  const k = V.c[V.g.off + i], v = V.r[V.g.off + i], cx = V.g.L + (i + .5) * V.g.cw;
+  if(X){ X.setAttribute('x1', cx); X.setAttribute('x2', cx); X.style.display = ''; }
+  tip.innerHTML = `<b>${fmtT(k[0])}</b><br>O ${fp(k[1])} H ${fp(k[2])} L ${fp(k[3])} C ${fp(k[4])}<br>RSI <b>${v == null ? '—' : v.toFixed(1) + ' · ' + zone(v)}</b>`;
+  const wb = svg.parentElement.getBoundingClientRect(); tip.style.display = 'block'; tip.style.left = Math.min(e.clientX - wb.left + 14, wb.width - 230) + 'px'; tip.style.top = (e.clientY - wb.top + 14) + 'px';
+});
+$('rcSvg').addEventListener('mouseleave', () => { $('rcTip').style.display = 'none'; const X = $('rcX'); if(X) X.style.display = 'none'; });
+// coin list: the 40 coins from the RSI heatmap file, BTC first
+const sel = $('rcCoin'); const fill = list => { sel.innerHTML = list.map(s => `<option value="${s}">${s}</option>`).join(''); sel.value = coin; };
+fill(['BTC','ETH','SOL','XRP','BNB','DOGE','ADA','LINK']);
+fetch('../rsi_heatmap.json', {cache:'no-store'}).then(r => r.ok ? r.json() : null).then(d => { if(d && d.coins) fill(d.coins.map(x => x.s)); }).catch(() => {});
+window.addEventListener('hashchange', () => { if(location.hash === '#rsichart') go(); });
+go();
+})();
+</script>
 <script>
 (function(){
   const secs = Array.from(document.querySelectorAll('body > section[id]'));
