@@ -21,6 +21,7 @@ from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 FEED_URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
+NEXT_FEED_URL = "https://nfs.faireconomy.media/ff_calendar_nextweek.json"
 MELBOURNE = ZoneInfo("Australia/Melbourne")
 NEW_YORK = ZoneInfo("America/New_York")
 LONDON = ZoneInfo("Europe/London")
@@ -44,6 +45,136 @@ def fetch_feed():
     req = urllib.request.Request(FEED_URL, headers={"User-Agent": "Mozilla/5.0"})
     with urllib.request.urlopen(req, timeout=30) as resp:
         return json.loads(resp.read().decode("utf-8"))
+
+
+def fetch_next_feed():
+    """Next week's schedule from the same mirror. Best effort: a miss never blocks the run."""
+    try:
+        req = urllib.request.Request(NEXT_FEED_URL, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        print(f"next-week feed: {len(data)} events")
+        return data
+    except Exception as exc:
+        print(f"next-week feed unavailable ({exc}) -- continuing without it")
+        return []
+
+
+FF_ZONES = ["America/New_York", "America/Chicago", "UTC", "Europe/London", "America/Los_Angeles", "Australia/Sydney", "Australia/Melbourne", "Europe/Berlin"]
+IMPACT_CLASS = {"impact-red": "High", "impact-ora": "Medium", "impact-yel": "Low"}
+ROWS_JS = """() => { const out = []; let date = '', time = '';
+  document.querySelectorAll('tr.calendar__row').forEach(r => {
+    const t = s => { const e = r.querySelector(s); return e ? e.innerText.replace(/\\s+/g, ' ').trim() : ''; };
+    const d = t('.calendar__date'); if (d && d !== date) { date = d; time = ''; }
+    const tm = t('.calendar__time'); if (tm) time = tm;
+    const imp = r.querySelector('.calendar__impact span'); 
+    out.push({date, time, cur: t('.calendar__currency'), impact: imp ? imp.className : '', title: t('.calendar__event'),
+              actual: t('.calendar__actual'), forecast: t('.calendar__forecast'), previous: t('.calendar__previous')});
+  });
+  return out; }"""
+
+
+def _parse_time(txt):
+    txt = (txt or "").strip().lower()
+    for fmt in ("%I:%M%p", "%I%p"):
+        try:
+            t = datetime.strptime(txt, fmt)
+            return t.hour, t.minute
+        except ValueError:
+            pass
+    return None  # All Day / Tentative / blank
+
+
+def _local_ts(date_str, year, tm, tzname):
+    """'Sun Oct 18' + year + (h, m) in zone -> UTC epoch."""
+    try:
+        d = datetime.strptime(" ".join(date_str.split()[-2:]) + f" {year}", "%b %d %Y")
+    except ValueError:
+        return None
+    h, m = tm if tm else (0, 0)
+    return int(datetime(d.year, d.month, d.day, h, m, tzinfo=ZoneInfo(tzname)).timestamp())
+
+
+def scrape_months(known_events, month_params, dbg):
+    """Scrape forexfactory.com/calendar?month=... for the weeks the JSON feeds don't cover.
+    The page's timezone is not fixed (it follows the runner), so we calibrate it: try candidate zones
+    and keep the one under which the scraped times line up with feed events whose UTC time we know.
+    Returns (raw_events in feed format, actuals {(ny_date, cur, norm): actual})."""
+    raw_out, act_out = [], {}
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        dbg("month scrape: Playwright missing")
+        return raw_out, act_out
+    known = {}
+    for e in known_events:
+        if e.get("ts"):
+            known.setdefault((e["_currency"], e["_title_norm"]), []).append(e["ts"])
+    have = {(e["_currency"], e["_title_norm"], e["ts"] // 3600) for e in known_events if e.get("ts")}
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            page = browser.new_page(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36")
+            page.set_default_timeout(10000)
+            for label, year in month_params:
+                try:
+                    page.goto(f"https://www.forexfactory.com/calendar?month={label}", wait_until="domcontentloaded", timeout=30000)
+                    page.wait_for_timeout(2500)
+                    for _ in range(14):
+                        page.mouse.wheel(0, 1500)
+                        page.wait_for_timeout(250)
+                    rows = page.evaluate(ROWS_JS)
+                except Exception as exc:
+                    dbg(f"month {label}: load failed ({exc})")
+                    continue
+                rows = [r for r in rows if r["cur"] in CURRENCY_TO_COUNTRY and r["title"]]
+                dbg(f"month {label}: {len(rows)} rows for tracked currencies; sample: {rows[:2]}")
+                if not rows:
+                    continue
+                # calibrate the page timezone
+                best, best_n = None, 0
+                for z in FF_ZONES:
+                    n = 0
+                    for r in rows:
+                        tm = _parse_time(r["time"])
+                        if not tm:
+                            continue
+                        ts = _local_ts(r["date"], year, tm, z)
+                        for k in known.get((r["cur"], _norm(r["title"])), []):
+                            if ts and abs(ts - k) < 120:
+                                n += 1
+                                break
+                    if n > best_n:
+                        best, best_n = z, n
+                dbg(f"month {label}: page timezone calibrated to {best} ({best_n} matching rows)")
+                if best_n < 3:
+                    dbg(f"month {label}: not enough matches to trust times -- skipping")
+                    continue
+                added = 0
+                for r in rows:
+                    impact = next((v for k, v in IMPACT_CLASS.items() if k in r["impact"]), None)
+                    if not impact:
+                        continue
+                    tm = _parse_time(r["time"])
+                    ts = _local_ts(r["date"], year, tm, best)
+                    if not ts:
+                        continue
+                    key = (r["cur"], _norm(r["title"]), ts // 3600)
+                    if key in have:
+                        continue
+                    have.add(key)
+                    iso = datetime.fromtimestamp(ts, timezone.utc).isoformat()
+                    raw_out.append({"title": r["title"], "country": r["cur"], "date": iso, "impact": impact,
+                                    "forecast": r["forecast"], "previous": r["previous"]})
+                    if r["actual"] and r["actual"] != "—":
+                        ny = datetime.fromtimestamp(ts, timezone.utc).astimezone(NEW_YORK).strftime("%Y-%m-%d")
+                        act_out[(ny, r["cur"], _norm(r["title"]))] = r["actual"]
+                    added += 1
+                dbg(f"month {label}: added {added} events not already in the weekly feeds")
+            browser.close()
+    except Exception as exc:
+        dbg(f"month scrape failed: {exc}")
+    return raw_out, act_out
 
 
 def transform(raw_events):
@@ -359,14 +490,55 @@ def merge_actuals(events, actuals):
 
 def main():
     raw = fetch_feed()
-    events = transform(raw)
+    raw_next = fetch_next_feed()
+    events = transform(raw + raw_next)
+    now = datetime.now(timezone.utc)
 
-    # scrape_actuals() already catches everything internally, but this is a
-    # second, final safety net: whatever happens in the live-scrape/merge
-    # step, the feed-based schedule above must still get written out. A
-    # crash here must never turn into a stale/no-op dashboard update.
+    # Months to look at beyond the weekly feeds: this month and next month.
+    def mp(dt):
+        return (dt.strftime("%b").lower() + "." + dt.strftime("%Y"), dt.year)
+    nxt = (now.replace(day=1) + timedelta(days=32)).replace(day=1)
+    month_params = [mp(now), mp(nxt)]
+    mdebug = []
+    mdebug_fn = lambda m: (mdebug.append(m), print(m))
+    month_raw, month_actuals = [], {}
+    # The month pages change slowly and this job runs every minute: scrape them at most every 30 minutes
+    # and carry the previous result forward in between.
+    try:
+        prev = json.load(open("calendar_data.json"))
+    except Exception:
+        prev = {}
+    scraped_at = prev.get("months_scraped_at")
+    fresh = False
+    try:
+        fresh = scraped_at and (now - datetime.fromisoformat(scraped_at)).total_seconds() < 1800
+    except Exception:
+        pass
+    new_scraped_at = scraped_at
+    if fresh:
+        have_k = {(e["dt"], e["country"], e["event"]) for e in events}
+        carried = [e for e in prev.get("events", []) if e.get("ts") and e["ts"] > now.timestamp()
+                   and (e["dt"], e["country"], e["event"]) not in have_k]
+        for e in carried:  # restore the internal match keys that are stripped before writing
+            e["_ny_date"] = datetime.fromtimestamp(e["ts"], timezone.utc).astimezone(NEW_YORK).strftime("%Y-%m-%d")
+            e["_currency"] = {v: k for k, v in CURRENCY_TO_COUNTRY.items()}.get(e["country"])
+            e["_title_norm"] = _norm(e["event"])
+        events += carried
+        print(f"month scrape skipped (last run {scraped_at}); carried {len(carried)} later events")
+    else:
+        try:
+            month_raw, month_actuals = scrape_months(events, month_params, mdebug_fn)
+            events += transform(month_raw)
+            if month_raw:
+                new_scraped_at = now.isoformat()
+        except Exception as exc:
+            print(f"month scrape step failed: {exc}")
+            mdebug.append(f"month scrape step failed: {exc}")
+
+    actuals = {}
     try:
         actuals = scrape_actuals()
+        actuals = {**month_actuals, **actuals}
         events = merge_actuals(events, actuals)
     except Exception as exc:
         print(f"Unexpected error during live-actuals step (writing feed-only data instead): {exc}")
@@ -374,6 +546,11 @@ def main():
             _write_debug([f"Unexpected top-level error: {exc}"])
         except Exception:
             pass
+    try:
+        with open("ff_scrape_debug.txt", "a") as f:
+            f.write("\n-- month scrape --\n" + "\n".join(mdebug) + "\n")
+    except Exception:
+        pass
 
     # strip internal match-key fields before writing
     for e in events:
@@ -381,10 +558,24 @@ def main():
         e.pop("_currency", None)
         e.pop("_title_norm", None)
 
+    # keep recent history: events that rolled out of the weekly feed stay in the file for 75 days
+    try:
+        old = json.load(open("calendar_data.json")).get("events", [])
+        have = {(e["dt"], e["country"], e["event"]) for e in events}
+        cutoff = now.timestamp() - 75 * 86400
+        kept = [e for e in old if e.get("ts") and cutoff < e["ts"] < now.timestamp() - 3600
+                and (e["dt"], e["country"], e["event"]) not in have]
+        events = kept + events
+        print(f"kept {len(kept)} earlier events for history")
+    except Exception as exc:
+        print(f"no previous calendar file to carry history from ({exc})")
+    events.sort(key=lambda e: (e.get("ts") or 0))
+
     payload = {
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": now.isoformat(),
         "source": FEED_URL,
         "live_actuals_source": "https://www.forexfactory.com/calendar" if actuals else None,
+        "months_scraped_at": new_scraped_at,
         "events": events,
     }
     with open("calendar_data.json", "w") as f:

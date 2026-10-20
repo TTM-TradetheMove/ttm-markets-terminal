@@ -609,7 +609,9 @@ body.view-section #backFab{display:block}
       <div class="filter-row" id="rangeRow">
         <button class="filter-chip active" data-range="all">All</button>
         <button class="filter-chip" data-range="week">This week</button>
+        <button class="filter-chip" data-range="nextweek">Next week</button>
         <button class="filter-chip" data-range="month">This month</button>
+        <button class="filter-chip" data-range="nextmonth">Next month</button>
       </div>
     </div>
 
@@ -1001,7 +1003,8 @@ let ALL_CALENDAR_EVENTS = [];
 fetch('../calendar_data.json', {cache:'no-store'})
   .then(r => { if(!r.ok) throw new Error('bad status'); return r.json(); })
   .then(data => {
-    const live = data.events.map(e => ({...e, dt:d(e.dt)}));
+    const seen = new Set(CALENDAR_HISTORICAL.map(e => e.date + '|' + e.country + '|' + e.event));
+    const live = data.events.filter(e => !seen.has(e.date + '|' + e.country + '|' + e.event)).map(e => ({...e, dt:d(e.dt)}));
     calendarBody.innerHTML = '';
     renderCalendarRows(CALENDAR_HISTORICAL);
     renderCalendarRows(live);
@@ -1030,6 +1033,14 @@ let adjustmentsOnly = false;
 
 function msDay(){ return 24*60*60*1000; }
 
+function rangeBounds(r){
+  const t = new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate());
+  const mon = new Date(t); mon.setDate(t.getDate() - ((t.getDay() + 6) % 7)); // Monday of this week
+  const wk = n => { const a = new Date(mon); a.setDate(mon.getDate() + 7 * n); return a.getTime(); };
+  const mo = n => new Date(t.getFullYear(), t.getMonth() + n, 1).getTime();
+  return r === 'week' ? [wk(0), wk(1)] : r === 'nextweek' ? [wk(1), wk(2)] : r === 'month' ? [mo(0), mo(1)] : [mo(1), mo(2)];
+}
+
 function applyFilters(){
   const rows = document.querySelectorAll('#calendarBody tr');
   let visibleCount = 0;
@@ -1045,9 +1056,8 @@ function applyFilters(){
     if(!activeImpacts.has(impact)) show = false;
     if(adjustmentsOnly && tr.dataset.revised !== '1') show = false;
     if(show && activeRange !== 'all'){
-      const diff = Math.abs(dt - TODAY.getTime());
-      const limit = activeRange === 'week' ? 7*msDay() : 31*msDay();
-      if(diff > limit) show = false;
+      const [r0, r1] = rangeBounds(activeRange);
+      if(dt < r0 || dt >= r1) show = false;
     }
     tr.classList.toggle('hidden-row', !show);
     if(show) visibleCount++;
