@@ -585,10 +585,9 @@ body.view-section #backFab{display:block}
       <a href="#calendar">Macro Watch</a>
       <a href="#tradinghours">Trading Hours</a>
       <a href="#marketpulse">Market Pulse</a>
-      <a href="#fomo">FOMO Finder</a>
+      <a href="#fomo">FOMO Finder &amp; RSI</a>
       <a href="#btcmonthly">BTC Monthly</a>
       <a href="#rsimap">RSI Heatmap</a>
-      <a href="#rsichart">RSI Chart</a>
       <a href="#socialpulse">Social Pulse</a>
       <a href="#tokenevents">Token Events</a>
       <a href="#library">Reports</a>
@@ -633,7 +632,7 @@ body.view-section #backFab{display:block}
   </div>
 </div>
 
-<div id="menuHome"><div class="wrap"><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#marketpulse"><b>Market Pulse</b><span>Fear & Greed, funding, liquidations</span></a><a class="menu-tile" href="#btcmonthly"><b>BTC Monthly</b><span>Bitcoin returns month by month</span></a><a class="menu-tile" href="#fomo"><b>FOMO Finder</b><span>Gauge from futures premium and funding</span></a><a class="menu-tile" href="#rsimap"><b>RSI Heatmap</b><span>Overbought / oversold across 40 coins</span></a><a class="menu-tile" href="#rsichart"><b>RSI Chart</b><span>Price and RSI on any timeframe</span></a><a class="menu-tile" href="#socialpulse"><b>Social Pulse</b><span>Truth Social and crypto news feed</span></a><a class="menu-tile" href="#tokenevents"><b>Token Events</b><span>Unlocks, listings and airdrops</span></a><a class="menu-tile" href="#library"><b>Reports</b><span>Asset reviews and deep dives</span></a><a class="menu-tile" href="#transparency"><b>Transparency Watch</b><span>Congress and insider trading watch</span></a></div></div></div>
+<div id="menuHome"><div class="wrap"><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#marketpulse"><b>Market Pulse</b><span>Fear & Greed, funding, liquidations</span></a><a class="menu-tile" href="#btcmonthly"><b>BTC Monthly</b><span>Bitcoin returns month by month</span></a><a class="menu-tile" href="#fomo"><b>FOMO Finder &amp; RSI Chart</b><span>Sentiment gauge plus price and RSI</span></a><a class="menu-tile" href="#rsimap"><b>RSI Heatmap</b><span>Overbought / oversold across 40 coins</span></a><a class="menu-tile" href="#socialpulse"><b>Social Pulse</b><span>Truth Social and crypto news feed</span></a><a class="menu-tile" href="#tokenevents"><b>Token Events</b><span>Unlocks, listings and airdrops</span></a><a class="menu-tile" href="#library"><b>Reports</b><span>Asset reviews and deep dives</span></a><a class="menu-tile" href="#transparency"><b>Transparency Watch</b><span>Congress and insider trading watch</span></a></div></div></div>
 <button id="backFab" type="button">&larr; Menu</button>
 <div id="backBar"><div class="wrap"><button id="backBtn" type="button">&larr; Back to menu</button><span id="backTitle"></span></div></div>
 <section id="calendar">
@@ -906,7 +905,31 @@ body.view-section #backFab{display:block}
       <div class="fomo-bar" id="fomoBar">Loading live prices…</div>
       <p class="fomo-note" id="fomoNote"></p>
     </div>
-  </div>
+
+    <div class="section-head" style="margin-top:38px">
+      <span class="tag">RSI Chart</span>
+      <h2>Price and RSI on any timeframe</h2>
+      <p>Candles on top, 14-period RSI underneath with the five zones shaded: Overbought (70+), Strong (60–70), Neutral (40–60), Weak (30–40) and Oversold (30 or below). Pick any coin and timeframe.</p>
+    </div>
+    <div class="filter-row" id="rcTf" style="margin-bottom:10px">
+      <button class="filter-chip" data-t="15m">15m</button>
+      <button class="filter-chip" data-t="1h">1H</button>
+      <button class="filter-chip active" data-t="4h">4H</button>
+      <button class="filter-chip" data-t="12h">12H</button>
+      <button class="filter-chip" data-t="1d">1D</button>
+      <button class="filter-chip" data-t="1w">1W</button>
+    </div>
+    <div class="rc-wrap">
+      <div class="rc-head">
+        <select id="rcCoin" aria-label="Coin"></select>
+        <span class="rc-stat" id="rcStat"></span>
+      </div>
+      <div class="rsi-key" style="margin:0 0 8px"><span><i style="background:rgba(214,69,61,.9)"></i>Overbought &ge; 70</span><span><i style="background:rgba(217,130,43,.9)"></i>Strong 60–70</span><span><i style="background:rgba(255,255,255,.25)"></i>Neutral 40–60</span><span><i style="background:rgba(47,154,140,.9)"></i>Weak 30–40</span><span><i style="background:rgba(47,158,95,.9)"></i>Oversold &le; 30</span></div>
+      <svg id="rcSvg" viewBox="0 0 900 470" preserveAspectRatio="none" role="img" aria-label="Price and RSI chart"></svg>
+      <div id="rcTip" class="chart-tooltip" style="display:none"></div>
+    </div>
+    <p class="calendar-note" style="margin-top:10px" id="rcNote">Live candles from OKX (Bybit as backup). RSI(14) with Wilder smoothing; the newest candle is still forming. Overbought and oversold show stretched momentum, not buy or sell calls. Not financial advice.</p>
+    </div>
 </section>
 
 <section id="btcmonthly" class="alt">
@@ -965,32 +988,7 @@ body.view-section #backFab{display:block}
   </div>
 </section>
 
-<section id="rsichart" class="alt">
-  <div class="wrap">
-    <div class="section-head">
-      <span class="tag">RSI Chart</span>
-      <h2>Price and RSI on any timeframe</h2>
-      <p>Candles on top, 14-period RSI underneath with the five zones shaded: Overbought (70+), Strong (60–70), Neutral (40–60), Weak (30–40) and Oversold (30 or below). Pick any coin and timeframe.</p>
-    </div>
-    <div class="filter-row" id="rcTf" style="margin-bottom:10px">
-      <button class="filter-chip" data-t="15m">15m</button>
-      <button class="filter-chip" data-t="1h">1H</button>
-      <button class="filter-chip active" data-t="4h">4H</button>
-      <button class="filter-chip" data-t="12h">12H</button>
-      <button class="filter-chip" data-t="1d">1D</button>
-      <button class="filter-chip" data-t="1w">1W</button>
-    </div>
-    <div class="rc-wrap">
-      <div class="rc-head">
-        <select id="rcCoin" aria-label="Coin"></select>
-        <span class="rc-stat" id="rcStat"></span>
-      </div>
-      <svg id="rcSvg" viewBox="0 0 900 470" preserveAspectRatio="none" role="img" aria-label="Price and RSI chart"></svg>
-      <div id="rcTip" class="chart-tooltip" style="display:none"></div>
-    </div>
-    <p class="calendar-note" style="margin-top:10px" id="rcNote">Live candles from OKX (Bybit as backup). RSI(14) with Wilder smoothing; the newest candle is still forming. Overbought and oversold show stretched momentum, not buy or sell calls. Not financial advice.</p>
-  </div>
-</section>
+
 
 <section id="socialpulse">
   <div class="wrap">
@@ -3029,6 +3027,7 @@ function draw(){
   let s = '';
   // rsi zones
   [[70,100,'rgba(214,69,61,.16)'],[60,70,'rgba(217,130,43,.13)'],[40,60,'rgba(255,255,255,.03)'],[30,40,'rgba(47,154,140,.13)'],[0,30,'rgba(47,158,95,.16)']].forEach(([a, b, f]) => s += `<rect x="${L}" y="${yr(b)}" width="${pw}" height="${yr(a) - yr(b)}" fill="${f}"/>`);
+  [['Overbought',85,'#d6453d'],['Strong',65,'#d9822b'],['Neutral',50,'#9ca3af'],['Weak',35,'#2f9a8c'],['Oversold',15,'#2f9e5f']].forEach(([n, v, col]) => s += `<text x="${L + pw - 6}" y="${yr(v) + 4}" font-size="11" font-weight="700" fill="${col}" text-anchor="end" opacity=".95">${n}</text>`);
   [70,60,50,40,30].forEach(v => s += `<line x1="${L}" x2="${L + pw}" y1="${yr(v)}" y2="${yr(v)}" stroke="rgba(255,255,255,${v === 50 ? .12 : .2})" stroke-dasharray="${v === 50 ? '2 4' : '4 4'}"/><text x="${L + pw + 6}" y="${yr(v) + 4}" font-size="11" fill="#9ca3af">${v}</text>`);
   // price grid
   for(let i = 0; i <= 4; i++){ const p = lo - pad + (hi - lo + 2 * pad) * i / 4; s += `<line x1="${L}" x2="${L + pw}" y1="${y(p)}" y2="${y(p)}" stroke="rgba(255,255,255,.07)"/><text x="${L + pw + 6}" y="${y(p) + 4}" font-size="11" fill="#9ca3af">${fp(p)}</text>`; }
@@ -3068,7 +3067,7 @@ $('rcSvg').addEventListener('mouseleave', () => { $('rcTip').style.display = 'no
 const sel = $('rcCoin'); const fill = list => { sel.innerHTML = list.map(s => `<option value="${s}">${s}</option>`).join(''); sel.value = coin; };
 fill(['BTC','ETH','SOL','XRP','BNB','DOGE','ADA','LINK']);
 fetch('../rsi_heatmap.json', {cache:'no-store'}).then(r => r.ok ? r.json() : null).then(d => { if(d && d.coins) fill(d.coins.map(x => x.s)); }).catch(() => {});
-window.addEventListener('hashchange', () => { if(location.hash === '#rsichart') go(); });
+window.addEventListener('hashchange', () => { if(location.hash === '#fomo') go(); });
 go();
 })();
 </script>
