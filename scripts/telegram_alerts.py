@@ -36,7 +36,9 @@ def load(name, default=None):
 
 
 def send(text):
-    token, chat = os.environ.get("TELEGRAM_BOT_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
+    token, chat = (os.environ.get("TELEGRAM_BOT_TOKEN") or "").strip().strip('"\''), (os.environ.get("TELEGRAM_CHAT_ID") or "").strip()
+    if token.lower().startswith("bot"):
+        token = token[3:]
     if DRY or not token or not chat:
         print("[dry/unsent]", text.replace("\n", " | "))
         return DRY
@@ -131,6 +133,8 @@ def sentiment(st, seeded):
 def main():
     if os.environ.get("SEND_TEST") == "1":
         ok = send("✅ TTM alerts bot is connected. You will see macro releases, RSI extremes, token events and sentiment shifts here.")
+        t = (os.environ.get("TELEGRAM_BOT_TOKEN") or "")
+        print("token shape: length", len(t), "| has colon:", ":" in t, "| has space/newline:", t != t.strip() or " " in t, "| digits before colon:", t.split(":")[0].isdigit() if ":" in t else False)
         print("token set:", bool(os.environ.get("TELEGRAM_BOT_TOKEN")), "| chat id set:", bool(os.environ.get("TELEGRAM_CHAT_ID")))
         print("test sent" if ok else "test NOT sent")
         if not ok:
