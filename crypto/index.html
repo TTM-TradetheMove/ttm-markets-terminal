@@ -538,6 +538,7 @@ body.view-section section[id].active{display:block}
 body.view-section .hero,body.view-section .hero-simple,body.view-section #menuHome{display:none}
 #backBar{display:none;background:rgba(11,11,12,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 body.view-section #backBar{display:block}
+body.locked #backBar,body.locked #backFab,body.locked #menuHome{display:none !important}
 #backBar .wrap{display:flex;align-items:center;gap:14px;padding-top:10px;padding-bottom:10px}
 #backBtn{background:var(--gold);color:#0b0b0c;border:0;border-radius:8px;padding:9px 16px;font:700 13px/1 inherit;font-family:inherit;cursor:pointer}
 #backBtn:hover{background:var(--gold2)}
@@ -3077,7 +3078,10 @@ go();
   const ids = secs.map(s => s.id);
   const titles = {}; document.querySelectorAll('.site-nav a[href^="#"]').forEach(a => titles[a.getAttribute('href').slice(1)] = a.textContent.trim());
   function show(){
-    const id = (location.hash || '').slice(1);
+    const only = new URLSearchParams(location.search).get('only');
+    const lock = only && ids.includes(only) ? only : null;  // ?only=<section> opens just that page, with no menu or back button
+    document.body.classList.toggle('locked', !!lock);
+    const id = lock || (location.hash || '').slice(1);
     const sec = ids.includes(id) ? document.getElementById(id) : null;
     secs.forEach(s => s.classList.toggle('active', s === sec));
     document.body.classList.toggle('view-section', !!sec);

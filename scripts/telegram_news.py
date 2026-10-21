@@ -22,6 +22,11 @@ SOURCES = set((os.environ.get("NEWS_SOURCES") or "crypto,trump,central,macro").s
 MAX_AGE = float(os.environ.get("MAX_AGE_H") or 12) * 3600
 MAX_PER_RUN = int(os.environ.get("MAX_PER_RUN") or 6)
 e = html.escape
+SITE = "https://ttm-tradethemove.github.io/ttm-markets-terminal/"
+
+
+def ttm(sec, area="crypto"):
+    return f"\n<a href=\"{SITE}{area}/?only={sec}\">Open in TTM</a>"
 
 
 def load(name, default=None):
@@ -62,23 +67,23 @@ def collect():
             for p in outlet.get("posts", []):
                 if p.get("title") and p.get("link"):
                     body = f"\n{e(clip(p.get('text'), 160))}" if p.get("text") else ""
-                    items.append((float(p.get("ts") or 0), "c|" + (p.get("id") or p["link"]), f"📰 <b>{e(outlet.get('name', 'Crypto news'))}</b>\n<a href=\"{e(p['link'])}\">{e(clip(p['title'], 200))}</a>{body}"))
+                    items.append((float(p.get("ts") or 0), "c|" + (p.get("id") or p["link"]), f"📰 <b>{e(outlet.get('name', 'Crypto news'))}</b>\n<a href=\"{e(p['link'])}\">{e(clip(p['title'], 200))}</a>{body}{ttm('socialpulse')}"))
     if "trump" in SOURCES:
         for p in social.get("truth", []):
             if p.get("text") and p.get("link"):
                 tags = f" · {', '.join(p['tags'])}" if p.get("tags") else ""
-                items.append((float(p.get("ts") or 0), "t|" + (p.get("id") or p["link"]), f"🇺🇸 <b>Trump · Truth Social</b>{e(tags)}\n{e(clip(p['text'], 350))}\n{e(p['link'])}"))
+                items.append((float(p.get("ts") or 0), "t|" + (p.get("id") or p["link"]), f"🇺🇸 <b>Trump · Truth Social</b>{e(tags)}\n{e(clip(p['text'], 350))}\n{e(p['link'])}{ttm('socialpulse')}"))
     tf = load("tradfi_news.json", {})
     if "central" in SOURCES:
         for p in tf.get("central_banks", []):
             if p.get("title") and p.get("link"):
-                items.append((float(p.get("ts") or 0), "b|" + p["link"], f"🏦 <b>{e(p.get('bank', 'Central bank'))}</b>\n<a href=\"{e(p['link'])}\">{e(clip(p['title'], 200))}</a>"))
+                items.append((float(p.get("ts") or 0), "b|" + p["link"], f"🏦 <b>{e(p.get('bank', 'Central bank'))}</b>\n<a href=\"{e(p['link'])}\">{e(clip(p['title'], 200))}</a>{ttm('newsrisk', 'tradfi')}"))
     if "macro" in SOURCES:
         for cat, icon in (("policy", "🏛️"), ("geopolitics", "🌍")):
             for p in tf.get(cat, []):
                 if p.get("title") and p.get("link") and p.get("affects"):
                     aff = ", ".join(p["affects"][:3])
-                    items.append((float(p.get("ts") or 0), "m|" + p["link"], f"{icon} <b>{cat.title()}</b> · {e(p.get('source', ''))}\n<a href=\"{e(p['link'])}\">{e(clip(p['title'], 200))}</a>\nAffects: {e(aff)}"))
+                    items.append((float(p.get("ts") or 0), "m|" + p["link"], f"{icon} <b>{cat.title()}</b> · {e(p.get('source', ''))}\n<a href=\"{e(p['link'])}\">{e(clip(p['title'], 200))}</a>\nAffects: {e(aff)}{ttm('newsrisk', 'tradfi')}"))
     return items
 
 
