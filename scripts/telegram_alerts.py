@@ -44,8 +44,8 @@ def send(text):
     try:
         with urllib.request.urlopen(urllib.request.Request(f"https://api.telegram.org/bot{token}/sendMessage", data=data), timeout=20) as r:
             return json.loads(r.read()).get("ok", False)
-    except Exception as e:
-        print("telegram send failed:", e)
+    except Exception as ex:
+        print("telegram send failed:", ex)
         return False
 
 
@@ -131,7 +131,10 @@ def sentiment(st, seeded):
 def main():
     if os.environ.get("SEND_TEST") == "1":
         ok = send("✅ TTM alerts bot is connected. You will see macro releases, RSI extremes, token events and sentiment shifts here.")
-        print("test sent" if ok else "test NOT sent (check secrets)")
+        print("token set:", bool(os.environ.get("TELEGRAM_BOT_TOKEN")), "| chat id set:", bool(os.environ.get("TELEGRAM_CHAT_ID")))
+        print("test sent" if ok else "test NOT sent")
+        if not ok:
+            sys.exit(1)
         return
     st = load("telegram_alerts_state.json", None)
     seeded = st is not None
