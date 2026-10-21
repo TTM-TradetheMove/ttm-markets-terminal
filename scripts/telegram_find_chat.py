@@ -20,14 +20,24 @@ try:
 except urllib.error.HTTPError as e:
     raise SystemExit(f"Telegram rejected the token (HTTP {e.code}). The TELEGRAM_BOT_TOKEN secret is wrong or was revoked - paste the newest token from @BotFather.")
 chats = {}
+topics = {}  # (chat id, topic id) -> chat name
 for u in res.get("result", []):
     for key in ("channel_post", "message", "edited_channel_post", "my_chat_member", "chat_member"):
-        c = (u.get(key) or {}).get("chat")
+        m = u.get(key) or {}
+        c = m.get("chat")
         if c:
             chats[c["id"]] = c.get("title") or c.get("username") or c.get("first_name") or "chat"
+            if m.get("message_thread_id") and (m.get("is_topic_message") or c.get("is_forum")):
+                topics[(c["id"], m["message_thread_id"])] = chats[c["id"]]
 print(f"found {len(chats)} chat(s)")  # ids deliberately not printed here
 if not chats:
     raise SystemExit("NO CHATS SEEN YET: make the bot an ADMIN of the channel/group, post a new message there, then run this again within 24 hours.")
+for (cid, tid), name in topics.items():
+    try:
+        api("sendMessage", chat_id=cid, message_thread_id=tid, text=f"✅ This TOPIC's ID is: {tid}\nThe group's chat ID is: {cid}\nFor alerts in this topic, put {tid} in the GitHub secret TELEGRAM_THREAD_ID.")
+        print(f"posted topic id into a topic of '{name}'")
+    except Exception as ex:
+        print("topic post failed:", ex)
 for cid, name in chats.items():
     api("sendMessage", chat_id=cid, text=f"✅ TTM Session bot is connected.\nThis chat's ID is: {cid}\nPut this number in the GitHub secret TELEGRAM_CHAT_ID.")
     print(f"posted the id into '{name}'")

@@ -42,7 +42,11 @@ def send(text):
     if DRY or not token or not chat:
         print("[dry/unsent]", text.replace("\n", " | "))
         return DRY
-    data = urllib.parse.urlencode({"chat_id": chat, "text": text, "parse_mode": "HTML", "disable_web_page_preview": "true"}).encode()
+    params = {"chat_id": chat, "text": text, "parse_mode": "HTML", "disable_web_page_preview": "true"}
+    thread = (os.environ.get("TELEGRAM_THREAD_ID") or "").strip()
+    if thread:
+        params["message_thread_id"] = thread
+    data = urllib.parse.urlencode(params).encode()
     try:
         with urllib.request.urlopen(urllib.request.Request(f"https://api.telegram.org/bot{token}/sendMessage", data=data), timeout=20) as r:
             return json.loads(r.read()).get("ok", False)
