@@ -34,6 +34,7 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
           INCLUDE_WEEKENDS: "0"
           SEND_TEST: ${{ inputs.send_test && '1' || '0' }}
         run: python3 scripts/telegram_sessions.py
