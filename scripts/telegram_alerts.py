@@ -17,7 +17,7 @@ from zoneinfo import ZoneInfo
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATE = os.path.join(ROOT, "telegram_alerts_state.json")
-SITE = "https://ttm-tradethemove.github.io/ttm-markets-terminal/crypto/"
+SITE = "https://ttm-tradethemove.github.io/ttm-markets-terminal/"
 MEL = ZoneInfo("Australia/Melbourne")
 NOW = datetime.now(timezone.utc)
 DRY = os.environ.get("DRY_RUN", "0") == "1"
@@ -73,11 +73,11 @@ def macro(st, seeded):
             st["macro"].append(key + "|res")
             if seeded and until > -6 * 3600:
                 verdict = {True: "⚠️ Missed forecast", False: "In line / better"}.get(bool(ev.get("miss")), "")
-                out.append(f"📊 {flag} <b>{e(ev['event'])}</b> is out\nActual <b>{e(ev['actual'])}</b> · Forecast {e(ev['forecast'])} · Previous {e(ev['previous'])}\n{verdict}\nTTM bias history: {SITE}#calendar")
+                out.append(f"📊 {flag} <b>{e(ev['event'])}</b> is out\nActual <b>{e(ev['actual'])}</b> · Forecast {e(ev['forecast'])} · Previous {e(ev['previous'])}\n{verdict}\nTTM bias history: {SITE}")
         elif not released and 0 < until <= 900 and key + "|soon" not in st["macro"]:
             st["macro"].append(key + "|soon")
             if seeded:
-                out.append(f"⏰ {flag} <b>{e(ev['event'])}</b> in {max(1, int(until // 60))} min ({when} Melbourne)\nForecast {e(ev['forecast'])} · Previous {e(ev['previous'])}\nHigh-impact: expect volatility. {SITE}#calendar")
+                out.append(f"⏰ {flag} <b>{e(ev['event'])}</b> in {max(1, int(until // 60))} min ({when} Melbourne)\nForecast {e(ev['forecast'])} · Previous {e(ev['previous'])}\nHigh-impact: expect volatility. {SITE}")
     return out
 
 
@@ -95,7 +95,7 @@ def rsi(st, seeded):
             st["rsi"][k] = zone
             if seeded and zone != "mid" and old != zone:
                 tag = "🔴 Overbought" if zone == "ob" else "🟢 Oversold"
-                out.append(f"{tag}: <b>{e(c['s'])}</b> RSI {v:.1f} on {lab} · ${(f"{c['p']:,.2f}" if c['p']>=1 else f"{c['p']:.6g}")}\nStretched momentum, not a trade call. {SITE}#fomo")
+                out.append(f"{tag}: <b>{e(c['s'])}</b> RSI {v:.1f} on {lab} · ${(f"{c['p']:,.2f}" if c['p']>=1 else f"{c['p']:.6g}")}\nStretched momentum, not a trade call. {SITE}")
     return out
 
 
@@ -130,7 +130,7 @@ def sentiment(st, seeded):
         if zone == "mid":
             return [f"😐 Fear &amp; Greed back to <b>{v}</b> ({e(cur.get('classification', ''))}), out of the extreme."]
         icon = "😱" if zone == "xfear" else "🤑"
-        return [f"{icon} Fear &amp; Greed hit <b>{v}</b> — {e(cur.get('classification', ''))}\nExtremes can mark turning points, but they can persist. {SITE}#marketpulse"]
+        return [f"{icon} Fear &amp; Greed hit <b>{v}</b> — {e(cur.get('classification', ''))}\nExtremes can mark turning points, but they can persist. {SITE}"]
     return []
 
 

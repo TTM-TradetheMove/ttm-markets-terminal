@@ -21,7 +21,7 @@ from zoneinfo import ZoneInfo
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATE = os.path.join(ROOT, "telegram_state.json")
-SITE = "https://ttm-tradethemove.github.io/ttm-markets-terminal/crypto/#tradinghours"
+SITE = "https://ttm-tradethemove.github.io/ttm-markets-terminal/"
 HEADSUP = int(os.environ.get("HEADSUP_MIN", "10"))
 WEEKENDS = os.environ.get("INCLUDE_WEEKENDS", "0") == "1"
 MAX_LOOKBACK = timedelta(minutes=20)  # never replay more than this after an outage
@@ -219,7 +219,7 @@ def main():
         if any(x in body for x in ("OPEN", "LIVE", "is open")):
             o = open_now(now)
             tail = f"\nCore sessions open: {', '.join(o) if o else 'none'}"
-        if send(body + tail + f"\n<a href=\"{SITE}\">Live clocks</a>"):
+        if send(body + tail + f"\n<a href=\"{SITE}\">TTM Markets Terminal</a>"):
             sent.update(k for k, _ in items)
             time.sleep(1)
     json.dump({"last": now.timestamp(), "sent": sorted(sent)[-300:]}, open(STATE, "w"))
