@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-10-20T23:50:14.366267+00:00",
+  "generated_at": "2026-10-21T02:28:38.175261+00:00",
   "source": "https://nfs.faireconomy.media/ff_calendar_thisweek.json",
   "live_actuals_source": "https://www.forexfactory.com/calendar",
-  "months_scraped_at": "2026-10-20T23:50:14.366267+00:00",
+  "months_scraped_at": "2026-10-21T02:28:38.175261+00:00",
   "events": [
     {
       "date": "01 Oct 2026",
       "dt": "2026-10-01",
-      "time": "MEL 3:00pm AEST \u00b7 NY 1:00am EDT \u00b7 LDN 6:00am BST \u00b7 EU 7:00am CEST",
+      "time": "MEL 2:00pm AEST \u00b7 NY 12:00am EDT \u00b7 LDN 5:00am BST \u00b7 EU 6:00am CEST",
       "country": "US",
       "event": "Omdia Total Vehicle Sales",
       "impact": "low",
@@ -17,7 +17,7 @@
       "miss": true,
       "bias": "neutral",
       "upcoming": false,
-      "ts": 1790830800
+      "ts": 1790827200
     },
     {
       "date": "01 Oct 2026",
@@ -1117,6 +1117,21 @@
     {
       "date": "08 Oct 2026",
       "dt": "2026-10-08",
+      "time": "MEL 3:00pm AEDT \u00b7 NY 12:00am EDT \u00b7 LDN 5:00am BST \u00b7 EU 6:00am CEST",
+      "country": "EU",
+      "event": "Eurogroup Meetings",
+      "impact": "low",
+      "actual": "\u2014",
+      "forecast": "\u2014",
+      "previous": "\u2014",
+      "miss": false,
+      "bias": "neutral",
+      "upcoming": true,
+      "ts": 1791432000
+    },
+    {
+      "date": "08 Oct 2026",
+      "dt": "2026-10-08",
       "time": "MEL 4:00pm AEDT \u00b7 NY 1:00am EDT \u00b7 LDN 6:00am BST \u00b7 EU 7:00am CEST",
       "country": "JP",
       "event": "Economy Watchers Sentiment",
@@ -1127,21 +1142,6 @@
       "miss": false,
       "bias": "neutral",
       "upcoming": false,
-      "ts": 1791435600
-    },
-    {
-      "date": "08 Oct 2026",
-      "dt": "2026-10-08",
-      "time": "MEL 4:00pm AEDT \u00b7 NY 1:00am EDT \u00b7 LDN 6:00am BST \u00b7 EU 7:00am CEST",
-      "country": "EU",
-      "event": "Eurogroup Meetings",
-      "impact": "low",
-      "actual": "\u2014",
-      "forecast": "\u2014",
-      "previous": "\u2014",
-      "miss": false,
-      "bias": "neutral",
-      "upcoming": true,
       "ts": 1791435600
     },
     {
@@ -1627,7 +1627,7 @@
     {
       "date": "14 Oct 2026",
       "dt": "2026-10-14",
-      "time": "MEL 4:00pm AEDT \u00b7 NY 1:00am EDT \u00b7 LDN 6:00am BST \u00b7 EU 7:00am CEST",
+      "time": "MEL 3:00pm AEDT \u00b7 NY 12:00am EDT \u00b7 LDN 5:00am BST \u00b7 EU 6:00am CEST",
       "country": "EU",
       "event": "EU Economic Summit",
       "impact": "medium",
@@ -1637,7 +1637,7 @@
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
-      "ts": 1791954000
+      "ts": 1791950400
     },
     {
       "date": "14 Oct 2026",
@@ -1912,6 +1912,21 @@
     {
       "date": "15 Oct 2026",
       "dt": "2026-10-15",
+      "time": "MEL 3:00pm AEDT \u00b7 NY 12:00am EDT \u00b7 LDN 5:00am BST \u00b7 EU 6:00am CEST",
+      "country": "EU",
+      "event": "EU Economic Summit",
+      "impact": "medium",
+      "actual": "\u2014",
+      "forecast": "\u2014",
+      "previous": "\u2014",
+      "miss": false,
+      "bias": "neutral",
+      "upcoming": true,
+      "ts": 1792036800
+    },
+    {
+      "date": "15 Oct 2026",
+      "dt": "2026-10-15",
       "time": "MEL 3:30pm AEDT \u00b7 NY 12:30am EDT \u00b7 LDN 5:30am BST \u00b7 EU 6:30am CEST",
       "country": "JP",
       "event": "Revised Industrial Production m/m",
@@ -1923,21 +1938,6 @@
       "bias": "neutral",
       "upcoming": false,
       "ts": 1792038600
-    },
-    {
-      "date": "15 Oct 2026",
-      "dt": "2026-10-15",
-      "time": "MEL 4:00pm AEDT \u00b7 NY 1:00am EDT \u00b7 LDN 6:00am BST \u00b7 EU 7:00am CEST",
-      "country": "EU",
-      "event": "EU Economic Summit",
-      "impact": "medium",
-      "actual": "\u2014",
-      "forecast": "\u2014",
-      "previous": "\u2014",
-      "miss": false,
-      "bias": "neutral",
-      "upcoming": true,
-      "ts": 1792040400
     },
     {
       "date": "15 Oct 2026",
@@ -2576,10 +2576,10 @@
       "country": "JP",
       "event": "Trade Balance",
       "impact": "low",
-      "actual": "PENDING",
+      "actual": "-0.70T",
       "forecast": "-0.26T",
       "previous": "-0.84T",
-      "miss": false,
+      "miss": true,
       "bias": "neutral",
       "upcoming": false,
       "ts": 1792540200
@@ -3277,7 +3277,7 @@
     {
       "date": "28 Oct 2026",
       "dt": "2026-10-28",
-      "time": "MEL 4:00pm AEDT \u00b7 NY 1:00am EDT \u00b7 LDN 5:00am GMT \u00b7 EU 6:00am CET",
+      "time": "MEL 3:00pm AEDT \u00b7 NY 12:00am EDT \u00b7 LDN 4:00am GMT \u00b7 EU 5:00am CET",
       "country": "EU",
       "event": "German Import Prices m/m",
       "impact": "low",
@@ -3287,12 +3287,12 @@
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
-      "ts": 1793163600
+      "ts": 1793160000
     },
     {
       "date": "28 Oct 2026",
       "dt": "2026-10-28",
-      "time": "MEL 4:00pm AEDT \u00b7 NY 1:00am EDT \u00b7 LDN 5:00am GMT \u00b7 EU 6:00am CET",
+      "time": "MEL 3:00pm AEDT \u00b7 NY 12:00am EDT \u00b7 LDN 4:00am GMT \u00b7 EU 5:00am CET",
       "country": "EU",
       "event": "German Prelim GDP q/q",
       "impact": "medium",
@@ -3302,12 +3302,12 @@
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
-      "ts": 1793163600
+      "ts": 1793160000
     },
     {
       "date": "28 Oct 2026",
       "dt": "2026-10-28",
-      "time": "MEL 4:00pm AEDT \u00b7 NY 1:00am EDT \u00b7 LDN 5:00am GMT \u00b7 EU 6:00am CET",
+      "time": "MEL 3:00pm AEDT \u00b7 NY 12:00am EDT \u00b7 LDN 4:00am GMT \u00b7 EU 5:00am CET",
       "country": "EU",
       "event": "German 10-y Bond Auction",
       "impact": "low",
@@ -3317,7 +3317,7 @@
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
-      "ts": 1793163600
+      "ts": 1793160000
     },
     {
       "date": "28 Oct 2026",
@@ -3442,22 +3442,7 @@
     {
       "date": "29 Oct 2026",
       "dt": "2026-10-29",
-      "time": "MEL 4:00pm AEDT \u00b7 NY 1:00am EDT \u00b7 LDN 5:00am GMT \u00b7 EU 6:00am CET",
-      "country": "JP",
-      "event": "Consumer Confidence",
-      "impact": "low",
-      "actual": "\u2014",
-      "forecast": "\u2014",
-      "previous": "35.4",
-      "miss": false,
-      "bias": "neutral",
-      "upcoming": true,
-      "ts": 1793250000
-    },
-    {
-      "date": "29 Oct 2026",
-      "dt": "2026-10-29",
-      "time": "MEL 4:00pm AEDT \u00b7 NY 1:00am EDT \u00b7 LDN 5:00am GMT \u00b7 EU 6:00am CET",
+      "time": "MEL 3:00pm AEDT \u00b7 NY 12:00am EDT \u00b7 LDN 4:00am GMT \u00b7 EU 5:00am CET",
       "country": "EU",
       "event": "German Retail Sales m/m",
       "impact": "low",
@@ -3467,12 +3452,12 @@
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
-      "ts": 1793250000
+      "ts": 1793246400
     },
     {
       "date": "29 Oct 2026",
       "dt": "2026-10-29",
-      "time": "MEL 4:00pm AEDT \u00b7 NY 1:00am EDT \u00b7 LDN 5:00am GMT \u00b7 EU 6:00am CET",
+      "time": "MEL 3:00pm AEDT \u00b7 NY 12:00am EDT \u00b7 LDN 4:00am GMT \u00b7 EU 5:00am CET",
       "country": "EU",
       "event": "Italian 10-y Bond Auction",
       "impact": "low",
@@ -3482,12 +3467,12 @@
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
-      "ts": 1793250000
+      "ts": 1793246400
     },
     {
       "date": "29 Oct 2026",
       "dt": "2026-10-29",
-      "time": "MEL 4:00pm AEDT \u00b7 NY 1:00am EDT \u00b7 LDN 5:00am GMT \u00b7 EU 6:00am CET",
+      "time": "MEL 3:00pm AEDT \u00b7 NY 12:00am EDT \u00b7 LDN 4:00am GMT \u00b7 EU 5:00am CET",
       "country": "JP",
       "event": "BOJ Policy Rate",
       "impact": "high",
@@ -3497,12 +3482,12 @@
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
-      "ts": 1793250000
+      "ts": 1793246400
     },
     {
       "date": "29 Oct 2026",
       "dt": "2026-10-29",
-      "time": "MEL 4:00pm AEDT \u00b7 NY 1:00am EDT \u00b7 LDN 5:00am GMT \u00b7 EU 6:00am CET",
+      "time": "MEL 3:00pm AEDT \u00b7 NY 12:00am EDT \u00b7 LDN 4:00am GMT \u00b7 EU 5:00am CET",
       "country": "JP",
       "event": "Monetary Policy Statement",
       "impact": "high",
@@ -3512,18 +3497,33 @@
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
-      "ts": 1793250000
+      "ts": 1793246400
     },
     {
       "date": "29 Oct 2026",
       "dt": "2026-10-29",
-      "time": "MEL 4:00pm AEDT \u00b7 NY 1:00am EDT \u00b7 LDN 5:00am GMT \u00b7 EU 6:00am CET",
+      "time": "MEL 3:00pm AEDT \u00b7 NY 12:00am EDT \u00b7 LDN 4:00am GMT \u00b7 EU 5:00am CET",
       "country": "JP",
       "event": "BOJ Outlook Report",
       "impact": "high",
       "actual": "\u2014",
       "forecast": "\u2014",
       "previous": "\u2014",
+      "miss": false,
+      "bias": "neutral",
+      "upcoming": true,
+      "ts": 1793246400
+    },
+    {
+      "date": "29 Oct 2026",
+      "dt": "2026-10-29",
+      "time": "MEL 4:00pm AEDT \u00b7 NY 1:00am EDT \u00b7 LDN 5:00am GMT \u00b7 EU 6:00am CET",
+      "country": "JP",
+      "event": "Consumer Confidence",
+      "impact": "low",
+      "actual": "\u2014",
+      "forecast": "\u2014",
+      "previous": "35.4",
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
@@ -3802,22 +3802,7 @@
     {
       "date": "30 Oct 2026",
       "dt": "2026-10-30",
-      "time": "MEL 4:00pm AEDT \u00b7 NY 1:00am EDT \u00b7 LDN 5:00am GMT \u00b7 EU 6:00am CET",
-      "country": "JP",
-      "event": "Housing Starts y/y",
-      "impact": "low",
-      "actual": "\u2014",
-      "forecast": "\u2014",
-      "previous": "6.1%",
-      "miss": false,
-      "bias": "neutral",
-      "upcoming": true,
-      "ts": 1793336400
-    },
-    {
-      "date": "30 Oct 2026",
-      "dt": "2026-10-30",
-      "time": "MEL 4:00pm AEDT \u00b7 NY 1:00am EDT \u00b7 LDN 5:00am GMT \u00b7 EU 6:00am CET",
+      "time": "MEL 3:00pm AEDT \u00b7 NY 12:00am EDT \u00b7 LDN 4:00am GMT \u00b7 EU 5:00am CET",
       "country": "JP",
       "event": "BOJ Press Conference",
       "impact": "high",
@@ -3827,12 +3812,12 @@
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
-      "ts": 1793336400
+      "ts": 1793332800
     },
     {
       "date": "30 Oct 2026",
       "dt": "2026-10-30",
-      "time": "MEL 4:00pm AEDT \u00b7 NY 1:00am EDT \u00b7 LDN 5:00am GMT \u00b7 EU 6:00am CET",
+      "time": "MEL 3:00pm AEDT \u00b7 NY 12:00am EDT \u00b7 LDN 4:00am GMT \u00b7 EU 5:00am CET",
       "country": "EU",
       "event": "German Prelim CPI m/m",
       "impact": "medium",
@@ -3842,18 +3827,33 @@
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
-      "ts": 1793336400
+      "ts": 1793332800
     },
     {
       "date": "30 Oct 2026",
       "dt": "2026-10-30",
-      "time": "MEL 4:00pm AEDT \u00b7 NY 1:00am EDT \u00b7 LDN 5:00am GMT \u00b7 EU 6:00am CET",
+      "time": "MEL 3:00pm AEDT \u00b7 NY 12:00am EDT \u00b7 LDN 4:00am GMT \u00b7 EU 5:00am CET",
       "country": "UK",
       "event": "Nationwide HPI m/m",
       "impact": "low",
       "actual": "\u2014",
       "forecast": "\u2014",
       "previous": "-0.2%",
+      "miss": false,
+      "bias": "neutral",
+      "upcoming": true,
+      "ts": 1793332800
+    },
+    {
+      "date": "30 Oct 2026",
+      "dt": "2026-10-30",
+      "time": "MEL 4:00pm AEDT \u00b7 NY 1:00am EDT \u00b7 LDN 5:00am GMT \u00b7 EU 6:00am CET",
+      "country": "JP",
+      "event": "Housing Starts y/y",
+      "impact": "low",
+      "actual": "\u2014",
+      "forecast": "\u2014",
+      "previous": "6.1%",
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
