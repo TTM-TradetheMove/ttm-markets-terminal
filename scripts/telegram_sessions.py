@@ -24,7 +24,7 @@ STATE = os.path.join(ROOT, "telegram_state.json")
 SITE = "https://ttm-tradethemove.github.io/ttm-markets-terminal/crypto/?only=tradinghours"
 HEADSUP = int(os.environ.get("HEADSUP_MIN", "10"))
 WEEKENDS = os.environ.get("INCLUDE_WEEKENDS", "0") == "1"
-MAX_LOOKBACK = timedelta(minutes=20)  # never replay more than this after an outage
+MAX_LOOKBACK = timedelta(hours=3)   # GitHub's cron can skip hours, so catch up on what was missed  # never replay more than this after an outage
 DISPLAY = ZoneInfo("Australia/Melbourne")
 
 # Sessions: local minutes-from-midnight phases (same as the site)
@@ -206,6 +206,20 @@ def main():
     sent = set(st.get("sent", []))
     due = sorted((e for e in build_events(now) if last < e[0] <= now and e[1] not in sent), key=lambda e: e[0])
     print(f"window {last.isoformat()} -> {now.isoformat()}: {len(due)} event(s)")
+    # catch-up after a gap: drop stale heads-ups ("opens in 10 min" is useless later), label late open/close news, cap the burst
+    HEADS = ("head", "closing")
+    stale = [e for e in due if any(h in e[1] for h in HEADS) and now - e[0] > timedelta(minutes=12)]
+    sent.update(e[1] for e in stale)
+    due = [e for e in due if e not in stale]
+    if len(due) > 6:
+        sent.update(e[1] for e in due[:-6])
+        print(f"catch-up: skipping {len(due) - 6} older events")
+        due = due[-6:]
+    late = []
+    for ts, key, text in due:
+        mins = int((now - ts).total_seconds() // 60)
+        late.append((ts, key, (f"🕒 <i>{mins} min ago (delayed)</i>\n" if mins >= 15 else "") + text))
+    due = late
     # merge messages that fire at the same moment and are the same kind (e.g. LSE + Xetra both opening)
     def kind(key):
         return "head" if "head" in key else "moment"
