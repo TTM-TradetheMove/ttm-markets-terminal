@@ -94,9 +94,11 @@ def collect():
 
 def main():
     if os.environ.get("SEND_TEST") == "1":
-        ok = send("✅ TTM news feed is connected. New crypto headlines, Trump posts, central-bank releases and market-moving policy news will appear here.")
-        print("test sent" if ok else "test NOT sent")
-        if not ok:
+        ok1 = send("✅ TTM <b>crypto news</b> topic is connected. Crypto headlines and Trump posts will appear here.", "crypto")
+        ok2 = send("✅ TTM <b>markets news</b> topic is connected. Central-bank releases and policy news will appear here.", "tradfi")
+        print("crypto topic test:", "sent" if ok1 else "NOT sent", "| markets topic test:", "sent" if ok2 else "NOT sent")
+        print("news thread set:", bool(os.environ.get("TELEGRAM_NEWS_THREAD_ID")), "| tradfi news thread set:", bool(os.environ.get("TELEGRAM_TRADFI_NEWS_THREAD_ID")), "| news chat set:", bool(os.environ.get("TELEGRAM_NEWS_CHAT_ID")))
+        if not (ok1 and ok2):
             sys.exit(1)
         return
     st = load("telegram_news_state.json", None)
