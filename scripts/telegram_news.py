@@ -7,7 +7,8 @@ TTM Telegram news feed: posts NEW headlines from the terminal's own data files i
   central  - central-bank releases: Fed, ECB, BoE, BoJ, RBA... (tradfi_news.json)
   macro    - TradFi policy / geopolitics headlines that move markets (tradfi_news.json, only items tagged with what they affect)
 
-Secrets: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, and TELEGRAM_NEWS_THREAD_ID (the topic for news; falls back to TELEGRAM_THREAD_ID).
+Secrets: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID. Optional: TELEGRAM_NEWS_THREAD_ID (crypto news + Trump topic), TELEGRAM_TRADFI_NEWS_THREAD_ID
+(central bank + policy topic; falls back to the news topic), TELEGRAM_NEWS_CHAT_ID (a separate group/channel for all news).
 Env: DRY_RUN=1, NEWS_SOURCES=crypto,trump,central,macro (default all), MAX_AGE_H (default 12), MAX_PER_RUN (default 6).
 First run only records what already exists (no flood). State: telegram_news_state.json.
 """
@@ -36,10 +37,14 @@ def load(name, default=None):
         return default
 
 
-def send(text):
+def send(text, group="crypto"):
+    """group 'crypto' -> crypto news topic; 'tradfi' -> TradFi news topic (falls back to the crypto news topic).
+    TELEGRAM_NEWS_CHAT_ID (optional) sends news to a different group/channel than the other bots."""
     token = (os.environ.get("TELEGRAM_BOT_TOKEN") or "").strip()
-    chat = (os.environ.get("TELEGRAM_CHAT_ID") or "").strip()
-    thread = (os.environ.get("TELEGRAM_NEWS_THREAD_ID") or os.environ.get("TELEGRAM_THREAD_ID") or "").strip()
+    chat = (os.environ.get("TELEGRAM_NEWS_CHAT_ID") or os.environ.get("TELEGRAM_CHAT_ID") or "").strip()
+    env = os.environ.get
+    thread = ((env("TELEGRAM_TRADFI_NEWS_THREAD_ID") or env("TELEGRAM_NEWS_THREAD_ID")) if group == "tradfi" else env("TELEGRAM_NEWS_THREAD_ID")) or env("TELEGRAM_THREAD_ID") or ""
+    thread = thread.strip()
     if DRY or not token or not chat:
         print("[dry/unsent]", text.replace("\n", " | ")[:200])
         return DRY
@@ -106,7 +111,7 @@ def main():
     sent = 0
     skipped = set()
     for ts, key, text in fresh[-MAX_PER_RUN:]:
-        if send(text):
+        if send(text, "tradfi" if key[0] in "bm" else "crypto"):
             sent += 1
         else:
             skipped.add(key)  # retry next run

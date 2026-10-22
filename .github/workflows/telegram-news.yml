@@ -32,6 +32,8 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
           TELEGRAM_NEWS_THREAD_ID: ${{ secrets.TELEGRAM_NEWS_THREAD_ID }}
+          TELEGRAM_TRADFI_NEWS_THREAD_ID: ${{ secrets.TELEGRAM_TRADFI_NEWS_THREAD_ID }}
+          TELEGRAM_NEWS_CHAT_ID: ${{ secrets.TELEGRAM_NEWS_CHAT_ID }}
           SEND_TEST: ${{ inputs.send_test && '1' || '0' }}
         run: python3 scripts/telegram_news.py
       - name: Save state
