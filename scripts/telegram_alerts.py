@@ -3,7 +3,7 @@
 TTM Telegram alerts: posts market news from the dashboard's own data files to your Telegram chat.
 
   1. MACRO   - heads-up 15 min before a high-impact release, then the result (actual vs forecast) once it prints
-  2. RSI     - a coin newly entering Overbought (>=70) or Oversold (<=30) on 4H / 1D / 1W
+  2. RSI     - a coin newly entering Overbought (>=70) or Oversold (<=30) on 4H / 8H / 12H / 1D / 1W
   3. TOKENS  - new token unlocks / listings / airdrops / major events, once, when they are within 48h (or announced today)
   4. SENTIMENT - Fear & Greed moving into / out of an extreme
 
@@ -27,7 +27,7 @@ MEL = ZoneInfo("Australia/Melbourne")
 NOW = datetime.now(timezone.utc)
 DRY = os.environ.get("DRY_RUN", "0") == "1"
 TYPES = set((os.environ.get("ALERT_TYPES") or "macro,rsi,tokens,sentiment").split(","))
-RSI_TFS = {"4h": "4H", "1d": "1D", "1w": "1W"}
+RSI_TFS = {"4h": "4H", "8h": "8H", "12h": "12H", "1d": "1D", "1w": "1W"}
 MAX_PER_RUN = 8
 FLAG = {"US": "🇺🇸", "UK": "🇬🇧", "EU": "🇪🇺", "JP": "🇯🇵"}
 TYPE_ICON = {"unlock": "🔓", "listing": "📈", "airdrop": "🎁", "major": "📅"}

@@ -4,6 +4,7 @@
 RSI(14, Wilder smoothing) for ~40 major coins across 15m / 1h / 4h / 12h / 1d / 1w, from OKX's public
 candle API (free, no key, not geo-blocked). Also stores last price and 24h change from OKX tickers.
 The newest, still-forming candle is included, like exchange charts show it.
+OKX has no 8H bar, so 8h is built from pairs of 4H candles aligned to 00:00 / 08:00 / 16:00 UTC.
 """
 import json, os, sys, time, urllib.request
 from concurrent.futures import ThreadPoolExecutor
@@ -11,7 +12,7 @@ from datetime import datetime, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UA = {"User-Agent": "Mozilla/5.0 (compatible; TTMMarketsTerminalBot/1.0)"}
-TFS = [("15m", "15m"), ("1h", "1H"), ("4h", "4H"), ("12h", "12H"), ("1d", "1D"), ("1w", "1W")]
+TFS = [("15m", "15m"), ("1h", "1H"), ("4h", "4H"), ("8h", "8H"), ("12h", "12H"), ("1d", "1D"), ("1w", "1W")]
 COINS = ["BTC", "ETH", "XRP", "BNB", "SOL", "DOGE", "TRX", "ADA", "HYPE", "LINK", "XLM", "SUI", "BCH", "AVAX",
          "LTC", "HBAR", "TON", "DOT", "UNI", "AAVE", "NEAR", "APT", "ARB", "OP", "ATOM", "FIL", "ETC", "ICP",
          "INJ", "PEPE", "SHIB", "TAO", "ONDO", "WLD", "CRV", "ENA", "SEI", "TIA", "JUP", "RENDER"]
@@ -56,6 +57,14 @@ def rsi(closes, n=14):
 def one(job):
     sym, label, bar = job
     time.sleep(0.3)
+    if bar == "8H":
+        d = getj(f"https://www.okx.com/api/v5/market/candles?instId={sym}-USDT&bar=4H&limit=300")
+        if not d or d.get("code") != "0" or not d.get("data"):
+            return sym, label, None
+        groups = {}
+        for c in sorted(d["data"], key=lambda c: int(c[0])):  # oldest first; the last candle in each 8h bucket sets its close
+            groups[int(c[0]) // (8 * 3600 * 1000)] = float(c[4])
+        return sym, label, rsi([groups[k] for k in sorted(groups)])
     d = getj(f"https://www.okx.com/api/v5/market/candles?instId={sym}-USDT&bar={bar}&limit=200")
     if not d or d.get("code") != "0" or not d.get("data"):
         return sym, label, None
