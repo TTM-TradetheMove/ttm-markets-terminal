@@ -1,4 +1,4 @@
-Run at 2026-10-22T05:07:31.193393+00:00
+Run at 2026-10-22T10:10:28.423964+00:00
 
 page title: 'Calendar | Forex Factory'
 page url after load: 'https://www.forexfactory.com/calendar'
@@ -12,10 +12,10 @@ TARGET ROW: date='Sun Oct 18' currency='CNY' title='Unemployment Rate' actual='5
 TARGET ROW: date='Mon Oct 19' currency='GBP' title='Unemployment Rate' actual='4.7%'
 TARGET ROW: date='Thu Oct 22' currency='USD' title='Unemployment Claims' actual=''
 TARGET ROW: date='Fri Oct 23' currency='USD' title='Revised UoM Consumer Sentiment' actual=''
-matched-actuals by date: {'2026-10-18': 10, '2026-10-19': 12, '2026-10-20': 17, '2026-10-21': 3}
-Scraped 42 live actual values from forexfactory.com
+matched-actuals by date: {'2026-10-18': 10, '2026-10-19': 12, '2026-10-20': 17, '2026-10-21': 3, '2026-10-22': 2}
+Scraped 44 live actual values from forexfactory.com
 Past events without actual (10): 2026-10-20 USD API Weekly Statistical Bulletin; 2026-10-21 EUR German Buba Monthly Report; 2026-10-07 USD FOMC Meeting Minutes; 2026-10-08 GBP BOE Credit Conditions Survey; 2026-10-08 EUR Eurogroup Meetings; 2026-10-08 EUR ECB Monetary Policy Meeting Accounts; 2026-10-14 EUR EU Economic Summit; 2026-10-14 USD Beige Book; 2026-10-14 USD API Weekly Statistical Bulletin; 2026-10-15 EUR EU Economic Summit
-Scraped GBP keys: [('2026-10-01', 'GBP', 'finalmanufacturingpmi'), ('2026-10-05', 'GBP', 'finalservicespmi'), ('2026-10-07', 'GBP', 'ricshousepricebalance'), ('2026-10-14', 'GBP', 'cbleadingindexmm'), ('2026-10-15', 'GBP', 'gdpmm'), ('2026-10-15', 'GBP', 'constructionoutputmm'), ('2026-10-15', 'GBP', 'goodstradebalance'), ('2026-10-15', 'GBP', 'indexofservices3m3m'), ('2026-10-15', 'GBP', 'industrialproductionmm'), ('2026-10-15', 'GBP', 'manufacturingproductionmm'), ('2026-10-18', 'GBP', 'rightmovehpimm'), ('2026-10-19', 'GBP', 'averageearningsindex3my'), ('2026-10-19', 'GBP', 'claimantcountchange'), ('2026-10-19', 'GBP', 'unemploymentrate'), ('2026-10-20', 'GBP', '10ybondauction'), ('2026-10-20', 'GBP', 'cpiyy'), ('2026-10-20', 'GBP', 'corecpiyy'), ('2026-10-20', 'GBP', 'ppiinputmm'), ('2026-10-20', 'GBP', 'ppioutputmm'), ('2026-10-20', 'GBP', 'publicsectornetborrowing'), ('2026-10-20', 'GBP', 'rpiyy'), ('2026-10-21', 'GBP', 'hpiyy')]
+Scraped GBP keys: [('2026-10-01', 'GBP', 'finalmanufacturingpmi'), ('2026-10-05', 'GBP', 'finalservicespmi'), ('2026-10-07', 'GBP', 'ricshousepricebalance'), ('2026-10-14', 'GBP', 'cbleadingindexmm'), ('2026-10-15', 'GBP', 'gdpmm'), ('2026-10-15', 'GBP', 'constructionoutputmm'), ('2026-10-15', 'GBP', 'goodstradebalance'), ('2026-10-15', 'GBP', 'indexofservices3m3m'), ('2026-10-15', 'GBP', 'industrialproductionmm'), ('2026-10-15', 'GBP', 'manufacturingproductionmm'), ('2026-10-18', 'GBP', 'rightmovehpimm'), ('2026-10-19', 'GBP', 'averageearningsindex3my'), ('2026-10-19', 'GBP', 'claimantcountchange'), ('2026-10-19', 'GBP', 'unemploymentrate'), ('2026-10-20', 'GBP', '10ybondauction'), ('2026-10-20', 'GBP', 'cpiyy'), ('2026-10-20', 'GBP', 'corecpiyy'), ('2026-10-20', 'GBP', 'ppiinputmm'), ('2026-10-20', 'GBP', 'ppioutputmm'), ('2026-10-20', 'GBP', 'publicsectornetborrowing'), ('2026-10-20', 'GBP', 'rpiyy'), ('2026-10-21', 'GBP', 'hpiyy'), ('2026-10-22', 'GBP', 'cbiindustrialorderexpectations')]
 
 -- month scrape --
 month oct.2026: 256 rows for tracked currencies; sample: [{'date': 'Thu Oct 1', 'time': '12:15am', 'cur': 'EUR', 'impact': 'icon icon--ff-impact-yel', 'title': 'Spanish Manufacturing PMI', 'actual': '51.0', 'forecast': '50.2', 'previous': '49.5'}, {'date': 'Thu Oct 1', 'time': '12:45am', 'cur': 'EUR', 'impact': 'icon icon--ff-impact-yel', 'title': 'Italian Manufacturing PMI', 'actual': '50.4', 'forecast': '50.1', 'previous': '49.6'}]
