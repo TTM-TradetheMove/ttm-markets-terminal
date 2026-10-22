@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Alerts when a tracked member of Congress (default: Nancy Pelosi) files a new stock-trade disclosure.
+Alerts when a member of Congress (default: ALL House members; or a list) files a new stock-trade disclosure.
 
 Source: the U.S. House Clerk's official financial-disclosure index (free, no key):
   https://disclosures-clerk.house.gov/public_disc/financial-pdfs/<year>FD.zip   (XML list of every filing)
@@ -9,7 +9,7 @@ download the PDF, read the transactions out of it (best effort) and post them to
 the alert still goes out with the link. Members have up to 45 days to file, so trades are reported weeks late.
 
 Secrets: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_TRADFI_NEWS_THREAD_ID (topic for markets news; falls back to TELEGRAM_THREAD_ID).
-Env: DRY_RUN=1, MEMBERS="Pelosi:Nancy;Another:Name" (last:first, semicolon separated), SEND_TEST=1.
+Env: DRY_RUN=1, MEMBERS=all (default) or "Pelosi:Nancy;Another:Name" (last:first, semicolon separated), MAX_PER_RUN=8, SEND_TEST=1.
 First run only records existing filings (no flood). State: telegram_congress_state.json.
 """
 import io, json, os, re, subprocess, sys, tempfile, time, html, urllib.request, urllib.parse, zipfile
@@ -19,7 +19,10 @@ from datetime import datetime, timezone
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATE = os.path.join(ROOT, "telegram_congress_state.json")
 DRY = os.environ.get("DRY_RUN", "0") == "1"
-MEMBERS = [tuple(x.strip().lower() for x in m.split(":", 1)) for m in (os.environ.get("MEMBERS") or "Pelosi:Nancy").split(";") if ":" in m]
+_M = (os.environ.get("MEMBERS") or "all").strip()
+ALL_MEMBERS = _M.lower() == "all"
+MEMBERS = [] if ALL_MEMBERS else [tuple(x.strip().lower() for x in m.split(":", 1)) for m in _M.split(";") if ":" in m]
+MAX_PER_RUN = int(os.environ.get("MAX_PER_RUN") or 8)
 UA = {"User-Agent": "Mozilla/5.0 (compatible; TTMMarketsTerminalBot/1.0)"}
 SITE = "https://ttm-tradethemove.github.io/ttm-markets-terminal/"
 e = html.escape
@@ -74,9 +77,9 @@ def filings(year):
         if g("FilingType") != "P":
             continue
         last, first = g("Last").lower(), g("First").lower()
-        if not any(last == l and first.startswith(f) for l, f in MEMBERS):
+        if not ALL_MEMBERS and not any(last == l and first.startswith(f) for l, f in MEMBERS):
             continue
-        out.append({"doc": g("DocID"), "name": f"{g('First')} {g('Last')}".title(), "date": g("FilingDate"), "year": g("Year") or str(year)})
+        out.append({"doc": g("DocID"), "name": f"{g('First')} {g('Last')}".title(), "state": g("StateDst"), "date": g("FilingDate"), "year": g("Year") or str(year)})
     return out
 
 
@@ -126,20 +129,53 @@ def parse_text(txt):
     return out
 
 
+def since_trade(ticker, tdate):
+    """Price change from the close on/after the trade date to the latest close, in %. None if unavailable."""
+    if not re.fullmatch(r"[A-Z][A-Z.\-]{0,5}", ticker or ""):
+        return None
+    try:
+        d = datetime.strptime(tdate, "%m/%d/%Y").replace(tzinfo=timezone.utc).timestamp()
+        raw = fetch(f"https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(ticker.replace('.', '-'))}?range=2y&interval=1d", tries=2)
+        r = json.loads(raw)["chart"]["result"][0]
+        pts = [(t, c) for t, c in zip(r["timestamp"], r["indicators"]["quote"][0]["close"]) if c]
+        start = next(c for t, c in pts if t >= d - 86400)
+        return round((pts[-1][1] / start - 1) * 100, 1)
+    except Exception as ex:
+        print(f"no price history for {ticker}: {type(ex).__name__}")
+        return None
+
+
+def result_pct(action, move):
+    """What the trade has done for the member: a buy gains when the price rose, a sell 'gains' when it fell."""
+    if move is None:
+        return None
+    return -move if action.startswith("sell") else move
+
+
 def message(f, tr):
-    head = f"🏛️ <b>{e(f['name'])}</b> filed a new stock-trade disclosure"
+    who = f"{f['name']} ({f['state'][:2]}-{f['state'][2:].lstrip('0') or 'AL'})" if f.get("state") else f["name"]
+    head = f"🏛️ <b>{e(who)}</b> filed a new stock-trade disclosure"
     if f["date"]:
         head += f" ({e(f['date'])})"
     lines = [head]
+    results = []
     for action, name, amt, tdate in tr[:10]:
         icon = "🟢" if action == "buy" else "🔴" if action.startswith("sell") else "🔁"
-        lines.append(f"{icon} {action.upper()} <b>{e(name)}</b> · {e(amt)} · traded {e(tdate)}")
+        res = result_pct(action, since_trade(name, tdate)) if action in ("buy", "sell", "sell (partial)") else None
+        tail = ""
+        if res is not None:
+            results.append(res)
+            tail = f" · {'🟢' if res >= 0 else '🔴'} <b>{res:+.1f}%</b> since"
+        lines.append(f"{icon} {action.upper()} <b>{e(name)}</b> · {e(amt)} · traded {e(tdate)}{tail}")
+    if results:
+        avg = sum(results) / len(results)
+        lines.append(f"{'🟢' if avg >= 0 else '🔴'} <b>Average return since the trades: {avg:+.1f}%</b> ({len(results)} trade{'s' if len(results) != 1 else ''})")
     if len(tr) > 10:
         lines.append(f"…and {len(tr) - 10} more in the filing")
     if not tr:
         lines.append("Open the filing for the trades (could not read them automatically).")
     lines.append(f"<a href=\"https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/{e(f['year'])}/{e(f['doc'])}.pdf\">Official filing (PDF)</a> · <a href=\"{SITE}tradfi/?only=congress\">Open in TTM</a>")
-    lines.append("Disclosures can lag the actual trades by up to 45 days. Not a trade call.")
+    lines.append("Return = price change from the trade date to now; a sell counts green if the price fell after it. Filings lag trades by up to 45 days. Not a trade call.")
     return "\n".join(lines)
 
 
@@ -166,7 +202,7 @@ def main():
     print(f"{len(fs)} filing(s) for tracked members this year, {len(new)} new" + ("" if seeded else " (first run: recording only)"))
     sent_docs = set()
     if seeded:
-        for f in sorted(new, key=lambda f: f["date"]):
+        for f in sorted(new, key=lambda f: (f["date"][-4:], f["date"][:5]))[:MAX_PER_RUN]:  # any beyond the cap are picked up on the next run
             pdf = fetch(f"https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/{f['year']}/{f['doc']}.pdf")
             tr = trades(pdf) if pdf else []
             if send(message(f, tr)):
