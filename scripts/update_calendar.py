@@ -116,14 +116,38 @@ def scrape_months(known_events, month_params, dbg):
             browser = p.chromium.launch()
             page = browser.new_page(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36")
             page.set_default_timeout(10000)
+            def load_rows(url, what):
+                """Open one forexfactory calendar url, scroll to load lazy rows, return its rows (and log what the page looked like)."""
+                page.goto(url, wait_until="domcontentloaded", timeout=30000)
+                page.wait_for_timeout(3000)
+                for _ in range(16):
+                    page.mouse.wheel(0, 1500)
+                    page.wait_for_timeout(250)
+                got = page.evaluate(ROWS_JS)
+                tracked = sum(1 for r in got if r["cur"] in CURRENCY_TO_COUNTRY and r["title"])
+                dbg(f"{what}: title={page.title()!r} url={page.url!r} rows={len(got)} tracked={tracked}")
+                if not tracked:
+                    dbg(f"{what}: first rows: {[(r['date'], r['time'], r['cur'], r['title']) for r in got[:4]]}")
+                return got
+
+            page_zone = None
             for label, year in month_params:
                 try:
-                    page.goto(f"https://www.forexfactory.com/calendar?month={label}", wait_until="domcontentloaded", timeout=30000)
-                    page.wait_for_timeout(2500)
-                    for _ in range(14):
-                        page.mouse.wheel(0, 1500)
-                        page.wait_for_timeout(250)
-                    rows = page.evaluate(ROWS_JS)
+                    rows = load_rows(f"https://www.forexfactory.com/calendar?month={label}", f"month {label}")
+                    if sum(1 for r in rows if r["cur"] in CURRENCY_TO_COUNTRY and r["title"]) < 3:
+                        # the month view came back (nearly) empty -> read the same weeks one by one instead
+                        mon, yr = label.split(".")
+                        first = datetime.strptime(f"{mon} 1 {yr}", "%b %d %Y")
+                        sunday = first - timedelta(days=(first.weekday() + 1) % 7)
+                        nxt_first = (first + timedelta(days=32)).replace(day=1)
+                        rows = []
+                        while sunday < nxt_first:
+                            wl = f"{sunday.strftime('%b').lower()}{sunday.day}.{sunday.year}"
+                            try:
+                                rows += load_rows(f"https://www.forexfactory.com/calendar?week={wl}", f"week {wl}")
+                            except Exception as exc2:
+                                dbg(f"week {wl}: load failed ({exc2})")
+                            sunday += timedelta(days=7)
                 except Exception as exc:
                     dbg(f"month {label}: load failed ({exc})")
                     continue
@@ -147,6 +171,12 @@ def scrape_months(known_events, month_params, dbg):
                     if n > best_n:
                         best, best_n = z, n
                 dbg(f"month {label}: page timezone calibrated to {best} ({best_n} matching rows)")
+                if best_n >= 3:
+                    page_zone = best
+                elif page_zone:
+                    # later months have no feed events to match against, but the page timezone is the same
+                    best, best_n = page_zone, 3
+                    dbg(f"month {label}: using the timezone calibrated earlier ({page_zone})")
                 if best_n < 3:
                     dbg(f"month {label}: not enough matches to trust times -- skipping")
                     continue
