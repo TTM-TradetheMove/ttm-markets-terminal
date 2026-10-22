@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-22T00:41:04.133987+00:00",
+  "generated_at": "2026-10-22T05:25:47.619271+00:00",
   "window_hours": 24,
   "sources": [
     "wss://fstream.binance.com/ws/!forceOrder@arr",
@@ -19,52 +19,52 @@
   },
   "buckets": {
     "BTCUSDT": {
-      "mark": 84136.16,
+      "mark": 82651.34,
       "buckets": [
         {
-          "pricePct": -1.5,
-          "price": 82874.12,
-          "longUsd": 0.0,
-          "shortUsd": 20770.35
+          "pricePct": 0.5,
+          "price": 83064.6,
+          "longUsd": 2913.51,
+          "shortUsd": 22099.93
         },
         {
-          "pricePct": -1.0,
-          "price": 83294.8,
-          "longUsd": 4079.5,
-          "shortUsd": 1329.58
+          "pricePct": 1.0,
+          "price": 83477.85,
+          "longUsd": 1165.98,
+          "shortUsd": 0.0
         },
         {
-          "pricePct": 0.0,
-          "price": 84136.16,
-          "longUsd": 0.0,
+          "pricePct": 2.0,
+          "price": 84304.37,
+          "longUsd": 929.44,
           "shortUsd": 84.25
         },
         {
-          "pricePct": 0.5,
-          "price": 84556.84,
-          "longUsd": 1606.12,
+          "pricePct": 2.5,
+          "price": 84717.62,
+          "longUsd": 676.68,
           "shortUsd": 0.0
         }
       ]
     },
     "ETHUSDT": {
-      "mark": 2473.25,
+      "mark": 2437.61,
       "buckets": [
         {
-          "pricePct": -1.0,
-          "price": 2448.52,
+          "pricePct": 0.5,
+          "price": 2449.8,
           "longUsd": 1125.18,
           "shortUsd": 0.0
         },
         {
-          "pricePct": 1.0,
-          "price": 2497.98,
+          "pricePct": 2.5,
+          "price": 2498.55,
           "longUsd": 6098.53,
           "shortUsd": 3648.96
         },
         {
-          "pricePct": 1.5,
-          "price": 2510.35,
+          "pricePct": 3.0,
+          "price": 2510.74,
           "longUsd": 36661.06,
           "shortUsd": 0.0
         }
@@ -73,10 +73,6 @@
   },
   "priceHistory": {
     "BTCUSDT": [
-      {
-        "time": 1792554014883.5833,
-        "price": 82686.21
-      },
       {
         "time": 1792573021527.4683,
         "price": 83266.09
@@ -96,13 +92,13 @@
       {
         "time": 1792629663869.7686,
         "price": 84136.16
+      },
+      {
+        "time": 1792646747373.2693,
+        "price": 82651.34
       }
     ],
     "ETHUSDT": [
-      {
-        "time": 1792554014883.5833,
-        "price": 2444.28
-      },
       {
         "time": 1792573021527.4683,
         "price": 2455.65
@@ -122,6 +118,10 @@
       {
         "time": 1792629663869.7686,
         "price": 2473.25
+      },
+      {
+        "time": 1792646747373.2693,
+        "price": 2437.61
       }
     ]
   },
