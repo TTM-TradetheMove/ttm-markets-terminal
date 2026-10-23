@@ -42,5 +42,9 @@ jobs:
           else
             git add calendar_data.json
             git commit -m "Auto-update economic calendar"
-            git push
+            # other jobs (Telegram state, data jobs) push while the scrape runs, so rebase onto them and retry
+            for i in 1 2 3 4; do
+              git pull --rebase -X theirs origin main && git push && break
+              sleep $((i * 5))
+            done
           fi
