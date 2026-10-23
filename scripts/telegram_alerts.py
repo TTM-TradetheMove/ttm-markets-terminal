@@ -40,15 +40,16 @@ def load(name, default=None):
         return default
 
 
-def send(text):
-    token, chat = (os.environ.get("TELEGRAM_BOT_TOKEN") or "").strip().strip('"\''), (os.environ.get("TELEGRAM_CHAT_ID") or "").strip()
-    if token.lower().startswith("bot"):
-        token = token[3:]
+def send(text, kind="other"):
+    """kind 'rsi' -> TELEGRAM_RSI_THREAD_ID; anything else -> TELEGRAM_ALERTS_THREAD_ID; both fall back to TELEGRAM_THREAD_ID."""
+    token = (os.environ.get("TELEGRAM_BOT_TOKEN") or "").strip()
+    chat = (os.environ.get("TELEGRAM_CHAT_ID") or "").strip()
+    env = os.environ.get
+    thread = ((env("TELEGRAM_RSI_THREAD_ID") if kind == "rsi" else None) or env("TELEGRAM_ALERTS_THREAD_ID") or env("TELEGRAM_THREAD_ID") or "").strip()
     if DRY or not token or not chat:
         print("[dry/unsent]", text.replace("\n", " | "))
         return DRY
     params = {"chat_id": chat, "text": text, "parse_mode": "HTML", "disable_web_page_preview": "true"}
-    thread = (os.environ.get("TELEGRAM_THREAD_ID") or "").strip()
     if thread:
         params["message_thread_id"] = thread
     data = urllib.parse.urlencode(params).encode()
@@ -141,7 +142,9 @@ def sentiment(st, seeded):
 
 def main():
     if os.environ.get("SEND_TEST") == "1":
-        ok = send("✅ TTM alerts bot is connected. You will see macro releases, RSI extremes, token events and sentiment shifts here.")
+        ok = send("✅ TTM alerts bot is connected. Macro releases, token events and sentiment shifts will appear here.")
+        ok_rsi = send("✅ TTM RSI alerts are connected. Overbought and oversold warnings will appear here.", "rsi")
+        ok = ok and ok_rsi
         t = (os.environ.get("TELEGRAM_BOT_TOKEN") or "")
         print("token shape: length", len(t), "| has colon:", ":" in t, "| has space/newline:", t != t.strip() or " " in t, "| digits before colon:", t.split(":")[0].isdigit() if ":" in t else False)
         print("token set:", bool(os.environ.get("TELEGRAM_BOT_TOKEN")), "| chat id set:", bool(os.environ.get("TELEGRAM_CHAT_ID")))
@@ -157,14 +160,14 @@ def main():
     for name, fn in (("macro", macro), ("rsi", rsi), ("tokens", tokens), ("sentiment", sentiment)):
         if name in TYPES:
             try:
-                msgs += fn(st, seeded)
+                msgs += [(name, t) for t in fn(st, seeded)]
             except Exception as ex:
                 print(f"{name} failed: {type(ex).__name__}: {ex}")
     if not seeded:
         print(f"first run: recorded current state, nothing sent ({len(msgs)} suppressed)")
     sent = 0
-    for m in msgs[:MAX_PER_RUN]:
-        if send(m):
+    for name, m in msgs[:MAX_PER_RUN]:
+        if send(m, "rsi" if name == "rsi" else "other"):
             sent += 1
         time.sleep(1.2)
     if len(msgs) > MAX_PER_RUN:

@@ -201,7 +201,7 @@ def send(text):
         print("[dry run] " + text.replace("\n", " | "))
         return True
     params = {"chat_id": chat, "text": text, "parse_mode": "HTML", "disable_web_page_preview": "true"}
-    thread = (os.environ.get("TELEGRAM_THREAD_ID") or "").strip()
+    thread = (os.environ.get("TELEGRAM_SESSIONS_THREAD_ID") or os.environ.get("TELEGRAM_THREAD_ID") or "").strip()
     if thread:
         params["message_thread_id"] = thread
     data = urllib.parse.urlencode(params).encode()
