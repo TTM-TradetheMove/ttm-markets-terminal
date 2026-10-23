@@ -1,0 +1,29 @@
+name: Cancel stuck Pages deployment
+
+# Use when a Pages deployment is stuck "in progress" and blocks every newer one.
+# Run it with the commit id from the error message ("Please cancel <id> first").
+
+on:
+  workflow_dispatch:
+    inputs:
+      deployment:
+        description: "Commit id (or deployment id) to cancel"
+        required: true
+        default: "a93f411a79bc63c1b9b9f797c8ec0d111cad57c2"
+
+permissions:
+  pages: write
+  contents: read
+
+jobs:
+  cancel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Cancel it
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEP: ${{ inputs.deployment }}
+        run: |
+          gh api -X POST "repos/${{ github.repository }}/pages/deployments/${DEP}/cancel" && echo "cancelled ${DEP}" || echo "could not cancel (it may already be finished or expired)"
+          gh api "repos/${{ github.repository }}/pages/deployments/${DEP}" 2>&1 | head -5 || true
