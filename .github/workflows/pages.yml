@@ -1,0 +1,60 @@
+name: Deploy site to Pages
+
+# One deployment at a time, and the newest commit always wins:
+#  - the "pages" concurrency group queues runs (one running, one waiting; older waiting ones are replaced)
+#  - it never cancels a deployment that is already running, so none overlap
+# Triggers: a push to main (any change by hand), and whenever a data job finishes (bots push with the built-in token,
+# which does not fire push triggers, so we listen for the jobs completing instead).
+# Telegram jobs are not listed: they only save state files, not site content.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "telegram_*_state.json"
+      - "*_debug.txt"
+      - "debug_ff.*"
+  workflow_run:
+    workflows:
+      - "Update crypto bias history"
+      - "Update BTC monthly returns"
+      - "Update BTC price history"
+      - "Update economic calendar"
+      - "Update liquidation heatmap"
+      - "Update liquidation map"
+      - "Update market data (Fear & Greed + funding/OI)"
+      - "Update RSI heatmap"
+      - "Update social pulse"
+      - "Update token events"
+      - "Update TradFi data"
+    types: [completed]
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion != 'cancelled' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4
