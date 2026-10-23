@@ -259,7 +259,12 @@ def main():
         if send(body + tail + f"\n<a href=\"{SITE}\">TTM Markets Terminal</a>"):
             sent.update(k for k, _ in items)
             time.sleep(1)
-    json.dump({"last": now.timestamp(), "sent": sorted(sent)[-300:]}, open(STATE, "w"))
+    # Only write the state file when something changed: every commit to main triggers a GitHub Pages rebuild,
+    # and this job runs every 5 minutes. Un-advanced "last" is safe, sent-keys stop repeats and the lookback is capped.
+    new_sent = sorted(sent)[-300:]
+    stale = not st.get("last") or (now.timestamp() - st["last"]) > 3600
+    if new_sent != st.get("sent", []) or stale:
+        json.dump({"last": now.timestamp(), "sent": new_sent}, open(STATE, "w"))
 
 
 if __name__ == "__main__":
