@@ -45,5 +45,8 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "Auto-update market data (Fear & Greed, funding/OI)"
-            git push
+            for i in 1 2 3 4; do
+              git pull --rebase -X theirs origin main && git push && break
+              sleep $((i * 5))
+            done
           fi
