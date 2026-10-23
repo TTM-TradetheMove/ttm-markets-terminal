@@ -670,7 +670,7 @@ body.view-section #backFab{display:block}
           <div class="th-clock" id="thClock-asia">--:--</div>
           <div class="th-phase" id="thPhase-asia">—</div>
           <div class="th-running" id="thRunning-asia">—</div>
-          <div class="th-hours">Core 07:00–16:00 Melbourne, Mon–Fri</div>
+          <div class="th-hours" id="thHours-asia">Core: all ASX, Tokyo, Hong Kong &amp; Singapore open, Mon–Fri</div>
           <div class="th-ex" id="thEx-asia"></div>
           <div class="th-countdown" id="thCountdown-asia">—</div>
         </div>
@@ -679,7 +679,7 @@ body.view-section #backFab{display:block}
           <div class="th-clock" id="thClock-ldn">--:--</div>
           <div class="th-phase" id="thPhase-ldn">—</div>
           <div class="th-running" id="thRunning-ldn">—</div>
-          <div class="th-hours">Core 08:00–17:00 London, Mon–Fri</div>
+          <div class="th-hours" id="thHours-ldn">Core: LSE &amp; Xetra both open, Mon–Fri</div>
           <div class="th-ex" id="thEx-ldn"></div>
           <div class="th-countdown" id="thCountdown-ldn">—</div>
         </div>
@@ -1284,8 +1284,8 @@ cgBanner.addEventListener('click', () => {
 // Hours are local wall-clock minutes-from-midnight per city. DST is handled
 // automatically because every tick converts via each city's real IANA timezone.
 const TH_SESSIONS = {
-  asia: {zone:'Australia/Melbourne', phases:[{name:'core', open:420, close:960}]},
-  ldn:  {zone:'Europe/London',       phases:[{name:'core', open:480, close:1020}]},
+  asia: {zone:'Australia/Melbourne', derive:'asia', phases:[{name:'core', open:420, close:960}]},  // core is derived: all four Asian exchanges open at once
+  ldn:  {zone:'Europe/London',       derive:'ldn',  phases:[{name:'core', open:480, close:1020}]},  // core is derived: LSE and Xetra both open
   ny:   {zone:'America/New_York',    phases:[
           {name:'pre',  open:240, close:570},
           {name:'core', open:570, close:960},
@@ -1319,7 +1319,24 @@ function isWeekendLocal(now, zone){
 
 // Every phase window (pre/core/post) on Mon-Fri local dates, from yesterday to
 // +4 days, so the next open is always findable (including across a weekend).
+// Core for ASIA / London = every exchange of that region open at once (lunch breaks count as open),
+// worked out from each exchange's own timezone, so each country's daylight saving is followed.
+function deriveCore(now, key){
+  const spans = TH_EX[key].map(ex => phaseWindows(now, {zone: ex.zone, phases: [{name:'core',
+    open: Math.min(...ex.segs.map(g => g[0])), close: Math.max(...ex.segs.map(g => g[1]))}]}));
+  let cur = spans[0];
+  for(let i = 1; i < spans.length; i++){
+    const nxt = [];
+    cur.forEach(a => spans[i].forEach(b => {
+      const s = new Date(Math.max(a.openUTC, b.openUTC)), e = new Date(Math.min(a.closeUTC, b.closeUTC));
+      if(s < e) nxt.push({phase:'core', openUTC:s, closeUTC:e});
+    }));
+    cur = nxt;
+  }
+  return cur;
+}
 function phaseWindows(now, session){
+  if(session.derive) return deriveCore(now, session.derive);
   const zone = session.zone;
   const fmt = new Intl.DateTimeFormat('en-US', {timeZone: zone, year:'numeric', month:'2-digit', day:'2-digit'});
   const parts = Object.fromEntries(fmt.formatToParts(now).map(p => [p.type, p.value]));
@@ -1473,6 +1490,11 @@ function updateTradingHours(){
     }
 
     renderSessionExchanges(key, now);
+    const hrsEl = document.getElementById('thHours-' + key);
+    if(hrsEl && s.derive){
+      const w = x.cur || x.upcoming;
+      hrsEl.textContent = w ? `Core ${hhmm(w.openUTC, s.zone)}–${hhmm(w.closeUTC, s.zone)} ${key === 'asia' ? 'Melbourne' : 'London'} · ${key === 'asia' ? 'ASX, Tokyo, Hong Kong & Singapore all open' : 'LSE & Xetra both open'}` : '';
+    }
     const statusEl = document.getElementById('thStatus-' + key);
     const boxEl = document.getElementById('thBox-' + key);
     statusEl.textContent = status;
