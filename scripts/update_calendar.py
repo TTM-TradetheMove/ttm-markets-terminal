@@ -60,6 +60,52 @@ def fetch_next_feed():
         return []
 
 
+FC_BASE = "https://www.financecalendar.com/wp-json/fc/v1/calendar"
+FC_COUNTRY_TO_CUR = {"US": "USD", "GB": "GBP", "EU": "EUR", "JP": "JPY"}
+FC_CATEGORIES = {"economic-indicators", "central-banks-monetary-policy"}
+
+
+def fetch_month_ahead(after_ts, dbg):
+    """Free fallback for the weeks ForexFactory's site won't serve us (it sits behind a Cloudflare check):
+    financecalendar.com's open API (no key, attribution required). Returns raw events in feed format that are
+    LATER than anything we already have, so it only fills the gap and never duplicates the other sources."""
+    now = datetime.now(timezone.utc)
+    frm, to = now.strftime("%Y-%m-%d"), (now + timedelta(days=75)).strftime("%Y-%m-%d")
+    out, offset, seen = [], 0, 0
+    try:
+        while offset < 2000:
+            url = f"{FC_BASE}?from={frm}&to={to}&country={','.join(FC_COUNTRY_TO_CUR)}&limit=500&offset={offset}"
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (compatible; TTMMarketsTerminalBot/1.0)", "Accept": "application/json"})
+            with urllib.request.urlopen(req, timeout=40) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+            evs = data.get("events", [])
+            seen += len(evs)
+            for e in evs:
+                cur = FC_COUNTRY_TO_CUR.get(e.get("country"))
+                when = e.get("release_at_utc")
+                if not cur or not when or e.get("category") not in FC_CATEGORIES or e.get("status") in ("cancelled",):
+                    continue
+                try:
+                    ts = datetime.fromisoformat(when.replace("Z", "+00:00")).timestamp()
+                except ValueError:
+                    continue
+                if ts <= after_ts:
+                    continue
+                impact = {"high": "High", "medium": "Medium", "low": "Low"}.get((e.get("impact") or "").lower()) \
+                    or ("High" if e.get("category") == "central-banks-monetary-policy" else "Medium")
+                unit = e.get("unit") or ""
+                fmtv = lambda v: "" if v in (None, "") else (f"{v}{unit}" if unit in ("%", "K", "M", "B") and not str(v).endswith(unit) else str(v))
+                out.append({"title": (e.get("name") or e.get("title") or "").strip(), "country": cur, "date": datetime.fromtimestamp(ts, timezone.utc).isoformat(),
+                            "impact": impact, "forecast": fmtv(e.get("consensus")), "previous": fmtv(e.get("prior"))})
+            if len(evs) < 500 or offset + len(evs) >= int(data.get("total") or 0):
+                break
+            offset += len(evs)
+        dbg(f"month-ahead fallback (financecalendar.com): {seen} rows read, {len(out)} events after {datetime.fromtimestamp(after_ts, timezone.utc).date()} added")
+    except Exception as exc:
+        dbg(f"month-ahead fallback failed: {type(exc).__name__}: {exc}")
+    return out
+
+
 FF_ZONES = ["America/New_York", "America/Chicago", "UTC", "Europe/London", "America/Los_Angeles", "Australia/Sydney", "Australia/Melbourne", "Europe/Berlin"]
 IMPACT_CLASS = {"impact-red": "High", "impact-ora": "Medium", "impact-yel": "Low"}
 ROWS_JS = """() => { const out = []; let date = '', time = '';
@@ -581,6 +627,15 @@ def main():
             print(f"month scrape step failed: {exc}")
             mdebug.append(f"month scrape step failed: {exc}")
 
+    # Fill whatever the feeds and the ForexFactory pages did not cover (normally: the month ahead)
+    try:
+        after = max([e["ts"] for e in events if e.get("ts")] or [now.timestamp()])
+        extra = fetch_month_ahead(after, mdebug_fn)
+        if extra:
+            events += transform(extra)
+    except Exception as exc:
+        mdebug.append(f"month-ahead fallback step failed: {exc}")
+
     actuals = {}
     try:
         actuals = scrape_actuals()
@@ -622,6 +677,7 @@ def main():
         "source": FEED_URL,
         "live_actuals_source": "https://www.forexfactory.com/calendar" if actuals else None,
         "months_scraped_at": new_scraped_at,
+        "month_ahead_source": "https://www.financecalendar.com",
         "events": events,
     }
     with open("calendar_data.json", "w") as f:
