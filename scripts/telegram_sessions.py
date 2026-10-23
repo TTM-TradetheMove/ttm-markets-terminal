@@ -106,12 +106,15 @@ def build_events(now):
             day = st.astimezone(ZoneInfo(s["zone"])).date().isoformat()
             if ph == "core":
                 hrs = f"{fmt(st, s['zone'])}–{fmt(en, s['zone'])} {s['name'] if k != 'asia' else 'Melbourne'}"
+                why = {"asia": "ASX, Tokyo, Hong Kong &amp; Singapore all open", "ldn": "LSE &amp; Xetra both open"}.get(k)
+                if why:
+                    hrs += f" — {why}"
                 ev.append((st - timedelta(minutes=HEADSUP), f"{k}-headsup-{day}",
                            f"⏰ <b>{s['name']}</b> core session opens in {HEADSUP} min ({hrs})"))
                 ev.append((st, f"{k}-open-{day}", f"{s['flag']} <b>{s['name'].upper()} SESSION OPEN</b> ({hrs})"))
                 ev.append((en - timedelta(minutes=HEADSUP), f"{k}-closing-{day}",
-                           f"⏳ <b>{s['name']}</b> session closes in {HEADSUP} min"))
-                ev.append((en, f"{k}-close-{day}", f"🔔 <b>{s['name'].upper()} SESSION CLOSED</b>"))
+                           f"⏳ <b>{s['name']}</b> core window closes in {HEADSUP} min" + (" (first exchange about to close)" if k in ("asia", "ldn") else "")))
+                ev.append((en, f"{k}-close-{day}", f"🔔 <b>{s['name'].upper()} SESSION CLOSED</b>" + (" — not all exchanges are open together any more" if k in ("asia", "ldn") else "")))
             elif ph == "pre":
                 ev.append((st, f"{k}-pre-{day}", f"{s['flag']} <b>{s['name']} pre-market</b> is open ({fmt(st, s['zone'])}–{fmt(en, s['zone'])} ET)"))
             elif ph == "post":
