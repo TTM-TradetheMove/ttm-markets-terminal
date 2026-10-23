@@ -30,7 +30,7 @@ DISPLAY = ZoneInfo("Australia/Melbourne")
 # Sessions: local minutes-from-midnight phases (same as the site)
 SESSIONS = {
     "asia": {"name": "ASIA", "zone": "Australia/Melbourne", "flag": "🌏",
-             "phases": [("core", 420, 960)]},
+             "phases": [("core", 420, 960)]},   # asia/ldn core is derived from the exchanges (see derived_core)
     "ldn":  {"name": "London", "zone": "Europe/London", "flag": "🇬🇧",
              "phases": [("core", 480, 1020)]},
     "ny":   {"name": "New York", "zone": "America/New_York", "flag": "🇺🇸",
@@ -72,6 +72,27 @@ def windows(now, zone, segs, phase_names=None):
     return out
 
 
+def derived_core(now, key):
+    """Core for ASIA / London = every exchange of that region open at once (lunch counts as open)."""
+    spans = None
+    for k, name, zone, segs in EXCHANGES:
+        if k != key:
+            continue
+        w = [(a, b) for a, b, _ in windows(now, zone, [(min(o for o, _ in segs), max(c for _, c in segs))])]
+        if spans is None:
+            spans = w
+        else:
+            spans = [(max(a1, a2), min(b1, b2)) for a1, b1 in spans for a2, b2 in w if max(a1, a2) < min(b1, b2)]
+    return [(a, b, "core") for a, b in (spans or [])]
+
+
+def session_windows(now, k):
+    s = SESSIONS[k]
+    if k in ("asia", "ldn"):
+        return derived_core(now, k)
+    return windows(now, s["zone"], [(o, c) for _, o, c in s["phases"]], [p for p, _, _ in s["phases"]])
+
+
 def fmt(ts, zone):
     return ts.astimezone(ZoneInfo(zone)).strftime("%H:%M")
 
@@ -81,8 +102,7 @@ def build_events(now):
     ev = []
     # --- sessions
     for k, s in SESSIONS.items():
-        segs = [(o, c) for _, o, c in s["phases"]]
-        for (st, en, ph) in windows(now, s["zone"], segs, [p for p, _, _ in s["phases"]]):
+        for (st, en, ph) in session_windows(now, k):
             day = st.astimezone(ZoneInfo(s["zone"])).date().isoformat()
             if ph == "core":
                 hrs = f"{fmt(st, s['zone'])}–{fmt(en, s['zone'])} {s['name'] if k != 'asia' else 'Melbourne'}"
@@ -166,7 +186,7 @@ def build_events(now):
 def open_now(now):
     names = []
     for k, s in SESSIONS.items():
-        for (st, en, ph) in windows(now, s["zone"], [(o, c) for _, o, c in s["phases"]], [p for p, _, _ in s["phases"]]):
+        for (st, en, ph) in session_windows(now, k):
             if st <= now < en and ph == "core":
                 names.append(s["name"])
     return names
