@@ -1,13 +1,13 @@
-social run 2026-10-23T15:01:13.832864+00:00
+social run 2026-10-23T19:04:27.095637+00:00
   GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/elonmusk?showReplies=fals -> HTTPError: HTTP Error 429: Too Many Requests
   rate limited (429) - waiting 25s then one retry
 truth: 80 posts seen, 7 key (crypto/market) kept
-news Cointelegraph: 30 items
 news Decrypt: 40 items
+news The Block: 19 items
+news Cointelegraph: 30 items
 news CryptoSlate: 10 items
 news CoinDesk: 25 items
 news Bitcoin Magazine: 10 items
-news The Block: 20 items
   GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/elonmusk?showReplies=fals -> HTTPError: HTTP Error 429: Too Many Requests
   GET fail https://cdn.syndication.twimg.com/srv/timeline-profile/screen-name/elonmusk?showReplies=fa -> HTTPError: HTTP Error 429: Too Many Requests
   rate limited (429) - waiting 25s then one retry
@@ -20,11 +20,11 @@ x @elonmusk: via None, 0 fetched, 0 key, 0 kept
   rate limited (429) - waiting 25s then one retry
   GET fail https://cdn.syndication.twimg.com/srv/timeline-profile/screen-name/saylor?showReplies=fals -> HTTPError: HTTP Error 429: Too Many Requests
 x @saylor: via None, 0 fetched, 0 key, 8 kept
-  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/VitalikButerin?showReplie -> HTTPError: HTTP Error 429: Too Many Requests
-  rate limited (429) - waiting 25s then one retry
-  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/VitalikButerin?showReplie -> HTTPError: HTTP Error 429: Too Many Requests
-  GET fail https://cdn.syndication.twimg.com/srv/timeline-profile/screen-name/VitalikButerin?showRepl -> HTTPError: HTTP Error 429: Too Many Requests
-  rate limited (429) - waiting 25s then one retry
-  GET fail https://cdn.syndication.twimg.com/srv/timeline-profile/screen-name/VitalikButerin?showRepl -> HTTPError: HTTP Error 429: Too Many Requests
-x @VitalikButerin: via None, 0 fetched, 0 key, 8 kept
-wrote social_data.json: truth=7, x accounts with posts=0/9; 163s
+x @VitalikButerin: via syndication, 90 fetched, 31 key, 8 kept
+x @cz_binance: via syndication, 99 fetched, 47 key, 8 kept
+x @brian_armstrong: via syndication, 91 fetched, 62 key, 8 kept
+x @CryptoHayes: via syndication, 99 fetched, 65 key, 8 kept
+x @RaoulGMI: via syndication, 94 fetched, 59 key, 8 kept
+x @SECGov: via syndication, 17 fetched, 7 key, 8 kept
+x @federalreserve: via syndication, 17 fetched, 10 key, 8 kept
+wrote social_data.json: truth=7, x accounts with posts=7/9; 154s
