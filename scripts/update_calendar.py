@@ -113,18 +113,34 @@ def scrape_months(known_events, month_params, dbg):
     have = {(e["_currency"], e["_title_norm"], e["ts"] // 3600) for e in known_events if e.get("ts")}
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch()
-            page = browser.new_page(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36")
+            browser = p.chromium.launch(args=["--disable-blink-features=AutomationControlled"])
+            ctx = browser.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+                                      locale="en-US", viewport={"width": 1366, "height": 900}, timezone_id="America/New_York")
+            ctx.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined});")
+            page = ctx.new_page()
             page.set_default_timeout(10000)
-            def load_rows(url, what):
+            def load_rows(url, what, attempt=0):
                 """Open one forexfactory calendar url, scroll to load lazy rows, return its rows (and log what the page looked like)."""
                 page.goto(url, wait_until="domcontentloaded", timeout=30000)
-                page.wait_for_timeout(3000)
+                # ForexFactory sits behind a Cloudflare check ("Just a moment..."): give it time to clear before reading
+                for _ in range(30):
+                    try:
+                        cleared = "just a moment" not in (page.title() or "").lower() and page.locator("tr.calendar__row").count() > 0
+                    except Exception:
+                        cleared = False
+                    if cleared:
+                        break
+                    page.wait_for_timeout(1000)
+                page.wait_for_timeout(2000)
                 for _ in range(16):
                     page.mouse.wheel(0, 1500)
                     page.wait_for_timeout(250)
                 got = page.evaluate(ROWS_JS)
                 tracked = sum(1 for r in got if r["cur"] in CURRENCY_TO_COUNTRY and r["title"])
+                if not tracked and attempt < 2:
+                    dbg(f"{what}: blocked or empty (title={page.title()!r}), retrying after a pause")
+                    page.wait_for_timeout(12000)
+                    return load_rows(url, what, attempt + 1)
                 dbg(f"{what}: title={page.title()!r} url={page.url!r} rows={len(got)} tracked={tracked}")
                 if not tracked:
                     dbg(f"{what}: first rows: {[(r['date'], r['time'], r['cur'], r['title']) for r in got[:4]]}")
@@ -340,7 +356,7 @@ def scrape_actuals():
 
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch()
+            browser = p.chromium.launch(args=["--disable-blink-features=AutomationControlled"])
             page = browser.new_page(
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                            "(KHTML, like Gecko) Chrome/120.0 Safari/537.36"
