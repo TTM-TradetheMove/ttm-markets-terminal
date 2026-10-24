@@ -2693,7 +2693,12 @@ function heatTip(e){
   if(c < 0 || c >= HV.nc || yv < HV.T || yv > HV.T + HV.ph){ tip.style.display = 'none'; return; }
   const p = HV.pLo + (1 - (yv - HV.T) / HV.ph) * (HV.pHi - HV.pLo), b = Math.floor((p - HV.d.lo) / HV.d.step);
   const v = parseInt(HV.d.cols[c].substr(b * 2, 2), 16) / 255 * HV.d.max_usd;
-  tip.innerHTML = `<b>${new Date(HV.d.times[c]).toLocaleString([], {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'})}</b><br>Price ${fmtP(p)}<br>Est. liquidation leverage <b>${usd(v)}</b>`;
+  // cumulative: add up this column from that candle's close out to the hovered price (longs below it, shorts above it)
+  const ref = HV.d.candles[c] ? HV.d.candles[c][4] : p, rb = Math.floor((ref - HV.d.lo) / HV.d.step);
+  let cum = 0;
+  for(let i = (b > rb ? rb + 1 : b); i <= (b > rb ? b : rb); i++) cum += parseInt(HV.d.cols[c].substr(i * 2, 2), 16) / 255 * HV.d.max_usd;
+  const side = b > rb ? ['short', '#2dd4a4', 'up'] : ['long', '#e5534b', 'down'];
+  tip.innerHTML = `<b>${new Date(HV.d.times[c]).toLocaleString([], {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'})}</b><br>Price ${fmtP(p)}<br>Est. liquidation leverage <b>${usd(v)}</b><br><span style="color:${side[1]}">Cumulative ${side[0]} liquidations ${side[2]} to here: <b>${usd(cum)}</b></span>`;
   tip.style.display = 'block'; tip.style.left = Math.min(x + 14, r.width - 190) + 'px'; tip.style.top = (yv + 14) + 'px';
 }
 
@@ -2720,7 +2725,7 @@ function renderMap(){
   for(let i = 0; i < nb; i++){
     let base = 0;
     m.tiers.forEach((t, k) => { const v = (m.long[k][i] || 0) + (m.short[k][i] || 0); if(v <= 0) return;
-      const h = v / mx * ph * 0.9; s += `<rect x="${xb(i)}" y="${T + ph - base - h}" width="${Math.max(1, bw - 0.6)}" height="${h}" fill="${TCOL[t]}"><title>${(d.lo + i*d.step).toFixed(0)} · ${t}x · $${v.toFixed(2)}M</title></rect>`; base += h; });
+      const h = v / mx * ph * 0.9; s += `<rect x="${xb(i)}" y="${T + ph - base - h}" width="${Math.max(1, bw - 0.6)}" height="${h}" fill="${TCOL[t]}"><title>${(d.lo + i*d.step).toFixed(0)} · ${t}x · $${v.toFixed(2)}M · cumulative ${i <= curBin ? 'long' : 'short'} $${(i <= curBin ? cumL[i] : cumS[i]).toFixed(1)}M</title></rect>`; base += h; });
   }
   const pathOf = (arr, from, to) => { let p = ''; for(let i = from; i <= to; i++) p += (p ? 'L' : 'M') + (xb(i) + bw/2).toFixed(1) + ',' + yc(arr[i]).toFixed(1); return p; };
   s += `<path d="${pathOf(cumL, 0, curBin)}" fill="none" stroke="#e5534b" stroke-width="2"/><path d="${pathOf(cumS, curBin + 1, nb - 1)}" fill="none" stroke="#2dd4a4" stroke-width="2"/>`;

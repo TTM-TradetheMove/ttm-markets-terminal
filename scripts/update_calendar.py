@@ -16,6 +16,7 @@ never goes stale, just without fresh Actuals until the next successful run.
 """
 import json
 import re
+import time
 import urllib.request
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
@@ -169,7 +170,7 @@ def scrape_months(known_events, month_params, dbg):
                 """Open one forexfactory calendar url, scroll to load lazy rows, return its rows (and log what the page looked like)."""
                 page.goto(url, wait_until="domcontentloaded", timeout=30000)
                 # ForexFactory sits behind a Cloudflare check ("Just a moment..."): give it time to clear before reading
-                for _ in range(30):
+                for _ in range(10):
                     try:
                         cleared = "just a moment" not in (page.title() or "").lower() and page.locator("tr.calendar__row").count() > 0
                     except Exception:
@@ -183,9 +184,9 @@ def scrape_months(known_events, month_params, dbg):
                     page.wait_for_timeout(250)
                 got = page.evaluate(ROWS_JS)
                 tracked = sum(1 for r in got if r["cur"] in CURRENCY_TO_COUNTRY and r["title"])
-                if not tracked and attempt < 2:
+                if not tracked and attempt < 1 and 'moment' not in (page.title() or '').lower():
                     dbg(f"{what}: blocked or empty (title={page.title()!r}), retrying after a pause")
-                    page.wait_for_timeout(12000)
+                    page.wait_for_timeout(5000)
                     return load_rows(url, what, attempt + 1)
                 dbg(f"{what}: title={page.title()!r} url={page.url!r} rows={len(got)} tracked={tracked}")
                 if not tracked:
@@ -193,10 +194,14 @@ def scrape_months(known_events, month_params, dbg):
                 return got
 
             page_zone = None
+            t_start = time.time()
             for label, year in month_params:
+                if time.time() - t_start > 150:
+                    dbg(f"month {label}: skipped, scrape time budget used up")
+                    break
                 try:
                     rows = load_rows(f"https://www.forexfactory.com/calendar?month={label}", f"month {label}")
-                    if sum(1 for r in rows if r["cur"] in CURRENCY_TO_COUNTRY and r["title"]) < 3:
+                    if sum(1 for r in rows if r["cur"] in CURRENCY_TO_COUNTRY and r["title"]) < 3 and "just a moment" not in (page.title() or "").lower():
                         # the month view came back (nearly) empty -> read the same weeks one by one instead
                         mon, yr = label.split(".")
                         first = datetime.strptime(f"{mon} 1 {yr}", "%b %d %Y")
