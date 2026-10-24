@@ -1,49 +1,28 @@
-Run at 2026-10-23T22:49:12.096867+00:00
+Run at 2026-10-24T00:11:42.667849+00:00
 
 page title: 'Calendar | Forex Factory'
 page url after load: 'https://www.forexfactory.com/calendar'
 row selector used: 'tr.calendar__row', rows found: 93
 sample row: date_el=False currency_el=False event_el=False actual_el=False raw_text='Sun Oct 18'
 sample row: date_el=True currency_el=True event_el=True actual_el=True raw_text='Sun\nOct 18\n\t\nDay 7\n\tAll\t\t\nIMF Meetings\n\t\t\n\t\t\t\t'
-sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='4:30pm\n\tNZD\t\t\nBusinessNZ Services Index\n\t\n\t\n\t50.9\t\t\n51.0\n\t'
-sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='4:45pm\n\tNZD\t\t\nTrade Balance\n\t\n\t\n\t-1971M\t-775M\t\n-1536M\n\t'
-sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='6:01pm\n\tGBP\t\t\nRightmove HPI m/m\n\t\n\t\n\t1.0%\t\t0.7%\t'
+sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='5:30pm\n\tNZD\t\t\nBusinessNZ Services Index\n\t\n\t\n\t50.9\t\t\n51.0\n\t'
+sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='5:45pm\n\tNZD\t\t\nTrade Balance\n\t\n\t\n\t-1971M\t-775M\t\n-1536M\n\t'
+sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='7:01pm\n\tGBP\t\t\nRightmove HPI m/m\n\t\n\t\n\t1.0%\t\t0.7%\t'
 TARGET ROW: date='Sun Oct 18' currency='CNY' title='Unemployment Rate' actual='5.2%'
 TARGET ROW: date='Tue Oct 20' currency='GBP' title='Unemployment Rate' actual='4.7%'
 TARGET ROW: date='Thu Oct 22' currency='USD' title='Unemployment Claims' actual='194K'
 TARGET ROW: date='Fri Oct 23' currency='USD' title='Revised UoM Consumer Sentiment' actual='48.0'
-matched-actuals by date: {'2026-10-18': 10, '2026-10-19': 8, '2026-10-20': 15, '2026-10-21': 9, '2026-10-22': 14, '2026-10-23': 16}
+matched-actuals by date: {'2026-10-18': 9, '2026-10-19': 9, '2026-10-20': 15, '2026-10-21': 9, '2026-10-22': 14, '2026-10-23': 16}
 Scraped 72 live actual values from forexfactory.com
 Past events without actual (12): 2026-10-20 USD API Weekly Statistical Bulletin; 2026-10-21 EUR German Buba Monthly Report; 2026-10-06 USD API Weekly Statistical Bulletin; 2026-10-07 USD FOMC Meeting Minutes; 2026-10-08 GBP BOE Credit Conditions Survey; 2026-10-08 EUR Eurogroup Meetings; 2026-10-08 EUR ECB Monetary Policy Meeting Accounts; 2026-10-09 EUR ECOFIN Meetings; 2026-10-14 EUR EU Economic Summit; 2026-10-14 USD Beige Book; 2026-10-14 USD API Weekly Statistical Bulletin; 2026-10-15 EUR EU Economic Summit
 Scraped GBP keys: [('2026-10-01', 'GBP', 'nationwidehpimm'), ('2026-10-01', 'GBP', 'finalmanufacturingpmi'), ('2026-10-05', 'GBP', 'finalservicespmi'), ('2026-10-06', 'GBP', 'constructionpmi'), ('2026-10-06', 'GBP', 'housingequitywithdrawalqq'), ('2026-10-07', 'GBP', 'lloydshpimm'), ('2026-10-07', 'GBP', 'ricshousepricebalance'), ('2026-10-12', 'GBP', 'brcretailsalesmonitoryy'), ('2026-10-14', 'GBP', 'cbleadingindexmm'), ('2026-10-15', 'GBP', 'gdpmm'), ('2026-10-15', 'GBP', 'constructionoutputmm'), ('2026-10-15', 'GBP', 'goodstradebalance'), ('2026-10-15', 'GBP', 'indexofservices3m3m'), ('2026-10-15', 'GBP', 'industrialproductionmm'), ('2026-10-15', 'GBP', 'manufacturingproductionmm'), ('2026-10-18', 'GBP', 'rightmovehpimm'), ('2026-10-20', 'GBP', 'averageearningsindex3my'), ('2026-10-20', 'GBP', 'claimantcountchange'), ('2026-10-20', 'GBP', 'unemploymentrate'), ('2026-10-20', 'GBP', '10ybondauction'), ('2026-10-21', 'GBP', 'cpiyy'), ('2026-10-21', 'GBP', 'corecpiyy'), ('2026-10-21', 'GBP', 'ppiinputmm'), ('2026-10-21', 'GBP', 'ppioutputmm'), ('2026-10-21', 'GBP', 'publicsectornetborrowing'), ('2026-10-21', 'GBP', 'rpiyy'), ('2026-10-21', 'GBP', 'hpiyy'), ('2026-10-22', 'GBP', 'cbiindustrialorderexpectations'), ('2026-10-22', 'GBP', 'gfkconsumerconfidence'), ('2026-10-23', 'GBP', 'retailsalesmm')]
 
 -- month scrape --
-month oct.2026: title='Calendar | Forex Factory' url='https://www.forexfactory.com/calendar?month=oct.2026' rows=463 tracked=291
-month oct.2026: 291 rows for tracked currencies; sample: [{'date': 'Thu Oct 1', 'time': '1:00am', 'cur': 'GBP', 'impact': 'icon icon--ff-impact-yel', 'title': 'Nationwide HPI m/m', 'actual': '-0.2%', 'forecast': '0.0%', 'previous': '0.2%'}, {'date': 'Thu Oct 1', 'time': '2:15am', 'cur': 'EUR', 'impact': 'icon icon--ff-impact-yel', 'title': 'Spanish Manufacturing PMI', 'actual': '51.0', 'forecast': '50.2', 'previous': '49.5'}]
-month oct.2026: page timezone calibrated to America/Chicago (40 matching rows)
-month oct.2026: added 248 events not already in the weekly feeds
-month nov.2026: blocked or empty (title='Just a moment...'), retrying after a pause
-month nov.2026: blocked or empty (title='Just a moment...'), retrying after a pause
+month oct.2026: title='Calendar | Forex Factory' url='https://www.forexfactory.com/calendar?month=oct.2026' rows=463 tracked=290
+month oct.2026: 290 rows for tracked currencies; sample: [{'date': 'Thu Oct 1', 'time': '2:00am', 'cur': 'GBP', 'impact': 'icon icon--ff-impact-yel', 'title': 'Nationwide HPI m/m', 'actual': '-0.2%', 'forecast': '0.0%', 'previous': '0.2%'}, {'date': 'Thu Oct 1', 'time': '3:15am', 'cur': 'EUR', 'impact': 'icon icon--ff-impact-yel', 'title': 'Spanish Manufacturing PMI', 'actual': '51.0', 'forecast': '50.2', 'previous': '49.5'}]
+month oct.2026: page timezone calibrated to America/New_York (40 matching rows)
+month oct.2026: added 247 events not already in the weekly feeds
 month nov.2026: title='Just a moment...' url='https://www.forexfactory.com/calendar?month=nov.2026' rows=0 tracked=0
 month nov.2026: first rows: []
-week nov1.2026: blocked or empty (title='Just a moment...'), retrying after a pause
-week nov1.2026: blocked or empty (title='Just a moment...'), retrying after a pause
-week nov1.2026: title='Just a moment...' url='https://www.forexfactory.com/calendar?week=nov1.2026' rows=0 tracked=0
-week nov1.2026: first rows: []
-week nov8.2026: blocked or empty (title='Just a moment...'), retrying after a pause
-week nov8.2026: blocked or empty (title='Just a moment...'), retrying after a pause
-week nov8.2026: title='Just a moment...' url='https://www.forexfactory.com/calendar?week=nov8.2026' rows=0 tracked=0
-week nov8.2026: first rows: []
-week nov15.2026: blocked or empty (title='Just a moment...'), retrying after a pause
-week nov15.2026: blocked or empty (title='Just a moment...'), retrying after a pause
-week nov15.2026: title='Just a moment...' url='https://www.forexfactory.com/calendar?week=nov15.2026' rows=0 tracked=0
-week nov15.2026: first rows: []
-week nov22.2026: blocked or empty (title='Just a moment...'), retrying after a pause
-week nov22.2026: blocked or empty (title='Just a moment...'), retrying after a pause
-week nov22.2026: title='Just a moment...' url='https://www.forexfactory.com/calendar?week=nov22.2026' rows=0 tracked=0
-week nov22.2026: first rows: []
-week nov29.2026: blocked or empty (title='Just a moment...'), retrying after a pause
-week nov29.2026: blocked or empty (title='Just a moment...'), retrying after a pause
-week nov29.2026: title='Just a moment...' url='https://www.forexfactory.com/calendar?week=nov29.2026' rows=0 tracked=0
-week nov29.2026: first rows: []
 month nov.2026: 0 rows for tracked currencies; sample: []
+month-ahead fallback (financecalendar.com): 284 rows read, 211 events after 2026-10-30 added
