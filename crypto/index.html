@@ -869,6 +869,7 @@ body.view-section #backFab{display:block}
         <button class="filter-chip" data-tf="12h">12H</button>
         <button class="filter-chip active" data-tf="1d">Daily</button>
         <button class="filter-chip" data-tf="1w">Weekly</button>
+        <button class="filter-chip" data-tf="1m">Monthly</button>
       </div>
 
       <div class="liq-panel" id="liqPanelHeat">
@@ -2629,7 +2630,7 @@ function color(t){
 }
 let HV = null; // view geometry for tooltip
 let LTF = '1d';
-const TFNAME = {'1h':'1 hour','4h':'4 hours','8h':'8 hours','12h':'12 hours','1d':'24 hours','1w':'7 days'};
+const TFNAME = {'1h':'1 hour','4h':'4 hours','8h':'8 hours','12h':'12 hours','1d':'24 hours','1w':'7 days','1m':'30 days'};
 function heatView(){
   const d0 = HM && HM[symKey()]; if(!d0) return null;
   const w = d0.w && d0.w[LTF];
@@ -2642,7 +2643,7 @@ function mapView(){
 }
 function axisLabel(ms){
   const t = new Date(ms), hh = String(t.getHours()).padStart(2,'0'), mm = String(t.getMinutes()).padStart(2,'0');
-  return LTF === '1w' ? t.toLocaleDateString([], {weekday:'short'}) + ' ' + hh + 'h' : hh + ':' + mm;
+  return LTF === '1m' ? t.toLocaleDateString([], {day:'numeric', month:'short'}) : LTF === '1w' ? t.toLocaleDateString([], {weekday:'short'}) + ' ' + hh + 'h' : hh + ':' + mm;
 }
 function renderHeat(){
   const cv = $('lhCanvas'); if(!cv) return;

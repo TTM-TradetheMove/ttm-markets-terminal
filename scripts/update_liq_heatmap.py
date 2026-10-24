@@ -214,6 +214,7 @@ def fetch(sym, start_ms, end_ms):
 WINDOWS = [  # name, columns, 5-minute steps per column, hours of history behind the map
     ("1h", 12, 1, 1), ("4h", 48, 1, 4), ("8h", 48, 2, 8),
     ("12h", 48, 3, 12), ("1d", 96, 3, 24), ("1w", 84, 24, 168),
+    ("1m", 120, 72, 720),   # monthly: 120 columns of 6 hours = 30 days
 ]
 
 
@@ -279,7 +280,7 @@ def simulate(candles, oi, last_price, snap_last=0):
 
 def build(sym, source, candles, oi):
     last = candles[-1][4]
-    lo, step, cols, times, longs, shorts, snaps = simulate(candles, oi, last, snap_last=2016 + 24)
+    lo, step, cols, times, longs, shorts, snaps = simulate(candles, oi, last, snap_last=8640 + 24)
     mx = max((max(c) for c in cols), default=0) or 1.0
     enc = ["".join("%02x" % min(255, int(round(v / mx * 255))) for v in col) for col in cols]
     # 15-minute candles for the overlay
