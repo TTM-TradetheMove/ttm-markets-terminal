@@ -27,7 +27,7 @@ def page(sec, area="crypto"):
 MEL = ZoneInfo("Australia/Melbourne")
 NOW = datetime.now(timezone.utc)
 DRY = os.environ.get("DRY_RUN", "0") == "1"
-TYPES = set((os.environ.get("ALERT_TYPES") or "macro,rsi,volume,tokens,sentiment").split(","))
+TYPES = set((os.environ.get("ALERT_TYPES") or "macro,rsi,volume,cycle,tokens,sentiment").split(","))
 VOL_TFS = {"1h": "1H", "4h": "4H", "12h": "12H", "1d": "1D"}   # volume alerts: a candle at 3x+ its 20-candle average
 VOL_MIN_24H = 2_000_000   # ignore coins trading under $2M a day (noisy)
 RSI_TFS = {"4h": "4H", "8h": "8H", "12h": "12H", "1d": "1D", "1w": "1W"}
@@ -134,6 +134,26 @@ def volume(st, seeded):
     return out
 
 
+def cycle(st, seeded):
+    """TTM Liquidity Cycle: post when the displayed stage changes (liquidity_cycle.json is written by update_cycle.py)."""
+    d = load("liquidity_cycle.json", {}) or {}
+    s_ = d.get("stage") or {}
+    if not s_.get("primary"):
+        return []
+    names = d.get("names", {})
+    cur = {"primary": s_["primary"], "lit": s_.get("lit", [])}
+    old = st.get("cycle")
+    st["cycle"] = cur
+    if not seeded or not old or old == cur:
+        return []
+    chain = " → ".join(names.get(str(i), str(i)) for i in cur["lit"])
+    was = " → ".join(names.get(str(i), str(i)) for i in old.get("lit", []))
+    nxt = s_.get("next")
+    pr = s_.get("progress")
+    tail = f"\nNext: {e(names.get(str(nxt), ''))}" + (f" ({e(pr['label'])} {pr['value']} of {pr['target']})" if pr else "") if nxt else ""
+    return [f"🧭 <b>TTM Liquidity Cycle update</b>\nNow: <b>{e(chain)}</b>\nWas: {e(was)}{tail}\nTTM's own model from live readings, not advice. {SITE}crypto/?cycle=1"]
+
+
 def tokens(st, seeded):
     out = []
     today = NOW.strftime("%Y-%m-%d")
@@ -187,7 +207,7 @@ def main():
     st = st or {}
     st.setdefault("macro", []); st.setdefault("rsi", {}); st.setdefault("tokens", [])
     msgs = []
-    for name, fn in (("macro", macro), ("rsi", rsi), ("volume", volume), ("tokens", tokens), ("sentiment", sentiment)):
+    for name, fn in (("macro", macro), ("rsi", rsi), ("volume", volume), ("cycle", cycle), ("tokens", tokens), ("sentiment", sentiment)):
         if name in TYPES:
             try:
                 msgs += [(name, t) for t in fn(st, seeded)]
