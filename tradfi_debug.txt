@@ -1,37 +1,37 @@
-TTM tradfi run 2026-10-24T01:55:11+00:00
+TTM tradfi run 2026-10-24T07:12:14+00:00
 nyfed effr: 705 rows
 nyfed effr: 705 rows
-ecb DFR: 1028 rows
 chicagofed NFCI: 121 rows
+ecb DFR: 1028 rows
   GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=RRPONTSYD&cosd=2024-01-01 -> TimeoutError: The read operation timed out
-  GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=WALCL&cosd=2024-01-01 -> TimeoutError: The read operation timed out
-  GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01AUM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01JPM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
+  GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=WALCL&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01GBM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
+  GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01AUM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=WTREGEN&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=STLFSI4&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2&cosd=2025-01-01 -> TimeoutError: The read operation timed out
-  GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=WALCL&cosd=2024-01-01 -> TimeoutError: The read operation timed out
-  GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01AUM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01GBM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01JPM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=RRPONTSYD&cosd=2024-01-01 -> TimeoutError: The read operation timed out
+  GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01AUM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
+  GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=WALCL&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=WTREGEN&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=STLFSI4&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2&cosd=2025-01-01 -> TimeoutError: The read operation timed out
-treasury real-yield T5YIE: 453 rows
 treasury real-yield DFII10: 453 rows
+treasury real-yield T5YIE: 453 rows
 treasury real-yield T10YIE: 453 rows
 series prefetch: 8/16 ok (missing: ['IRSTCB01AUM156N', 'IRSTCB01GBM156N', 'IRSTCB01JPM156N', 'WALCL', 'RRPONTSYD', 'WTREGEN', 'STLFSI4', 'BAMLH0A0HYM2'])
 rss Fed: 6 items
+rss ECB: 6 items
 yahoo: 27/27 symbols
 markets: ok
 treasury: ok
-rss ECB: 6 items
+rss BoE: 6 items
 rba f2-data.csv: 5 series, e.g. ['FCMYGBAG2D', 'FCMYGBAG3D', 'FCMYGBAG5D', 'FCMYGBAG10D', 'FCMYGBAGID']
 au: ok
 rba f1-data.csv: 17 series, e.g. ['FIRMMCRTD', 'FIRMMCCRT', 'FIRMMCRID', 'FIRMMCRIH', 'FIRMMCRIL', 'FIRMMCRIV']
-rss BoE: 6 items
 rss RBA: 1 items
 boe IUDBEDR: 712 rows
 policy: ok
@@ -46,4 +46,4 @@ news: ok
 wrote tradfi_markets.json (updated) keys=['breadth', 'correlations', 'indices', 'macro', 'risk', 'vix']
 wrote tradfi_rates.json (updated) keys=['au', 'conditions', 'expectations', 'policy', 'treasury']
 wrote tradfi_news.json (updated) keys=['central_banks', 'companies', 'geopolitics', 'liquidity', 'policy']
-done in 98s
+done in 99s
