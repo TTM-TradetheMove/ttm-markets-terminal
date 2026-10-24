@@ -33,6 +33,7 @@ jobs:
           TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
           TELEGRAM_RSI_THREAD_ID: ${{ secrets.TELEGRAM_RSI_THREAD_ID }}
           TELEGRAM_ALERTS_THREAD_ID: ${{ secrets.TELEGRAM_ALERTS_THREAD_ID }}
+          TELEGRAM_VOLUME_THREAD_ID: ${{ secrets.TELEGRAM_VOLUME_THREAD_ID }}
           SEND_TEST: ${{ inputs.send_test && '1' || '0' }}
         run: python3 scripts/telegram_alerts.py
       - name: Save state

@@ -5,6 +5,7 @@ TTM Telegram alerts: posts market news from the dashboard's own data files to yo
   1. MACRO   - heads-up 15 min before a high-impact release, then the result (actual vs forecast) once it prints
   2. RSI     - a coin newly entering Overbought (>=70) or Oversold (<=30) on 4H / 8H / 12H / 1D / 1W
   3. TOKENS  - new token unlocks / listings / airdrops / major events, once, when they are within 48h (or announced today)
+  3b. VOLUME - a coin newly surging to 3x+ normal volume on 1H / 4H / 12H / 1D (own topic: TELEGRAM_VOLUME_THREAD_ID)
   4. SENTIMENT - Fear & Greed moving into / out of an extreme
 
 Secrets (same as the session announcer): TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID.
@@ -26,7 +27,9 @@ def page(sec, area="crypto"):
 MEL = ZoneInfo("Australia/Melbourne")
 NOW = datetime.now(timezone.utc)
 DRY = os.environ.get("DRY_RUN", "0") == "1"
-TYPES = set((os.environ.get("ALERT_TYPES") or "macro,rsi,tokens,sentiment").split(","))
+TYPES = set((os.environ.get("ALERT_TYPES") or "macro,rsi,volume,tokens,sentiment").split(","))
+VOL_TFS = {"1h": "1H", "4h": "4H", "12h": "12H", "1d": "1D"}   # volume alerts: a candle at 3x+ its 20-candle average
+VOL_MIN_24H = 2_000_000   # ignore coins trading under $2M a day (noisy)
 RSI_TFS = {"4h": "4H", "8h": "8H", "12h": "12H", "1d": "1D", "1w": "1W"}
 MAX_PER_RUN = 8
 FLAG = {"US": "🇺🇸", "UK": "🇬🇧", "EU": "🇪🇺", "JP": "🇯🇵"}
@@ -45,7 +48,7 @@ def send(text, kind="other"):
     token = (os.environ.get("TELEGRAM_BOT_TOKEN") or "").strip()
     chat = (os.environ.get("TELEGRAM_CHAT_ID") or "").strip()
     env = os.environ.get
-    thread = ((env("TELEGRAM_RSI_THREAD_ID") if kind == "rsi" else None) or env("TELEGRAM_ALERTS_THREAD_ID") or env("TELEGRAM_THREAD_ID") or "").strip()
+    thread = ((env("TELEGRAM_RSI_THREAD_ID") if kind == "rsi" else env("TELEGRAM_VOLUME_THREAD_ID") if kind == "volume" else None) or env("TELEGRAM_ALERTS_THREAD_ID") or env("TELEGRAM_THREAD_ID") or "").strip()
     if DRY or not token or not chat:
         print("[dry/unsent]", text.replace("\n", " | "))
         return DRY
@@ -105,6 +108,32 @@ def rsi(st, seeded):
     return out
 
 
+def volume(st, seeded):
+    """A coin newly enters Surging volume (3x+ its 20-candle average) on a completed candle, with the candle's direction."""
+    out, first = [], "vol" not in st
+    st.setdefault("vol", {})
+    hits = []
+    for c in load("rsi_heatmap.json", {}).get("coins", []):
+        for tf, lab in VOL_TFS.items():
+            v = (c.get("vr") or {}).get(tf)
+            if v is None:
+                continue
+            k = f'{c["s"]}|{tf}'
+            zone = "su" if v >= 3 else "no"
+            old = st["vol"].get(k)
+            st["vol"][k] = zone
+            if seeded and not first and zone == "su" and old != "su" and (c.get("v24") or 0) >= VOL_MIN_24H:
+                hits.append((v, c, tf, lab))
+    for v, c, tf, lab in sorted(hits, key=lambda h: -h[0])[:6]:
+        d = (c.get("vd") or {}).get(tf)
+        icon, word = ("🟢", "positive volume ▲") if d and d > 0 else ("🔴", "negative volume ▼") if d and d < 0 else ("⚪", "volume")
+        mv = f" · candle {d:+.2f}%" if d is not None else ""
+        q = (c.get("vq") or {}).get(tf)
+        qs = f" · ${q/1e6:,.1f}M traded" if q else ""
+        out.append(f"{icon} <b>Volume surge</b>: <b>{e(c['s'])}</b> {v:.1f}× normal on {lab} ({word}){mv}{qs}\nHeavy volume shows activity, not who is buying or selling. {page('volume')}")
+    return out
+
+
 def tokens(st, seeded):
     out = []
     today = NOW.strftime("%Y-%m-%d")
@@ -144,7 +173,8 @@ def main():
     if os.environ.get("SEND_TEST") == "1":
         ok = send("✅ TTM alerts bot is connected. Macro releases, token events and sentiment shifts will appear here.")
         ok_rsi = send("✅ TTM RSI alerts are connected. Overbought and oversold warnings will appear here.", "rsi")
-        ok = ok and ok_rsi
+        ok_vol = send("✅ TTM volume alerts are connected. Volume surges will appear here.", "volume")
+        ok = ok and ok_rsi and ok_vol
         t = (os.environ.get("TELEGRAM_BOT_TOKEN") or "")
         print("token shape: length", len(t), "| has colon:", ":" in t, "| has space/newline:", t != t.strip() or " " in t, "| digits before colon:", t.split(":")[0].isdigit() if ":" in t else False)
         print("token set:", bool(os.environ.get("TELEGRAM_BOT_TOKEN")), "| chat id set:", bool(os.environ.get("TELEGRAM_CHAT_ID")))
@@ -157,7 +187,7 @@ def main():
     st = st or {}
     st.setdefault("macro", []); st.setdefault("rsi", {}); st.setdefault("tokens", [])
     msgs = []
-    for name, fn in (("macro", macro), ("rsi", rsi), ("tokens", tokens), ("sentiment", sentiment)):
+    for name, fn in (("macro", macro), ("rsi", rsi), ("volume", volume), ("tokens", tokens), ("sentiment", sentiment)):
         if name in TYPES:
             try:
                 msgs += [(name, t) for t in fn(st, seeded)]
@@ -167,7 +197,7 @@ def main():
         print(f"first run: recorded current state, nothing sent ({len(msgs)} suppressed)")
     sent = 0
     for name, m in msgs[:MAX_PER_RUN]:
-        if send(m, "rsi" if name == "rsi" else "other"):
+        if send(m, name if name in ("rsi", "volume") else "other"):
             sent += 1
         time.sleep(1.2)
     if len(msgs) > MAX_PER_RUN:
