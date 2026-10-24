@@ -971,7 +971,7 @@ body.view-section #backFab{display:block}
     <div class="section-head">
       <span class="tag">Volume Heatmap</span>
       <h2>Where trading volume is surging or drying up</h2>
-      <p>Relative volume compares the latest candle's volume with the average of the previous 20 candles on the same timeframe, so 3.0&times; means three times normal. Zones: Surging (3&times;+), High (1.5–3&times;), Normal (0.7–1.5&times;), Low (0.4–0.7&times;) and Dry (below 0.4&times;). Hover a tile for the coin's 24h USDT volume. Filter by type, search a coin, or switch to the table to compare every timeframe.</p>
+      <p>Relative volume compares the latest candle's volume with the average of the previous 20 candles on the same timeframe, so 3.0&times; means three times normal. Zones: Surging (3&times;+), High (1.5–3&times;), Normal (0.7–1.5&times;), Low (0.4–0.7&times;) and Dry (below 0.4&times;). Green tiles with &#9650; are positive volume (the latest candle closed higher) and red tiles with &#9660; are negative volume (it closed lower); the darker the colour, the heavier the volume. Hover a tile for the candle's move and the coin's 24h USDT volume. Filter by type, search a coin, or switch to the table to compare every timeframe.</p>
       <p id="volUpdated" class="calendar-note" style="margin-top:8px">Loading volume…</p>
     </div>
     <div class="filter-row" id="volView" style="margin-bottom:8px">
@@ -994,10 +994,10 @@ body.view-section #backFab{display:block}
       <button class="filter-chip" data-f="lo">Low</button>
       <button class="filter-chip" data-f="dr">Dry</button>
     </div>
-    <div class="rsi-key"><span><i style="background:rgba(214,69,61,.88)"></i>Surging &ge; 3&times;</span><span><i style="background:rgba(217,130,43,.82)"></i>High 1.5–3&times;</span><span><i style="background:rgba(255,255,255,.12)"></i>Normal 0.7–1.5&times;</span><span><i style="background:rgba(47,154,140,.78)"></i>Low 0.4–0.7&times;</span><span><i style="background:rgba(90,100,125,.8)"></i>Dry &lt; 0.4&times;</span></div>
+    <div class="rsi-key"><span><i style="background:rgba(47,158,95,.88)"></i>&#9650; Positive volume (latest candle closed up)</span><span><i style="background:rgba(214,69,61,.88)"></i>&#9660; Negative volume (closed down)</span><span>Darker = heavier volume (Surging 3&times;+, High 1.5–3&times;, Normal 0.7–1.5&times;, Low 0.4–0.7&times;, Dry &lt;0.4&times;)</span></div>
     <div class="rsi-tiles" id="volTiles"></div>
     <div class="rsi-wrap" id="volTblWrap" style="display:none"><table class="rsi-tbl" id="volTable"><tbody><tr><td class="na">Loading…</td></tr></tbody></table></div>
-    <p class="calendar-note" style="margin-top:10px">Volume is OKX spot USDT volume, refreshed about every 10 minutes. The newest candle is still forming, so a young candle can read low early on. High volume shows activity, not direction: it can come with buying or selling. Not financial advice.</p>
+    <p class="calendar-note" style="margin-top:10px">Volume is OKX spot USDT volume, refreshed about every 10 minutes. The newest candle is still forming, so a young candle can read low early on. Positive or negative means the latest candle closed up or down, not a split of buyers and sellers. Heavy volume on a down candle is not necessarily more selling than buying. Not financial advice.</p>
   </div>
 </section>
 
@@ -3026,6 +3026,11 @@ const zoneOf = v => v == null ? null : v >= 3 ? 'su' : v >= 1.5 ? 'hi' : v >= 0.
 const zoneName = v => { const z = zoneOf(v); return z ? ZONES.find(x => x[0] === z)[1] : ''; };
 const bg = v => { const z = zoneOf(v); return z ? ZONES.find(x => x[0] === z)[2] : null; };
 const x = v => v == null ? '—' : v.toFixed(v >= 10 ? 0 : 1) + '×';
+// direction of the latest candle (close vs open): green = up-volume, red = down-volume; shade = how heavy the volume is
+const dir = (c, f) => c.vd ? c.vd[f] : null;
+const arrow = d => d == null ? '' : d > 0 ? '▲ ' : d < 0 ? '▼ ' : '';
+const dbg = (v, d) => { if(v == null) return null; if(d == null || d === 0) return bg(v);
+  const a = Math.max(.2, Math.min(.92, .2 + Math.min(v, 4) * .18)); return d > 0 ? `rgba(47,158,95,${a})` : `rgba(214,69,61,${a})`; };
 const pick = rows => rows.filter(c => (!top || c.mc < top) && (cat === 'all' || c.cat === cat) && (!q || c.s.toLowerCase().includes(q)) && (filt === 'all' || zoneOf((c.vr || {})[tf]) === filt));
 function buildCats(){ const el = $('volCat'); if(!el || !D || !D.categories) return;
   el.innerHTML = '<button class="filter-chip ' + (cat === 'all' ? 'active' : '') + '" data-c="all">All types</button>' + D.categories.map(k => `<button class="filter-chip ${cat === k ? 'active' : ''}" data-c="${k}">${k}</button>`).join(''); }
@@ -3033,7 +3038,7 @@ const hasVol = () => D && D.coins && D.coins.some(c => c.vr);
 function renderTiles(){
   const el = $('volTiles'); let rows = pick(D.coins.map((c, i) => Object.assign({mc: i}, c))); shown = rows.length;
   el.innerHTML = rows.map(c => { const v = (c.vr || {})[tf], sz = c.mc < 5 ? 1 : c.mc < 16 ? 2 : c.mc < 60 ? 3 : 4;
-    return `<div class="rsi-tile sz${sz}" style="background:${bg(v) || 'rgba(255,255,255,.05)'}" title="${c.s}: ${x(v)} normal volume (${zoneName(v)}) on ${tf} · 24h volume ${money(c.v24)}"><b>${c.s}</b><span class="v">${x(v)}</span><small>${money(c.v24)}</small></div>`; }).join('') || '<div class="calendar-note" style="padding:14px">No coins match this filter.</div>';
+    return `<div class="rsi-tile sz${sz}" style="background:${dbg(v, dir(c, tf)) || 'rgba(255,255,255,.05)'}" title="${c.s}: ${x(v)} normal volume (${zoneName(v)}) on ${tf}${dir(c, tf) == null ? '' : ' · latest candle ' + (dir(c, tf) > 0 ? 'up' : dir(c, tf) < 0 ? 'down' : 'flat') + ' ' + (dir(c, tf) > 0 ? '+' : '') + dir(c, tf).toFixed(2) + '%'} · 24h volume ${money(c.v24)}"><b>${c.s}</b><span class="v">${arrow(dir(c, tf))}${x(v)}</span><small>${money(c.v24)}</small></div>`; }).join('') || '<div class="calendar-note" style="padding:14px">No coins match this filter.</div>';
 }
 function render(){
   const t = $('volTable'); if(!t) return;
@@ -3048,7 +3053,7 @@ function render(){
   const th = (k, label, cls) => `<th class="${cls || ''} ${sortKey === k ? 'on' : ''}" data-k="${k}">${label}${sortKey === k ? (sortDir > 0 ? ' ▲' : ' ▼') : ''}</th>`;
   let html = '<thead><tr>' + th('s', 'Coin', 'l') + '<th>Type</th><th>Price</th>' + th('c', '24h') + th('v24', '24h volume') + tfs.map(f => th(f, {'1d':'1D','1w':'1W'}[f] || f)).join('') + '</tr></thead><tbody>';
   rows.forEach(c => { html += `<tr><td class="l">${c.s}</td><td class="ty">${c.cat || ''}</td><td class="px">$${px(c.p)}</td><td class="px" style="color:${c.c > 0 ? 'var(--green)' : c.c < 0 ? 'var(--red)' : 'var(--text)'}">${c.c == null ? '—' : (c.c > 0 ? '+' : '') + c.c.toFixed(1) + '%'}</td><td class="px">${money(c.v24)}</td>` +
-    tfs.map(f => { const v = (c.vr || {})[f]; return v == null ? '<td class="na">—</td>' : `<td style="background:${bg(v)}">${x(v)}</td>`; }).join('') + '</tr>'; });
+    tfs.map(f => { const v = (c.vr || {})[f]; return v == null ? '<td class="na">—</td>' : `<td style="background:${dbg(v, dir(c, f))}">${arrow(dir(c, f))}${x(v)}</td>`; }).join('') + '</tr>'; });
   const cnt = (f, fn) => rows.filter(c => (c.vr || {})[f] != null && fn(c.vr[f])).length;
   html += '<tr class="rsi-sum"><td class="l" colspan="5">Surging coins (3×+)</td>' + tfs.map(f => `<td>${cnt(f, v => v >= 3)}</td>`).join('') + '</tr>';
   html += '<tr class="rsi-sum"><td class="l" colspan="5">Dry coins (&lt;0.4×)</td>' + tfs.map(f => `<td>${cnt(f, v => v < 0.4)}</td>`).join('') + '</tr>';

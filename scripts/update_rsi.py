@@ -83,10 +83,11 @@ def vol_stats(buckets):
     """buckets: oldest-first [(ts, close, quote_volume, complete)]. -> (relative volume x avg of the 20 before, last completed candle's USDT volume)"""
     done = [b for b in buckets if b[3]]
     if len(done) < 6:
-        return None, None
+        return None, None, None
     last, prev = done[-1][2], [b[2] for b in done[-21:-1]]
     avg = sum(prev) / len(prev) if prev else 0
-    return (round(last / avg, 2) if avg > 0 else None), round(last)
+    op, cl = done[-1][4], done[-1][1]  # direction of the last completed candle: close vs open, in %
+    return (round(last / avg, 2) if avg > 0 else None), round(last), (round((cl / op - 1) * 100, 2) if op else None)
 
 
 def one(job):
@@ -100,15 +101,15 @@ def one(job):
     qv = lambda c: float(c[7]) if len(c) > 7 and c[7] not in ("", None) else 0.0
     out = {}
     label = {"15m": "15m", "1H": "1h", "4H": "4h", "12H": "12h", "1D": "1d", "1W": "1w"}[bar]
-    base = [(int(c[0]), float(c[4]), qv(c), (c[8] == "1") if len(c) > 8 else True) for c in rows]
+    base = [(int(c[0]), float(c[4]), qv(c), (c[8] == "1") if len(c) > 8 else True, float(c[1])) for c in rows]
     out[label] = (rsi([b[1] for b in base][-200:]),) + vol_stats(base)
     if bar == "4H":  # 8h = pairs of 4H candles aligned to 00:00 / 08:00 / 16:00 UTC
         now_ms, groups = int(time.time() * 1000), {}
-        for ts, close, q, _ in base:
-            g = groups.setdefault(ts // (8 * HOUR), [0, 0.0])
+        for ts, close, q, _, o in base:
+            g = groups.setdefault(ts // (8 * HOUR), [0, 0.0, o])  # [close, volume, open of the first 4H candle]
             g[0] = close
             g[1] += q
-        b8 = [(k * 8 * HOUR, v[0], v[1], (k + 1) * 8 * HOUR <= now_ms) for k, v in sorted(groups.items())]
+        b8 = [(k * 8 * HOUR, v[0], v[1], (k + 1) * 8 * HOUR <= now_ms, v[2]) for k, v in sorted(groups.items())]
         out["8h"] = (rsi([b[1] for b in b8]),) + vol_stats(b8)
     return sym, out
 
@@ -139,7 +140,8 @@ def main():
         out.append({"s": c, "p": tk[c][0], "c": tk[c][1], "cat": CAT_OF.get(c, "Other"), "v24": tk[c][2],
                     "r": {l: (r[l][0] if l in r else None) for l in tfl},
                     "vr": {l: (r[l][1] if l in r else None) for l in tfl},
-                    "vq": {l: (r[l][2] if l in r else None) for l in tfl}})
+                    "vq": {l: (r[l][2] if l in r else None) for l in tfl},
+                    "vd": {l: (r[l][3] if l in r else None) for l in tfl}})
     if len(out) < 10:
         raise SystemExit("too few coins computed - not overwriting rsi_heatmap.json")
     payload = {"generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(), "source": "OKX",

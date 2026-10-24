@@ -65,8 +65,6 @@ def is_weekend(day):
 def windows(now, zone, segs, phase_names=None):
     out = []
     for day in days_around(now, zone):
-        if is_weekend(day) and not WEEKENDS:
-            continue
         for i, (o, c) in enumerate(segs):
             out.append((local_to_utc(day, o, zone), local_to_utc(day, c, zone), phase_names[i] if phase_names else "core"))
     return out
@@ -103,27 +101,33 @@ def build_events(now):
     # --- sessions
     for k, s in SESSIONS.items():
         for (st, en, ph) in session_windows(now, k):
-            day = st.astimezone(ZoneInfo(s["zone"])).date().isoformat()
+            dday = st.astimezone(ZoneInfo(s["zone"])).date()
+            day = dday.isoformat()
+            wk = "-wk" if is_weekend(dday) else ""
             if ph == "core":
                 hrs = f"{fmt(st, s['zone'])}–{fmt(en, s['zone'])} {s['name'] if k != 'asia' else 'Melbourne'}"
                 why = {"asia": "ASX, Tokyo, Hong Kong &amp; Singapore all open", "ldn": "LSE &amp; Xetra both open"}.get(k)
+                if wk:
+                    why = "cash markets shut, crypto only" 
                 if why:
                     hrs += f" — {why}"
-                ev.append((st - timedelta(minutes=HEADSUP), f"{k}-headsup-{day}",
+                ev.append((st - timedelta(minutes=HEADSUP), f"{k}-headsup-{day}{wk}",
                            f"⏰ <b>{s['name']}</b> core session opens in {HEADSUP} min ({hrs})"))
-                ev.append((st, f"{k}-open-{day}", f"{s['flag']} <b>{s['name'].upper()} SESSION OPEN</b> ({hrs})"))
-                ev.append((en - timedelta(minutes=HEADSUP), f"{k}-closing-{day}",
+                ev.append((st, f"{k}-open-{day}{wk}", f"{s['flag']} <b>{s['name'].upper()} SESSION OPEN</b> ({hrs})"))
+                ev.append((en - timedelta(minutes=HEADSUP), f"{k}-closing-{day}{wk}",
                            f"⏳ <b>{s['name']}</b> core window closes in {HEADSUP} min" + (" (first exchange about to close)" if k in ("asia", "ldn") else "")))
-                ev.append((en, f"{k}-close-{day}", f"🔔 <b>{s['name'].upper()} SESSION CLOSED</b>" + (" — not all exchanges are open together any more" if k in ("asia", "ldn") else "")))
+                ev.append((en, f"{k}-close-{day}{wk}", f"🔔 <b>{s['name'].upper()} SESSION CLOSED</b>" + (" — not all exchanges are open together any more" if k in ("asia", "ldn") else "")))
+            elif wk:
+                continue  # weekend: no pre/post-market, cash markets are shut
             elif ph == "pre":
-                ev.append((st, f"{k}-pre-{day}", f"{s['flag']} <b>{s['name']} pre-market</b> is open ({fmt(st, s['zone'])}–{fmt(en, s['zone'])} ET)"))
+                ev.append((st, f"{k}-pre-{day}{wk}", f"{s['flag']} <b>{s['name']} pre-market</b> is open ({fmt(st, s['zone'])}–{fmt(en, s['zone'])} ET)"))
             elif ph == "post":
-                ev.append((st, f"{k}-post-{day}", f"{s['flag']} <b>{s['name']} post-market</b> is open ({fmt(st, s['zone'])}–{fmt(en, s['zone'])} ET)"))
+                ev.append((st, f"{k}-post-{day}{wk}", f"{s['flag']} <b>{s['name']} post-market</b> is open ({fmt(st, s['zone'])}–{fmt(en, s['zone'])} ET)"))
     # --- lunch breaks
     for k, name, zone, segs in EXCHANGES:
         if len(segs) > 1:
             for day in days_around(now, zone):
-                if is_weekend(day) and not WEEKENDS:
+                if is_weekend(day):
                     continue
                 a = local_to_utc(day, segs[0][1], zone)
                 b = local_to_utc(day, segs[1][0], zone)
@@ -135,7 +139,7 @@ def build_events(now):
     # --- every exchange: heads-up + moment for its first open and last close of the day
     for k, name, zone, segs in EXCHANGES:
         for day in days_around(now, zone):
-            if is_weekend(day) and not WEEKENDS:
+            if is_weekend(day):
                 continue
             o = local_to_utc(day, segs[0][0], zone)
             c = local_to_utc(day, segs[-1][1], zone)
@@ -149,7 +153,7 @@ def build_events(now):
     wins = []
     for k, name, zone, segs in EXCHANGES:
         for (st, en, _) in windows(now, zone, segs):
-            wins.append((k, name, st, en))
+            wins.append((k, name, st, en, zone))
     cuts = sorted({w[2] for w in wins} | {w[3] for w in wins})
     periods = []  # [start, end, [(a, b, sessions, exchanges)...]]
     for a, b in zip(cuts, cuts[1:]):
@@ -169,6 +173,9 @@ def build_events(now):
 
     for a, b, ivs in periods:
         d = a.strftime("%Y%m%d%H%M")
+        wkd = any(is_weekend(a.astimezone(ZoneInfo(w[4])).date()) for w in wins if w[2] <= a < w[3])
+        if wkd:
+            continue  # weekend: multi-session overlap is a cash-market idea, skip
         first = ivs[0]
         win = f"{fmt(a, 'Australia/Melbourne')}–{fmt(b, 'Australia/Melbourne')} Melbourne time"
         detail = lambda iv: f"{snames(iv[2])} ({', '.join(sorted(iv[3]))})"
@@ -252,6 +259,8 @@ def main():
         groups.setdefault(k, []).append((key, text))
     for (ts, kd), items in sorted(groups.items(), key=lambda kv: kv[0][0]):
         body = "\n".join(t for _, t in items)
+        if any(k.endswith("-wk") for k, _ in items):
+            body = "🗓 <b>TTM Weekend Session Timing — Crypto Only</b>\n" + body
         tail = ""
         if any(x in body for x in ("OPEN", "LIVE", "is open")):
             o = open_now(now)
