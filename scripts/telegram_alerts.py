@@ -101,7 +101,7 @@ def rsi(st, seeded):
             st["rsi"][k] = zone
             if seeded and zone != "mid" and old != zone:
                 tag = "🔴 Overbought" if zone == "ob" else "🟢 Oversold"
-                out.append(f"{tag}: <b>{e(c['s'])}</b> RSI {v:.1f} on {lab} · ${(f"{c['p']:,.2f}" if c['p']>=1 else f"{c['p']:.6g}")}\nStretched momentum, not a trade call. {page('fomo')}")
+                out.append(f"{tag}: <b>{e(c['s'])}</b> RSI {v:.1f} on {lab} · ${(f"{c['p']:,.2f}" if c['p']>=1 else f"{c['p']:.6g}")}\nStretched momentum, not a trade call. {page('rsimap')}")
     return out
 
 
