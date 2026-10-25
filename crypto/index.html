@@ -371,6 +371,11 @@ td.num{font-variant-numeric:tabular-nums;color:var(--mute)}
 .rr-btn.sm{padding:5px 9px;font-size:12px}
 .rr-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 select{color-scheme:dark}select option,select optgroup{background:#16161a;color:#e8e6e1}
+.rr-card h3::after{content:'';display:block;clear:both}
+.rr-out.c4{grid-template-columns:repeat(4,1fr)}.rr-out.c5{grid-template-columns:repeat(5,1fr)}
+@media (max-width:760px){.rr-out.c4,.rr-out.c5{grid-template-columns:repeat(2,1fr)}.rr-tfbar button{padding:6px 11px}}
+.bm-tbl td.yr.top{background:var(--gold);color:#111;font-weight:800}.bm-tbl td.yr .topflag{display:block;font-size:9px;letter-spacing:.6px;font-weight:800}
+.bm-tbl td.peak{box-shadow:inset 0 0 0 2px #dba118}
 .tool-nav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px;align-items:center}
 .tool-nav a,.tool-nav button{border:1px solid var(--line);background:transparent;color:var(--mute);padding:7px 13px;border-radius:999px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;text-decoration:none}
 .tool-nav a.cur{background:var(--gold);color:#111;border-color:var(--gold)}.tool-nav a:hover,.tool-nav button:hover{border-color:var(--gold);color:var(--gold2)}.tool-nav a.cur:hover{color:#111}
@@ -1050,6 +1055,7 @@ body.view-section #backFab{display:block}
       <button class="filter-chip" data-n="5">Last 5 years</button>
       <button class="filter-chip" data-n="10">Last 10 years</button>
     </div>
+    <p class="calendar-note" style="margin:0 0 10px"><b style="color:var(--gold2)">▲ CYCLE TOP</b> marks the blow-off top years of Bitcoin's roughly four-year cycle: <b>2013, 2017, 2021 and 2025</b>. The gold-outlined month is where that cycle's all-time high was printed (Dec 2013, Dec 2017, Nov 2021, Oct 2025). The year after each top has historically been a deep drawdown. This is a historical pattern from four cycles, not a forecast.</p>
     <div class="bm-wrap"><table class="bm-tbl" id="bmTable"><tbody><tr><td class="empty">Loading…</td></tr></tbody></table></div>
     <div class="section-head" style="margin-top:34px">
       <span class="tag">August to July view</span>
@@ -1069,11 +1075,15 @@ body.view-section #backFab{display:block}
       <h2>Risk-to-Reward Calculator</h2>
       <p>Plan the trade before you place it. Enter your entry, stop-loss and up to three take-profit targets, set your account size and the percentage you are willing to lose, and the calculator sizes the position from your risk, then shows margin, leverage impact, estimated liquidation, break-even win rate and fees. Prices are manual, with a button to pull the live price. Everything stays in your own browser.</p>
     </div>
-    <div class="rr-card" style="margin-bottom:16px"><h3>Your account · <span id="rrAcctName" style="color:var(--text);text-transform:none;letter-spacing:0"></span> <a href="#tradejournal" style="float:right;color:var(--gold2);text-transform:none;letter-spacing:0;font-size:12px">Trade tracker &amp; stats →</a></h3><div class="rr-out" id="rrAcct" style="grid-template-columns:repeat(4,1fr);margin-bottom:6px"></div><p class="calendar-note" style="margin:0">Margin locked in open trades is taken out of what is available, so with $5,000 and $2,000 in a trade you have $3,000 left for the next one. Close a trade in the tracker to release its margin and add or subtract the result.</p></div>
+    <div class="rr-card" style="margin-bottom:16px"><h3>Your account · <span id="rrAcctName" style="color:var(--text);text-transform:none;letter-spacing:0"></span> <a href="#tradejournal" style="float:right;color:var(--gold2);text-transform:none;letter-spacing:0;font-size:12px">Trade tracker &amp; stats →</a></h3><div class="rr-out c4" id="rrAcct" style="margin-bottom:6px"></div><p class="calendar-note" style="margin:0">Margin locked in open trades is taken out of what is available, so with $5,000 and $2,000 in a trade you have $3,000 left for the next one. Close a trade in the tracker to release its margin and add or subtract the result.</p></div>
     <div class="rr-grid">
       <div>
         <div class="rr-card">
           <h3>1. Trade setup</h3>
+          <div class="rr-row">
+            <div class="rr-f"><label for="rrSrc">Live price &amp; candles from</label><select id="rrSrc"></select></div>
+            <div class="rr-f"><label>&nbsp;</label><div class="calendar-note" style="margin:0">Pick the exchange you trade on. If it cannot be reached the terminal falls back to OKX.</div></div>
+          </div>
           <div class="rr-row">
             <div class="rr-f rr-combo"><label for="rrAsset">Asset (search the top 250, or type any ticker)</label><input id="rrAsset" type="text" autocomplete="off" spellcheck="false" placeholder="Search e.g. SOL or Solana"><div class="rr-list" id="rrList"></div></div>
             <div class="rr-f"><label>Direction</label><div class="rr-seg" id="rrDir"><button type="button" class="on" data-d="long">Long</button><button type="button" data-d="short">Short</button></div></div>
@@ -1133,13 +1143,12 @@ body.view-section #backFab{display:block}
           <div id="rrExch" style="margin:0 0 12px"></div>
           <p class="calendar-note" style="margin:0">Leverage changes the margin you lock up and how close liquidation sits; it does not change the dollar loss at your stop, because the position is sized from your risk. Liquidation is an estimate for an isolated position and varies by exchange, contract and margin mode.</p>
         </div>
-        <div class="rr-card"><h3>Trade visualisation</h3><svg id="rrChart" viewBox="0 0 520 300" style="width:100%;height:auto;display:block"></svg></div>
-      </div>
+              </div>
     </div>
-    <div class="rr-card"><h3>Live chart <span id="rrCanHead" style="float:right;color:var(--mute);text-transform:none;letter-spacing:0;font-size:12px"></span></h3>
+    <div class="rr-card"><h3>Trade visualisation <span id="rrCanHead" style="float:right;color:var(--mute);text-transform:none;letter-spacing:0;font-size:12px"></span></h3>
       <div class="rr-tfbar" id="rrTfChips"></div>
       <svg id="rrCandles" viewBox="0 0 900 360" style="width:100%;height:auto;display:block"></svg>
-      <p class="calendar-note" id="rrCanSt" style="margin:8px 0 0">Candles are live from OKX for the asset and time frame above, with your entry, stop, targets and liquidation drawn on top.</p></div>
+      <p class="calendar-note" id="rrCanSt" style="margin:8px 0 0">Live candles for the asset and time frame above, with your entry, stop, targets and liquidation drawn on top. Press Auto-fit to pick the time frame that shows your whole trade.</p></div>
     <div class="rr-card"><h3>Take-profit breakdown</h3><div class="rr-wrap"><table class="rr-tbl" id="rrTpTbl"></table></div></div>
     <div class="rr-card"><h3>Portfolios &amp; win rates <a href="#tradejournal" style="float:right;color:var(--gold2);text-transform:none;letter-spacing:0;font-size:12px">Full tracker →</a></h3><div class="rr-wrap"><table class="rr-tbl" id="rrPort"></table></div><p class="calendar-note" style="margin:8px 0 0">Each account keeps its own balance, locked margin and results, so spot, leverage and super / retirement trades never mix. Pick the account type on each trade.</p></div>
     <div class="rr-card">
@@ -1163,12 +1172,16 @@ body.view-section #backFab{display:block}
       <h2>Trade Tracker &amp; Win Ratio</h2>
       <p>Every trade you open in the Risk-to-Reward calculator lands here, split by account type (spot, leverage, super / retirement) and by the time frame you traded. Open trades lock their margin; when a trade plays out, close it as fully played out (all targets), stopped out, or partly played out (some targets hit, then stopped, break-even or closed by hand). The result is added to or taken from your account, and your win ratio, average R, profit factor, drawdown and equity curve update. Everything stays in your own browser.</p>
     </div>
-    <div class="rr-card"><h3>All accounts <button type="button" class="rr-btn sm" id="jXlsx" style="float:right">Download Excel (TTM view)</button></h3><div class="rr-out" id="jAcct" style="grid-template-columns:repeat(4,1fr);margin:0"></div></div>
+    <div class="rr-card"><h3>All accounts <button type="button" class="rr-btn sm" id="jXlsx" style="float:right">Download Excel (TTM view)</button></h3><div class="rr-out c4" id="jAcct"></div><div class="rr-wrap"><table class="rr-tbl" id="jPort"></table></div></div>
     <div class="rr-card"><h3>Performance</h3><div class="rr-stats" id="jStats"></div><svg id="jCurve" viewBox="0 0 700 220" style="width:100%;height:auto;display:block"></svg></div>
-    <div class="rr-card"><h3>Portfolios</h3><div class="rr-wrap"><table class="rr-tbl" id="jPort"></table></div></div>
+    <div class="rr-card"><h3>Open positions <span style="float:right;color:var(--mute);text-transform:none;letter-spacing:0;font-size:12px">live prices, refreshed every 30s</span></h3><div class="rr-wrap"><table class="rr-tbl" id="jOpen"></table></div></div>
     <div class="rr-card"><h3>Best results by time frame</h3><div id="jTfBest" style="margin-bottom:10px"></div><div class="rr-wrap"><table class="rr-tbl" id="jTf"></table></div></div>
-    <div class="rr-card"><h3>Open positions</h3><div class="rr-wrap"><table class="rr-tbl" id="jOpen"></table></div></div>
-    <div class="rr-grid" style="align-items:stretch"><div class="rr-card"><h3>By asset</h3><div class="rr-wrap"><table class="rr-tbl" id="jAsset"></table></div></div><div class="rr-card"><h3>By direction &amp; leverage</h3><div class="rr-wrap"><table class="rr-tbl" id="jDir"></table></div></div></div>
+        <div class="rr-grid" style="align-items:stretch"><div class="rr-card"><h3>By asset</h3><div class="rr-wrap"><table class="rr-tbl" id="jAsset"></table></div></div><div class="rr-card"><h3>By direction &amp; leverage</h3><div class="rr-wrap"><table class="rr-tbl" id="jDir"></table></div></div></div>
+    <div class="rr-card"><h3>Telegram alerts to your own account</h3>
+      <p class="calendar-note" style="margin-top:0">Get a message on your own Telegram when a take-profit is hit on an open trade, for example "TP1 hit: move your stop to entry". Create your own bot with @BotFather, send it one message, and find your chat ID with @userinfobot. Use your own personal bot, not the TTM community bot. The token and chat ID stay in this browser only.</p>
+      <div class="rr-row3"><div class="rr-f"><label for="tgTok">Your bot token</label><input id="tgTok" type="password" autocomplete="off" placeholder="from @BotFather"></div><div class="rr-f"><label for="tgChat">Your chat ID</label><input id="tgChat" type="text" inputmode="numeric" placeholder="e.g. 123456789"></div><div class="rr-f"><label>&nbsp;</label><label style="display:flex;gap:8px;align-items:center;font-size:13.5px;margin-top:8px"><input type="checkbox" id="tgOn" style="width:auto"> Alerts on</label></div></div>
+      <div class="rr-acts"><button type="button" class="rr-btn sm" id="tgSave">Save</button><button type="button" class="rr-btn ghost sm" id="tgTest">Send test message</button></div>
+      <p class="calendar-note" id="tgNote" style="margin:8px 0 0">Alerts only fire while the terminal is open in a browser tab (checked every 30 seconds against the live price, so a very quick wick can be missed). The terminal has no server, so it cannot watch your trades when the page is closed.</p></div>
     <div class="rr-card"><h3>Trade history</h3>
       <div class="filter-row" id="jFilter" style="margin-bottom:10px"><button class="filter-chip active" data-f="all">All</button><button class="filter-chip" data-f="open">Open</button><button class="filter-chip" data-f="win">Wins</button><button class="filter-chip" data-f="loss">Losses</button><button class="filter-chip" data-f="be">Break-even</button></div>
       <div class="rr-wrap"><table class="rr-tbl" id="jHist"></table></div>
@@ -1188,7 +1201,7 @@ body.view-section #backFab{display:block}
       <p>Your tracker, valued against live prices. For each account (spot, leverage, super / retirement) this shows your realised balance, what the account is worth right now with open trades marked to the market, the forecast if every target is hit, and the worst case if every stop is hit. Prices come live from OKX and refresh every 30 seconds while this page is open.</p>
     </div>
     <div class="filter-row" id="pfScope" style="margin-bottom:12px"></div>
-    <div class="rr-card"><h3>Forecast vs actual <span id="pfStamp" style="float:right;color:var(--mute);text-transform:none;letter-spacing:0;font-size:12px"></span></h3><div class="rr-out" id="pfTiles" style="grid-template-columns:repeat(5,1fr)"></div><svg id="pfChart" viewBox="0 0 800 300" style="width:100%;height:auto;display:block"></svg></div>
+    <div class="rr-card"><h3>Forecast vs actual <span id="pfStamp" style="float:right;color:var(--mute);text-transform:none;letter-spacing:0;font-size:12px"></span></h3><div class="rr-out c5" id="pfTiles"></div><svg id="pfChart" viewBox="0 0 800 300" style="width:100%;height:auto;display:block"></svg></div>
     <div class="rr-card"><h3>By account</h3><div class="rr-wrap"><table class="rr-tbl" id="pfAcc"></table></div></div>
     <div class="rr-card"><h3>Open trades at live prices</h3><div class="rr-wrap"><table class="rr-tbl" id="pfOpen"></table></div></div>
     <p class="calendar-note">How to read it: <b>Actual now</b> = realised balance plus the open P&amp;L of your open trades at the live price (targets already passed are counted as filled, a stop already passed as taken). <b>Forecast</b> = realised balance plus the planned profit if every target of every open trade is hit. <b>Worst</b> = every stop hit. <b>Expected</b> weights those two by that account's own win rate once it has at least 5 closed trades. These are projections from your own plans, not predictions of the market, and fills on your exchange will differ. Not financial advice.</p>
@@ -3158,6 +3171,7 @@ function bg(r){
   const k = Math.min(1, Math.sqrt(Math.abs(r) / 40));
   return r >= 0 ? `rgba(63,185,122,${(0.12 + 0.62 * k).toFixed(2)})` : `rgba(229,83,75,${(0.12 + 0.62 * k).toFixed(2)})`;
 }
+const TOPS = {2013: '2013-12', 2017: '2017-12', 2021: '2021-11', 2025: '2025-10'};
 const med = a => { const s = [...a].sort((x, y) => x - y), n = s.length; return n ? (n % 2 ? s[(n-1)/2] : (s[n/2-1] + s[n/2]) / 2) : null; };
 const MN2 = ['Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun','Jul'];
 function renderCycle(by){
@@ -3171,12 +3185,13 @@ function renderCycle(by){
   let html = '<thead><tr><th></th>' + MN2.map(m => `<th>${m}</th>`).join('') + '<th>Aug–Jul</th></tr></thead><tbody>';
   rows.forEach(cy => {
     let comp = 1, any = false, partial = false;
-    html += `<tr><td class="yr">${cy}/${String(cy + 1).slice(2)}</td>`;
+    html += `<tr><td class="yr${TOPS[cy] ? ' top' : ''}" title="${TOPS[cy] ? '4-year-cycle blow-off top year' : ''}">${cy}/${String(cy + 1).slice(2)}${TOPS[cy] ? '<span class="topflag">▲ CYCLE TOP</span>' : ''}</td>`;
     for(let i = 0; i < 12; i++){
       const m = cyc[cy][i];
       if(!m){ html += '<td class="empty"></td>'; continue; }
       comp *= 1 + m.r / 100; any = true; if(m.p) partial = true; else cols[i].push(m.r);
-      html += `<td class="${m.p ? 'part' : ''}" style="background:${bg(m.r)}" title="${MN[m.mi]} ${m.yr}: close $${m.c.toLocaleString()}">${fmt(m.r)}</td>`;
+      const pk = TOPS[m.yr] === m.yr + '-' + String(m.mi + 1).padStart(2, '0');
+      html += `<td class="${(m.p ? 'part' : '') + (pk ? ' peak' : '')}" style="background:${bg(m.r)}" title="${MN[m.mi]} ${m.yr}: close $${m.c.toLocaleString()}${pk ? ' · month of the cycle all-time high' : ''}">${fmt(m.r)}</td>`;
     }
     const tot = (comp - 1) * 100;
     html += any ? `<td class="tot ${partial ? 'part' : ''}" style="background:${bg(tot)}">${fmt(tot)}</td></tr>` : '<td class="empty"></td></tr>';
@@ -3199,12 +3214,13 @@ function render(){
   let html = '<thead><tr><th></th>' + MN.map(m => `<th>${m}</th>`).join('') + '<th>Year</th></tr></thead><tbody>';
   years.forEach(y => {
     let comp = 1, any = false, partial = false;
-    html += `<tr><td class="yr">${y}</td>`;
+    html += `<tr><td class="yr${TOPS[y] ? ' top' : ''}" title="${TOPS[y] ? '4-year-cycle blow-off top year' : ''}">${y}${TOPS[y] ? '<span class="topflag">▲ CYCLE TOP</span>' : ''}</td>`;
     for(let i = 0; i < 12; i++){
       const m = by[y][i];
       if(!m){ html += '<td class="empty"></td>'; continue; }
       comp *= 1 + m.r / 100; any = true; if(m.p) partial = true; else cols[i].push(m.r);
-      html += `<td class="${m.p ? 'part' : ''}" style="background:${bg(m.r)}" title="${MN[i]} ${y}: close $${m.c.toLocaleString()}">${fmt(m.r)}</td>`;
+      const pk = TOPS[y] === y + '-' + String(i + 1).padStart(2, '0');
+      html += `<td class="${(m.p ? 'part' : '') + (pk ? ' peak' : '')}" style="background:${bg(m.r)}" title="${MN[i]} ${y}: close $${m.c.toLocaleString()}${pk ? ' · month of the cycle all-time high' : ''}">${fmt(m.r)}</td>`;
     }
     const yr = (comp - 1) * 100;
     html += any ? `<td class="tot ${partial ? 'part' : ''}" style="background:${bg(yr)}">${fmt(yr)}</td></tr>` : '<td class="empty"></td></tr>';
@@ -3303,6 +3319,7 @@ const BALS = Object.assign({spot: 5000, lev: num0(S.bal) || 5000, super: 5000}, 
 function num0(v){ const n = parseFloat(v); return isFinite(n) ? n : null; }
 if(!S.asset || S.asset === 'Other') S.asset = 'BTC';
 $('rrLev').innerHTML = LEVS.map(l => `<option value="${l}">${l}×${l === 1 ? ' (no leverage)' : ''}</option>`).join('');
+$('rrSrc').innerHTML = [['okx', 'OKX'], ['binance', 'Binance'], ['bybit', 'Bybit'], ['bitget', 'Bitget'], ['mexc', 'MEXC']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
 $('rrAcc').innerHTML = [['spot', 'Spot portfolio'], ['lev', 'Leverage / futures'], ['super', 'Super / retirement']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
 $('rrTf').innerHTML = [['m5', '5 min'], ['m15', '15 min'], ['h1', '1 hour'], ['h2', '2 hour'], ['h4', '4 hour'], ['h8', '8 hour'], ['h12', '12 hour'], ['d1', 'Daily'], ['w1', 'Weekly'], ['mo1', 'Monthly']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
 const IDS = {entry:'rrEntry', stop:'rrStop', tp1:'rrTp1', s1:'rrS1', tp2:'rrTp2', s2:'rrS2', tp3:'rrTp3', s3:'rrS3', risk:'rrRisk', rusd:'rrRusd', inv:'rrInv', fee:'rrFee', daily:'rrDaily', min:'rrMin', mmr:'rrMmr'};
@@ -3310,7 +3327,9 @@ function pushInputs(){
   Object.keys(IDS).forEach(k => { $(IDS[k]).value = S[k] === '' || S[k] == null ? '' : S[k]; });
   $('rrBal').value = BALS[S.acc] == null ? '' : BALS[S.acc];
   $('rrBalL').textContent = 'Starting balance — ' + ({spot: 'Spot portfolio', lev: 'Leverage / futures', super: 'Super / retirement'}[S.acc] || '') + ' (USD)';
-  $('rrAsset').value = S.asset; $('rrLev').value = String(S.lev); $('rrAcc').value = S.acc; $('rrTf').value = S.tf;
+  $('rrAsset').value = S.asset; $('rrAcc').value = S.acc; $('rrTf').value = S.tf; $('rrSrc').value = SRC;
+  if(S.mkt === 'spot'){ $('rrLev').innerHTML = '<option value="1">None (spot)</option>'; $('rrLev').value = '1'; }
+  else { $('rrLev').innerHTML = LEVS.map(l => `<option value="${l}">${l}×${l === 1 ? ' (no leverage)' : ''}</option>`).join(''); $('rrLev').value = String(S.lev); }
   document.querySelectorAll('#rrDir button').forEach(b => { b.classList.toggle('on', b.dataset.d === S.dir); b.classList.toggle('short', b.dataset.d === 'short'); });
   document.querySelectorAll('#rrMkt button').forEach(b => b.classList.toggle('on', b.dataset.m === S.mkt));
   $('rrLev').disabled = S.mkt === 'spot';
@@ -3318,7 +3337,7 @@ function pushInputs(){
   document.querySelectorAll('#rrSz button').forEach(b => b.classList.toggle('on', b.dataset.z === z));
   $('fPct').style.display = z === 'pct' ? '' : 'none'; $('fUsd').style.display = z === 'usd' ? '' : 'none'; $('fInv').style.display = z === 'inv' ? '' : 'none';
   $('rrSzNote').textContent = {pct: 'The position is sized so a stop-out loses this % of the account you picked.', usd: 'The position is sized so a stop-out loses exactly this dollar amount.', inv: 'You decide how much to put in (margin). Position = investment × leverage, and the risk is worked out for you.'}[z];
-  $('rrTfChips').innerHTML = [['m5', '5m'], ['m15', '15m'], ['h1', '1h'], ['h2', '2h'], ['h4', '4h'], ['h8', '8h'], ['h12', '12h'], ['d1', '1D'], ['w1', '1W'], ['mo1', '1M']].map(a => `<button type="button" data-t="${a[0]}" class="${S.tf === a[0] ? 'on' : ''}">${a[1]}</button>`).join('');
+  $('rrTfChips').innerHTML = [['m5', '5m'], ['m15', '15m'], ['h1', '1h'], ['h2', '2h'], ['h4', '4h'], ['h8', '8h'], ['h12', '12h'], ['d1', '1D'], ['w1', '1W'], ['mo1', '1M']].map(a => `<button type="button" data-t="${a[0]}" class="${S.tf === a[0] ? 'on' : ''}">${a[1]}</button>`).join('') + '<button type="button" data-auto="1" style="margin-left:auto;border-color:var(--gold);color:var(--gold2)">Auto-fit time frame</button>';
 }
 const num = v => { const n = parseFloat(v); return isFinite(n) ? n : null; };
 const usd = v => v == null || !isFinite(v) ? '—' : (v < 0 ? '-' : '') + '$' + Math.abs(v).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -3383,7 +3402,7 @@ function render(){
     return `<div class="rr-warn ${w[0] === 'y' ? 'y' : ''}">${w[1]}${fv && +fv > 0 ? ` <button type="button" class="rr-btn sm" data-key="${w[3]}" data-fit="${fv}" style="margin-left:6px">${lab}</button>` : ''}</div>`; }).join('');
   renderAcct();
   { const a = (S.asset || '').toUpperCase(), sp = S.mkt === 'spot', ex = $('rrExch');
-    const L = sp ? [['Binance', `https://www.binance.com/en/trade/${a}_USDT`], ['Bybit', `https://www.bybit.com/en/trade/spot/${a}/USDT`], ['OKX', `https://www.okx.com/trade-spot/${a.toLowerCase()}-usdt`]] : [['Binance', `https://www.binance.com/en/futures/${a}USDT`], ['Bybit', `https://www.bybit.com/trade/usdt/${a}USDT`], ['OKX', `https://www.okx.com/trade-swap/${a.toLowerCase()}-usdt-swap`], ['Hyperliquid', `https://app.hyperliquid.xyz/trade/${a}`]];
+    const L = sp ? [['Binance', `https://www.binance.com/en/trade/${a}_USDT`], ['Bybit', `https://www.bybit.com/en/trade/spot/${a}/USDT`], ['OKX', `https://www.okx.com/trade-spot/${a.toLowerCase()}-usdt`], ['Bitget', `https://www.bitget.com/spot/${a}USDT`], ['MEXC', `https://www.mexc.com/exchange/${a}_USDT`]] : [['Binance', `https://www.binance.com/en/futures/${a}USDT`], ['Bybit', `https://www.bybit.com/trade/usdt/${a}USDT`], ['OKX', `https://www.okx.com/trade-swap/${a.toLowerCase()}-usdt-swap`], ['Bitget', `https://www.bitget.com/futures/usdt/${a}USDT`], ['MEXC', `https://futures.mexc.com/exchange/${a}_USDT`], ['Hyperliquid', `https://app.hyperliquid.xyz/trade/${a}`]];
     ex.innerHTML = a ? `<div style="font-size:12px;color:var(--mute);margin-bottom:6px">Place this trade on an exchange (opens the ${esc(a)} ${sp ? 'spot' : 'perp'} market in a new tab):</div><div class="rr-acts" style="margin:0">${L.map(x => `<a class="rr-btn ghost sm" style="text-decoration:none" href="${x[1]}" target="_blank" rel="noopener noreferrer">${x[0]} ↗</a>`).join('')}<button type="button" class="rr-btn ghost sm" id="rrTicket">Copy order ticket</button></div><div style="font-size:11px;color:var(--mute);margin-top:6px">The terminal never places orders or asks for API keys. You enter the trade yourself on the exchange. Availability of some exchanges depends on where you live.</div>` : ''; }
   { const n = $('rrSzNote'), z = S.mode || 'pct', base = {pct: 'The position is sized so a stop-out loses this % of the account you picked.', usd: 'The position is sized so a stop-out loses exactly this dollar amount.', inv: 'You decide how much to put in (margin). Position = investment × leverage, and the risk is worked out for you.'}[z];
     n.innerHTML = c.ok ? `<b style="color:var(--gold2)">= ${usd(c.riskUsd)} at risk · ${c.riskPctAcct.toFixed(2)}% of account · ${c.riskPctInv.toFixed(1)}% of the ${usd(c.margin)} invested</b><br>${base}` : base; }
@@ -3414,7 +3433,7 @@ function render(){
   drawChart(c); drawCandles(c);
 }
 function drawChart(c){
-  const svg = $('rrChart'); if(!c.ok){ svg.innerHTML = '<text x="260" y="150" fill="#8b8f9a" font-size="13" text-anchor="middle">Enter your levels to see the trade map</text>'; return; }
+  const svg = $('rrChart'); if(!svg) return; if(!c.ok){ svg.innerHTML = '<text x="260" y="150" fill="#8b8f9a" font-size="13" text-anchor="middle">Enter your levels to see the trade map</text>'; return; }
   const lv = [{k:'Entry', p:c.E, col:'#dba118'}, {k:'Stop', p:c.SL, col:'#e0554d'}];
   c.tps.forEach(x => lv.push({k:'TP' + x.i, p:x.P, col:'#3fb47a'}));
   if(c.liq != null) lv.push({k:'Liq (est.)', p:c.liq, col:'#b04bd6'});
@@ -3493,11 +3512,12 @@ function renderSaved(){
 let jf = 'all';
 function curve(pts){
   const svg = $('jCurve'); if(!svg) return;
-  if(pts.length < 2){ svg.innerHTML = '<text x="350" y="110" fill="#8b8f9a" font-size="13" text-anchor="middle">Your equity curve appears after your first closed trade</text>'; return; }
-  const ys = pts.map(p => p.v), mn = Math.min(...ys), mx = Math.max(...ys), pad = (mx - mn) * .15 || mx * .02 || 1, lo = mn - pad, hi = mx + pad, W = 700, H = 220, L = 54, R = 12, T = 12, B = 22;
+  if(pts.length < 2){ svg.setAttribute('viewBox', '0 0 700 56'); svg.innerHTML = '<text x="350" y="34" fill="#8b8f9a" font-size="14" text-anchor="middle">Your equity curve appears after your first closed trade</text>'; return; }
+  const ys = pts.map(p => p.v), mn = Math.min(...ys), mx = Math.max(...ys), pad = (mx - mn) * .15 || mx * .02 || 1, lo = mn - pad, hi = mx + pad, narrow = svg.getBoundingClientRect().width < 600, W = narrow ? 480 : 700, H = narrow ? 240 : 220, L = narrow ? 52 : 54, R = 12, T = 12, B = 22, fs = narrow ? 12.5 : 10;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   const X = i => L + (W - L - R) * (i / (pts.length - 1)), Y = v => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
   let g = '';
-  [0, .5, 1].forEach(f => { const v = lo + (hi - lo) * f; g += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.08)"/><text x="${L - 6}" y="${Y(v) + 4}" font-size="10" fill="#8b8f9a" text-anchor="end">${Math.round(v).toLocaleString()}</text>`; });
+  [0, .5, 1].forEach(f => { const v = lo + (hi - lo) * f; g += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.08)"/><text x="${L - 6}" y="${Y(v) + 4}" font-size="${fs}" fill="#8b8f9a" text-anchor="end">${Math.round(v).toLocaleString()}</text>`; });
   g += `<line x1="${L}" x2="${W - R}" y1="${Y(pts[0].v)}" y2="${Y(pts[0].v)}" stroke="#dba118" stroke-dasharray="4 4" opacity=".6"/>`;
   g += `<polyline fill="none" stroke="#dba118" stroke-width="2.2" points="${pts.map((p, i) => X(i) + ',' + Y(p.v)).join(' ')}"/>`;
   pts.forEach((p, i) => { g += `<circle cx="${X(i)}" cy="${Y(p.v)}" r="3.2" fill="${i === 0 ? '#8b8f9a' : p.d >= 0 ? '#3fb47a' : '#e0554d'}"><title>${esc(p.label)}: ${usd(p.v)}</title></circle>`; });
@@ -3539,11 +3559,7 @@ function renderJournal(){
   $('jTf').innerHTML = tfTbl(closed);
   { const b = bestTf(tfRows(closed));
     $('jTfBest').innerHTML = b ? `<div class="rr-warn y" style="border-color:var(--gold);background:rgba(219,161,24,.08);color:var(--text)">Best time frame so far: <b style="color:var(--gold2)">${b.nm}</b> &mdash; net ${usd(b.t.net)} from ${b.t.n} trade${b.t.n > 1 ? 's' : ''}, ${b.t.wr == null ? 'no decided trades' : (b.t.wr * 100).toFixed(0) + '% win rate'}, average ${b.t.avgR.toFixed(2)}R.${closed.length < 10 ? ' This rests on only ' + closed.length + ' closed trade' + (closed.length > 1 ? 's' : '') + ', so treat it as an early read, not a pattern.' : ''}</div>` : '<p class="calendar-note" style="margin:0">Pick the time frame you trade on each setup. Once trades are closed, your best and worst time frames show up here.</p>'; }
-  let o = '<thead><tr><th>Trade</th><th>Account</th><th>Asset</th><th>Dir</th><th>Lev</th><th>Time frame</th><th>Entry</th><th>Stop</th><th>Margin locked</th><th>Risk</th><th>Opened</th><th></th></tr></thead><tbody>';
-  if(!opens.length) o += '<tr><td colspan="12" style="color:var(--mute)">No open trades. Open one from the Risk-to-Reward calculator.</td></tr>';
-  opens.forEach(x => { const i = list.indexOf(x); o += `<tr><td><b>${esc(x.name)}</b></td><td>${esc(accName(accOf(x)))}</td><td>${esc(x.snap.asset)}</td><td style="color:${x.snap.long ? '#3fb47a' : '#e0554d'}">${x.snap.long ? 'Long' : 'Short'}</td><td>${x.snap.mkt === 'spot' ? 1 : x.snap.lev}×</td><td>${esc(tfName(tfOf(x)))}</td><td>${pr(x.snap.E)}</td><td>${pr(x.snap.SL)}</td><td>${usd(x.snap.margin)}</td><td style="color:#e0554d">${usd(x.snap.riskUsd)}</td><td>${new Date(x.opened || x.t).toLocaleDateString()}</td>` +
-    `<td><div class="rr-acts" style="margin:0"><button class="rr-btn sm" data-j="close" data-i="${i}">Close / update</button><button class="rr-btn ghost sm" data-j="load" data-i="${i}">Load</button><button class="rr-btn ghost sm" data-j="del" data-i="${i}">Cancel</button></div></td></tr>`; });
-  $('jOpen').innerHTML = o + '</tbody>';
+  $('jOpen').innerHTML = openTbl(opens);
   let rows = list.filter(x => x.snap && (x.status === 'open' || x.status === 'closed'));
   rows = rows.filter(x => jf === 'all' || (jf === 'open' ? x.status === 'open' : x.status === 'closed' && kind(x.res.pnl, x.snap.riskUsd) === jf));
   rows.sort((a, b) => ((b.res && b.res.closed) || b.opened || b.t) - ((a.res && a.res.closed) || a.opened || a.t));
@@ -3610,6 +3626,7 @@ function wireJournal(){
     else if(a === 'copy'){ list.splice(i + 1, 0, {id: uid(), name: x.name + ' (copy)', t: Date.now(), s: Object.assign({}, x.s), status: 'saved'}); saveAll(list); renderSaved(); render(); }
     else if(a === 'open'){ const save = S; S = Object.assign({}, DEF, x.s); const c = calc(); S = save; startTrade(c, x.s, x.name, i); }
     else if(a === 'close'){ openClose(i); }
+    else if(a === 'be'){ x.snap.SL = x.snap.E; x.snap.slMoved = true; saveAll(list); renderSaved(); render(); }
     else if(a === 'reopen'){ x.status = 'open'; delete x.res; saveAll(list); renderSaved(); render(); }
     else if(a === 'del'){ if(x.status === 'closed' || x.status === 'open'){ if(!confirm(x.status === 'open' ? 'Cancel this open trade and release its margin?' : 'Delete this closed trade from your history? Your balance will change back.')) return; } list.splice(i, 1); saveAll(list); renderSaved(); render(); } }
   $('rrSaved').addEventListener('click', e => { const b = e.target.closest('button[data-a]'); if(b) act(b); });
@@ -3630,116 +3647,206 @@ function startTrade(c, setup, name, replaceIdx){
   saveAll(list); note.style.color = ''; note.innerHTML = `Opened “${esc(item.name)}”: ${usd(c.margin)} margin locked, ${usd(c.avail - c.margin)} left to trade with. When it plays out, close it in the <a href="#tradejournal" style="color:var(--gold2)">trade tracker</a> to update your balance.`;
   $('rrName').value = ''; render(); renderSaved(); return true;
 }
-// ---- live candles (OKX) behind the setup
-const OKXBAR = {m5: '5m', m15: '15m', h1: '1H', h2: '2H', h4: '4H', h8: '4H', h12: '12H', d1: '1D', w1: '1W', mo1: '1M'};
-let CAN = {key: '', rows: [], err: ''}, ctok = 0, ctimer = null;
-const rrActive = () => { const s = document.getElementById('riskreward'); return !!(s && s.classList.contains('active')); };
+// ---- price source (exchange) + live candles
+const SRCS = {okx: 'OKX', binance: 'Binance', bybit: 'Bybit', bitget: 'Bitget', mexc: 'MEXC'};
+const SRCKEY = 'ttm_rr_src_v1', TGKEY = 'ttm_rr_tg_v1';
+let SRC = lsGet(SRCKEY, 'okx'); if(!SRCS[SRC]) SRC = 'okx';
+const TFMS = {m5: 3e5, m15: 9e5, h1: 36e5, h2: 72e5, h4: 144e5, h8: 288e5, h12: 432e5, d1: 864e5, w1: 6048e5, mo1: 2592e6};
+const TFBASE = {
+  okx: {m5: '5m', m15: '15m', h1: '1H', h2: '2H', h4: '4H', h8: ['4H', 144e5], h12: '12H', d1: '1D', w1: '1W', mo1: '1M'},
+  binance: {m5: '5m', m15: '15m', h1: '1h', h2: '2h', h4: '4h', h8: '8h', h12: '12h', d1: '1d', w1: '1w', mo1: '1M'},
+  bybit: {m5: '5', m15: '15', h1: '60', h2: '120', h4: '240', h8: ['240', 144e5], h12: '720', d1: 'D', w1: 'W', mo1: 'M'},
+  bitget: {m5: '5min', m15: '15min', h1: '1h', h2: ['1h', 36e5], h4: '4h', h8: ['4h', 144e5], h12: '12h', d1: '1day', w1: '1week', mo1: '1M'},
+  mexc: {m5: '5m', m15: '15m', h1: '60m', h2: ['60m', 36e5], h4: '4h', h8: ['4h', 144e5], h12: ['4h', 432e5], d1: '1d', w1: '1W', mo1: '1M'}
+};
+const getJ = async u => { const r = await fetch(u, {cache: 'no-store'}); if(!r.ok) throw new Error('http'); return r.json(); };
+const kl = d => d.map(r => ({t: +r[0], o: +r[1], h: +r[2], l: +r[3], c: +r[4]}));
+const FETCH = {
+  okx: async (a, iv, n) => { for(const inst of [a + '-USDT', a + '-USDT-SWAP']){ try{ const d = await getJ(`https://www.okx.com/api/v5/market/candles?instId=${inst}&bar=${iv}&limit=${Math.min(n, 300)}`); if(d.data && d.data.length) return kl(d.data).reverse(); }catch(e){} } throw new Error('none'); },
+  binance: async (a, iv, n) => kl(await getJ(`https://api.binance.com/api/v3/klines?symbol=${a}USDT&interval=${iv}&limit=${Math.min(n, 1000)}`)),
+  mexc: async (a, iv, n) => kl(await getJ(`https://api.mexc.com/api/v3/klines?symbol=${a}USDT&interval=${iv}&limit=${Math.min(n, 500)}`)),
+  bybit: async (a, iv, n) => { const d = await getJ(`https://api.bybit.com/v5/market/kline?category=spot&symbol=${a}USDT&interval=${iv}&limit=${Math.min(n, 1000)}`); return kl(d.result.list).reverse(); },
+  bitget: async (a, iv, n) => { const d = await getJ(`https://api.bitget.com/api/v2/spot/market/candles?symbol=${a}USDT&granularity=${iv}&limit=${Math.min(n, 1000)}`); return kl(d.data).sort((x, y) => x.t - y.t); }
+};
+const TICK = {
+  okx: async () => { const d = await getJ('https://www.okx.com/api/v5/market/tickers?instType=SPOT'), m = {}; d.data.forEach(t => { if(t.instId.endsWith('-USDT')) m[t.instId.slice(0, -5)] = +t.last; }); return m; },
+  binance: async () => { const d = await getJ('https://api.binance.com/api/v3/ticker/price'), m = {}; d.forEach(t => { if(t.symbol.endsWith('USDT')) m[t.symbol.slice(0, -4)] = +t.price; }); return m; },
+  mexc: async () => { const d = await getJ('https://api.mexc.com/api/v3/ticker/price'), m = {}; d.forEach(t => { if(t.symbol.endsWith('USDT')) m[t.symbol.slice(0, -4)] = +t.price; }); return m; },
+  bybit: async () => { const d = await getJ('https://api.bybit.com/v5/market/tickers?category=spot'), m = {}; d.result.list.forEach(t => { if(t.symbol.endsWith('USDT')) m[t.symbol.slice(0, -4)] = +t.lastPrice; }); return m; },
+  bitget: async () => { const d = await getJ('https://api.bitget.com/api/v2/spot/market/tickers'), m = {}; d.data.forEach(t => { if(t.symbol.endsWith('USDT')) m[t.symbol.slice(0, -4)] = +t.lastPr; }); return m; }
+};
+function aggC(rows, ms){ const g = {}; rows.forEach(x => { const k = Math.floor(x.t / ms), b = g[k]; if(!b) g[k] = {t: k * ms, o: x.o, h: x.h, l: x.l, c: x.c}; else { b.h = Math.max(b.h, x.h); b.l = Math.min(b.l, x.l); b.c = x.c; } }); return Object.keys(g).sort((p, q) => p - q).map(k => g[k]); }
+async function getCandles(a, tf){
+  const order = [SRC].concat(SRC === 'okx' ? [] : ['okx']);
+  for(const src of order){
+    try{ const spec = TFBASE[src][tf], iv = Array.isArray(spec) ? spec[0] : spec, nat = Array.isArray(spec) ? spec[1] : 0;
+      let rows = await FETCH[src](a, iv, nat ? Math.ceil(110 * TFMS[tf] / nat) : 110);
+      if(nat) rows = aggC(rows, TFMS[tf]);
+      if(rows.length > 5) return {rows: rows.slice(-90), src}; }catch(e){}
+  }
+  return null;
+}
+let TK = {src: '', map: {}, t: 0, used: ''};
+async function getTickers(){
+  if(Date.now() - TK.t < 8000 && TK.src === SRC) return TK;
+  for(const src of [SRC].concat(SRC === 'okx' ? [] : ['okx'])){
+    try{ const m = await TICK[src](); if(Object.keys(m).length > 20){ TK = {src: SRC, map: m, t: Date.now(), used: src}; return TK; } }catch(e){}
+  }
+  return null;
+}
+let CAN = {key: '', rows: [], err: '', src: ''}, ctok = 0, ctimer = null;
+const secOn = id => { const s = document.getElementById(id); return !!(s && s.classList.contains('active')); };
+const rrActive = () => secOn('riskreward'), pfActive = () => secOn('portfolio'), tjActive = () => secOn('tradejournal');
 function loadCandles(){ clearTimeout(ctimer); ctimer = setTimeout(doCandles, 250); }
 async function doCandles(){
-  const a = S.asset, tf = S.tf, key = a + '|' + tf, tok = ++ctok; if(!a) return;
-  if($('rrCanSt')) $('rrCanSt').textContent = 'Loading ' + a + ' candles…';
-  let rows = null;
-  for(const inst of [a + '-USDT', a + '-USDT-SWAP']){
-    try{ const r = await fetch(`https://www.okx.com/api/v5/market/candles?instId=${inst}&bar=${OKXBAR[tf] || '1H'}&limit=${tf === 'h8' ? 200 : 100}`, {cache: 'no-store'}); const d = await r.json(); if(d.data && d.data.length){ rows = d.data; break; } }catch(e){}
-  }
+  const a = S.asset, tf = S.tf, key = a + '|' + tf + '|' + SRC, tok = ++ctok; if(!a) return;
+  if($('rrCanSt')) $('rrCanSt').textContent = 'Loading ' + a + ' candles from ' + SRCS[SRC] + '…';
+  const res = await getCandles(a, tf);
   if(tok !== ctok) return;
-  if(!rows){ CAN = {key, rows: [], err: 'No candles'}; $('rrCanSt').textContent = `No live candles for ${a} on OKX (an unlisted or custom ticker, or the feed is unreachable). You can still type your levels in by hand.`; }
-  else {
-    let c = rows.map(r => ({t: +r[0], o: +r[1], h: +r[2], l: +r[3], c: +r[4]})).reverse();
-    if(tf === 'h8'){ const g = {}; c.forEach(x => { const k = Math.floor(x.t / 28800000), b = g[k]; if(!b) g[k] = {t: k * 28800000, o: x.o, h: x.h, l: x.l, c: x.c}; else { b.h = Math.max(b.h, x.h); b.l = Math.min(b.l, x.l); b.c = x.c; } }); c = Object.keys(g).sort((p, q) => p - q).map(k => g[k]); }
-    CAN = {key, rows: c.slice(-90), err: ''};
-    const l = CAN.rows[CAN.rows.length - 1]; $('rrCanSt').textContent = `${a} last ${pr(l.c)} · ${CAN.rows.length} × ${tfName(tf)} candles · updated ${new Date().toLocaleTimeString()}. Entry, stop, targets and liquidation from your setup are drawn on the chart.`;
-  }
+  if(!res){ CAN = {key, rows: [], err: 'No candles', src: ''}; $('rrCanSt').textContent = `No candles for ${a} on ${SRCS[SRC]} or OKX (an unlisted or custom ticker, or the feed is unreachable). You can still type your levels in by hand.`; }
+  else { CAN = {key, rows: res.rows, err: '', src: res.src}; const l = CAN.rows[CAN.rows.length - 1];
+    $('rrCanSt').textContent = `${a} last ${pr(l.c)} · ${CAN.rows.length} × ${tfName(tf)} candles · ${SRCS[res.src]}${res.src !== SRC ? ' (' + SRCS[SRC] + ' was unavailable)' : ''} · updated ${new Date().toLocaleTimeString()}.`; }
   drawCandles(calc());
+}
+function autoFit(){
+  const c = calc(); if(!c.ok || !CAN.rows.length || CAN.key !== S.asset + '|' + S.tf + '|' + SRC){ $('rrCanSt').textContent = 'Fill in entry and stop first and wait for the candles to load, then press Auto-fit.'; return; }
+  const atr = CAN.rows.reduce((t, r) => t + (r.h - r.l) / r.c, 0) / CAN.rows.length * 100, cur = TFMS[S.tf];
+  let best = null; TFS.forEach(([id]) => { const est = atr * Math.sqrt(TFMS[id] / cur), d = Math.abs(est - c.distPct / 3); if(best == null || d < best.d) best = {id, d, est}; });
+  S.tf = best.id; persist(); pushInputs(); render(); loadCandles();
+  setTimeout(() => { $('rrCanSt').textContent = `Auto-fit picked ${tfName(best.id)}: your stop is ${c.distPct.toFixed(1)}% away, roughly 3 candles tall on that time frame, so entry, stop and targets sit comfortably on the chart.`; }, 900);
 }
 function drawCandles(c){
   const svg = $('rrCandles'); if(!svg) return;
-  const W = 900, H = 360, L = 8, R = 124, T = 14, B = 24, key = (S.asset || '') + '|' + S.tf;
-  $('rrCanHead').textContent = `${S.asset || ''}/USDT · ${tfName(S.tf)} · OKX`;
-  if(CAN.key !== key || !CAN.rows.length){ svg.innerHTML = `<text x="450" y="180" fill="#8b8f9a" font-size="14" text-anchor="middle">${CAN.key === key && CAN.err ? 'No live candles for ' + esc(S.asset || '') : 'Loading candles…'}</text>`; return; }
+  const narrow = svg.getBoundingClientRect().width < 600, W = narrow ? 520 : 900, H = narrow ? 380 : 380, L = 8, R = narrow ? 112 : 128, T = 14, B = 26, fs = narrow ? 12.5 : 11, key = (S.asset || '') + '|' + S.tf + '|' + SRC;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  $('rrCanHead').textContent = `${S.asset || ''}/USDT · ${tfName(S.tf)} · ${SRCS[CAN.src || SRC]}`;
+  if(CAN.key !== key || !CAN.rows.length){ svg.innerHTML = `<text x="${W / 2}" y="${H / 2}" fill="#8b8f9a" font-size="14" text-anchor="middle">${CAN.key === key && CAN.err ? 'No candles for ' + esc(S.asset || '') : 'Loading candles…'}</text>`; return; }
   const rows = CAN.rows, n = rows.length; let lo = Math.min(...rows.map(r => r.l)), hi = Math.max(...rows.map(r => r.h));
   const lv = [];
-  if(c && c.ok){ lv.push({k: 'Entry', p: c.E, col: '#dba118'}, {k: 'Stop', p: c.SL, col: '#e0554d'}); c.tps.forEach(x => lv.push({k: 'TP' + x.i, p: x.P, col: '#3fb47a'})); if(c.liq != null) lv.push({k: 'Liq', p: c.liq, col: '#b04bd6'}); lv.forEach(l => { lo = Math.min(lo, l.p); hi = Math.max(hi, l.p); }); }
+  if(c && c.ok){
+    lv.push({k: 'Entry', p: c.E, col: '#dba118', core: 1}, {k: 'Stop', p: c.SL, col: '#e0554d', core: 1}); c.tps.forEach((x, i) => lv.push({k: 'TP' + x.i, p: x.P, col: '#3fb47a', core: i === 0})); if(c.liq != null) lv.push({k: 'Liq', p: c.liq, col: '#b04bd6'});
+    lv.filter(l => l.core).forEach(l => { lo = Math.min(lo, l.p); hi = Math.max(hi, l.p); });
+    const sp = hi - lo; lv.filter(l => !l.core).forEach(l => { if(l.p >= lo - sp * .5 && l.p <= hi + sp * .5){ lo = Math.min(lo, l.p); hi = Math.max(hi, l.p); } });
+  }
   const last = rows[n - 1].c, pad = (hi - lo) * .06 || hi * .01; lo -= pad; hi += pad;
   const X = i => L + (W - L - R) * ((i + .5) / n), Y = p => T + (H - T - B) * (1 - (p - lo) / (hi - lo)), bw = Math.max(1.5, (W - L - R) / n * .62);
   let g = '';
-  for(let k = 0; k <= 4; k++){ const v = lo + (hi - lo) * k / 4; g += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.07)"/><text x="${L + 3}" y="${Y(v) - 3}" font-size="10" fill="#6c707b">${pr(v)}</text>`; }
+  for(let k = 0; k <= 4; k++){ const v = lo + (hi - lo) * k / 4; g += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.07)"/><text x="${L + 3}" y="${Y(v) - 3}" font-size="${fs - 1}" fill="#6c707b">${pr(v)}</text>`; }
   rows.forEach((r, i) => { const up = r.c >= r.o, col = up ? '#3fb47a' : '#e0554d', x = X(i), yo = Y(r.o), yc = Y(r.c);
     g += `<line x1="${x}" x2="${x}" y1="${Y(r.h)}" y2="${Y(r.l)}" stroke="${col}" stroke-width="1"/><rect x="${x - bw / 2}" y="${Math.min(yo, yc)}" width="${bw}" height="${Math.max(1, Math.abs(yc - yo))}" fill="${col}"/>`; });
   const fmt = t => { const d = new Date(t), m = d.toLocaleString('en-GB', {month: 'short'}); return ['d1', 'w1', 'mo1'].includes(S.tf) ? `${d.getDate()} ${m} ${String(d.getFullYear()).slice(2)}` : `${d.getDate()} ${m} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
-  [0, Math.floor(n / 2), n - 1].forEach((i, k) => { g += `<text x="${X(i)}" y="${H - 6}" font-size="10" fill="#6c707b" text-anchor="${k === 0 ? 'start' : k === 2 ? 'end' : 'middle'}">${fmt(rows[i].t)}</text>`; });
-  const all = lv.concat([{k: 'Last', p: last, col: '#aeb2bd', solid: 1}]).sort((a, b) => b.p - a.p);
+  [0, Math.floor(n / 2), n - 1].forEach((i, k) => { g += `<text x="${X(i)}" y="${H - 7}" font-size="${fs - 1}" fill="#6c707b" text-anchor="${k === 0 ? 'start' : k === 2 ? 'end' : 'middle'}">${fmt(rows[i].t)}</text>`; });
+  const all = lv.concat([{k: 'Last', p: last, col: '#aeb2bd', solid: 1}]).sort((a, b) => b.p - a.p), gap = fs + 6;
   let ly = -99;
-  all.forEach(l => { const yy = Y(l.p); let ty = yy; if(ty - ly < 17) ty = ly + 17; ly = ty;
-    g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="${l.col}" stroke-width="${l.k === 'Entry' || l.solid ? 1.4 : 1.2}" ${l.k === 'Entry' || l.solid ? '' : 'stroke-dasharray="5 4"'} opacity="${l.solid ? .8 : 1}"/>` +
-         `<rect x="${W - R + 6}" y="${ty - 9}" width="${R - 8}" height="18" rx="4" fill="${l.col}"/><text x="${W - R + 11}" y="${ty + 4}" font-size="11" font-weight="700" fill="#111">${l.k} ${pr(l.p)}</text>`; });
+  all.forEach(l => { const off = l.p > hi ? -1 : l.p < lo ? 1 : 0, yy = off ? (off < 0 ? T + 2 : H - B - 2) : Y(l.p); let ty = yy; if(ty - ly < gap) ty = ly + gap; ly = ty;
+    if(!off) g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="${l.col}" stroke-width="${l.k === 'Entry' || l.solid ? 1.4 : 1.2}" ${l.k === 'Entry' || l.solid ? '' : 'stroke-dasharray="5 4"'} opacity="${l.solid ? .8 : 1}"/>`;
+    g += `<rect x="${W - R + 6}" y="${ty - fs / 2 - 3}" width="${R - 8}" height="${fs + 6}" rx="4" fill="${l.col}"/><text x="${W - R + 11}" y="${ty + fs / 2 - 1}" font-size="${fs}" font-weight="700" fill="#111">${off < 0 ? '▲ ' : off > 0 ? '▼ ' : ''}${l.k} ${pr(l.p)}</text>`; });
   svg.innerHTML = g;
 }
 
-// ---- portfolio forecast vs actual (live prices)
-let PRICES = {}, PSTAMP = 0, pfScope = 'all';
-const pfActive = () => { const s = document.getElementById('portfolio'); return !!(s && s.classList.contains('active')); };
-async function pfLoad(){
-  try{ const r = await fetch('https://www.okx.com/api/v5/market/tickers?instType=SPOT', {cache: 'no-store'}); const d = await r.json(), m = {};
-    d.data.forEach(t => { if(t.instId.endsWith('-USDT')) m[t.instId.slice(0, -5)] = +t.last; });
-    if(Object.keys(m).length > 20){ PRICES = m; PSTAMP = Date.now(); } }catch(e){}
-  renderPortfolio();
+// ---- live prices, open-trade tracking, optional Telegram alerts
+let PRICES = {}, PSTAMP = 0, pfScope = 'all', PUSED = '';
+const needLive = () => pfActive() || tjActive() || (lsGet(TGKEY, {}).on && loadSaved().some(x => x.status === 'open'));
+async function liveLoad(){
+  const t = await getTickers(); if(t){ PRICES = t.map; PSTAMP = t.t; PUSED = t.used; }
+  trackHits(); renderJournal();
 }
 function priceOf(a){ if(PRICES[a] > 0) return {p: PRICES[a], live: true}; const c = COINS.find(x => x.s === a); return c && c.p ? {p: c.p, live: false} : null; }
+const hitsOf = (x, p) => x.snap.tps.map((t, i) => !!(x.hit && x.hit[i]) || (p != null && (x.snap.long ? p >= t.P : p <= t.P)));
 function openState(x){
-  const sn = x.snap, pp = priceOf(sn.asset), best = settle(sn, sn.tps.map(() => true), sn.E), worst = settle(sn, sn.tps.map(() => false), sn.SL);
-  if(!pp) return {pp: null, pnl: 0, best, worst, label: 'No price', prog: 0, move: null};
-  const p = pp.p, long = sn.long, stopped = long ? p <= sn.SL : p >= sn.SL, hits = sn.tps.map(t => long ? p >= t.P : p <= t.P);
-  const far = sn.tps.length ? sn.tps.reduce((a, b) => (long ? b.P > a.P : b.P < a.P) ? b : a).P : sn.E;
-  const pnl = stopped ? settle(sn, sn.tps.map(() => false), sn.SL) : settle(sn, hits, p), nh = hits.filter(Boolean).length;
-  return {pp, pnl, best, worst, stopped, move: (p - sn.E) / sn.E * 100 * (long ? 1 : -1), prog: far !== sn.SL ? Math.max(0, Math.min(1, (p - sn.SL) / (far - sn.SL))) : 0,
-    label: stopped ? 'Stop level reached' : nh === sn.tps.length && nh ? 'All targets reached' : nh ? `TP${hits.map((h, k) => h ? k + 1 : 0).filter(Boolean).join('+')} reached` : 'In play'};
+  const sn = x.snap, pp = priceOf(sn.asset), long = sn.long, nt = sn.tps.length;
+  const best = settle(sn, sn.tps.map(() => true), sn.E), stH = hitsOf(x, null), worst = settle(sn, stH, sn.SL);
+  const far = nt ? sn.tps.reduce((a, b) => (long ? b.P > a.P : b.P < a.P) ? b : a).P : sn.E;
+  if(!pp) return {pp: null, real: 0, open: 0, pnl: 0, best, worst, hits: stH, label: 'No price', move: null, far};
+  const p = pp.p, stopped = long ? p <= sn.SL : p >= sn.SL, hits = hitsOf(x, p), nh = hits.filter(Boolean).length;
+  const total = stopped ? worst : settle(sn, hits, p); let real = 0; sn.tps.forEach((t, i) => { if(hits[i]){ const u = sn.units * t.share / 100; real += u * Math.abs(t.P - sn.E) - u * sn.fee * (sn.E + t.P); } });
+  const open = total - real;   // realised = targets already filled; open = the rest of the position at the live price
+  return {pp, real, open, pnl: total, best, worst, stopped, hits, far, move: (p - sn.E) / sn.E * 100 * (long ? 1 : -1),
+    label: stopped ? (nh ? 'Stopped after TP' + hits.map((h, k) => h ? k + 1 : 0).filter(Boolean).join('+') : 'Stop level reached') : nh === nt && nt ? 'All targets hit' : nh ? `TP${hits.map((h, k) => h ? k + 1 : 0).filter(Boolean).join('+')} hit` : 'In play'};
+}
+function barHtml(x, s){
+  const sn = x.snap, lv = [sn.SL, sn.E].concat(sn.tps.map(t => t.P)); if(s.pp) lv.push(s.pp.p);
+  let lo = Math.min(...lv), hi = Math.max(...lv); const pad = (hi - lo) * .06 || 1; lo -= pad; hi += pad;
+  const pos = v => { const q = (v - lo) / (hi - lo) * 100; return sn.long ? q : 100 - q; };
+  const pe = pos(sn.E), pp = s.pp ? pos(s.pp.p) : pe, good = s.pp ? (sn.long ? s.pp.p >= sn.E : s.pp.p <= sn.E) : true;
+  let h = `<div title="Stop ${pr(sn.SL)} · Entry ${pr(sn.E)} · ${sn.tps.map((t, i) => 'TP' + (i + 1) + ' ' + pr(t.P)).join(' · ')}${s.pp ? ' · Live ' + pr(s.pp.p) : ''}" style="position:relative;height:16px;min-width:170px;background:var(--line);border-radius:8px;margin:2px 0">`;
+  h += `<i style="position:absolute;top:0;bottom:0;left:${Math.min(pe, pp)}%;width:${Math.abs(pp - pe)}%;background:${good ? '#3fb47a' : '#e0554d'};opacity:.85"></i>`;
+  h += `<i style="position:absolute;top:-2px;bottom:-2px;left:${pos(sn.SL)}%;width:3px;background:#e0554d;border-radius:2px"></i>`;
+  h += `<i style="position:absolute;top:-3px;bottom:-3px;left:${pe}%;width:2px;background:#fff;opacity:.9"></i>`;
+  sn.tps.forEach((t, i) => { const hit = s.hits && s.hits[i]; h += `<b style="position:absolute;top:50%;left:${pos(t.P)}%;transform:translate(-50%,-50%);width:11px;height:11px;border-radius:50%;box-sizing:border-box;border:2px solid #3fb47a;background:${hit ? '#3fb47a' : '#16161a'}" title="TP${i + 1} ${pr(t.P)}${hit ? ' hit' : ''}"></b>`; });
+  if(s.pp) h += `<i style="position:absolute;top:-4px;bottom:-4px;left:${pp}%;width:4px;transform:translateX(-50%);background:#f2c14e;border-radius:2px;box-shadow:0 0 0 1px #000"></i>`;
+  return h + '</div>';
+}
+function openTbl(items, noteEmpty){
+  let o = '<thead><tr><th>Trade</th><th>Account</th><th>Asset</th><th>Dir</th><th>Entry</th><th>Live</th><th>Move</th><th>Realised P&amp;L</th><th>Open P&amp;L</th><th>Total</th><th style="min-width:190px">Stop ● Entry ● Targets</th><th>Status</th><th></th></tr></thead><tbody>';
+  const list = loadSaved();
+  if(!items.length) o += `<tr><td colspan="13" style="color:var(--mute)">${noteEmpty || 'No open trades. Open one from the Risk-to-Reward calculator and it appears here at live prices.'}</td></tr>`;
+  const c = v => v > 0.005 ? '#3fb47a' : v < -0.005 ? '#e0554d' : 'var(--text)';
+  items.forEach(x => { const s = openState(x), i = list.findIndex(y => y.id === x.id), anyHit = s.hits && s.hits.some(Boolean), moved = x.snap.SL === x.snap.E;
+    o += `<tr><td><b>${esc(x.name)}</b><br><small style="color:var(--mute)">${x.snap.mkt === 'spot' ? 'Spot' : x.snap.lev + '×'} · ${esc(tfName(tfOf(x)))}</small></td><td>${esc(accName(accOf(x)))}</td><td>${esc(x.snap.asset)}</td><td style="color:${x.snap.long ? '#3fb47a' : '#e0554d'}">${x.snap.long ? 'Long' : 'Short'}</td><td>${pr(x.snap.E)}</td><td>${s.pp ? pr(s.pp.p) + (s.pp.live ? '' : ' <small style="color:var(--mute)">(snapshot)</small>') : '—'}</td>` +
+      `<td style="color:${c(s.move)}">${s.move == null ? '—' : (s.move >= 0 ? '+' : '') + s.move.toFixed(2) + '%'}</td><td style="color:${c(s.real)}">${s.pp ? usd(s.real) : '—'}</td><td style="color:${c(s.open)}">${s.pp ? usd(s.open) : '—'}</td><td style="color:${c(s.pnl)}"><b>${s.pp ? usd(s.pnl) : '—'}</b></td><td>${barHtml(x, s)}</td>` +
+      `<td style="color:${s.stopped ? '#e0554d' : anyHit ? '#3fb47a' : 'var(--mute)'}">${s.label}${moved ? '<br><small style="color:var(--gold2)">Stop at entry</small>' : ''}</td>` +
+      `<td><div class="rr-acts" style="margin:0"><button class="rr-btn sm" data-j="close" data-i="${i}">Close / update</button>${anyHit && !moved ? `<button class="rr-btn ghost sm" data-j="be" data-i="${i}">Move stop to entry</button>` : ''}<button class="rr-btn ghost sm" data-j="load" data-i="${i}">Load</button><button class="rr-btn ghost sm" data-j="del" data-i="${i}">Cancel</button></div></td></tr>`; });
+  return o + '</tbody>';
+}
+async function tgSend(text){
+  const c = lsGet(TGKEY, {}); if(!c.tok || !c.chat) return false;
+  const body = new URLSearchParams({chat_id: c.chat, text, parse_mode: 'HTML', disable_web_page_preview: 'true'});
+  try{ const r = await fetch(`https://api.telegram.org/bot${c.tok}/sendMessage`, {method: 'POST', body}); const d = await r.json(); return !!d.ok; }
+  catch(e){ try{ await fetch(`https://api.telegram.org/bot${c.tok}/sendMessage`, {method: 'POST', body, mode: 'no-cors'}); return true; }catch(e2){ return false; } }
+}
+function trackHits(){
+  const list = loadSaved(); let changed = false; const cfg = lsGet(TGKEY, {});
+  list.forEach(x => { if(x.status !== 'open' || !x.snap) return; const pp = priceOf(x.snap.asset); if(!pp || !pp.live) return;
+    const sn = x.snap, p = pp.p; x.hit = x.hit || sn.tps.map(() => false); x.sent = x.sent || {tp: sn.tps.map(() => false), sl: false};
+    sn.tps.forEach((t, i) => { const crossed = sn.long ? p >= t.P : p <= t.P;
+      if(crossed && !x.hit[i]){ x.hit[i] = true; changed = true; }
+      if(x.hit[i] && !x.sent.tp[i]){ x.sent.tp[i] = true; changed = true;
+        if(cfg.on) tgSend(`🎯 <b>TP${i + 1} hit</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nTarget ${pr(t.P)} reached (live ${pr(p)}).\n` + (i === 0 && sn.SL !== sn.E ? `👉 <b>Move your stop-loss to entry (${pr(sn.E)})</b> to protect the trade.\n` : i === sn.tps.length - 1 ? 'All targets are in. Consider closing the trade in your tracker.\n' : 'Consider trailing your stop up.\n') + `<i>${esc(x.name)} · TTM Trade Tracker</i>`); } });
+    const stopped = sn.long ? p <= sn.SL : p >= sn.SL;
+    if(stopped && !x.sent.sl){ x.sent.sl = true; changed = true; if(cfg.on) tgSend(`🛑 <b>Stop level reached</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nPrice ${pr(p)} touched your stop ${pr(sn.SL)}. Check your exchange and close the trade in your tracker.\n<i>${esc(x.name)} · TTM Trade Tracker</i>`); }
+    if(!stopped && x.sent.sl){ x.sent.sl = false; changed = true; } });
+  if(changed) saveAll(list);
+}
+function renderPortfolio(){
+  if(!$('pfTiles')) return;
+  $('pfScope').innerHTML = [['all', 'All accounts']].concat(ACCS).map(a => `<button class="filter-chip ${pfScope === a[0] ? 'active' : ''}" data-s="${a[0]}">${a[1]}</button>`).join('') + `<select id="pfSrc" style="margin-left:auto;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:999px;padding:7px 12px;font:inherit;font-size:12.5px">${Object.keys(SRCS).map(k => `<option value="${k}" ${k === SRC ? 'selected' : ''}>Prices: ${SRCS[k]}</option>`).join('')}</select>`;
+  const ids = pfScope === 'all' ? ACCS.map(a => a[0]) : [pfScope], D = ids.map(pfAccData);
+  const hasOpen = D.some(d => d.opens.length);
+  const T = D.reduce((t, d) => ({start: t.start + d.A.start, real: t.real + d.A.equity, actual: t.actual + d.actual, best: t.best + d.best, worst: t.worst + d.worst, unreal: t.unreal + d.unreal}), {start: 0, real: 0, actual: 0, best: 0, worst: 0, unreal: 0});
+  T.exp = D.every(d => !d.opens.length || d.exp != null) ? D.reduce((t, d) => t + (d.exp != null ? d.exp : d.A.equity), 0) : null;
+  const dl = (v, base) => base > 0 ? `<br><span style="font-size:11px;font-weight:400;color:${v - base >= 0 ? '#3fb47a' : '#e0554d'}">${v - base >= 0 ? '+' : ''}${((v - base) / base * 100).toFixed(1)}% vs start</span>` : '';
+  const sub = (v, base, t) => hasOpen ? `<br><span style="font-size:11px;font-weight:400;color:var(--mute)">${v - base >= 0 ? '+' : '−'}${usd(Math.abs(v - base)).replace('-', '')} ${t}</span>` : '';
+  $('pfTiles').innerHTML = row('Starting balance', usd(T.start)) + row('Realised balance', usd(T.real) + dl(T.real, T.start)) + row('Actual now (live)', usd(T.actual) + dl(T.actual, T.start), T.actual >= T.real ? 'g' : 'r') +
+    row('If every open target hits', hasOpen ? usd(T.best) + sub(T.best, T.real, 'on open trades') : '—' + '<br><span style="font-size:11px;font-weight:400;color:var(--mute)">no open trades</span>', 'g') + row('If every open stop hits', hasOpen ? usd(T.worst) + sub(T.worst, T.real, 'on open trades') : '—' + '<br><span style="font-size:11px;font-weight:400;color:var(--mute)">no open trades</span>', 'r');
+  $('pfStamp').textContent = PSTAMP ? `Prices ${new Date(PSTAMP).toLocaleTimeString()} · ${SRCS[PUSED || SRC]} live` : (hasOpen ? 'Fetching live prices…' : '');
+  const svg = $('pfChart'), cl = closedOf('all').filter(x => ids.includes(accOf(x))), narrow = svg.getBoundingClientRect().width < 600, W = narrow ? 520 : 800, H = narrow ? 320 : 300, L = narrow ? 50 : 60, R = narrow ? 128 : 140, Tp = 14, Bt = 24, fs = narrow ? 12 : 10.5;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  let eq = T.start; const hist = [eq]; cl.forEach(x => { eq += x.res.pnl; hist.push(eq); });
+  const n = hist.length, N = n + 2, vals = hist.concat([T.actual]).concat(hasOpen ? [T.best, T.worst].concat(T.exp != null ? [T.exp] : []) : []);
+  let lo = Math.min(...vals), hi = Math.max(...vals); const pad = (hi - lo) * .15 || hi * .03 || 1; lo -= pad; hi += pad;
+  const X = i => L + (W - L - R) * (i / N), Y = v => Tp + (H - Tp - Bt) * (1 - (v - lo) / (hi - lo));
+  let g = ''; [0, .5, 1].forEach(f => { const v = lo + (hi - lo) * f; g += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.07)"/><text x="${L - 6}" y="${Y(v) + 4}" font-size="${fs - .5}" fill="#8b8f9a" text-anchor="end">${Math.round(v).toLocaleString()}</text>`; });
+  g += `<line x1="${L}" x2="${W - R}" y1="${Y(T.start)}" y2="${Y(T.start)}" stroke="#dba118" stroke-dasharray="4 4" opacity=".5"/>`;
+  g += `<polyline fill="none" stroke="#dba118" stroke-width="2.2" points="${hist.map((v, i) => X(i) + ',' + Y(v)).join(' ')}"/>`;
+  hist.forEach((v, i) => { g += `<circle cx="${X(i)}" cy="${Y(v)}" r="3" fill="#dba118"/>`; });
+  const x0 = X(n - 1), x1 = X(N), fan = [['Targets hit', hasOpen ? T.best : null, '#3fb47a'], ['Actual now', T.actual, '#f2c14e'], ['Expected', hasOpen ? T.exp : null, '#aeb2bd'], ['Stops hit', hasOpen ? T.worst : null, '#e0554d']].filter(f => f[1] != null);
+  let lastLy = -99; fan.slice().sort((a, b) => b[1] - a[1]).forEach(f => { let ty = Y(f[1]); if(ty - lastLy < fs + 8) ty = lastLy + fs + 8; lastLy = ty;
+    g += `<line x1="${x0}" y1="${Y(hist[n - 1])}" x2="${x1}" y2="${Y(f[1])}" stroke="${f[2]}" stroke-width="${f[0] === 'Actual now' ? 2.4 : 1.6}" ${f[0] === 'Actual now' ? '' : 'stroke-dasharray="6 4"'}/><circle cx="${x1}" cy="${Y(f[1])}" r="4" fill="${f[2]}"/><rect x="${x1 + 8}" y="${ty - fs / 2 - 4}" width="${R - 12}" height="${fs + 8}" rx="4" fill="${f[2]}"/><text x="${x1 + 13}" y="${ty + fs / 2 - 1}" font-size="${fs}" font-weight="700" fill="#111">${f[0]} ${Math.round(f[1]).toLocaleString()}</text>`; });
+  g += `<text x="${L}" y="${H - 6}" font-size="${fs - .5}" fill="#6c707b">Start</text>` + (n > 1 ? `<text x="${x0}" y="${H - 6}" font-size="${fs - .5}" fill="#6c707b" text-anchor="middle">Today (${n - 1} closed)</text>` : '');
+  svg.innerHTML = g;
+  let h = '<thead><tr><th>Account</th><th>Realised balance</th><th>Open P&amp;L now</th><th>Actual now</th><th>Expected</th><th>If targets hit</th><th>If stops hit</th><th>Open</th></tr></thead><tbody>';
+  const rowA = (nm, d, b) => { const f = t => b ? `<b>${t}</b>` : t, has = d.n > 0; h += `<tr><td>${f(esc(nm))}</td><td>${usd(d.real)}</td><td style="color:${d.unreal >= 0 ? '#3fb47a' : '#e0554d'}">${has ? usd(d.unreal) : '—'}</td><td>${f(usd(d.actual))}</td><td>${d.exp == null || !has ? '—' : usd(d.exp)}</td><td style="color:#3fb47a">${has ? usd(d.best) : '—'}</td><td style="color:#e0554d">${has ? usd(d.worst) : '—'}</td><td>${d.n}</td></tr>`; };
+  D.forEach(d => rowA(accName(d.id), {real: d.A.equity, unreal: d.unreal, actual: d.actual, exp: d.exp, best: d.best, worst: d.worst, n: d.opens.length}));
+  if(D.length > 1) rowA('All accounts', {real: T.real, unreal: T.unreal, actual: T.actual, exp: hasOpen ? T.exp : null, best: T.best, worst: T.worst, n: D.reduce((t, d) => t + d.opens.length, 0)}, true);
+  $('pfAcc').innerHTML = h + '</tbody>';
+  $('pfOpen').innerHTML = openTbl(D.reduce((a, d) => a.concat(d.opens), []), 'No open trades in this view. Open a trade from the Risk / Reward calculator and it appears here at live prices.');
 }
 function pfAccData(id){
   const A = acct(id), opens = loadSaved().filter(x => x.status === 'open' && x.snap && accOf(x) === id), st = tstats(closedOf(id));
   let unreal = 0, bestS = 0, worstS = 0, expS = 0; const w = st.wr != null && st.n >= 5 ? st.wr : null;
   opens.forEach(x => { const o = openState(x); unreal += o.pnl; bestS += o.best; worstS += o.worst; if(w != null) expS += w * o.best + (1 - w) * o.worst; });
   return {id, A, opens, st, unreal, actual: A.equity + unreal, best: A.equity + bestS, worst: A.equity + worstS, exp: w != null ? A.equity + expS : null};
-}
-function renderPortfolio(){
-  if(!$('pfTiles')) return;
-  $('pfScope').innerHTML = [['all', 'All accounts']].concat(ACCS).map(a => `<button class="filter-chip ${pfScope === a[0] ? 'active' : ''}" data-s="${a[0]}">${a[1]}</button>`).join('');
-  const ids = pfScope === 'all' ? ACCS.map(a => a[0]) : [pfScope], D = ids.map(pfAccData);
-  const T = D.reduce((t, d) => ({start: t.start + d.A.start, real: t.real + d.A.equity, actual: t.actual + d.actual, best: t.best + d.best, worst: t.worst + d.worst, unreal: t.unreal + d.unreal}), {start: 0, real: 0, actual: 0, best: 0, worst: 0, unreal: 0});
-  T.exp = D.every(d => !d.opens.length || d.exp != null) ? D.reduce((t, d) => t + (d.exp != null ? d.exp : d.A.equity), 0) : null;
-  const hasOpen = D.some(d => d.opens.length);
-  const dl = (v, base) => base > 0 ? `<br><span style="font-size:11px;font-weight:400;color:${v - base >= 0 ? '#3fb47a' : '#e0554d'}">${v - base >= 0 ? '+' : ''}${((v - base) / base * 100).toFixed(1)}% vs start</span>` : '';
-  $('pfTiles').innerHTML = row('Starting balance', usd(T.start)) + row('Realised balance', usd(T.real) + dl(T.real, T.start)) + row('Actual now (live)', usd(T.actual) + dl(T.actual, T.start), T.actual >= T.real ? 'g' : 'r') + row('Forecast: all targets hit', usd(T.best) + dl(T.best, T.start), 'g') + row('Worst: all stops hit', usd(T.worst) + dl(T.worst, T.start), 'r');
-  $('pfStamp').textContent = PSTAMP ? `Prices ${new Date(PSTAMP).toLocaleTimeString()} · OKX live` : (hasOpen ? 'Fetching live prices…' : '');
-  // chart: realised equity history, then the fan to actual / forecast / worst / expected
-  const svg = $('pfChart'), cl = closedOf('all').filter(x => ids.includes(accOf(x))), W = 800, H = 300, L = 60, R = 130, Tp = 14, Bt = 22;
-  let eq = T.start; const hist = [eq]; cl.forEach(x => { eq += x.res.pnl; hist.push(eq); });
-  const n = hist.length, N = n + 2, vals = hist.concat([T.actual, T.best, T.worst].concat(T.exp != null && hasOpen ? [T.exp] : []));
-  let lo = Math.min(...vals), hi = Math.max(...vals); const pad = (hi - lo) * .15 || hi * .03 || 1; lo -= pad; hi += pad;
-  const X = i => L + (W - L - R) * (i / N), Y = v => Tp + (H - Tp - Bt) * (1 - (v - lo) / (hi - lo));
-  let g = ''; [0, .5, 1].forEach(f => { const v = lo + (hi - lo) * f; g += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.07)"/><text x="${L - 6}" y="${Y(v) + 4}" font-size="10" fill="#8b8f9a" text-anchor="end">${Math.round(v).toLocaleString()}</text>`; });
-  g += `<line x1="${L}" x2="${W - R}" y1="${Y(T.start)}" y2="${Y(T.start)}" stroke="#dba118" stroke-dasharray="4 4" opacity=".5"/>`;
-  g += `<polyline fill="none" stroke="#dba118" stroke-width="2.2" points="${hist.map((v, i) => X(i) + ',' + Y(v)).join(' ')}"/>`;
-  hist.forEach((v, i) => { g += `<circle cx="${X(i)}" cy="${Y(v)}" r="3" fill="#dba118"/>`; });
-  const x0 = X(n - 1), x1 = X(N), fan = [['Forecast', T.best, '#3fb47a'], ['Actual now', T.actual, '#f2c14e'], ['Expected', hasOpen ? T.exp : null, '#aeb2bd'], ['Worst', T.worst, '#e0554d']].filter(f => f[1] != null && (hasOpen || f[0] === 'Actual now'));
-  let lastLy = -99; fan.slice().sort((a, b) => b[1] - a[1]).forEach(f => { let ty = Y(f[1]); if(ty - lastLy < 18) ty = lastLy + 18; lastLy = ty;
-    g += `<line x1="${x0}" y1="${Y(hist[n - 1])}" x2="${x1}" y2="${Y(f[1])}" stroke="${f[2]}" stroke-width="${f[0] === 'Actual now' ? 2.4 : 1.6}" ${f[0] === 'Actual now' ? '' : 'stroke-dasharray="6 4"'}/><circle cx="${x1}" cy="${Y(f[1])}" r="4" fill="${f[2]}"/><rect x="${x1 + 8}" y="${ty - 9}" width="${R - 12}" height="18" rx="4" fill="${f[2]}"/><text x="${x1 + 13}" y="${ty + 4}" font-size="10.5" font-weight="700" fill="#111">${f[0]} ${Math.round(f[1]).toLocaleString()}</text>`; });
-  g += `<text x="${L}" y="${H - 5}" font-size="10" fill="#6c707b">Start</text><text x="${x0}" y="${H - 5}" font-size="10" fill="#6c707b" text-anchor="middle">Today (${n - 1} closed)</text>`;
-  svg.innerHTML = g;
-  // by account
-  let h = '<thead><tr><th>Account</th><th>Realised balance</th><th>Open P&amp;L now</th><th>Actual now</th><th>Expected</th><th>Forecast (all TPs)</th><th>Worst (all stops)</th><th>Open</th></tr></thead><tbody>';
-  const rowA = (nm, d, b) => { const f = t => b ? `<b>${t}</b>` : t; h += `<tr><td>${f(esc(nm))}</td><td>${usd(d.real)}</td><td style="color:${d.unreal >= 0 ? '#3fb47a' : '#e0554d'}">${usd(d.unreal)}</td><td>${f(usd(d.actual))}</td><td>${d.exp == null ? '—' : usd(d.exp)}</td><td style="color:#3fb47a">${usd(d.best)}</td><td style="color:#e0554d">${usd(d.worst)}</td><td>${d.n}</td></tr>`; };
-  D.forEach(d => rowA(accName(d.id), {real: d.A.equity, unreal: d.unreal, actual: d.actual, exp: d.exp, best: d.best, worst: d.worst, n: d.opens.length}));
-  if(D.length > 1) rowA('All accounts', {real: T.real, unreal: T.unreal, actual: T.actual, exp: hasOpen ? T.exp : null, best: T.best, worst: T.worst, n: D.reduce((t, d) => t + d.opens.length, 0)}, true);
-  $('pfAcc').innerHTML = h + '</tbody>';
-  // open trades at live prices
-  let o = '<thead><tr><th>Trade</th><th>Account</th><th>Asset</th><th>Dir</th><th>Entry</th><th>Live</th><th>Move</th><th>Open P&amp;L</th><th>Stop → farthest TP</th><th>Status</th><th></th></tr></thead><tbody>';
-  const list = loadSaved(), all = D.reduce((a, d) => a.concat(d.opens), []);
-  if(!all.length) o += '<tr><td colspan="11" style="color:var(--mute)">No open trades in this view. Open a trade from the Risk / Reward calculator and it appears here at live prices.</td></tr>';
-  all.forEach(x => { const s = openState(x), i = list.indexOf(x);
-    o += `<tr><td><b>${esc(x.name)}</b></td><td>${esc(accName(accOf(x)))}</td><td>${esc(x.snap.asset)}</td><td style="color:${x.snap.long ? '#3fb47a' : '#e0554d'}">${x.snap.long ? 'Long' : 'Short'}</td><td>${pr(x.snap.E)}</td><td>${s.pp ? pr(s.pp.p) + (s.pp.live ? '' : ' <small style="color:var(--mute)">(snapshot)</small>') : '—'}</td><td style="color:${s.move >= 0 ? '#3fb47a' : '#e0554d'}">${s.move == null ? '—' : (s.move >= 0 ? '+' : '') + s.move.toFixed(2) + '%'}</td><td style="color:${s.pnl >= 0 ? '#3fb47a' : '#e0554d'}"><b>${s.pp ? usd(s.pnl) : '—'}</b></td>` +
-      `<td style="min-width:120px"><div class="rr-bar" style="margin:0"><i style="width:${(s.prog * 100).toFixed(0)}%;background:${s.stopped ? '#e0554d' : '#dba118'}"></i></div></td><td style="color:${s.stopped ? '#e0554d' : /reached/.test(s.label) ? '#3fb47a' : 'var(--mute)'}">${s.label}</td><td><button class="rr-btn sm" data-j="close" data-i="${i}">Close / update</button></td></tr>`; });
-  $('pfOpen').innerHTML = o + '</tbody>';
 }
 // ---- Excel export: a small built-in .xlsx writer (no libraries), TTM black / gold view, gridlines off
 function xlsxBook(){
@@ -3893,9 +4000,9 @@ function downloadXlsx(){
   a.href = url; a.download = `TTM-Trade-Tracker-${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}.xlsx`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
 
-setInterval(() => { if(document.hidden) return; if(pfActive()) pfLoad(); if(rrActive()) doCandles(); }, 40000);
-window.addEventListener('hashchange', () => setTimeout(() => { if(pfActive()) pfLoad(); if(rrActive()) loadCandles(); }, 150));
-setTimeout(() => { if(pfActive()) pfLoad(); if(rrActive()) loadCandles(); }, 600);
+setInterval(() => { if(document.hidden) return; if(needLive()) liveLoad(); if(rrActive()) doCandles(); }, 30000);
+window.addEventListener('hashchange', () => setTimeout(() => { if(needLive()) liveLoad(); if(rrActive()) loadCandles(); }, 150));
+setTimeout(() => { if(needLive()) liveLoad(); if(rrActive()) loadCandles(); }, 600);
 function persist(){ lsSet(KEY, S); }
 function wire(){
   const clampPct = v => Math.max(0, Math.min(100, Math.round((parseFloat(v) || 0) * 100) / 100));
@@ -3935,11 +4042,11 @@ function wire(){
   $('rrMkt').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; S.mkt = b.dataset.m; if(S.mkt === 'spot'){ S.dir = 'long'; if(S.acc === 'lev') S.acc = 'spot'; } else if(S.acc === 'spot') S.acc = 'lev'; pushInputs(); persist(); render(); });
   $('rrLive').addEventListener('click', async () => {
     const btn = $('rrLive'), a = S.asset; if(!a){ btn.textContent = 'Pick an asset first'; return; }
-    btn.textContent = 'Fetching…';
-    try{ const r = await fetch(`https://www.okx.com/api/v5/market/ticker?instId=${a}-USDT`, {cache:'no-store'}); const d = await r.json(); const p = +d.data[0].last; if(!(p > 0)) throw 0;
-      S.entry = p >= 1 ? +p.toFixed(4) : +p.toPrecision(5); persist(); pushInputs(); render(); loadCandles(); btn.textContent = `Live ${a}: ${pr(p)} (OKX) ✓`;
-    }catch(e){ const c = COINS.find(x => x.s === a); if(c && c.p){ S.entry = c.p >= 1 ? +c.p.toFixed(4) : +c.p.toPrecision(5); persist(); pushInputs(); render(); btn.textContent = `${a}: ${pr(c.p)} from the list snapshot (not live)`; } else btn.textContent = 'No live price for this asset — type it in'; }
-    setTimeout(() => { btn.textContent = 'Use live price as entry'; }, 4000);
+    btn.textContent = 'Fetching…'; TK.t = 0;
+    const t = await getTickers(), p = t && t.map[a];
+    if(p > 0){ S.entry = p >= 1 ? +p.toFixed(4) : +p.toPrecision(5); persist(); pushInputs(); render(); loadCandles(); btn.textContent = `Live ${a}: ${pr(p)} (${SRCS[t.used]}${t.used !== SRC ? ', ' + SRCS[SRC] + ' unavailable' : ''}) ✓`; }
+    else { const c = COINS.find(x => x.s === a); if(c && c.p){ S.entry = c.p >= 1 ? +c.p.toFixed(4) : +c.p.toPrecision(5); persist(); pushInputs(); render(); btn.textContent = `${a}: ${pr(c.p)} from the list snapshot (not live)`; } else btn.textContent = 'No live price for ' + a; }
+    setTimeout(() => { btn.textContent = 'Use live price as entry'; }, 4500);
   });
   $('rrSave').addEventListener('click', () => {
     const c = calc(); const n = $('rrName').value.trim() || `${S.asset} ${S.mkt === 'spot' ? 'spot' : S.lev + '×'} ${S.dir}`;
@@ -3955,10 +4062,16 @@ function wire(){
   $('rrImport').addEventListener('change', e => { const f = e.target.files[0]; if(!f) return; const r = new FileReader();
     r.onload = () => { try{ const d = JSON.parse(r.result); if(d.bals){ Object.assign(BALS, d.bals); lsSet(BKEY, BALS); pushInputs(); } const inc = (d.setups || []).filter(x => x && x.s && x.name).map(x => Object.assign({id: uid()}, x)); const have = new Set(loadSaved().map(x => x.id)); const list = inc.filter(x => !have.has(x.id)).concat(loadSaved()); saveAll(list); renderSaved(); render(); $('rrSaveNote').textContent = `Imported ${inc.length} item(s).`; $('jNote').textContent = `Imported ${inc.length} item(s).`; }catch(err){ $('rrSaveNote').textContent = 'That file is not a TTM journal export.'; } };
     r.readAsText(f); e.target.value = ''; });
+  $('rrSrc').addEventListener('change', e => { SRC = e.target.value; lsSet(SRCKEY, SRC); TK.t = 0; CAN = {key: '', rows: [], err: '', src: ''}; render(); loadCandles(); });
+  $('pfScope').addEventListener('change', e => { if(e.target.id === 'pfSrc'){ SRC = e.target.value; lsSet(SRCKEY, SRC); TK.t = 0; pushInputs(); liveLoad(); } });
+  const tg0 = lsGet(TGKEY, {}); $('tgTok').value = tg0.tok || ''; $('tgChat').value = tg0.chat || ''; $('tgOn').checked = !!tg0.on;
+  const tgNote = t => { $('tgNote').textContent = t; };
+  $('tgSave').addEventListener('click', () => { lsSet(TGKEY, {tok: $('tgTok').value.trim(), chat: $('tgChat').value.trim(), on: $('tgOn').checked}); tgNote($('tgOn').checked ? 'Saved. Alerts are on while this page is open.' : 'Saved. Alerts are off.'); });
+  $('tgTest').addEventListener('click', async () => { lsSet(TGKEY, {tok: $('tgTok').value.trim(), chat: $('tgChat').value.trim(), on: $('tgOn').checked}); tgNote('Sending…'); const ok = await tgSend('✅ <b>TTM Trade Tracker</b> is connected. You will get a message here when a take-profit is hit on one of your open trades.'); tgNote(ok ? 'Test sent. Check your Telegram.' : 'Could not send. Check the token and chat ID, and that you have sent your bot a message first.'); });
   $('rrBal').addEventListener('input', e => { BALS[S.acc] = e.target.value; lsSet(BKEY, BALS); render(); renderSaved(); });
   $('rrAcc').addEventListener('change', e => { S.acc = e.target.value; persist(); pushInputs(); render(); });
   $('rrTf').addEventListener('change', e => { S.tf = e.target.value; persist(); pushInputs(); render(); loadCandles(); });
-  $('rrTfChips').addEventListener('click', e => { const b = e.target.closest('button[data-t]'); if(!b) return; S.tf = b.dataset.t; persist(); pushInputs(); render(); loadCandles(); });
+  $('rrTfChips').addEventListener('click', e => { const au = e.target.closest('button[data-auto]'); if(au){ autoFit(); return; } const b = e.target.closest('button[data-t]'); if(!b) return; S.tf = b.dataset.t; persist(); pushInputs(); render(); loadCandles(); });
   $('rrSz').addEventListener('click', e => { const b = e.target.closest('button[data-z]'); if(!b) return; S.mode = b.dataset.z; persist(); pushInputs(); render(); });
   $('rrXlsx').addEventListener('click', downloadXlsx); $('jXlsx').addEventListener('click', downloadXlsx);
   $('pfScope').addEventListener('click', e => { const b = e.target.closest('button[data-s]'); if(!b) return; pfScope = b.dataset.s; renderPortfolio(); });
@@ -4170,7 +4283,7 @@ go();
   const titles = {}; document.querySelectorAll('.site-nav a[href^="#"]').forEach(a => titles[a.getAttribute('href').slice(1)] = a.textContent.trim());
   function show(){
     const only = new URLSearchParams(location.search).get('only');
-    const lock = only && ids.includes(only) ? only : null;  // ?only=<section> opens just that page, with no menu or back button
+    const lock = only && ids.includes(only) && !['riskreward', 'tradejournal', 'portfolio'].includes(only) ? only : null;  // ?only=<section> opens just that page, with no menu or back button
     document.body.classList.toggle('locked', !!lock);
     const id = lock || (location.hash || '').slice(1);
     const sec = ids.includes(id) ? document.getElementById(id) : null;
@@ -4181,9 +4294,7 @@ go();
     if(sec) setTimeout(() => window.dispatchEvent(new Event('resize')), 60);
   }
   (function(){ const T = [['riskreward', 'Risk / Reward'], ['tradejournal', 'Trade Tracker'], ['portfolio', 'Portfolio Forecast']];
-    document.querySelectorAll('.tool-nav').forEach(n => { const cur = n.dataset.cur, lock = new URLSearchParams(location.search).get('only');
-      n.innerHTML = T.map(t => `<a class="${t[0] === cur ? 'cur' : ''}" href="${lock ? '?only=' + t[0] : '#' + t[0]}">${t[1]}</a>`).join('') + '<span class="sp"></span><button type="button" data-copy="' + cur + '">Copy standalone link</button>';
-      n.querySelector('button').addEventListener('click', e => { const u = location.origin + location.pathname + '?only=' + cur; const b = e.target; (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(() => { b.textContent = 'Link copied'; }).catch(() => { b.textContent = u; }); setTimeout(() => { b.textContent = 'Copy standalone link'; }, 3500); }); }); })();
+    document.querySelectorAll('.tool-nav').forEach(n => { const cur = n.dataset.cur; n.innerHTML = T.map(t => `<a class="${t[0] === cur ? 'cur' : ''}" href="#${t[0]}">${t[1]}</a>`).join(''); }); })();
   ['backBtn','backFab'].forEach(i => document.getElementById(i).addEventListener('click', () => { location.hash = ''; }));
   window.addEventListener('hashchange', show);
   show();
