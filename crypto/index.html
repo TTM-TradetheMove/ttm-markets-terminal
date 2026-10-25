@@ -1130,6 +1130,7 @@ body.view-section #backFab{display:block}
           <div class="rr-out" id="rrLevOut"></div>
           <div class="rr-row3" style="margin:12px 0 8px"><div class="rr-f" style="grid-column:span 3;margin:0"><label for="rrName">Name this trade (optional)</label><input id="rrName" type="text" placeholder="e.g. BTC 10x long" maxlength="40"></div></div><div class="rr-acts" style="margin:0 0 12px"><button type="button" class="rr-btn" id="rrOpen">Open trade (lock margin)</button><button type="button" class="rr-btn ghost" id="rrSave">Save as plan</button></div>
           <p class="calendar-note" id="rrOpenNote" style="margin:0 0 10px"></p>
+          <div id="rrExch" style="margin:0 0 12px"></div>
           <p class="calendar-note" style="margin:0">Leverage changes the margin you lock up and how close liquidation sits; it does not change the dollar loss at your stop, because the position is sized from your risk. Liquidation is an estimate for an isolated position and varies by exchange, contract and margin mode.</p>
         </div>
         <div class="rr-card"><h3>Trade visualisation</h3><svg id="rrChart" viewBox="0 0 520 300" style="width:100%;height:auto;display:block"></svg></div>
@@ -3381,6 +3382,9 @@ function render(){
   $('rrWarns').innerHTML = c.warns.map(w => { const fv = w[2] ? (Math.floor(w[2] * 100) / 100).toFixed(2) : null, lab = w[3] === 'risk' ? `Set risk to ${fv}%` : w[3] === 'rusd' ? `Set risk to $${fv}` : `Invest $${fv}`;
     return `<div class="rr-warn ${w[0] === 'y' ? 'y' : ''}">${w[1]}${fv && +fv > 0 ? ` <button type="button" class="rr-btn sm" data-key="${w[3]}" data-fit="${fv}" style="margin-left:6px">${lab}</button>` : ''}</div>`; }).join('');
   renderAcct();
+  { const a = (S.asset || '').toUpperCase(), sp = S.mkt === 'spot', ex = $('rrExch');
+    const L = sp ? [['Binance', `https://www.binance.com/en/trade/${a}_USDT`], ['Bybit', `https://www.bybit.com/en/trade/spot/${a}/USDT`], ['OKX', `https://www.okx.com/trade-spot/${a.toLowerCase()}-usdt`]] : [['Binance', `https://www.binance.com/en/futures/${a}USDT`], ['Bybit', `https://www.bybit.com/trade/usdt/${a}USDT`], ['OKX', `https://www.okx.com/trade-swap/${a.toLowerCase()}-usdt-swap`], ['Hyperliquid', `https://app.hyperliquid.xyz/trade/${a}`]];
+    ex.innerHTML = a ? `<div style="font-size:12px;color:var(--mute);margin-bottom:6px">Place this trade on an exchange (opens the ${esc(a)} ${sp ? 'spot' : 'perp'} market in a new tab):</div><div class="rr-acts" style="margin:0">${L.map(x => `<a class="rr-btn ghost sm" style="text-decoration:none" href="${x[1]}" target="_blank" rel="noopener noreferrer">${x[0]} ↗</a>`).join('')}<button type="button" class="rr-btn ghost sm" id="rrTicket">Copy order ticket</button></div><div style="font-size:11px;color:var(--mute);margin-top:6px">The terminal never places orders or asks for API keys. You enter the trade yourself on the exchange. Availability of some exchanges depends on where you live.</div>` : ''; }
   { const n = $('rrSzNote'), z = S.mode || 'pct', base = {pct: 'The position is sized so a stop-out loses this % of the account you picked.', usd: 'The position is sized so a stop-out loses exactly this dollar amount.', inv: 'You decide how much to put in (margin). Position = investment × leverage, and the risk is worked out for you.'}[z];
     n.innerHTML = c.ok ? `<b style="color:var(--gold2)">= ${usd(c.riskUsd)} at risk · ${c.riskPctAcct.toFixed(2)}% of account · ${c.riskPctInv.toFixed(1)}% of the ${usd(c.margin)} invested</b><br>${base}` : base; }
   if(!c.ok){
@@ -3943,6 +3947,9 @@ function wire(){
     const ok = saveAll(list); $('rrName').value = ''; const note = $('rrOpenNote'); note.style.color = '';
     note.textContent = ok ? `Saved “${n}” as a plan (no margin locked). Open it from the saved plans list when you take the trade.` : 'Could not save: your browser is blocking site storage. Use Export instead.';
     renderSaved(); });
+  $('rrExch').addEventListener('click', e => { if(e.target.id !== 'rrTicket') return; const c = calc(); if(!c.ok){ e.target.textContent = 'Fill in the setup first'; setTimeout(() => { e.target.textContent = 'Copy order ticket'; }, 2500); return; }
+    const t = `${S.asset}/USDT ${c.long ? 'LONG' : 'SHORT'} ${S.mkt === 'spot' ? 'spot' : c.lev + 'x isolated'}\nEntry ${pr(c.E)}\nStop ${pr(c.SL)}\n` + c.tps.map(x => `TP${x.i} ${pr(x.P)} (${x.share}%)`).join('\n') + `\nSize ${qty(c.units)} ${S.asset} (notional ${usd(c.notional)})\nMargin ${usd(c.margin)} · Risk ${usd(c.riskUsd)}`;
+    (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => { e.target.textContent = 'Copied ✓'; }).catch(() => { e.target.textContent = 'Copy blocked'; }); setTimeout(() => { e.target.textContent = 'Copy order ticket'; }, 2500); });
   $('rrOpen').addEventListener('click', () => startTrade(calc(), S, $('rrName').value));
   $('rrWarns').addEventListener('click', e => { const b = e.target.closest('button[data-fit]'); if(!b) return; S[b.dataset.key || 'risk'] = b.dataset.fit; persist(); pushInputs(); render(); });
   $('rrImport').addEventListener('change', e => { const f = e.target.files[0]; if(!f) return; const r = new FileReader();
