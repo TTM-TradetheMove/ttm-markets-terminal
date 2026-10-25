@@ -3381,6 +3381,8 @@ function render(){
   $('rrWarns').innerHTML = c.warns.map(w => { const fv = w[2] ? (Math.floor(w[2] * 100) / 100).toFixed(2) : null, lab = w[3] === 'risk' ? `Set risk to ${fv}%` : w[3] === 'rusd' ? `Set risk to $${fv}` : `Invest $${fv}`;
     return `<div class="rr-warn ${w[0] === 'y' ? 'y' : ''}">${w[1]}${fv && +fv > 0 ? ` <button type="button" class="rr-btn sm" data-key="${w[3]}" data-fit="${fv}" style="margin-left:6px">${lab}</button>` : ''}</div>`; }).join('');
   renderAcct();
+  { const n = $('rrSzNote'), z = S.mode || 'pct', base = {pct: 'The position is sized so a stop-out loses this % of the account you picked.', usd: 'The position is sized so a stop-out loses exactly this dollar amount.', inv: 'You decide how much to put in (margin). Position = investment × leverage, and the risk is worked out for you.'}[z];
+    n.innerHTML = c.ok ? `<b style="color:var(--gold2)">= ${usd(c.riskUsd)} at risk · ${c.riskPctAcct.toFixed(2)}% of account · ${c.riskPctInv.toFixed(1)}% of the ${usd(c.margin)} invested</b><br>${base}` : base; }
   if(!c.ok){
     $('rrOut').innerHTML = row('Risk at stop', '—') + row('Potential profit', '—') + row('Position size', '—') + row('Notional', '—') + row('Risk : reward', '—') + row('Stop distance', '—');
     $('rrLevOut').innerHTML = ''; $('rrVerdict').innerHTML = ''; $('rrTpTbl').innerHTML = '<tbody><tr><td class="na">Enter entry, stop, balance and risk to begin.</td></tr></tbody>';
