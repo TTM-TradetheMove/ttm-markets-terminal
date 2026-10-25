@@ -370,6 +370,23 @@ td.num{font-variant-numeric:tabular-nums;color:var(--mute)}
 .rr-btn.ghost{background:transparent;color:var(--gold2);border:1px solid var(--gold)}
 .rr-btn.sm{padding:5px 9px;font-size:12px}
 .rr-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tool-nav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px;align-items:center}
+.tool-nav a,.tool-nav button{border:1px solid var(--line);background:transparent;color:var(--mute);padding:7px 13px;border-radius:999px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;text-decoration:none}
+.tool-nav a.cur{background:var(--gold);color:#111;border-color:var(--gold)}.tool-nav a:hover,.tool-nav button:hover{border-color:var(--gold);color:var(--gold2)}.tool-nav a.cur:hover{color:#111}
+.tool-nav .sp{flex:1}
+.rr-tfbar{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}.rr-tfbar button{border:1px solid var(--line);background:transparent;color:var(--mute);padding:5px 11px;border-radius:999px;font:inherit;font-size:12px;font-weight:600;cursor:pointer}.rr-tfbar button.on{background:var(--gold);color:#111;border-color:var(--gold)}
+.rr-mini{display:inline-block;height:8px;border-radius:4px;vertical-align:middle}
+.rr-modal{position:fixed;inset:0;z-index:2000;display:none;background:rgba(0,0,0,.78);overflow:auto;padding:4vh 14px}
+.rr-modal.open{display:block}
+.rr-modal>div{max-width:560px;margin:0 auto;background:var(--card);border:1px solid var(--gold);border-radius:14px;padding:18px 20px}
+.rr-modal h3{margin:0 0 6px;color:var(--gold);font-size:14px;letter-spacing:1.2px;text-transform:uppercase}
+.rr-opt{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1px solid var(--line);border-radius:9px;margin-bottom:8px;cursor:pointer;font-size:13.5px}
+.rr-opt input{margin-top:3px}.rr-opt.on{border-color:var(--gold);background:rgba(219,161,24,.08)}
+.rr-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:14px}
+@media (max-width:760px){.rr-stats{grid-template-columns:repeat(2,1fr)}}
+.rr-stats>div{background:var(--card);padding:11px 12px}.rr-stats small{display:block;color:var(--mute);font-size:11px;margin-bottom:4px}.rr-stats strong{font-size:19px}
+.rr-pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:700;border:1px solid var(--line)}
+.rr-pill.win{color:#3fb47a;border-color:#3fb47a}.rr-pill.loss{color:#e0554d;border-color:#e0554d}.rr-pill.be{color:var(--gold2);border-color:var(--gold)}.rr-pill.open{color:#6aa9ff;border-color:#6aa9ff}
 .rr-notes{margin:0;padding-left:18px;color:var(--mute);font-size:12.5px;line-height:1.7}
 .sp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
 .sp-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
@@ -670,6 +687,8 @@ body.view-section #backFab{display:block}
       <a href="#rsimap">RSI Heatmap</a>
       <a href="#volume">Volume Heatmap</a>
       <a href="#riskreward">Risk / Reward</a>
+      <a href="#tradejournal">Trade Tracker</a>
+      <a href="#portfolio">Portfolio Forecast</a>
       <a href="#socialpulse">Social Pulse</a>
       <a href="#tokenevents">Token Events</a>
       <a href="#library">Reports</a>
@@ -716,7 +735,7 @@ body.view-section #backFab{display:block}
   </div>
 </div>
 
-<div id="menuHome"><div class="wrap"><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#marketpulse"><b>Market Pulse</b><span>Fear & Greed, funding, liquidations</span></a><a class="menu-tile" href="#btcmonthly"><b>BTC Monthly</b><span>Bitcoin returns month by month</span></a><a class="menu-tile" href="#fomo"><b>FOMO Finder &amp; RSI Chart</b><span>Sentiment gauge plus price and RSI</span></a><a class="menu-tile" href="#rsimap"><b>RSI Heatmap</b><span>Overbought / oversold across ~125 coins</span></a><a class="menu-tile" href="#volume"><b>Volume Heatmap</b><span>Surging and drying-up volume by coin</span></a><a class="menu-tile" href="#riskreward"><b>Risk / Reward Calculator</b><span>Position size, leverage and liquidation estimate</span></a><a class="menu-tile" href="#socialpulse"><b>Social Pulse</b><span>Truth Social and crypto news feed</span></a><a class="menu-tile" href="#tokenevents"><b>Token Events</b><span>Unlocks, listings and airdrops</span></a><a class="menu-tile" href="#library"><b>Reports</b><span>Asset reviews and deep dives</span></a><a class="menu-tile" href="#transparency"><b>Transparency Watch</b><span>Congress and insider trading watch</span></a></div></div></div>
+<div id="menuHome"><div class="wrap"><h2>Trading tools</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#riskreward"><b>Risk / Reward Tooling</b><span>Size a trade by risk % , risk $ or investment, with live candles, leverage and liquidation</span></a><a class="menu-tile" href="#tradejournal"><b>Trade Tracker &amp; Win Ratio</b><span>Open and closed trades by account and time frame, win rate, equity curve, Excel export</span></a><a class="menu-tile" href="#portfolio"><b>Portfolio Forecast</b><span>Spot, leverage and super / retirement: forecast vs actual at live prices</span></a></div><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#marketpulse"><b>Market Pulse</b><span>Fear & Greed, funding, liquidations</span></a><a class="menu-tile" href="#btcmonthly"><b>BTC Monthly</b><span>Bitcoin returns month by month</span></a><a class="menu-tile" href="#fomo"><b>FOMO Finder &amp; RSI Chart</b><span>Sentiment gauge plus price and RSI</span></a><a class="menu-tile" href="#rsimap"><b>RSI Heatmap</b><span>Overbought / oversold across ~125 coins</span></a><a class="menu-tile" href="#volume"><b>Volume Heatmap</b><span>Surging and drying-up volume by coin</span></a><a class="menu-tile" href="#socialpulse"><b>Social Pulse</b><span>Truth Social and crypto news feed</span></a><a class="menu-tile" href="#tokenevents"><b>Token Events</b><span>Unlocks, listings and airdrops</span></a><a class="menu-tile" href="#library"><b>Reports</b><span>Asset reviews and deep dives</span></a><a class="menu-tile" href="#transparency"><b>Transparency Watch</b><span>Congress and insider trading watch</span></a></div></div></div>
 <button id="backFab" type="button">&larr; Menu</button>
 <div id="backBar"><div class="wrap"><button id="backBtn" type="button">&larr; Back to menu</button><span id="backTitle"></span></div></div>
 <section id="calendar">
@@ -1043,11 +1062,13 @@ body.view-section #backFab{display:block}
 
 <section id="riskreward">
   <div class="wrap">
+    <div class="tool-nav" data-cur="riskreward"></div>
     <div class="section-head">
       <span class="tag">Risk Tools</span>
       <h2>Risk-to-Reward Calculator</h2>
       <p>Plan the trade before you place it. Enter your entry, stop-loss and up to three take-profit targets, set your account size and the percentage you are willing to lose, and the calculator sizes the position from your risk, then shows margin, leverage impact, estimated liquidation, break-even win rate and fees. Prices are manual, with a button to pull the live price. Everything stays in your own browser.</p>
     </div>
+    <div class="rr-card" style="margin-bottom:16px"><h3>Your account · <span id="rrAcctName" style="color:var(--text);text-transform:none;letter-spacing:0"></span> <a href="#tradejournal" style="float:right;color:var(--gold2);text-transform:none;letter-spacing:0;font-size:12px">Trade tracker &amp; stats →</a></h3><div class="rr-out" id="rrAcct" style="grid-template-columns:repeat(4,1fr);margin-bottom:6px"></div><p class="calendar-note" style="margin:0">Margin locked in open trades is taken out of what is available, so with $5,000 and $2,000 in a trade you have $3,000 left for the next one. Close a trade in the tracker to release its margin and add or subtract the result.</p></div>
     <div class="rr-grid">
       <div>
         <div class="rr-card">
@@ -1059,6 +1080,10 @@ body.view-section #backFab{display:block}
           <div class="rr-row">
             <div class="rr-f"><label>Market type</label><div class="rr-seg" id="rrMkt"><button type="button" data-m="spot">Spot</button><button type="button" class="on" data-m="fut">Futures / Perp</button></div></div>
             <div class="rr-f"><label for="rrLev">Leverage</label><select id="rrLev"></select></div>
+          </div>
+          <div class="rr-row">
+            <div class="rr-f"><label for="rrAcc">Account type</label><select id="rrAcc"></select></div>
+            <div class="rr-f"><label for="rrTf">Time frame you are trading</label><select id="rrTf"></select></div>
           </div>
           <div class="rr-row">
             <div class="rr-f"><label for="rrEntry">Entry price (USD)</label><input id="rrEntry" type="number" inputmode="decimal" step="any"></div>
@@ -1074,9 +1099,15 @@ body.view-section #backFab{display:block}
           </div>
           <p class="calendar-note" id="rrAlloc" style="margin:0 0 10px"></p>
           <div class="rr-row3">
-            <div class="rr-f"><label for="rrBal">Account balance (USD)</label><input id="rrBal" type="number" inputmode="decimal" step="any"></div>
-            <div class="rr-f"><label for="rrRisk">Risk per trade (%)</label><input id="rrRisk" type="number" inputmode="decimal" step="any"></div>
+            <div class="rr-f"><label for="rrBal" id="rrBalL">Starting balance (USD)</label><input id="rrBal" type="number" inputmode="decimal" step="any"></div>
             <div class="rr-f"><label for="rrFee">Trading fee (% per side)</label><input id="rrFee" type="number" inputmode="decimal" step="any"></div>
+            <div class="rr-f"><label>Size my trade by</label><div class="rr-seg" id="rrSz"><button type="button" data-z="pct">Risk %</button><button type="button" data-z="usd">Risk $</button><button type="button" data-z="inv">Invest $</button></div></div>
+          </div>
+          <div class="rr-row" style="margin-top:10px">
+            <div class="rr-f" id="fPct"><label for="rrRisk">Risk per trade (% of account)</label><input id="rrRisk" type="number" inputmode="decimal" step="any"></div>
+            <div class="rr-f" id="fUsd"><label for="rrRusd">Risk per trade ($ lost if stopped out)</label><input id="rrRusd" type="number" inputmode="decimal" step="any"></div>
+            <div class="rr-f" id="fInv"><label for="rrInv">Investment / margin ($ you put in)</label><input id="rrInv" type="number" inputmode="decimal" step="any"></div>
+            <div class="rr-f"><label>&nbsp;</label><div class="calendar-note" id="rrSzNote" style="margin:0"></div></div>
           </div>
         </div>
         <div class="rr-card">
@@ -1096,26 +1127,71 @@ body.view-section #backFab{display:block}
           <div class="rr-out" id="rrOut"></div>
           <h3 style="margin-top:14px">Leverage impact</h3>
           <div class="rr-out" id="rrLevOut"></div>
+          <div class="rr-row3" style="margin:12px 0 8px"><div class="rr-f" style="grid-column:span 3;margin:0"><label for="rrName">Name this trade (optional)</label><input id="rrName" type="text" placeholder="e.g. BTC 10x long" maxlength="40"></div></div><div class="rr-acts" style="margin:0 0 12px"><button type="button" class="rr-btn" id="rrOpen">Open trade (lock margin)</button><button type="button" class="rr-btn ghost" id="rrSave">Save as plan</button></div>
+          <p class="calendar-note" id="rrOpenNote" style="margin:0 0 10px"></p>
           <p class="calendar-note" style="margin:0">Leverage changes the margin you lock up and how close liquidation sits; it does not change the dollar loss at your stop, because the position is sized from your risk. Liquidation is an estimate for an isolated position and varies by exchange, contract and margin mode.</p>
         </div>
         <div class="rr-card"><h3>Trade visualisation</h3><svg id="rrChart" viewBox="0 0 520 300" style="width:100%;height:auto;display:block"></svg></div>
       </div>
     </div>
+    <div class="rr-card"><h3>Live chart <span id="rrCanHead" style="float:right;color:var(--mute);text-transform:none;letter-spacing:0;font-size:12px"></span></h3>
+      <div class="rr-tfbar" id="rrTfChips"></div>
+      <svg id="rrCandles" viewBox="0 0 900 360" style="width:100%;height:auto;display:block"></svg>
+      <p class="calendar-note" id="rrCanSt" style="margin:8px 0 0">Candles are live from OKX for the asset and time frame above, with your entry, stop, targets and liquidation drawn on top.</p></div>
     <div class="rr-card"><h3>Take-profit breakdown</h3><div class="rr-wrap"><table class="rr-tbl" id="rrTpTbl"></table></div></div>
+    <div class="rr-card"><h3>Portfolios &amp; win rates <a href="#tradejournal" style="float:right;color:var(--gold2);text-transform:none;letter-spacing:0;font-size:12px">Full tracker →</a></h3><div class="rr-wrap"><table class="rr-tbl" id="rrPort"></table></div><p class="calendar-note" style="margin:8px 0 0">Each account keeps its own balance, locked margin and results, so spot, leverage and super / retirement trades never mix. Pick the account type on each trade.</p></div>
     <div class="rr-card">
       <h3>Key risk notes</h3>
       <ul class="rr-notes"><li>Leverage increases both potential gains and losses, and liquidation can happen before your stop-loss is reached if the stop is too wide for the leverage.</li><li>Actual fills can differ from planned prices because of volatility, slippage and funding or fees.</li><li>Break-even win rate is the share of trades you must win, at this R:R, just to cover losses (before fees on a series of trades).</li><li>This tool gives estimates for education and planning, not financial advice or a trade signal.</li></ul>
     </div>
     <div class="rr-card">
-      <h3>Saved setups</h3>
-      <div class="rr-row3" style="margin-bottom:6px"><div class="rr-f" style="grid-column:span 2"><label for="rrName">Setup name</label><input id="rrName" type="text" placeholder="e.g. BTC 10x long" maxlength="40"></div><div class="rr-f"><label>&nbsp;</label><button type="button" class="rr-btn" id="rrSave">Save setup</button></div></div>
-      <div class="rr-acts"><button type="button" class="rr-btn ghost sm" id="rrExport">Export setups</button><button type="button" class="rr-btn ghost sm" id="rrImportBtn">Import setups</button><input type="file" id="rrImport" accept="application/json,.json" style="display:none"></div>
+      <h3>Saved plans (not yet opened) &mdash; with investment</h3>
+      <div class="rr-acts"><button type="button" class="rr-btn ghost sm" id="rrExport">Backup (JSON)</button><button type="button" class="rr-btn ghost sm" id="rrImportBtn">Restore (JSON)</button><button type="button" class="rr-btn sm" id="rrXlsx">Download Excel (TTM view)</button><input type="file" id="rrImport" accept="application/json,.json" style="display:none"></div>
       <p class="calendar-note" id="rrSaveNote" style="margin:8px 0">Setups are stored in this browser only, so other members cannot see them. They are lost if you clear site data or change device, so use Export to keep a copy.</p>
       <div class="rr-wrap"><table class="rr-tbl" id="rrSaved"></table></div>
     </div>
   </div>
 </section>
 
+<section id="tradejournal">
+  <div class="wrap">
+    <div class="tool-nav" data-cur="tradejournal"></div>
+    <div class="section-head">
+      <span class="tag">Risk Tools</span>
+      <h2>Trade Tracker &amp; Win Ratio</h2>
+      <p>Every trade you open in the Risk-to-Reward calculator lands here, split by account type (spot, leverage, super / retirement) and by the time frame you traded. Open trades lock their margin; when a trade plays out, close it as fully played out (all targets), stopped out, or partly played out (some targets hit, then stopped, break-even or closed by hand). The result is added to or taken from your account, and your win ratio, average R, profit factor, drawdown and equity curve update. Everything stays in your own browser.</p>
+    </div>
+    <div class="rr-card"><h3>All accounts <button type="button" class="rr-btn sm" id="jXlsx" style="float:right">Download Excel (TTM view)</button></h3><div class="rr-out" id="jAcct" style="grid-template-columns:repeat(4,1fr);margin:0"></div></div>
+    <div class="rr-card"><h3>Performance</h3><div class="rr-stats" id="jStats"></div><svg id="jCurve" viewBox="0 0 700 220" style="width:100%;height:auto;display:block"></svg></div>
+    <div class="rr-card"><h3>Portfolios</h3><div class="rr-wrap"><table class="rr-tbl" id="jPort"></table></div></div>
+    <div class="rr-card"><h3>Best results by time frame</h3><div id="jTfBest" style="margin-bottom:10px"></div><div class="rr-wrap"><table class="rr-tbl" id="jTf"></table></div></div>
+    <div class="rr-card"><h3>Open positions</h3><div class="rr-wrap"><table class="rr-tbl" id="jOpen"></table></div></div>
+    <div class="rr-grid" style="align-items:stretch"><div class="rr-card"><h3>By asset</h3><div class="rr-wrap"><table class="rr-tbl" id="jAsset"></table></div></div><div class="rr-card"><h3>By direction &amp; leverage</h3><div class="rr-wrap"><table class="rr-tbl" id="jDir"></table></div></div></div>
+    <div class="rr-card"><h3>Trade history</h3>
+      <div class="filter-row" id="jFilter" style="margin-bottom:10px"><button class="filter-chip active" data-f="all">All</button><button class="filter-chip" data-f="open">Open</button><button class="filter-chip" data-f="win">Wins</button><button class="filter-chip" data-f="loss">Losses</button><button class="filter-chip" data-f="be">Break-even</button></div>
+      <div class="rr-wrap"><table class="rr-tbl" id="jHist"></table></div>
+      <div class="rr-acts"><button type="button" class="rr-btn ghost sm" id="jExport">Backup (JSON)</button><button type="button" class="rr-btn ghost sm" id="jImportBtn">Restore (JSON)</button><input type="file" id="jImport" accept="application/json,.json" style="display:none"><button type="button" class="rr-btn ghost sm" id="jClear">Clear all trades</button></div>
+      <p class="calendar-note" id="jNote" style="margin:8px 0 0">Stored in this browser only. Export a copy so you do not lose it if you clear site data or switch device. Results are what you enter, not read from an exchange: if your real fill, fees or funding differed, type your actual P&amp;L when closing.</p>
+    </div>
+  </div>
+</section>
+<div class="rr-modal" id="rrModal"><div id="rrModalBody"></div></div>
+
+<section id="portfolio">
+  <div class="wrap">
+    <div class="tool-nav" data-cur="portfolio"></div>
+    <div class="section-head">
+      <span class="tag">Risk Tools</span>
+      <h2>Portfolio Forecast</h2>
+      <p>Your tracker, valued against live prices. For each account (spot, leverage, super / retirement) this shows your realised balance, what the account is worth right now with open trades marked to the market, the forecast if every target is hit, and the worst case if every stop is hit. Prices come live from OKX and refresh every 30 seconds while this page is open.</p>
+    </div>
+    <div class="filter-row" id="pfScope" style="margin-bottom:12px"></div>
+    <div class="rr-card"><h3>Forecast vs actual <span id="pfStamp" style="float:right;color:var(--mute);text-transform:none;letter-spacing:0;font-size:12px"></span></h3><div class="rr-out" id="pfTiles" style="grid-template-columns:repeat(5,1fr)"></div><svg id="pfChart" viewBox="0 0 800 300" style="width:100%;height:auto;display:block"></svg></div>
+    <div class="rr-card"><h3>By account</h3><div class="rr-wrap"><table class="rr-tbl" id="pfAcc"></table></div></div>
+    <div class="rr-card"><h3>Open trades at live prices</h3><div class="rr-wrap"><table class="rr-tbl" id="pfOpen"></table></div></div>
+    <p class="calendar-note">How to read it: <b>Actual now</b> = realised balance plus the open P&amp;L of your open trades at the live price (targets already passed are counted as filled, a stop already passed as taken). <b>Forecast</b> = realised balance plus the planned profit if every target of every open trade is hit. <b>Worst</b> = every stop hit. <b>Expected</b> weights those two by that account's own win rate once it has at least 5 closed trades. These are projections from your own plans, not predictions of the market, and fills on your exchange will differ. Not financial advice.</p>
+  </div>
+</section>
 <section id="volume">
   <div class="wrap">
     <div class="section-head">
@@ -3215,20 +3291,32 @@ if(!$('rrAsset')) return;
 let COINS = ['BTC','ETH','SOL','XRP','BNB','DOGE','ADA','AVAX','LINK','SUI','TON','DOT','LTC','NEAR','APT','ARB','OP','INJ','PEPE','HYPE','ICP'].map((s, i) => ({s, n: '', r: i + 1, p: null}));  // replaced by ../top_coins.json when it loads
 const LEVS = [1,2,3,5,10,15,20,25,50,75,100];
 const KEY = 'ttm_rr_state_v1', SKEY = 'ttm_rr_saved_v1';
-const DEF = {asset:'BTC', dir:'long', mkt:'fut', lev:10, entry:'', stop:'', tp1:'', s1:50, tp2:'', s2:50, tp3:'', s3:0, bal:5000, risk:1, fee:0.06, daily:250, min:2, mmr:0.5};
+const DEF = {asset:'BTC', dir:'long', mkt:'fut', lev:10, entry:'', stop:'', tp1:'', s1:50, tp2:'', s2:50, tp3:'', s3:0, bal:5000, risk:1, fee:0.06, daily:250, min:2, mmr:0.5, acc:'lev', tf:'h1', mode:'pct', rusd:50, inv:1000};
 let S = Object.assign({}, DEF);
 function lsGet(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
 S = Object.assign(S, lsGet(KEY, {}));
+const BKEY = 'ttm_rr_bals_v1';
+const BALS = Object.assign({spot: 5000, lev: num0(S.bal) || 5000, super: 5000}, lsGet(BKEY, {}));
+function num0(v){ const n = parseFloat(v); return isFinite(n) ? n : null; }
 if(!S.asset || S.asset === 'Other') S.asset = 'BTC';
 $('rrLev').innerHTML = LEVS.map(l => `<option value="${l}">${l}×${l === 1 ? ' (no leverage)' : ''}</option>`).join('');
-const IDS = {entry:'rrEntry', stop:'rrStop', tp1:'rrTp1', s1:'rrS1', tp2:'rrTp2', s2:'rrS2', tp3:'rrTp3', s3:'rrS3', bal:'rrBal', risk:'rrRisk', fee:'rrFee', daily:'rrDaily', min:'rrMin', mmr:'rrMmr'};
+$('rrAcc').innerHTML = [['spot', 'Spot portfolio'], ['lev', 'Leverage / futures'], ['super', 'Super / retirement']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
+$('rrTf').innerHTML = [['m5', '5 min'], ['m15', '15 min'], ['h1', '1 hour'], ['h2', '2 hour'], ['h4', '4 hour'], ['h8', '8 hour'], ['h12', '12 hour'], ['d1', 'Daily'], ['w1', 'Weekly'], ['mo1', 'Monthly']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
+const IDS = {entry:'rrEntry', stop:'rrStop', tp1:'rrTp1', s1:'rrS1', tp2:'rrTp2', s2:'rrS2', tp3:'rrTp3', s3:'rrS3', risk:'rrRisk', rusd:'rrRusd', inv:'rrInv', fee:'rrFee', daily:'rrDaily', min:'rrMin', mmr:'rrMmr'};
 function pushInputs(){
   Object.keys(IDS).forEach(k => { $(IDS[k]).value = S[k] === '' || S[k] == null ? '' : S[k]; });
-  $('rrAsset').value = S.asset; $('rrLev').value = String(S.lev);
+  $('rrBal').value = BALS[S.acc] == null ? '' : BALS[S.acc];
+  $('rrBalL').textContent = 'Starting balance — ' + ({spot: 'Spot portfolio', lev: 'Leverage / futures', super: 'Super / retirement'}[S.acc] || '') + ' (USD)';
+  $('rrAsset').value = S.asset; $('rrLev').value = String(S.lev); $('rrAcc').value = S.acc; $('rrTf').value = S.tf;
   document.querySelectorAll('#rrDir button').forEach(b => { b.classList.toggle('on', b.dataset.d === S.dir); b.classList.toggle('short', b.dataset.d === 'short'); });
   document.querySelectorAll('#rrMkt button').forEach(b => b.classList.toggle('on', b.dataset.m === S.mkt));
   $('rrLev').disabled = S.mkt === 'spot';
+  const z = S.mode || 'pct';
+  document.querySelectorAll('#rrSz button').forEach(b => b.classList.toggle('on', b.dataset.z === z));
+  $('fPct').style.display = z === 'pct' ? '' : 'none'; $('fUsd').style.display = z === 'usd' ? '' : 'none'; $('fInv').style.display = z === 'inv' ? '' : 'none';
+  $('rrSzNote').textContent = {pct: 'The position is sized so a stop-out loses this % of the account you picked.', usd: 'The position is sized so a stop-out loses exactly this dollar amount.', inv: 'You decide how much to put in (margin). Position = investment × leverage, and the risk is worked out for you.'}[z];
+  $('rrTfChips').innerHTML = [['m5', '5m'], ['m15', '15m'], ['h1', '1h'], ['h2', '2h'], ['h4', '4h'], ['h8', '8h'], ['h12', '12h'], ['d1', '1D'], ['w1', '1W'], ['mo1', '1M']].map(a => `<button type="button" data-t="${a[0]}" class="${S.tf === a[0] ? 'on' : ''}">${a[1]}</button>`).join('');
 }
 const num = v => { const n = parseFloat(v); return isFinite(n) ? n : null; };
 const usd = v => v == null || !isFinite(v) ? '—' : (v < 0 ? '-' : '') + '$' + Math.abs(v).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -3236,18 +3324,19 @@ const pr = v => v == null || !isFinite(v) ? '—' : v >= 1000 ? v.toLocaleString
 const qty = v => v == null || !isFinite(v) ? '—' : v >= 100 ? v.toFixed(2) : v >= 1 ? v.toFixed(4) : v.toPrecision(4);
 function calc(){
   const long = S.dir === 'long', lev = S.mkt === 'spot' ? 1 : (num(S.lev) || 1);
-  const E = num(S.entry), SL = num(S.stop), bal = num(S.bal), rk = num(S.risk), fee = (num(S.fee) || 0) / 100, mmr = (num(S.mmr) || 0) / 100;
-  const out = {long, lev, E, SL, bal, rk, fee, mmr, warns: [], ok: false};
-  if(E == null || SL == null || bal == null || rk == null || E <= 0 || SL <= 0 || bal <= 0 || rk <= 0) return out;
+  const A = acct(), E = num(S.entry), SL = num(S.stop), bal = A.equity, mode = S.mode || 'pct', rk = num(S.risk), ru = num(S.rusd), inv = num(S.inv), fee = (num(S.fee) || 0) / 100, mmr = (num(S.mmr) || 0) / 100;
+  const out = {long, lev, E, SL, bal, rk, mode, fee, mmr, avail: A.avail, warns: [], ok: false};
+  if(bal != null && bal <= 0) out.warns.push(['y', 'The ' + ({spot: 'Spot portfolio', lev: 'Leverage / futures', super: 'Super / retirement'}[S.acc] || 'selected') + ' account has no balance. Enter a starting balance for it.']);
+  const sizeIn = mode === 'usd' ? ru : mode === 'inv' ? inv : rk;
+  if(E == null || SL == null || bal == null || sizeIn == null || E <= 0 || SL <= 0 || bal <= 0 || sizeIn <= 0) return out;
   if(long ? SL >= E : SL <= E){ out.warns.push(['bad', long ? 'For a long trade the stop-loss must be below the entry.' : 'For a short trade the stop-loss must be above the entry.']); return out; }
   if(S.mkt === 'spot' && !long) out.warns.push(['y', 'Shorting is not possible on spot; switch to Futures / Perp to model a short.']);
   const dist = Math.abs(E - SL);
   out.dist = dist; out.distPct = dist / E * 100;
-  out.riskUsd = bal * rk / 100;
   const perUnitLoss = dist + fee * (E + SL);            // loss per unit at the stop including fees on both sides
-  out.units = out.riskUsd / perUnitLoss;
-  out.notional = out.units * E;
-  out.margin = out.notional / lev;
+  if(mode === 'inv'){ out.margin = inv; out.notional = inv * lev; out.units = out.notional / E; out.riskUsd = out.units * perUnitLoss; }
+  else { out.riskUsd = mode === 'usd' ? ru : bal * rk / 100; out.units = out.riskUsd / perUnitLoss; out.notional = out.units * E; out.margin = out.notional / lev; }
+  out.riskPctAcct = out.riskUsd / bal * 100; out.riskPctInv = out.riskUsd / out.margin * 100;
   out.tps = [];
   let used = 0, profit = 0;
   [[S.tp1, S.s1], [S.tp2, S.s2], [S.tp3, S.s3]].forEach(([p, sh], i) => {
@@ -3271,8 +3360,11 @@ function calc(){
     if(stopBeyond) out.warns.push(['bad', `Your stop is at or beyond the estimated liquidation price (${pr(out.liq)}). You would be liquidated before the stop triggers. Lower the leverage or tighten the stop.`]);
     else if(Math.abs(SL - out.liq) / E * 100 < out.distPct * 0.25) out.warns.push(['y', `Your stop is close to the estimated liquidation price (${pr(out.liq)}). Small slippage or wicks could liquidate you first.`]);
   }
-  if(out.margin > bal) out.warns.push(['bad', `The margin needed (${usd(out.margin)}) is more than your account balance. Use more leverage, a tighter stop or a smaller risk percentage.`]);
-  else if(out.margin > bal * 0.5) out.warns.push(['y', `This position locks up ${(out.margin / bal * 100).toFixed(0)}% of your balance as margin.`]);
+  const av = A.avail;
+  if(out.margin > av + 0.005){
+    const f = av > 0 ? av / out.margin : 0; out.fitKey = mode === 'pct' ? 'risk' : mode === 'usd' ? 'rusd' : 'inv'; out.fit = mode === 'pct' ? rk * f : mode === 'usd' ? ru * f : av;
+    out.warns.push(['bad', `The margin needed (${usd(out.margin)}) is more than the ${usd(av)} you have available in ${({spot: 'your spot portfolio', lev: 'your leverage account', super: 'your super / retirement account'})[S.acc] || 'this account'}` + (A.locked > 0 ? ` (${usd(A.locked)} is locked in ${A.open} open trade${A.open > 1 ? 's' : ''})` : '') + '. ' + (av > 0 ? 'Reduce the size, use more leverage, or tighten the stop.' : 'Close a trade or add capital first.'), av > 0 ? out.fit : 0, out.fitKey]); }
+  else if(out.margin > av * 0.5) out.warns.push(['y', `This position locks up ${(out.margin / av * 100).toFixed(0)}% of your available balance as margin (${usd(av - out.margin)} would be left).`]);
   const mn = num(S.min);
   if(out.rr != null && mn != null && out.rr < mn) out.warns.push(['y', `Reward-to-risk 1:${out.rr.toFixed(2)} is below your minimum of 1:${mn}.`]);
   if(!out.tps.length) out.warns.push(['y', 'Add at least one take-profit and its share of the position to see reward-to-risk.']);
@@ -3285,18 +3377,20 @@ function render(){
   const c = calc();
   { const t = (num(S.s1) || 0) + (num(S.s2) || 0) + (num(S.s3) || 0), r = Math.round((100 - t) * 100) / 100;
     $('rrAlloc').innerHTML = `Position split across targets: <b style="color:${t > 100.0001 ? '#e0554d' : 'var(--gold2)'}">${Math.round(t * 100) / 100}%</b> allocated` + (r > 0.0001 ? `, ${r}% left with no target` : r < -0.0001 ? ` — over by ${-r}%` : ' — fully allocated') + '. Change TP1 and TP2 gets the rest; change TP2 and TP3 gets the rest.'; }
-  $('rrWarns').innerHTML = c.warns.map(w => `<div class="rr-warn ${w[0] === 'y' ? 'y' : ''}">${w[1]}</div>`).join('');
+  $('rrWarns').innerHTML = c.warns.map(w => { const fv = w[2] ? (Math.floor(w[2] * 100) / 100).toFixed(2) : null, lab = w[3] === 'risk' ? `Set risk to ${fv}%` : w[3] === 'rusd' ? `Set risk to $${fv}` : `Invest $${fv}`;
+    return `<div class="rr-warn ${w[0] === 'y' ? 'y' : ''}">${w[1]}${fv && +fv > 0 ? ` <button type="button" class="rr-btn sm" data-key="${w[3]}" data-fit="${fv}" style="margin-left:6px">${lab}</button>` : ''}</div>`; }).join('');
+  renderAcct();
   if(!c.ok){
     $('rrOut').innerHTML = row('Risk at stop', '—') + row('Potential profit', '—') + row('Position size', '—') + row('Notional', '—') + row('Risk : reward', '—') + row('Stop distance', '—');
     $('rrLevOut').innerHTML = ''; $('rrVerdict').innerHTML = ''; $('rrTpTbl').innerHTML = '<tbody><tr><td class="na">Enter entry, stop, balance and risk to begin.</td></tr></tbody>';
-    $('rrDailyOut').innerHTML = ''; drawChart(c); return;
+    $('rrDailyOut').innerHTML = ''; drawChart(c); drawCandles(c); return;
   }
   const mn = num(S.min), meets = c.rr != null && mn != null ? c.rr >= mn : null;
   $('rrVerdict').innerHTML = c.rr == null ? '' : `<span class="rr-badge ${meets ? 'ok' : 'bad'}">R:R 1:${c.rr.toFixed(2)} ${meets ? '✓ meets target' : '✕ below target'}</span>`;
   const sym = S.asset || 'units';
   $('rrOut').innerHTML = row('Risk at stop', usd(-c.riskUsd).replace('-', ''), 'r') + row('Potential profit', c.tps.length ? usd(c.profit) : '—', 'g') + row('Position size', qty(c.units) + ' ' + sym) +
     row('Position notional', usd(c.notional)) + row('Risk : reward', c.rr == null ? '—' : '1 : ' + c.rr.toFixed(2), 'y') + row('Stop distance', c.distPct.toFixed(2) + '%') +
-    row('Break-even win rate', c.be == null ? '—' : c.be.toFixed(1) + '%') + row('Est. fees (round trip at stop)', usd(c.units * c.fee * (c.E + c.SL))) + row('Return on balance at stop', (-c.riskUsd / c.bal * 100).toFixed(2) + '%', 'r');
+    row('Break-even win rate', c.be == null ? '—' : c.be.toFixed(1) + '%') + row('Est. fees (round trip at stop)', usd(c.units * c.fee * (c.E + c.SL))) + row('Investment (margin)', usd(c.margin)) + row('Risk as % of investment', c.riskPctInv.toFixed(2) + '%', 'r') + row('Risk as % of account', c.riskPctAcct.toFixed(2) + '%', 'r');
   $('rrLevOut').innerHTML = row('Leverage', c.lev + '×') + row('Margin required', usd(c.margin) + `<br><span style="font-size:11px;color:var(--mute);font-weight:400">${(c.margin / c.notional * 100).toFixed(1)}% of notional</span>`) +
     row('Liquidation (est.)', c.liq == null ? (S.mkt === 'spot' ? 'n/a (spot)' : 'n/a at 1×') : pr(c.liq) + `<br><span style="font-size:11px;color:var(--mute);font-weight:400">${c.liqDist.toFixed(1)}% from entry</span>`, c.liq != null ? 'r' : '');
   // take-profit table
@@ -3310,7 +3404,7 @@ function render(){
     const pct = Math.min(100, c.riskUsd / c.daily * 100), left = c.daily - c.riskUsd;
     $('rrDailyOut').innerHTML = `<div class="rr-bar"><i style="width:${pct}%;background:${left < 0 ? '#e0554d' : '#3fb47a'}"></i></div><div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--mute)"><span>Planned risk ${usd(c.riskUsd)} (${pct.toFixed(0)}% of limit)</span><span>Remaining ${usd(Math.max(0, left))}</span></div>` + (left < 0 ? `<div class="rr-warn" style="margin-top:8px">This trade risks more than your daily loss limit.</div>` : '');
   } else $('rrDailyOut').innerHTML = '';
-  drawChart(c);
+  drawChart(c); drawCandles(c);
 }
 function drawChart(c){
   const svg = $('rrChart'); if(!c.ok){ svg.innerHTML = '<text x="260" y="150" fill="#8b8f9a" font-size="13" text-anchor="middle">Enter your levels to see the trade map</text>'; return; }
@@ -3330,17 +3424,471 @@ function drawChart(c){
          `<rect x="378" y="${ly - 10}" width="132" height="20" rx="4" fill="${l.col}" opacity=".92"/><text x="384" y="${ly + 4}" font-size="11.5" font-weight="700" fill="#111">${l.k}  ${pr(l.p)}</text>`; });
   svg.innerHTML = g + `<text x="44" y="${T + 10}" fill="#8b8f9a" font-size="10.5">${S.asset} · ${c.long ? 'Long' : 'Short'} · ${c.lev}×</text>`;
 }
-// ---- saved setups
-function loadSaved(){ return lsGet(SKEY, []); }
+// ---- account, trades (saved plans / open / closed), tracker
+const ACCS = [['spot', 'Spot portfolio'], ['lev', 'Leverage / futures'], ['super', 'Super / retirement']];
+const TFS = [['m5', '5 min'], ['m15', '15 min'], ['h1', '1 hour'], ['h2', '2 hour'], ['h4', '4 hour'], ['h8', '8 hour'], ['h12', '12 hour'], ['d1', 'Daily'], ['w1', 'Weekly'], ['mo1', 'Monthly']];
+const accName = id => (ACCS.find(a => a[0] === id) || ACCS[1])[1];
+const tfName = id => (TFS.find(a => a[0] === id) || [0, 'Not set'])[1];
+const accOf = x => (x.snap && x.snap.acc) || (x.s && x.s.acc) || 'lev';
+const tfOf = x => (x.snap && x.snap.tf) || (x.s && x.s.tf) || '';
+function loadSaved(){ const l = lsGet(SKEY, []); return Array.isArray(l) ? l : []; }
+function saveAll(l){ return lsSet(SKEY, l.slice(0, 500)); }
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+function acct(id){
+  id = id || S.acc || 'lev'; const start = num(BALS[id]) || 0; let real = 0, locked = 0, open = 0, closed = 0;
+  loadSaved().forEach(x => { if(accOf(x) !== id) return; if(x.status === 'closed' && x.res){ real += x.res.pnl; closed++; } else if(x.status === 'open' && x.snap){ locked += x.snap.margin; open++; } });
+  const equity = start + real; return {id, start, real, locked, open, closed, equity, avail: Math.max(0, equity - locked)};
+}
+function acctAll(){ const t = {start: 0, real: 0, locked: 0, open: 0, closed: 0, equity: 0, avail: 0}; ACCS.forEach(a => { const x = acct(a[0]); Object.keys(t).forEach(k => t[k] += x[k]); }); return t; }
+const kind = (pnl, risk) => Math.abs(pnl) < 0.05 * risk ? 'be' : pnl > 0 ? 'win' : 'loss';
+const closedOf = id => loadSaved().filter(x => x.status === 'closed' && x.res && x.snap && (!id || id === 'all' || accOf(x) === id)).sort((a, b) => a.res.closed - b.res.closed);
+function tstats(cl){
+  const wins = cl.filter(x => kind(x.res.pnl, x.snap.riskUsd) === 'win'), losses = cl.filter(x => kind(x.res.pnl, x.snap.riskUsd) === 'loss');
+  const gw = wins.reduce((t, x) => t + x.res.pnl, 0), gl = -losses.reduce((t, x) => t + x.res.pnl, 0), net = cl.reduce((t, x) => t + x.res.pnl, 0);
+  return {n: cl.length, w: wins.length, l: losses.length, be: cl.length - wins.length - losses.length, wr: wins.length + losses.length ? wins.length / (wins.length + losses.length) : null, net, gw, gl, avgR: cl.length ? cl.reduce((t, x) => t + x.res.r, 0) / cl.length : null, pf: gl > 0 ? gw / gl : null};
+}
+function tiles(A){ return row('Starting balance', usd(A.start)) + row('Current balance', usd(A.equity) + `<br><span style="font-size:11px;font-weight:400;color:${A.real >= 0 ? '#3fb47a' : '#e0554d'}">${A.real >= 0 ? '+' : ''}${usd(A.real)} realised</span>`) + row('Locked in open trades', usd(A.locked) + `<br><span style="font-size:11px;font-weight:400;color:var(--mute)">${A.open} open</span>`, 'y') + row('Available for next trade', usd(A.avail), 'g'); }
+function portHtml(){
+  let h = '<thead><tr><th>Account</th><th>Start</th><th>Realised P&amp;L</th><th>Balance</th><th>Locked</th><th>Available</th><th>Open</th><th>Closed</th><th>Win rate</th><th>Avg R</th></tr></thead><tbody>';
+  const one = (name, A, st, bold) => { const b = bold ? t => `<b>${t}</b>` : t => t;
+    h += `<tr><td>${b(esc(name))}</td><td>${usd(A.start)}</td><td style="color:${A.real >= 0 ? '#3fb47a' : '#e0554d'}">${b(usd(A.real))}</td><td>${b(usd(A.equity))}</td><td>${usd(A.locked)}</td><td style="color:#3fb47a">${usd(A.avail)}</td><td>${A.open}</td><td>${A.closed}</td><td>${st.wr == null ? '—' : (st.wr * 100).toFixed(0) + '% (' + st.w + 'W / ' + st.l + 'L)'}</td><td>${st.avgR == null ? '—' : st.avgR.toFixed(2) + 'R'}</td></tr>`; };
+  ACCS.forEach(a => one(a[1], acct(a[0]), tstats(closedOf(a[0]))));
+  one('All accounts', acctAll(), tstats(closedOf('all')), true);
+  return h + '</tbody>';
+}
+function renderAcct(){
+  if(!$('rrAcct')) return;
+  $('rrAcct').innerHTML = tiles(acct()); $('rrAcctName').textContent = accName(S.acc);
+  if($('jAcct')) $('jAcct').innerHTML = tiles(acctAll());
+  [$('rrPort'), $('jPort')].forEach(el => { if(el) el.innerHTML = portHtml(); });
+}
+function snapOf(c, st){ st = st || S; return {asset: st.asset, acc: st.acc || 'lev', tf: st.tf || 'h1', long: c.long, mkt: st.mkt, lev: c.lev, E: c.E, SL: c.SL, units: c.units, notional: c.notional, margin: c.margin, riskUsd: c.riskUsd, fee: c.fee, tps: c.tps.map(t => ({P: t.P, share: t.share}))}; }
+function settle(sn, hits, rest){
+  let pnl = 0, usedU = 0;
+  sn.tps.forEach((t, i) => { if(hits[i]){ const u = sn.units * t.share / 100; pnl += u * Math.abs(t.P - sn.E) - u * sn.fee * (sn.E + t.P); usedU += u; } });
+  const ru = Math.max(0, sn.units - usedU), mv = sn.long ? rest - sn.E : sn.E - rest;
+  return pnl + ru * mv - ru * sn.fee * (sn.E + rest);
+}
+function pill(x){ if(x.status === 'open') return '<span class="rr-pill open">Open</span>'; if(!x.res) return ''; const k = kind(x.res.pnl, x.snap.riskUsd); return `<span class="rr-pill ${k}">${k === 'win' ? 'Win' : k === 'loss' ? 'Loss' : 'Break-even'}</span>`; }
+const esc = t => String(t).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+function planCalc(x){ const st = Object.assign({}, DEF, x.s), save = S; S = st; let c; try{ c = calc(); }finally{ S = save; } return {st, c}; }
 function renderSaved(){
   const list = loadSaved();
-  let h = '<thead><tr><th>Name</th><th>Asset</th><th>Dir</th><th>Type</th><th>Lev</th><th>Entry</th><th>Stop</th><th>TP1</th><th>TP2</th><th>Risk</th><th>R:R</th><th>Saved</th><th></th></tr></thead><tbody>';
-  if(!list.length) h += '<tr><td colspan="13" style="color:var(--mute)">No saved setups yet. Fill in the calculator, name it and press Save setup.</td></tr>';
-  list.forEach((x, i) => { const st = Object.assign({}, DEF, x.s), save = S; S = st; const c = calc(); S = save;
-    h += `<tr><td><b>${String(x.name).replace(/</g, '&lt;')}</b></td><td>${st.asset}</td><td style="color:${st.dir === 'long' ? '#3fb47a' : '#e0554d'}">${st.dir === 'long' ? 'Long' : 'Short'}</td><td>${st.mkt === 'spot' ? 'Spot' : 'Futures'}</td><td>${st.mkt === 'spot' ? 1 : st.lev}×</td><td>${st.entry}</td><td>${st.stop}</td><td>${st.tp1 || '—'}</td><td>${st.tp2 || '—'}</td><td>${st.risk}%</td><td>${c.rr != null ? '1:' + c.rr.toFixed(2) : '—'}</td><td>${new Date(x.t).toLocaleDateString()}</td>` +
-      `<td><div class="rr-acts" style="margin:0"><button class="rr-btn ghost sm" data-a="load" data-i="${i}">Load</button><button class="rr-btn ghost sm" data-a="copy" data-i="${i}">Copy</button><button class="rr-btn ghost sm" data-a="del" data-i="${i}">Delete</button></div></td></tr>`; });
+  let h = '<thead><tr><th>Name</th><th>Account</th><th>Time frame</th><th>Asset</th><th>Dir</th><th>Type</th><th>Lev</th><th>Entry</th><th>Stop</th><th>TP1</th><th>Investment (margin)</th><th>Position size</th><th>Risk</th><th>R:R</th><th>Saved</th><th></th></tr></thead><tbody>';
+  const plans = list.map((x, i) => [x, i]).filter(([x]) => !x.status || x.status === 'saved');
+  if(!plans.length) h += '<tr><td colspan="16" style="color:var(--mute)">No saved plans. Fill in the calculator and press Save as plan, or Open trade to lock the margin straight away.</td></tr>';
+  plans.forEach(([x, i]) => { const {st, c} = planCalc(x);
+    h += `<tr><td><b>${esc(x.name)}</b></td><td>${esc(accName(st.acc))}</td><td>${esc(tfName(st.tf))}</td><td>${esc(st.asset)}</td><td style="color:${st.dir === 'long' ? '#3fb47a' : '#e0554d'}">${st.dir === 'long' ? 'Long' : 'Short'}</td><td>${st.mkt === 'spot' ? 'Spot' : 'Futures'}</td><td>${st.mkt === 'spot' ? 1 : st.lev}×</td><td>${esc(st.entry)}</td><td>${esc(st.stop)}</td><td>${esc(st.tp1 || '—')}</td><td><b>${c.ok ? usd(c.margin) : '—'}</b></td><td>${c.ok ? usd(c.notional) : '—'}</td><td>${c.ok ? usd(c.riskUsd) : '—'}</td><td>${c.rr != null ? '1:' + c.rr.toFixed(2) : '—'}</td><td>${new Date(x.t).toLocaleDateString()}</td>` +
+      `<td><div class="rr-acts" style="margin:0"><button class="rr-btn ghost sm" data-a="load" data-i="${i}">Load</button><button class="rr-btn ghost sm" data-a="open" data-i="${i}">Open trade</button><button class="rr-btn ghost sm" data-a="copy" data-i="${i}">Copy</button><button class="rr-btn ghost sm" data-a="del" data-i="${i}">Delete</button></div></td></tr>`; });
   $('rrSaved').innerHTML = h + '</tbody>';
+  renderAcct(); renderJournal();
 }
+let jf = 'all';
+function curve(pts){
+  const svg = $('jCurve'); if(!svg) return;
+  if(pts.length < 2){ svg.innerHTML = '<text x="350" y="110" fill="#8b8f9a" font-size="13" text-anchor="middle">Your equity curve appears after your first closed trade</text>'; return; }
+  const ys = pts.map(p => p.v), mn = Math.min(...ys), mx = Math.max(...ys), pad = (mx - mn) * .15 || mx * .02 || 1, lo = mn - pad, hi = mx + pad, W = 700, H = 220, L = 54, R = 12, T = 12, B = 22;
+  const X = i => L + (W - L - R) * (i / (pts.length - 1)), Y = v => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
+  let g = '';
+  [0, .5, 1].forEach(f => { const v = lo + (hi - lo) * f; g += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.08)"/><text x="${L - 6}" y="${Y(v) + 4}" font-size="10" fill="#8b8f9a" text-anchor="end">${Math.round(v).toLocaleString()}</text>`; });
+  g += `<line x1="${L}" x2="${W - R}" y1="${Y(pts[0].v)}" y2="${Y(pts[0].v)}" stroke="#dba118" stroke-dasharray="4 4" opacity=".6"/>`;
+  g += `<polyline fill="none" stroke="#dba118" stroke-width="2.2" points="${pts.map((p, i) => X(i) + ',' + Y(p.v)).join(' ')}"/>`;
+  pts.forEach((p, i) => { g += `<circle cx="${X(i)}" cy="${Y(p.v)}" r="3.2" fill="${i === 0 ? '#8b8f9a' : p.d >= 0 ? '#3fb47a' : '#e0554d'}"><title>${esc(p.label)}: ${usd(p.v)}</title></circle>`; });
+  svg.innerHTML = g;
+}
+function groupTbl(rows, keyFn, labelHead){
+  const m = {}; rows.forEach(x => { const k = keyFn(x); (m[k] = m[k] || []).push(x); });
+  let h = `<thead><tr><th>${labelHead}</th><th>Trades</th><th>Win rate</th><th>Net P&amp;L</th><th>Avg R</th></tr></thead><tbody>`;
+  const keys = Object.keys(m).sort((a, b) => m[b].length - m[a].length);
+  if(!keys.length) h += '<tr><td colspan="5" style="color:var(--mute)">No closed trades yet.</td></tr>';
+  keys.forEach(k => { const t = tstats(m[k]);
+    h += `<tr><td><b>${esc(k)}</b></td><td>${t.n}</td><td>${t.wr == null ? '—' : (t.wr * 100).toFixed(0) + '%'}</td><td style="color:${t.net >= 0 ? '#3fb47a' : '#e0554d'}">${usd(t.net)}</td><td>${t.avgR.toFixed(2)}R</td></tr>`; });
+  return h + '</tbody>';
+}
+function tfRows(cl){ return TFS.map(([id, nm]) => ({id, nm, t: tstats(cl.filter(x => tfOf(x) === id))})); }
+function bestTf(rows){ const c = rows.filter(r => r.t.n > 0); if(!c.length) return null; return c.reduce((a, b) => (b.t.net > a.t.net || (b.t.net === a.t.net && (b.t.avgR || 0) > (a.t.avgR || 0))) ? b : a); }
+function tfTbl(cl){
+  const rows = tfRows(cl), mx = Math.max(1, ...rows.map(r => Math.abs(r.t.net)));
+  let h = '<thead><tr><th>Time frame</th><th>Trades</th><th>Win rate</th><th>Net P&amp;L</th><th>Avg R</th><th style="min-width:160px">P&amp;L</th></tr></thead><tbody>';
+  rows.forEach(r => { const t = r.t; h += `<tr><td><b>${r.nm}</b></td><td>${t.n}</td><td>${t.wr == null ? '—' : (t.wr * 100).toFixed(0) + '%'}</td><td style="color:${t.net >= 0 ? '#3fb47a' : '#e0554d'}">${t.n ? usd(t.net) : '—'}</td><td>${t.avgR == null ? '—' : t.avgR.toFixed(2) + 'R'}</td><td>${t.n ? `<span class="rr-mini" style="width:${Math.max(3, Math.abs(t.net) / mx * 150)}px;background:${t.net >= 0 ? '#3fb47a' : '#e0554d'}"></span>` : ''}</td></tr>`; });
+  const un = cl.filter(x => !tfOf(x)).length; if(un) h += `<tr><td style="color:var(--mute)">No time frame set</td><td>${un}</td><td colspan="4"></td></tr>`;
+  return h + '</tbody>';
+}
+function renderJournal(){
+  if(!$('jStats')) return;
+  const list = loadSaved(), A = acctAll(), closed = closedOf('all');
+  const opens = list.filter(x => x.status === 'open' && x.snap);
+  const st = tstats(closed), wins = closed.filter(x => kind(x.res.pnl, x.snap.riskUsd) === 'win'), losses = closed.filter(x => kind(x.res.pnl, x.snap.riskUsd) === 'loss');
+  let eq = A.start, peak = eq, dd = 0; const pts = [{v: eq, d: 0, label: 'Start (all accounts)'}];
+  closed.forEach(x => { eq += x.res.pnl; peak = Math.max(peak, eq); dd = Math.max(dd, peak - eq); pts.push({v: eq, d: x.res.pnl, label: x.name}); });
+  let sn = 0, stk = ''; for(let i = closed.length - 1; i >= 0; i--){ const k = kind(closed[i].res.pnl, closed[i].snap.riskUsd); if(k === 'be') continue; if(!stk) stk = k; if(k === stk) sn++; else break; }
+  const g = (k, v, c) => `<div><small>${k}</small><strong class="${c || ''}">${v}</strong></div>`;
+  $('jStats').innerHTML = g('Closed trades', st.n) + g('Win rate', st.wr == null ? '—' : (st.wr * 100).toFixed(1) + '%', 'y') + g('Wins / losses / BE', `${st.w} / ${st.l} / ${st.be}`) + g('Net P&L', usd(st.net), st.net >= 0 ? 'g' : 'r') +
+    g('Average win', wins.length ? usd(st.gw / wins.length) : '—', 'g') + g('Average loss', losses.length ? usd(-st.gl / losses.length) : '—', 'r') + g('Average R per trade', st.avgR == null ? '—' : st.avgR.toFixed(2) + 'R', st.avgR > 0 ? 'g' : st.avgR < 0 ? 'r' : '') + g('Profit factor', st.pf != null ? st.pf.toFixed(2) : st.gw > 0 ? '∞' : '—') +
+    g('Best trade', closed.length ? usd(Math.max(...closed.map(x => x.res.pnl))) : '—', 'g') + g('Worst trade', closed.length ? usd(Math.min(...closed.map(x => x.res.pnl))) : '—', 'r') + g('Max drawdown', closed.length ? usd(-dd) : '—', 'r') + g('Current streak', stk ? `${sn} ${stk === 'win' ? 'win' : 'loss'}${sn > 1 ? (stk === 'win' ? 's' : 'es') : ''}` : '—');
+  curve(pts);
+  $('jAsset').innerHTML = groupTbl(closed, x => x.snap.asset, 'Asset');
+  $('jDir').innerHTML = groupTbl(closed, x => `${x.snap.long ? 'Long' : 'Short'} · ${x.snap.mkt === 'spot' ? 'Spot' : (x.snap.lev <= 5 ? '1–5×' : x.snap.lev <= 15 ? '6–15×' : '16×+')}`, 'Direction · leverage');
+  $('jTf').innerHTML = tfTbl(closed);
+  { const b = bestTf(tfRows(closed));
+    $('jTfBest').innerHTML = b ? `<div class="rr-warn y" style="border-color:var(--gold);background:rgba(219,161,24,.08);color:var(--text)">Best time frame so far: <b style="color:var(--gold2)">${b.nm}</b> &mdash; net ${usd(b.t.net)} from ${b.t.n} trade${b.t.n > 1 ? 's' : ''}, ${b.t.wr == null ? 'no decided trades' : (b.t.wr * 100).toFixed(0) + '% win rate'}, average ${b.t.avgR.toFixed(2)}R.${closed.length < 10 ? ' This rests on only ' + closed.length + ' closed trade' + (closed.length > 1 ? 's' : '') + ', so treat it as an early read, not a pattern.' : ''}</div>` : '<p class="calendar-note" style="margin:0">Pick the time frame you trade on each setup. Once trades are closed, your best and worst time frames show up here.</p>'; }
+  let o = '<thead><tr><th>Trade</th><th>Account</th><th>Asset</th><th>Dir</th><th>Lev</th><th>Time frame</th><th>Entry</th><th>Stop</th><th>Margin locked</th><th>Risk</th><th>Opened</th><th></th></tr></thead><tbody>';
+  if(!opens.length) o += '<tr><td colspan="12" style="color:var(--mute)">No open trades. Open one from the Risk-to-Reward calculator.</td></tr>';
+  opens.forEach(x => { const i = list.indexOf(x); o += `<tr><td><b>${esc(x.name)}</b></td><td>${esc(accName(accOf(x)))}</td><td>${esc(x.snap.asset)}</td><td style="color:${x.snap.long ? '#3fb47a' : '#e0554d'}">${x.snap.long ? 'Long' : 'Short'}</td><td>${x.snap.mkt === 'spot' ? 1 : x.snap.lev}×</td><td>${esc(tfName(tfOf(x)))}</td><td>${pr(x.snap.E)}</td><td>${pr(x.snap.SL)}</td><td>${usd(x.snap.margin)}</td><td style="color:#e0554d">${usd(x.snap.riskUsd)}</td><td>${new Date(x.opened || x.t).toLocaleDateString()}</td>` +
+    `<td><div class="rr-acts" style="margin:0"><button class="rr-btn sm" data-j="close" data-i="${i}">Close / update</button><button class="rr-btn ghost sm" data-j="load" data-i="${i}">Load</button><button class="rr-btn ghost sm" data-j="del" data-i="${i}">Cancel</button></div></td></tr>`; });
+  $('jOpen').innerHTML = o + '</tbody>';
+  let rows = list.filter(x => x.snap && (x.status === 'open' || x.status === 'closed'));
+  rows = rows.filter(x => jf === 'all' || (jf === 'open' ? x.status === 'open' : x.status === 'closed' && kind(x.res.pnl, x.snap.riskUsd) === jf));
+  rows.sort((a, b) => ((b.res && b.res.closed) || b.opened || b.t) - ((a.res && a.res.closed) || a.opened || a.t));
+  let t = '<thead><tr><th>Date</th><th>Trade</th><th>Account</th><th>Asset</th><th>Dir</th><th>Lev</th><th>Time frame</th><th>Entry</th><th>Result</th><th>P&amp;L</th><th>R</th><th>How it ended</th><th></th></tr></thead><tbody>';
+  if(!rows.length) t += '<tr><td colspan="13" style="color:var(--mute)">Nothing here yet.</td></tr>';
+  rows.forEach(x => { const i = list.indexOf(x), r = x.res;
+    t += `<tr><td>${new Date(r ? r.closed : (x.opened || x.t)).toLocaleDateString()}</td><td><b>${esc(x.name)}</b></td><td>${esc(accName(accOf(x)))}</td><td>${esc(x.snap.asset)}</td><td style="color:${x.snap.long ? '#3fb47a' : '#e0554d'}">${x.snap.long ? 'Long' : 'Short'}</td><td>${x.snap.mkt === 'spot' ? 1 : x.snap.lev}×</td><td>${esc(tfName(tfOf(x)))}</td><td>${pr(x.snap.E)}</td><td>${pill(x)}</td>` +
+      (r ? `<td style="color:${r.pnl >= 0 ? '#3fb47a' : '#e0554d'}"><b>${usd(r.pnl)}</b></td><td>${r.r.toFixed(2)}R</td><td style="white-space:normal;min-width:150px;color:var(--mute)">${esc(r.how || '')}</td>` : '<td>—</td><td>—</td><td style="color:var(--mute)">In play</td>') +
+      `<td><div class="rr-acts" style="margin:0">${x.status === 'open' ? `<button class="rr-btn sm" data-j="close" data-i="${i}">Close / update</button>` : `<button class="rr-btn ghost sm" data-j="reopen" data-i="${i}">Reopen</button>`}<button class="rr-btn ghost sm" data-j="load" data-i="${i}">Load</button><button class="rr-btn ghost sm" data-j="del" data-i="${i}">Delete</button></div></td></tr>`; });
+  $('jHist').innerHTML = t + '</tbody>';
+  renderPortfolio();
+}
+// ---- close / update modal
+let cur = null;
+function openClose(i){
+  const list = loadSaved(), x = list[i]; if(!x || !x.snap) return; cur = {i, mode: 'partial', hits: x.snap.tps.map(() => false), rest: 'stop', custom: '', actual: ''};
+  drawModal();
+  $('rrModal').classList.add('open');
+}
+function modalCalc(){
+  const x = loadSaved()[cur.i], sn = x.snap;
+  let hits = sn.tps.map(() => false), rest = sn.SL, how = '';
+  if(cur.mode === 'full'){ hits = sn.tps.map(() => true); rest = sn.E; how = `All ${sn.tps.length} target${sn.tps.length > 1 ? 's' : ''} hit`; }
+  else if(cur.mode === 'sl'){ how = 'Stopped out at the original stop'; }
+  else { hits = cur.hits; const n = hits.filter(Boolean).length;
+    if(cur.rest === 'stop') rest = sn.SL; else if(cur.rest === 'be') rest = sn.E; else rest = num(cur.custom) != null ? num(cur.custom) : sn.E;
+    how = (n ? `TP${hits.map((h, k) => h ? k + 1 : 0).filter(Boolean).join(' + TP')} hit` : 'No target hit') + '; rest ' + (cur.rest === 'stop' ? 'stopped at the original stop' : cur.rest === 'be' ? 'closed at break-even (entry)' : `closed at ${pr(rest)}`); }
+  let pnl = settle(sn, hits, rest); const act = num(cur.actual); if(act != null){ pnl = act; how += ' · P&L as entered from my exchange'; }
+  return {pnl, how, x, sn};
+}
+function drawModal(){
+  const x = loadSaved()[cur.i], sn = x.snap, m = modalCalc(), A = acct(accOf(x));
+  const optBox = (id, title, desc) => `<label class="rr-opt ${cur.mode === id ? 'on' : ''}"><input type="radio" name="rrMode" value="${id}" ${cur.mode === id ? 'checked' : ''}><span><b>${title}</b><br><span style="color:var(--mute);font-size:12.5px">${desc}</span></span></label>`;
+  const after = A.equity + m.pnl;
+  $('rrModalBody').innerHTML = `<h3>Close / update trade</h3><p style="margin:0 0 12px;font-size:13.5px"><b>${esc(x.name)}</b> · ${esc(sn.asset)} ${sn.long ? 'long' : 'short'} · entry ${pr(sn.E)} · stop ${pr(sn.SL)} · margin locked ${usd(sn.margin)}</p>` +
+    optBox('full', 'Fully played out (all targets hit)', 'Every take-profit was reached. Adds your planned profit to the account.') + optBox('sl', 'Stop loss hit', 'Stopped out for the planned loss. Takes the risk amount off the account.') +
+    optBox('partial', 'Partly played out', 'Some targets hit, then the rest was stopped, closed at break-even, or closed by hand at a price you choose (for example a stop moved into profit).') +
+    (cur.mode === 'partial' ? `<div style="margin:2px 0 12px 4px"><div style="font-size:12px;color:var(--mute);margin-bottom:6px">Targets that were hit</div>${sn.tps.map((t, k) => `<label style="display:inline-flex;gap:6px;margin-right:14px;font-size:13.5px"><input type="checkbox" data-hit="${k}" ${cur.hits[k] ? 'checked' : ''}> TP${k + 1} (${pr(t.P)}, ${t.share}%)</label>`).join('') || '<span style="color:var(--mute)">This trade had no targets.</span>'}
+      <div style="font-size:12px;color:var(--mute);margin:10px 0 6px">The rest of the position ended…</div>
+      <select id="rrRest" class="rr-f" style="background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 10px;font:inherit;width:100%"><option value="stop" ${cur.rest === 'stop' ? 'selected' : ''}>Stopped at the original stop (${pr(sn.SL)})</option><option value="be" ${cur.rest === 'be' ? 'selected' : ''}>At break-even (entry ${pr(sn.E)})</option><option value="custom" ${cur.rest === 'custom' ? 'selected' : ''}>At a price I choose (e.g. stop moved into profit)</option></select>
+      ${cur.rest === 'custom' ? `<input id="rrCustom" type="number" step="any" inputmode="decimal" placeholder="Exit price (USD)" value="${esc(cur.custom)}" style="margin-top:8px;width:100%;box-sizing:border-box;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 10px;font:inherit">` : ''}</div>` : '') +
+    `<div class="rr-f"><label for="rrActual">Actual P&amp;L from my exchange (optional, overrides the estimate)</label><input id="rrActual" type="number" step="any" inputmode="decimal" placeholder="e.g. 142.50 or -48.20" value="${esc(cur.actual)}"></div>
+    <div class="rr-out" style="grid-template-columns:repeat(3,1fr)">${row('Result', usd(m.pnl), m.pnl >= 0 ? 'g' : 'r')}${row('R multiple', (m.pnl / sn.riskUsd).toFixed(2) + 'R')}${row('Balance after', usd(after), after >= A.equity ? 'g' : 'r')}</div>
+    <p class="calendar-note" style="margin:0 0 12px">${esc(m.how)}. Closing releases ${usd(sn.margin)} of locked margin.</p>
+    <div class="rr-acts" style="margin:0"><button type="button" class="rr-btn" id="rrConfirm">Confirm result</button><button type="button" class="rr-btn ghost" id="rrCancelClose">Cancel</button></div>`;
+}
+function wireJournal(){
+  $('rrModalBody').addEventListener('change', e => {
+    if(e.target.name === 'rrMode'){ cur.mode = e.target.value; drawModal(); }
+    else if(e.target.dataset.hit != null){ cur.hits[+e.target.dataset.hit] = e.target.checked; drawModal(); }
+    else if(e.target.id === 'rrRest'){ cur.rest = e.target.value; drawModal(); }
+  });
+  $('rrModalBody').addEventListener('input', e => { if(e.target.id === 'rrCustom'){ cur.custom = e.target.value; refreshModalNums(e.target); } else if(e.target.id === 'rrActual'){ cur.actual = e.target.value; refreshModalNums(e.target); } });
+  function refreshModalNums(active){ const id = active.id, pos = active.selectionStart, v = active.value; drawModal(); const el = $(id); if(el){ el.focus(); try{ el.setSelectionRange(pos, pos); }catch(err){} el.value = v; } }
+  $('rrModalBody').addEventListener('click', e => {
+    if(e.target.id === 'rrCancelClose'){ $('rrModal').classList.remove('open'); cur = null; }
+    else if(e.target.id === 'rrConfirm'){ const m = modalCalc(), list = loadSaved(), x = list[cur.i];
+      x.status = 'closed'; x.res = {pnl: Math.round(m.pnl * 100) / 100, r: m.pnl / x.snap.riskUsd, how: m.how, closed: Date.now()};
+      saveAll(list); $('rrModal').classList.remove('open'); cur = null; render(); renderSaved(); }
+  });
+  $('rrModal').addEventListener('mousedown', e => { if(e.target === $('rrModal')){ $('rrModal').classList.remove('open'); cur = null; } });
+  function act(b){ const a = b.dataset.a || b.dataset.j, i = +b.dataset.i, list = loadSaved(), x = list[i]; if(!x) return;
+    if(a === 'load'){ S = Object.assign({}, DEF, x.s); persist(); pushInputs(); render(); location.hash = '#riskreward'; setTimeout(() => $('rrAsset').scrollIntoView({behavior: 'smooth', block: 'center'}), 150); }
+    else if(a === 'copy'){ list.splice(i + 1, 0, {id: uid(), name: x.name + ' (copy)', t: Date.now(), s: Object.assign({}, x.s), status: 'saved'}); saveAll(list); renderSaved(); render(); }
+    else if(a === 'open'){ const save = S; S = Object.assign({}, DEF, x.s); const c = calc(); S = save; startTrade(c, x.s, x.name, i); }
+    else if(a === 'close'){ openClose(i); }
+    else if(a === 'reopen'){ x.status = 'open'; delete x.res; saveAll(list); renderSaved(); render(); }
+    else if(a === 'del'){ if(x.status === 'closed' || x.status === 'open'){ if(!confirm(x.status === 'open' ? 'Cancel this open trade and release its margin?' : 'Delete this closed trade from your history? Your balance will change back.')) return; } list.splice(i, 1); saveAll(list); renderSaved(); render(); } }
+  $('rrSaved').addEventListener('click', e => { const b = e.target.closest('button[data-a]'); if(b) act(b); });
+  ['jOpen', 'jHist', 'pfOpen'].forEach(id => $(id).addEventListener('click', e => { const b = e.target.closest('button[data-j]'); if(b) act(b); }));
+  $('jFilter').addEventListener('click', e => { const c = e.target.closest('.filter-chip'); if(!c) return; document.querySelectorAll('#jFilter .filter-chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); jf = c.dataset.f; renderJournal(); });
+  const exp = () => { const blob = new Blob([JSON.stringify({ttm_rr: 3, bals: BALS, setups: loadSaved()}, null, 2)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ttm-risk-reward-backup.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
+  $('rrExport').addEventListener('click', exp); $('jExport').addEventListener('click', exp);
+  const impBtn = () => $('rrImport').click(); $('rrImportBtn').addEventListener('click', impBtn); $('jImportBtn').addEventListener('click', impBtn);
+  $('jImport').addEventListener('change', e => { $('rrImport').files = e.target.files; $('rrImport').dispatchEvent(new Event('change')); });
+  $('jClear').addEventListener('click', () => { if(confirm('Delete ALL saved plans, open and closed trades from this browser? This cannot be undone. Export first if you want a copy.')){ saveAll([]); renderSaved(); render(); } });
+}
+function startTrade(c, setup, name, replaceIdx){
+  const note = $('rrOpenNote');
+  if(!c.ok || c.warns.some(w => w[0] === 'bad')){ note.textContent = 'Fix the red warnings first, then open the trade.'; note.style.color = '#e0554d'; return false; }
+  if(!c.tps.length){ note.textContent = 'Add at least one take-profit target before opening the trade.'; note.style.color = '#e0554d'; return false; }
+  const list = loadSaved(), item = {id: uid(), name: (name || '').trim() || `${setup.asset} ${setup.mkt === 'spot' ? 'spot' : setup.lev + '×'} ${setup.dir}`, t: Date.now(), opened: Date.now(), s: Object.assign({}, setup), status: 'open', snap: snapOf(c, setup)};
+  if(replaceIdx != null && list[replaceIdx]) list[replaceIdx] = Object.assign(list[replaceIdx], item, {id: list[replaceIdx].id || item.id}); else list.unshift(item);
+  saveAll(list); note.style.color = ''; note.innerHTML = `Opened “${esc(item.name)}”: ${usd(c.margin)} margin locked, ${usd(c.avail - c.margin)} left to trade with. When it plays out, close it in the <a href="#tradejournal" style="color:var(--gold2)">trade tracker</a> to update your balance.`;
+  $('rrName').value = ''; render(); renderSaved(); return true;
+}
+// ---- live candles (OKX) behind the setup
+const OKXBAR = {m5: '5m', m15: '15m', h1: '1H', h2: '2H', h4: '4H', h8: '4H', h12: '12H', d1: '1D', w1: '1W', mo1: '1M'};
+let CAN = {key: '', rows: [], err: ''}, ctok = 0, ctimer = null;
+const rrActive = () => { const s = document.getElementById('riskreward'); return !!(s && s.classList.contains('active')); };
+function loadCandles(){ clearTimeout(ctimer); ctimer = setTimeout(doCandles, 250); }
+async function doCandles(){
+  const a = S.asset, tf = S.tf, key = a + '|' + tf, tok = ++ctok; if(!a) return;
+  if($('rrCanSt')) $('rrCanSt').textContent = 'Loading ' + a + ' candles…';
+  let rows = null;
+  for(const inst of [a + '-USDT', a + '-USDT-SWAP']){
+    try{ const r = await fetch(`https://www.okx.com/api/v5/market/candles?instId=${inst}&bar=${OKXBAR[tf] || '1H'}&limit=${tf === 'h8' ? 200 : 100}`, {cache: 'no-store'}); const d = await r.json(); if(d.data && d.data.length){ rows = d.data; break; } }catch(e){}
+  }
+  if(tok !== ctok) return;
+  if(!rows){ CAN = {key, rows: [], err: 'No candles'}; $('rrCanSt').textContent = `No live candles for ${a} on OKX (an unlisted or custom ticker, or the feed is unreachable). You can still type your levels in by hand.`; }
+  else {
+    let c = rows.map(r => ({t: +r[0], o: +r[1], h: +r[2], l: +r[3], c: +r[4]})).reverse();
+    if(tf === 'h8'){ const g = {}; c.forEach(x => { const k = Math.floor(x.t / 28800000), b = g[k]; if(!b) g[k] = {t: k * 28800000, o: x.o, h: x.h, l: x.l, c: x.c}; else { b.h = Math.max(b.h, x.h); b.l = Math.min(b.l, x.l); b.c = x.c; } }); c = Object.keys(g).sort((p, q) => p - q).map(k => g[k]); }
+    CAN = {key, rows: c.slice(-90), err: ''};
+    const l = CAN.rows[CAN.rows.length - 1]; $('rrCanSt').textContent = `${a} last ${pr(l.c)} · ${CAN.rows.length} × ${tfName(tf)} candles · updated ${new Date().toLocaleTimeString()}. Entry, stop, targets and liquidation from your setup are drawn on the chart.`;
+  }
+  drawCandles(calc());
+}
+function drawCandles(c){
+  const svg = $('rrCandles'); if(!svg) return;
+  const W = 900, H = 360, L = 8, R = 124, T = 14, B = 24, key = (S.asset || '') + '|' + S.tf;
+  $('rrCanHead').textContent = `${S.asset || ''}/USDT · ${tfName(S.tf)} · OKX`;
+  if(CAN.key !== key || !CAN.rows.length){ svg.innerHTML = `<text x="450" y="180" fill="#8b8f9a" font-size="14" text-anchor="middle">${CAN.key === key && CAN.err ? 'No live candles for ' + esc(S.asset || '') : 'Loading candles…'}</text>`; return; }
+  const rows = CAN.rows, n = rows.length; let lo = Math.min(...rows.map(r => r.l)), hi = Math.max(...rows.map(r => r.h));
+  const lv = [];
+  if(c && c.ok){ lv.push({k: 'Entry', p: c.E, col: '#dba118'}, {k: 'Stop', p: c.SL, col: '#e0554d'}); c.tps.forEach(x => lv.push({k: 'TP' + x.i, p: x.P, col: '#3fb47a'})); if(c.liq != null) lv.push({k: 'Liq', p: c.liq, col: '#b04bd6'}); lv.forEach(l => { lo = Math.min(lo, l.p); hi = Math.max(hi, l.p); }); }
+  const last = rows[n - 1].c, pad = (hi - lo) * .06 || hi * .01; lo -= pad; hi += pad;
+  const X = i => L + (W - L - R) * ((i + .5) / n), Y = p => T + (H - T - B) * (1 - (p - lo) / (hi - lo)), bw = Math.max(1.5, (W - L - R) / n * .62);
+  let g = '';
+  for(let k = 0; k <= 4; k++){ const v = lo + (hi - lo) * k / 4; g += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.07)"/><text x="${L + 3}" y="${Y(v) - 3}" font-size="10" fill="#6c707b">${pr(v)}</text>`; }
+  rows.forEach((r, i) => { const up = r.c >= r.o, col = up ? '#3fb47a' : '#e0554d', x = X(i), yo = Y(r.o), yc = Y(r.c);
+    g += `<line x1="${x}" x2="${x}" y1="${Y(r.h)}" y2="${Y(r.l)}" stroke="${col}" stroke-width="1"/><rect x="${x - bw / 2}" y="${Math.min(yo, yc)}" width="${bw}" height="${Math.max(1, Math.abs(yc - yo))}" fill="${col}"/>`; });
+  const fmt = t => { const d = new Date(t), m = d.toLocaleString('en-GB', {month: 'short'}); return ['d1', 'w1', 'mo1'].includes(S.tf) ? `${d.getDate()} ${m} ${String(d.getFullYear()).slice(2)}` : `${d.getDate()} ${m} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+  [0, Math.floor(n / 2), n - 1].forEach((i, k) => { g += `<text x="${X(i)}" y="${H - 6}" font-size="10" fill="#6c707b" text-anchor="${k === 0 ? 'start' : k === 2 ? 'end' : 'middle'}">${fmt(rows[i].t)}</text>`; });
+  const all = lv.concat([{k: 'Last', p: last, col: '#aeb2bd', solid: 1}]).sort((a, b) => b.p - a.p);
+  let ly = -99;
+  all.forEach(l => { const yy = Y(l.p); let ty = yy; if(ty - ly < 17) ty = ly + 17; ly = ty;
+    g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="${l.col}" stroke-width="${l.k === 'Entry' || l.solid ? 1.4 : 1.2}" ${l.k === 'Entry' || l.solid ? '' : 'stroke-dasharray="5 4"'} opacity="${l.solid ? .8 : 1}"/>` +
+         `<rect x="${W - R + 6}" y="${ty - 9}" width="${R - 8}" height="18" rx="4" fill="${l.col}"/><text x="${W - R + 11}" y="${ty + 4}" font-size="11" font-weight="700" fill="#111">${l.k} ${pr(l.p)}</text>`; });
+  svg.innerHTML = g;
+}
+
+// ---- portfolio forecast vs actual (live prices)
+let PRICES = {}, PSTAMP = 0, pfScope = 'all';
+const pfActive = () => { const s = document.getElementById('portfolio'); return !!(s && s.classList.contains('active')); };
+async function pfLoad(){
+  try{ const r = await fetch('https://www.okx.com/api/v5/market/tickers?instType=SPOT', {cache: 'no-store'}); const d = await r.json(), m = {};
+    d.data.forEach(t => { if(t.instId.endsWith('-USDT')) m[t.instId.slice(0, -5)] = +t.last; });
+    if(Object.keys(m).length > 20){ PRICES = m; PSTAMP = Date.now(); } }catch(e){}
+  renderPortfolio();
+}
+function priceOf(a){ if(PRICES[a] > 0) return {p: PRICES[a], live: true}; const c = COINS.find(x => x.s === a); return c && c.p ? {p: c.p, live: false} : null; }
+function openState(x){
+  const sn = x.snap, pp = priceOf(sn.asset), best = settle(sn, sn.tps.map(() => true), sn.E), worst = settle(sn, sn.tps.map(() => false), sn.SL);
+  if(!pp) return {pp: null, pnl: 0, best, worst, label: 'No price', prog: 0, move: null};
+  const p = pp.p, long = sn.long, stopped = long ? p <= sn.SL : p >= sn.SL, hits = sn.tps.map(t => long ? p >= t.P : p <= t.P);
+  const far = sn.tps.length ? sn.tps.reduce((a, b) => (long ? b.P > a.P : b.P < a.P) ? b : a).P : sn.E;
+  const pnl = stopped ? settle(sn, sn.tps.map(() => false), sn.SL) : settle(sn, hits, p), nh = hits.filter(Boolean).length;
+  return {pp, pnl, best, worst, stopped, move: (p - sn.E) / sn.E * 100 * (long ? 1 : -1), prog: far !== sn.SL ? Math.max(0, Math.min(1, (p - sn.SL) / (far - sn.SL))) : 0,
+    label: stopped ? 'Stop level reached' : nh === sn.tps.length && nh ? 'All targets reached' : nh ? `TP${hits.map((h, k) => h ? k + 1 : 0).filter(Boolean).join('+')} reached` : 'In play'};
+}
+function pfAccData(id){
+  const A = acct(id), opens = loadSaved().filter(x => x.status === 'open' && x.snap && accOf(x) === id), st = tstats(closedOf(id));
+  let unreal = 0, bestS = 0, worstS = 0, expS = 0; const w = st.wr != null && st.n >= 5 ? st.wr : null;
+  opens.forEach(x => { const o = openState(x); unreal += o.pnl; bestS += o.best; worstS += o.worst; if(w != null) expS += w * o.best + (1 - w) * o.worst; });
+  return {id, A, opens, st, unreal, actual: A.equity + unreal, best: A.equity + bestS, worst: A.equity + worstS, exp: w != null ? A.equity + expS : null};
+}
+function renderPortfolio(){
+  if(!$('pfTiles')) return;
+  $('pfScope').innerHTML = [['all', 'All accounts']].concat(ACCS).map(a => `<button class="filter-chip ${pfScope === a[0] ? 'active' : ''}" data-s="${a[0]}">${a[1]}</button>`).join('');
+  const ids = pfScope === 'all' ? ACCS.map(a => a[0]) : [pfScope], D = ids.map(pfAccData);
+  const T = D.reduce((t, d) => ({start: t.start + d.A.start, real: t.real + d.A.equity, actual: t.actual + d.actual, best: t.best + d.best, worst: t.worst + d.worst, unreal: t.unreal + d.unreal}), {start: 0, real: 0, actual: 0, best: 0, worst: 0, unreal: 0});
+  T.exp = D.every(d => !d.opens.length || d.exp != null) ? D.reduce((t, d) => t + (d.exp != null ? d.exp : d.A.equity), 0) : null;
+  const hasOpen = D.some(d => d.opens.length);
+  const dl = (v, base) => base > 0 ? `<br><span style="font-size:11px;font-weight:400;color:${v - base >= 0 ? '#3fb47a' : '#e0554d'}">${v - base >= 0 ? '+' : ''}${((v - base) / base * 100).toFixed(1)}% vs start</span>` : '';
+  $('pfTiles').innerHTML = row('Starting balance', usd(T.start)) + row('Realised balance', usd(T.real) + dl(T.real, T.start)) + row('Actual now (live)', usd(T.actual) + dl(T.actual, T.start), T.actual >= T.real ? 'g' : 'r') + row('Forecast: all targets hit', usd(T.best) + dl(T.best, T.start), 'g') + row('Worst: all stops hit', usd(T.worst) + dl(T.worst, T.start), 'r');
+  $('pfStamp').textContent = PSTAMP ? `Prices ${new Date(PSTAMP).toLocaleTimeString()} · OKX live` : (hasOpen ? 'Fetching live prices…' : '');
+  // chart: realised equity history, then the fan to actual / forecast / worst / expected
+  const svg = $('pfChart'), cl = closedOf('all').filter(x => ids.includes(accOf(x))), W = 800, H = 300, L = 60, R = 130, Tp = 14, Bt = 22;
+  let eq = T.start; const hist = [eq]; cl.forEach(x => { eq += x.res.pnl; hist.push(eq); });
+  const n = hist.length, N = n + 2, vals = hist.concat([T.actual, T.best, T.worst].concat(T.exp != null && hasOpen ? [T.exp] : []));
+  let lo = Math.min(...vals), hi = Math.max(...vals); const pad = (hi - lo) * .15 || hi * .03 || 1; lo -= pad; hi += pad;
+  const X = i => L + (W - L - R) * (i / N), Y = v => Tp + (H - Tp - Bt) * (1 - (v - lo) / (hi - lo));
+  let g = ''; [0, .5, 1].forEach(f => { const v = lo + (hi - lo) * f; g += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.07)"/><text x="${L - 6}" y="${Y(v) + 4}" font-size="10" fill="#8b8f9a" text-anchor="end">${Math.round(v).toLocaleString()}</text>`; });
+  g += `<line x1="${L}" x2="${W - R}" y1="${Y(T.start)}" y2="${Y(T.start)}" stroke="#dba118" stroke-dasharray="4 4" opacity=".5"/>`;
+  g += `<polyline fill="none" stroke="#dba118" stroke-width="2.2" points="${hist.map((v, i) => X(i) + ',' + Y(v)).join(' ')}"/>`;
+  hist.forEach((v, i) => { g += `<circle cx="${X(i)}" cy="${Y(v)}" r="3" fill="#dba118"/>`; });
+  const x0 = X(n - 1), x1 = X(N), fan = [['Forecast', T.best, '#3fb47a'], ['Actual now', T.actual, '#f2c14e'], ['Expected', hasOpen ? T.exp : null, '#aeb2bd'], ['Worst', T.worst, '#e0554d']].filter(f => f[1] != null && (hasOpen || f[0] === 'Actual now'));
+  let lastLy = -99; fan.slice().sort((a, b) => b[1] - a[1]).forEach(f => { let ty = Y(f[1]); if(ty - lastLy < 18) ty = lastLy + 18; lastLy = ty;
+    g += `<line x1="${x0}" y1="${Y(hist[n - 1])}" x2="${x1}" y2="${Y(f[1])}" stroke="${f[2]}" stroke-width="${f[0] === 'Actual now' ? 2.4 : 1.6}" ${f[0] === 'Actual now' ? '' : 'stroke-dasharray="6 4"'}/><circle cx="${x1}" cy="${Y(f[1])}" r="4" fill="${f[2]}"/><rect x="${x1 + 8}" y="${ty - 9}" width="${R - 12}" height="18" rx="4" fill="${f[2]}"/><text x="${x1 + 13}" y="${ty + 4}" font-size="10.5" font-weight="700" fill="#111">${f[0]} ${Math.round(f[1]).toLocaleString()}</text>`; });
+  g += `<text x="${L}" y="${H - 5}" font-size="10" fill="#6c707b">Start</text><text x="${x0}" y="${H - 5}" font-size="10" fill="#6c707b" text-anchor="middle">Today (${n - 1} closed)</text>`;
+  svg.innerHTML = g;
+  // by account
+  let h = '<thead><tr><th>Account</th><th>Realised balance</th><th>Open P&amp;L now</th><th>Actual now</th><th>Expected</th><th>Forecast (all TPs)</th><th>Worst (all stops)</th><th>Open</th></tr></thead><tbody>';
+  const rowA = (nm, d, b) => { const f = t => b ? `<b>${t}</b>` : t; h += `<tr><td>${f(esc(nm))}</td><td>${usd(d.real)}</td><td style="color:${d.unreal >= 0 ? '#3fb47a' : '#e0554d'}">${usd(d.unreal)}</td><td>${f(usd(d.actual))}</td><td>${d.exp == null ? '—' : usd(d.exp)}</td><td style="color:#3fb47a">${usd(d.best)}</td><td style="color:#e0554d">${usd(d.worst)}</td><td>${d.n}</td></tr>`; };
+  D.forEach(d => rowA(accName(d.id), {real: d.A.equity, unreal: d.unreal, actual: d.actual, exp: d.exp, best: d.best, worst: d.worst, n: d.opens.length}));
+  if(D.length > 1) rowA('All accounts', {real: T.real, unreal: T.unreal, actual: T.actual, exp: hasOpen ? T.exp : null, best: T.best, worst: T.worst, n: D.reduce((t, d) => t + d.opens.length, 0)}, true);
+  $('pfAcc').innerHTML = h + '</tbody>';
+  // open trades at live prices
+  let o = '<thead><tr><th>Trade</th><th>Account</th><th>Asset</th><th>Dir</th><th>Entry</th><th>Live</th><th>Move</th><th>Open P&amp;L</th><th>Stop → farthest TP</th><th>Status</th><th></th></tr></thead><tbody>';
+  const list = loadSaved(), all = D.reduce((a, d) => a.concat(d.opens), []);
+  if(!all.length) o += '<tr><td colspan="11" style="color:var(--mute)">No open trades in this view. Open a trade from the Risk / Reward calculator and it appears here at live prices.</td></tr>';
+  all.forEach(x => { const s = openState(x), i = list.indexOf(x);
+    o += `<tr><td><b>${esc(x.name)}</b></td><td>${esc(accName(accOf(x)))}</td><td>${esc(x.snap.asset)}</td><td style="color:${x.snap.long ? '#3fb47a' : '#e0554d'}">${x.snap.long ? 'Long' : 'Short'}</td><td>${pr(x.snap.E)}</td><td>${s.pp ? pr(s.pp.p) + (s.pp.live ? '' : ' <small style="color:var(--mute)">(snapshot)</small>') : '—'}</td><td style="color:${s.move >= 0 ? '#3fb47a' : '#e0554d'}">${s.move == null ? '—' : (s.move >= 0 ? '+' : '') + s.move.toFixed(2) + '%'}</td><td style="color:${s.pnl >= 0 ? '#3fb47a' : '#e0554d'}"><b>${s.pp ? usd(s.pnl) : '—'}</b></td>` +
+      `<td style="min-width:120px"><div class="rr-bar" style="margin:0"><i style="width:${(s.prog * 100).toFixed(0)}%;background:${s.stopped ? '#e0554d' : '#dba118'}"></i></div></td><td style="color:${s.stopped ? '#e0554d' : /reached/.test(s.label) ? '#3fb47a' : 'var(--mute)'}">${s.label}</td><td><button class="rr-btn sm" data-j="close" data-i="${i}">Close / update</button></td></tr>`; });
+  $('pfOpen').innerHTML = o + '</tbody>';
+}
+// ---- Excel export: a small built-in .xlsx writer (no libraries), TTM black / gold view, gridlines off
+function xlsxBook(){
+  const x2 = t => String(t).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const fonts = ['<font><sz val="11"/><name val="Calibri"/></font>'], fills = ['<fill><patternFill patternType="none"/></fill>', '<fill><patternFill patternType="gray125"/></fill>'], borders = ['<border><left/><right/><top/><bottom/><diagonal/></border>'], nfs = [], xfs = ['<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'], cache = {};
+  const idx = (arr, v) => { let i = arr.indexOf(v); if(i < 0){ arr.push(v); i = arr.length - 1; } return i; };
+  const BLK = 'FF000000';
+  function style(o){
+    o = o || {}; const key = JSON.stringify(o); if(cache[key] != null) return cache[key];
+    const font = `<font>${o.b ? '<b/>' : ''}${o.i ? '<i/>' : ''}<sz val="${o.sz || 11}"/><color rgb="${o.color || 'FFE8E6E1'}"/><name val="Calibri"/></font>`;
+    const fill = `<fill><patternFill patternType="solid"><fgColor rgb="${o.fill || BLK}"/><bgColor indexed="64"/></patternFill></fill>`;
+    const side = (n, c) => c ? `<${n} style="thin"><color rgb="${c}"/></${n}>` : `<${n}/>`;
+    const bot = o.bb ? `<bottom style="medium"><color rgb="${o.bb}"/></bottom>` : side('bottom', o.bd);
+    const border = (o.bd || o.bb) ? `<border>${side('left', o.bd)}${side('right', o.bd)}${side('top', o.bd)}${bot}<diagonal/></border>` : null;
+    const nf = o.fmt ? 164 + idx(nfs, o.fmt) : 0;
+    const al = `<alignment horizontal="${o.h || 'general'}" vertical="${o.v || 'center'}"${o.wrap ? ' wrapText="1"' : ''}/>`;
+    xfs.push(`<xf numFmtId="${nf}" fontId="${idx(fonts, font)}" fillId="${idx(fills, fill)}" borderId="${border ? idx(borders, border) : 0}" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">${al}</xf>`);
+    return cache[key] = xfs.length - 1;
+  }
+  const colL = n => { let s = ''; while(n > 0){ const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
+  const sheets = [];
+  function sheet(name, tab){
+    const cells = {}, merges = [], widths = {}, heights = {};
+    const api = {
+      set(r, c, v, o){ cells[r + ',' + c] = {r, c, v, s: style(o)}; },
+      merge(r1, c1, r2, c2, v, o){ for(let r = r1; r <= r2; r++) for(let c = c1; c <= c2; c++) api.set(r, c, (r === r1 && c === c1) ? v : '', o); if(r1 !== r2 || c1 !== c2) merges.push(`${colL(c1)}${r1}:${colL(c2)}${r2}`); },
+      width(c, w){ widths[c] = w; }, height(r, h){ heights[r] = h; },
+      xml(first){
+        const bg = style({}); let cols = '';
+        for(let c = 1; c <= 40; c++) cols += `<col min="${c}" max="${c}" width="${widths[c] || 12}" customWidth="1" style="${bg}"/>`;
+        cols += `<col min="41" max="16384" width="9" style="${bg}"/>`;
+        const byRow = {}; Object.values(cells).forEach(k => (byRow[k.r] = byRow[k.r] || []).push(k));
+        const rnums = Object.keys(byRow).map(Number).concat(Object.keys(heights).map(Number)).filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => a - b);
+        let rows = '';
+        rnums.forEach(r => { const cs = (byRow[r] || []).sort((a, b) => a.c - b.c);
+          rows += `<row r="${r}"${heights[r] ? ` ht="${heights[r]}" customHeight="1"` : ''}>` + cs.map(k => { const ref = colL(k.c) + r, v = k.v;
+            if(v instanceof Date) return `<c r="${ref}" s="${k.s}"><v>${(v.getTime() - v.getTimezoneOffset() * 60000) / 86400000 + 25569}</v></c>`;
+            if(typeof v === 'number' && isFinite(v)) return `<c r="${ref}" s="${k.s}"><v>${v}</v></c>`;
+            if(v == null || v === '') return `<c r="${ref}" s="${k.s}"/>`;
+            return `<c r="${ref}" s="${k.s}" t="inlineStr"><is><t xml:space="preserve">${x2(v)}</t></is></c>`; }).join('') + '</row>'; });
+        return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetPr><tabColor rgb="${tab || 'FFDBA118'}"/></sheetPr><sheetViews><sheetView showGridLines="0" ${first ? 'tabSelected="1" ' : ''}workbookViewId="0"/></sheetViews><sheetFormatPr defaultRowHeight="15"/><cols>${cols}</cols><sheetData>${rows}</sheetData>${merges.length ? `<mergeCells count="${merges.length}">${merges.map(m => `<mergeCell ref="${m}"/>`).join('')}</mergeCells>` : ''}<pageMargins left="0.5" right="0.5" top="0.5" bottom="0.5" header="0.3" footer="0.3"/></worksheet>`;
+      }
+    };
+    api.name = name; sheets.push(api); return api;
+  }
+  const T = (() => { const t = []; for(let n = 0; n < 256; n++){ let c = n; for(let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t.push(c >>> 0); } return t; })();
+  const crc = u => { let c = -1; for(let i = 0; i < u.length; i++) c = T[(c ^ u[i]) & 255] ^ (c >>> 8); return (c ^ -1) >>> 0; };
+  function blob(){
+    const enc = new TextEncoder(), files = [];
+    const add = (name, text) => files.push({name, d: enc.encode(text)});
+    add('[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${sheets.map((s, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>`);
+    add('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>');
+    add('xl/workbook.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView activeTab="0"/></bookViews><sheets>${sheets.map((s, i) => `<sheet name="${x2(s.name)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets></workbook>`);
+    add('xl/_rels/workbook.xml.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((s, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')}<Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`);
+    sheets.forEach((s, i) => add(`xl/worksheets/sheet${i + 1}.xml`, s.xml(i === 0)));
+    add('xl/styles.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${nfs.length ? `<numFmts count="${nfs.length}">${nfs.map((f, i) => `<numFmt numFmtId="${164 + i}" formatCode="${x2(f)}"/>`).join('')}</numFmts>` : ''}<fonts count="${fonts.length}">${fonts.join('')}</fonts><fills count="${fills.length}">${fills.join('')}</fills><borders count="${borders.length}">${borders.join('')}</borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="${xfs.length}">${xfs.join('')}</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`);
+    const parts = [], cen = []; let off = 0;
+    files.forEach(f => { const nm = enc.encode(f.name), d = f.d, cr = crc(d), lh = new Uint8Array(30 + nm.length), v = new DataView(lh.buffer);
+      v.setUint32(0, 0x04034b50, true); v.setUint16(4, 20, true); v.setUint16(6, 0x0800, true); v.setUint16(10, 0, true); v.setUint16(12, 0x21, true); v.setUint32(14, cr, true); v.setUint32(18, d.length, true); v.setUint32(22, d.length, true); v.setUint16(26, nm.length, true); lh.set(nm, 30);
+      const ch = new Uint8Array(46 + nm.length), c = new DataView(ch.buffer);
+      c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(14, 0x21, true); c.setUint32(16, cr, true); c.setUint32(20, d.length, true); c.setUint32(24, d.length, true); c.setUint16(28, nm.length, true); c.setUint32(42, off, true); ch.set(nm, 46);
+      parts.push(lh, d); cen.push(ch); off += lh.length + d.length; });
+    let cs = 0; cen.forEach(c => { parts.push(c); cs += c.length; });
+    const end = new Uint8Array(22), e = new DataView(end.buffer); e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, cs, true); e.setUint32(16, off, true); parts.push(end);
+    return new Blob(parts, {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  }
+  return {sheet, blob};
+}
+function buildTtmWorkbook(){
+  const wb = xlsxBook(), C = {panel: 'FF111111', head: 'FF1F1A08', line: 'FF2E2A1C', gold: 'FFDBA118', gold2: 'FFF2C14E', txt: 'FFE8E6E1', mut: 'FF8B8F9A', grn: 'FF3FB47A', red: 'FFE0554D'};
+  const fUSD = '"$"#,##0.00;-"$"#,##0.00', fPct = '0.0%', fR = '0.00"R"', fDt = 'dd mmm yyyy', fPx = '#,##0.00####';
+  const sg = v => v > 0 ? C.grn : v < 0 ? C.red : C.txt;
+  const list = loadSaved(), closed = closedOf('all'), A = acctAll(), st = tstats(closed), now = new Date();
+  let eq = A.start, peak = eq, dd = 0; closed.forEach(x => { eq += x.res.pnl; peak = Math.max(peak, eq); dd = Math.max(dd, peak - eq); });
+  const d = wb.sheet('Dashboard', 'FFDBA118'); d.width(1, 2); for(let c = 2; c <= 13; c++) d.width(c, 15);
+  d.merge(2, 2, 2, 9, 'TRADE THE MOVE  ·  TRADE TRACKER', {b: 1, sz: 22, color: C.gold}); d.height(2, 34);
+  d.merge(3, 2, 3, 12, 'Win rate, profit and portfolio dashboard  ·  Generated ' + now.toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'}) + '  ·  Educational tool, not financial advice', {color: C.mut, sz: 10});
+  const tile = (r, c, label, val, fmt, color, sub) => {
+    d.merge(r, c, r, c + 2, label, {color: C.mut, sz: 10, fill: C.panel, bd: C.line, h: 'left'});
+    d.merge(r + 1, c, r + 1, c + 2, val, {b: 1, sz: 20, color: color || C.gold2, fill: C.panel, bd: C.line, fmt, h: 'left'});
+    d.merge(r + 2, c, r + 2, c + 2, sub || '', {color: C.mut, sz: 9, fill: C.panel, bd: C.line, h: 'left'}); d.height(r + 1, 32); };
+  tile(5, 2, 'NET P&L (closed trades)', st.net, fUSD, sg(st.net), `${st.n} closed · ${st.w} wins · ${st.l} losses · ${st.be} break-even`);
+  tile(5, 5, 'WIN RATE', st.wr == null ? '—' : st.wr, fPct, C.gold2, 'wins ÷ (wins + losses)');
+  tile(5, 8, 'AVERAGE R PER TRADE', st.avgR == null ? '—' : st.avgR, fR, st.avgR == null ? C.txt : sg(st.avgR), 'R = result ÷ amount risked');
+  tile(5, 11, 'PROFIT FACTOR', st.pf != null ? st.pf : (st.gw > 0 ? 'No losses yet' : '—'), '0.00', C.gold2, 'gross profit ÷ gross loss');
+  tile(9, 2, 'TOTAL BALANCE (all accounts)', A.equity, fUSD, C.gold2, `started with ${usd(A.start)}`);
+  tile(9, 5, 'LOCKED IN OPEN TRADES', A.locked, fUSD, C.gold2, `${A.open} open trade${A.open === 1 ? '' : 's'}`);
+  tile(9, 8, 'AVAILABLE TO TRADE', A.avail, fUSD, C.grn, 'balance minus locked margin');
+  tile(9, 11, 'MAX DRAWDOWN', closed.length ? -dd : '—', fUSD, closed.length ? C.red : C.txt, 'peak to trough, closed trades');
+  const best = closed.length ? Math.max(...closed.map(x => x.res.pnl)) : null, worst = closed.length ? Math.min(...closed.map(x => x.res.pnl)) : null;
+  tile(13, 2, 'BEST TRADE', best == null ? '—' : best, fUSD, C.grn, ''); tile(13, 5, 'WORST TRADE', worst == null ? '—' : worst, fUSD, C.red, '');
+  tile(13, 8, 'AVERAGE WIN', st.w ? st.gw / st.w : '—', fUSD, C.grn, ''); tile(13, 11, 'AVERAGE LOSS', st.l ? -st.gl / st.l : '—', fUSD, C.red, '');
+  const head = (r, c, labels) => labels.forEach((t, i) => d.set(r, c + i, t, {b: 1, color: C.gold, fill: C.head, bd: C.line, sz: 10, h: i ? 'right' : 'left', wrap: 1}));
+  const sect = (r, t) => { d.merge(r, 2, r, 13, t, {b: 1, sz: 13, color: C.gold, bb: C.gold}); d.height(r, 24); };
+  sect(17, 'PORTFOLIOS'); head(18, 2, ['Account', 'Starting', 'Realised P&L', 'Balance', 'Locked', 'Available', 'Open', 'Closed', 'Win rate', 'Avg R']); d.height(18, 24);
+  let r = 19;
+  ACCS.map(a => [a[1], acct(a[0]), tstats(closedOf(a[0]))]).concat([['ALL ACCOUNTS', A, st]]).forEach(([nm, a, t], i) => { const tot = i === 3, o = {fill: C.panel, bd: C.line, b: tot ? 1 : 0};
+    d.set(r, 2, nm, Object.assign({}, o, {color: tot ? C.gold2 : C.txt})); d.set(r, 3, a.start, Object.assign({fmt: fUSD}, o)); d.set(r, 4, a.real, Object.assign({fmt: fUSD, color: sg(a.real)}, o)); d.set(r, 5, a.equity, Object.assign({fmt: fUSD}, o));
+    d.set(r, 6, a.locked, Object.assign({fmt: fUSD}, o)); d.set(r, 7, a.avail, Object.assign({fmt: fUSD, color: C.grn}, o)); d.set(r, 8, a.open, o); d.set(r, 9, a.closed, o);
+    d.set(r, 10, t.wr == null ? '—' : t.wr, Object.assign({fmt: fPct, h: 'right'}, o)); d.set(r, 11, t.avgR == null ? '—' : t.avgR, Object.assign({fmt: fR, h: 'right', color: t.avgR == null ? C.txt : sg(t.avgR)}, o)); r++; });
+  r += 1; sect(r, 'BEST RESULTS BY TIME FRAME TRADED'); r++; head(r, 2, ['Time frame', 'Trades', 'Win rate', 'Net P&L', 'Avg R']); d.merge(r, 7, r, 10, 'P&L bar', {b: 1, color: C.gold, fill: C.head, bd: C.line, sz: 10}); r++;
+  const tr = tfRows(closed), mx = Math.max(1, ...tr.map(x => Math.abs(x.t.net))), bt = bestTf(tr);
+  tr.forEach(x => { const t = x.t, hl = bt && bt.id === x.id, o = {fill: C.panel, bd: C.line, b: hl ? 1 : 0};
+    d.set(r, 2, x.nm + (hl ? '  ★ best' : ''), Object.assign({}, o, {color: hl ? C.gold2 : C.txt})); d.set(r, 3, t.n, o); d.set(r, 4, t.wr == null ? '—' : t.wr, Object.assign({fmt: fPct, h: 'right'}, o)); d.set(r, 5, t.n ? t.net : '—', Object.assign({fmt: fUSD, color: t.n ? sg(t.net) : C.txt, h: 'right'}, o));
+    d.set(r, 6, t.avgR == null ? '—' : t.avgR, Object.assign({fmt: fR, h: 'right'}, o)); d.merge(r, 7, r, 10, t.n ? '█'.repeat(Math.max(1, Math.round(Math.abs(t.net) / mx * 24))) : '', {fill: C.panel, bd: C.line, color: t.net >= 0 ? C.grn : C.red, sz: 9}); r++; });
+  r += 1; sect(r, 'RESULTS BY ASSET'); r++; head(r, 2, ['Asset', 'Trades', 'Win rate', 'Net P&L', 'Avg R']); r++;
+  const am = {}; closed.forEach(x => (am[x.snap.asset] = am[x.snap.asset] || []).push(x));
+  const ak = Object.keys(am).sort((a, b) => tstats(am[b]).net - tstats(am[a]).net).slice(0, 12);
+  if(!ak.length){ d.merge(r, 2, r, 6, 'No closed trades yet.', {color: C.mut, fill: C.panel, bd: C.line}); r++; }
+  ak.forEach(k => { const t = tstats(am[k]), o = {fill: C.panel, bd: C.line}; d.set(r, 2, k, o); d.set(r, 3, t.n, o); d.set(r, 4, t.wr == null ? '—' : t.wr, Object.assign({fmt: fPct, h: 'right'}, o)); d.set(r, 5, t.net, Object.assign({fmt: fUSD, color: sg(t.net), h: 'right'}, o)); d.set(r, 6, t.avgR, Object.assign({fmt: fR, h: 'right'}, o)); r++; });
+  r += 1; d.merge(r, 2, r, 13, 'Results are what was entered in the tracker, not read from an exchange. Past results do not predict future ones. Trade The Move is educational and is not financial advice.', {color: C.mut, sz: 9, i: 1});
+  const heads = ['Date', 'Trade', 'Account', 'Asset', 'Direction', 'Market', 'Leverage', 'Time frame', 'Entry', 'Stop', 'TP1', 'TP2', 'TP3', 'Investment (margin)', 'Position size ($)', 'Risk ($)', 'Result', 'P&L', 'R', 'How it ended'];
+  const widths = [13, 24, 20, 10, 11, 10, 10, 12, 13, 13, 13, 13, 13, 17, 16, 12, 12, 13, 9, 46];
+  function tradeSheet(name, tab, items){
+    const w = wb.sheet(name, tab); widths.forEach((x, i) => w.width(i + 1, x));
+    w.merge(1, 1, 1, 8, name.toUpperCase(), {b: 1, sz: 16, color: C.gold}); w.height(1, 26);
+    heads.forEach((t, i) => w.set(3, i + 1, t, {b: 1, color: C.gold, fill: C.head, bd: C.line, sz: 10, h: i >= 8 && i <= 18 ? 'right' : 'left', wrap: 1})); w.height(3, 30);
+    let rr = 4;
+    if(!items.length) w.merge(rr, 1, rr, 8, 'Nothing here yet.', {color: C.mut});
+    items.forEach((x, k) => { const sn = x.snap, rs = x.res, o = {fill: k % 2 ? 'FF0B0B0B' : C.panel, bd: C.line}, tp = i => sn.tps[i] ? sn.tps[i].P : '';
+      const vals = [new Date(rs ? rs.closed : (x.opened || x.t)), x.name, accName(accOf(x)), sn.asset, sn.long ? 'Long' : 'Short', sn.mkt === 'spot' ? 'Spot' : 'Futures', sn.mkt === 'spot' ? 1 : sn.lev, tfName(tfOf(x)), sn.E, sn.SL, tp(0), tp(1), tp(2), sn.margin, sn.notional, sn.riskUsd, rs ? (kind(rs.pnl, sn.riskUsd) === 'win' ? 'Win' : kind(rs.pnl, sn.riskUsd) === 'loss' ? 'Loss' : 'Break-even') : 'Open', rs ? rs.pnl : '', rs ? rs.r : '', rs ? rs.how : 'In play'];
+      const fm = [fDt, '', '', '', '', '', '0"×"', '', fPx, fPx, fPx, fPx, fPx, fUSD, fUSD, fUSD, '', fUSD, fR, ''];
+      vals.forEach((v, i) => { let col = C.txt; if(i === 4) col = sn.long ? C.grn : C.red; if((i === 16 || i === 17) && rs) col = sg(rs.pnl); if(i === 18 && rs) col = sg(rs.r); if(i === 9) col = C.red; if(i >= 10 && i <= 12) col = C.grn;
+        w.set(rr, i + 1, v, Object.assign({}, o, {color: col, fmt: fm[i] || undefined, h: i >= 8 && i <= 18 ? 'right' : 'left', b: i === 17 ? 1 : 0, wrap: i === 19 ? 1 : 0})); }); rr++; });
+  }
+  tradeSheet('Trade History', 'FF3FB47A', closed.slice().reverse());
+  tradeSheet('Open Trades', 'FF6AA9FF', list.filter(x => x.status === 'open' && x.snap));
+  const p = wb.sheet('Saved Plans', 'FFF2C14E'), ph = ['Saved', 'Name', 'Account', 'Asset', 'Direction', 'Market', 'Leverage', 'Time frame', 'Entry', 'Stop', 'TP1', 'TP2', 'TP3', 'Investment (margin)', 'Position size ($)', 'Risk ($)', 'R:R', 'Liquidation (est.)', 'Sized by'];
+  [13, 24, 20, 10, 11, 10, 10, 12, 13, 13, 13, 13, 13, 17, 16, 12, 10, 16, 30].forEach((x, i) => p.width(i + 1, x));
+  p.merge(1, 1, 1, 8, 'SAVED PLANS (NOT YET OPENED)', {b: 1, sz: 16, color: C.gold}); p.height(1, 26);
+  ph.forEach((t, i) => p.set(3, i + 1, t, {b: 1, color: C.gold, fill: C.head, bd: C.line, sz: 10, h: i >= 8 && i <= 17 ? 'right' : 'left', wrap: 1})); p.height(3, 30);
+  let pr0 = 4; const plans = list.filter(x => !x.status || x.status === 'saved');
+  if(!plans.length) p.merge(pr0, 1, pr0, 8, 'No saved plans.', {color: C.mut});
+  plans.forEach((x, k) => { const {st: s2, c} = planCalc(x), o = {fill: k % 2 ? 'FF0B0B0B' : C.panel, bd: C.line}, tpv = n => num(s2['tp' + n]) || '';
+    const vals = [new Date(x.t), x.name, accName(s2.acc), s2.asset, s2.dir === 'long' ? 'Long' : 'Short', s2.mkt === 'spot' ? 'Spot' : 'Futures', s2.mkt === 'spot' ? 1 : +s2.lev, tfName(s2.tf), num(s2.entry) || '', num(s2.stop) || '', tpv(1), tpv(2), tpv(3), c.ok ? c.margin : '', c.ok ? c.notional : '', c.ok ? c.riskUsd : '', c.rr != null ? c.rr : '', c.liq != null ? c.liq : '', ({pct: 'Risk % of account (' + s2.risk + '%)', usd: 'Risk $ (' + usd(num(s2.rusd)) + ')', inv: 'Investment $ (' + usd(num(s2.inv)) + ')'})[s2.mode || 'pct']];
+    const fm = [fDt, '', '', '', '', '', '0"×"', '', fPx, fPx, fPx, fPx, fPx, fUSD, fUSD, fUSD, '"1 : "0.00', fPx, ''];
+    vals.forEach((v, i) => p.set(pr0, i + 1, v, Object.assign({}, o, {fmt: fm[i] || undefined, h: i >= 8 && i <= 17 ? 'right' : 'left', color: i === 4 ? (s2.dir === 'long' ? C.grn : C.red) : i === 9 ? C.red : (i >= 10 && i <= 12) ? C.grn : C.txt, b: i === 13 ? 1 : 0}))); pr0++; });
+  const b = wb.sheet('Breakdowns', 'FFB04BD6'); [24, 10, 12, 14, 12, 40].forEach((x, i) => b.width(i + 1, x));
+  let br = 1; b.merge(br, 1, br, 6, 'BREAKDOWNS', {b: 1, sz: 16, color: C.gold}); br += 2;
+  const grp = (title, keyFn) => { b.merge(br, 1, br, 5, title, {b: 1, sz: 12, color: C.gold, bb: C.gold}); br++;
+    ['Group', 'Trades', 'Win rate', 'Net P&L', 'Avg R'].forEach((t, i) => b.set(br, i + 1, t, {b: 1, color: C.gold, fill: C.head, bd: C.line, sz: 10, h: i ? 'right' : 'left'})); br++;
+    const m = {}; closed.forEach(x => (m[keyFn(x)] = m[keyFn(x)] || []).push(x));
+    Object.keys(m).sort((a, c) => tstats(m[c]).net - tstats(m[a]).net).forEach(k => { const t = tstats(m[k]), o = {fill: C.panel, bd: C.line};
+      b.set(br, 1, k, o); b.set(br, 2, t.n, o); b.set(br, 3, t.wr == null ? '—' : t.wr, Object.assign({fmt: fPct, h: 'right'}, o)); b.set(br, 4, t.net, Object.assign({fmt: fUSD, color: sg(t.net), h: 'right'}, o)); b.set(br, 5, t.avgR, Object.assign({fmt: fR, h: 'right'}, o)); br++; });
+    br++; };
+  grp('BY ACCOUNT TYPE', x => accName(accOf(x))); grp('BY TIME FRAME', x => tfName(tfOf(x))); grp('BY ASSET', x => x.snap.asset); grp('BY DIRECTION', x => (x.snap.long ? 'Long' : 'Short') + (x.snap.mkt === 'spot' ? ' · Spot' : ' · Futures'));
+  return wb;
+}
+function downloadXlsx(){
+  const wb = buildTtmWorkbook(), url = URL.createObjectURL(wb.blob()), a = document.createElement('a'), n = new Date();
+  a.href = url; a.download = `TTM-Trade-Tracker-${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}.xlsx`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
+setInterval(() => { if(document.hidden) return; if(pfActive()) pfLoad(); if(rrActive()) doCandles(); }, 40000);
+window.addEventListener('hashchange', () => setTimeout(() => { if(pfActive()) pfLoad(); if(rrActive()) loadCandles(); }, 150));
+setTimeout(() => { if(pfActive()) pfLoad(); if(rrActive()) loadCandles(); }, 600);
 function persist(){ lsSet(KEY, S); }
 function wire(){
   const clampPct = v => Math.max(0, Math.min(100, Math.round((parseFloat(v) || 0) * 100) / 100));
@@ -3363,7 +3911,7 @@ function wire(){
     else if(!t) h += `<div class="rr-hint">Showing the top 40 of ${COINS.length}. Type to search by ticker or name, or enter any ticker not listed.</div>`;
     list.innerHTML = h || '<div class="rr-hint">No match. Type a ticker to use it as a custom asset.</div>'; list.classList.add('open'); hl = -1;
   }
-  function choose(sym){ S.asset = sym; $('rrAsset').value = sym; list.classList.remove('open'); persist(); render(); }
+  function choose(sym){ S.asset = sym; $('rrAsset').value = sym; list.classList.remove('open'); persist(); render(); loadCandles(); }
   $('rrAsset').addEventListener('focus', e => { e.target.select(); showList(''); });
   $('rrAsset').addEventListener('input', e => showList(e.target.value));
   $('rrAsset').addEventListener('keydown', e => {
@@ -3377,31 +3925,34 @@ function wire(){
   fetch('../top_coins.json?t=' + Date.now(), {cache: 'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null).then(d => { if(d && d.coins && d.coins.length > 20){ COINS = d.coins.map(c => ({s: c.s, n: c.n, r: c.r, p: c.p})); } });
   $('rrLev').addEventListener('change', e => { S.lev = +e.target.value; persist(); render(); });
   $('rrDir').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; S.dir = b.dataset.d; pushInputs(); persist(); render(); });
-  $('rrMkt').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; S.mkt = b.dataset.m; if(S.mkt === 'spot') S.dir = 'long'; pushInputs(); persist(); render(); });
+  $('rrMkt').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; S.mkt = b.dataset.m; if(S.mkt === 'spot'){ S.dir = 'long'; if(S.acc === 'lev') S.acc = 'spot'; } else if(S.acc === 'spot') S.acc = 'lev'; pushInputs(); persist(); render(); });
   $('rrLive').addEventListener('click', async () => {
     const btn = $('rrLive'), a = S.asset; if(!a){ btn.textContent = 'Pick an asset first'; return; }
     btn.textContent = 'Fetching…';
     try{ const r = await fetch(`https://www.okx.com/api/v5/market/ticker?instId=${a}-USDT`, {cache:'no-store'}); const d = await r.json(); const p = +d.data[0].last; if(!(p > 0)) throw 0;
-      S.entry = p >= 1 ? +p.toFixed(4) : +p.toPrecision(5); persist(); pushInputs(); render(); btn.textContent = `Live ${a}: ${pr(p)} (OKX) ✓`;
+      S.entry = p >= 1 ? +p.toFixed(4) : +p.toPrecision(5); persist(); pushInputs(); render(); loadCandles(); btn.textContent = `Live ${a}: ${pr(p)} (OKX) ✓`;
     }catch(e){ const c = COINS.find(x => x.s === a); if(c && c.p){ S.entry = c.p >= 1 ? +c.p.toFixed(4) : +c.p.toPrecision(5); persist(); pushInputs(); render(); btn.textContent = `${a}: ${pr(c.p)} from the list snapshot (not live)`; } else btn.textContent = 'No live price for this asset — type it in'; }
     setTimeout(() => { btn.textContent = 'Use live price as entry'; }, 4000);
   });
   $('rrSave').addEventListener('click', () => {
-    const n = $('rrName').value.trim() || `${S.asset} ${S.mkt === 'spot' ? 'spot' : S.lev + '×'} ${S.dir}`;
-    const list = loadSaved(); list.unshift({name: n, t: Date.now(), s: Object.assign({}, S)});
-    const ok = lsSet(SKEY, list.slice(0, 100)); $('rrName').value = '';
-    $('rrSaveNote').textContent = ok ? `Saved "${n}" in this browser. Use Export to keep a copy.` : 'Could not save: your browser is blocking site storage. Use Export instead.';
-    renderSaved();
-  });
-  $('rrSaved').addEventListener('click', e => { const b = e.target.closest('button[data-a]'); if(!b) return; const i = +b.dataset.i, list = loadSaved(), x = list[i]; if(!x) return;
-    if(b.dataset.a === 'load'){ S = Object.assign({}, DEF, x.s); persist(); pushInputs(); render(); $('rrAsset').scrollIntoView({behavior:'smooth', block:'center'}); }
-    else if(b.dataset.a === 'copy'){ list.splice(i + 1, 0, {name: x.name + ' (copy)', t: Date.now(), s: Object.assign({}, x.s)}); lsSet(SKEY, list); renderSaved(); }
-    else { list.splice(i, 1); lsSet(SKEY, list); renderSaved(); } });
-  $('rrExport').addEventListener('click', () => { const blob = new Blob([JSON.stringify({ttm_rr: 1, setups: loadSaved()}, null, 2)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ttm-risk-reward-setups.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); });
-  $('rrImportBtn').addEventListener('click', () => $('rrImport').click());
+    const c = calc(); const n = $('rrName').value.trim() || `${S.asset} ${S.mkt === 'spot' ? 'spot' : S.lev + '×'} ${S.dir}`;
+    const list = loadSaved(); list.unshift({id: uid(), name: n, t: Date.now(), s: Object.assign({}, S), status: 'saved'});
+    const ok = saveAll(list); $('rrName').value = ''; const note = $('rrOpenNote'); note.style.color = '';
+    note.textContent = ok ? `Saved “${n}” as a plan (no margin locked). Open it from the saved plans list when you take the trade.` : 'Could not save: your browser is blocking site storage. Use Export instead.';
+    renderSaved(); });
+  $('rrOpen').addEventListener('click', () => startTrade(calc(), S, $('rrName').value));
+  $('rrWarns').addEventListener('click', e => { const b = e.target.closest('button[data-fit]'); if(!b) return; S[b.dataset.key || 'risk'] = b.dataset.fit; persist(); pushInputs(); render(); });
   $('rrImport').addEventListener('change', e => { const f = e.target.files[0]; if(!f) return; const r = new FileReader();
-    r.onload = () => { try{ const d = JSON.parse(r.result), inc = (d.setups || []).filter(x => x && x.s && x.name); const list = inc.concat(loadSaved()).slice(0, 100); lsSet(SKEY, list); renderSaved(); $('rrSaveNote').textContent = `Imported ${inc.length} setup(s).`; }catch(err){ $('rrSaveNote').textContent = 'That file is not a TTM setups export.'; } };
+    r.onload = () => { try{ const d = JSON.parse(r.result); if(d.bals){ Object.assign(BALS, d.bals); lsSet(BKEY, BALS); pushInputs(); } const inc = (d.setups || []).filter(x => x && x.s && x.name).map(x => Object.assign({id: uid()}, x)); const have = new Set(loadSaved().map(x => x.id)); const list = inc.filter(x => !have.has(x.id)).concat(loadSaved()); saveAll(list); renderSaved(); render(); $('rrSaveNote').textContent = `Imported ${inc.length} item(s).`; $('jNote').textContent = `Imported ${inc.length} item(s).`; }catch(err){ $('rrSaveNote').textContent = 'That file is not a TTM journal export.'; } };
     r.readAsText(f); e.target.value = ''; });
+  $('rrBal').addEventListener('input', e => { BALS[S.acc] = e.target.value; lsSet(BKEY, BALS); render(); renderSaved(); });
+  $('rrAcc').addEventListener('change', e => { S.acc = e.target.value; persist(); pushInputs(); render(); });
+  $('rrTf').addEventListener('change', e => { S.tf = e.target.value; persist(); pushInputs(); render(); loadCandles(); });
+  $('rrTfChips').addEventListener('click', e => { const b = e.target.closest('button[data-t]'); if(!b) return; S.tf = b.dataset.t; persist(); pushInputs(); render(); loadCandles(); });
+  $('rrSz').addEventListener('click', e => { const b = e.target.closest('button[data-z]'); if(!b) return; S.mode = b.dataset.z; persist(); pushInputs(); render(); });
+  $('rrXlsx').addEventListener('click', downloadXlsx); $('jXlsx').addEventListener('click', downloadXlsx);
+  $('pfScope').addEventListener('click', e => { const b = e.target.closest('button[data-s]'); if(!b) return; pfScope = b.dataset.s; renderPortfolio(); });
+  wireJournal();
 }
 pushInputs(); wire(); render(); renderSaved();
 })();
@@ -3619,6 +4170,10 @@ go();
     window.scrollTo(0, 0);
     if(sec) setTimeout(() => window.dispatchEvent(new Event('resize')), 60);
   }
+  (function(){ const T = [['riskreward', 'Risk / Reward'], ['tradejournal', 'Trade Tracker'], ['portfolio', 'Portfolio Forecast']];
+    document.querySelectorAll('.tool-nav').forEach(n => { const cur = n.dataset.cur, lock = new URLSearchParams(location.search).get('only');
+      n.innerHTML = T.map(t => `<a class="${t[0] === cur ? 'cur' : ''}" href="${lock ? '?only=' + t[0] : '#' + t[0]}">${t[1]}</a>`).join('') + '<span class="sp"></span><button type="button" data-copy="' + cur + '">Copy standalone link</button>';
+      n.querySelector('button').addEventListener('click', e => { const u = location.origin + location.pathname + '?only=' + cur; const b = e.target; (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(() => { b.textContent = 'Link copied'; }).catch(() => { b.textContent = u; }); setTimeout(() => { b.textContent = 'Copy standalone link'; }, 3500); }); }); })();
   ['backBtn','backFab'].forEach(i => document.getElementById(i).addEventListener('click', () => { location.hash = ''; }));
   window.addEventListener('hashchange', show);
   show();
