@@ -327,6 +327,43 @@ td.num{font-variant-numeric:tabular-nums;color:var(--mute)}
 .rsi-tbl td.ty{background:none;color:var(--mute);font-size:11px;text-align:left}
 .rsi-ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
 @media (max-width:600px){.rsi-tile.sz4{width:22%}.rsi-search{min-width:0;flex:1 1 100%}}
+
+/* ---- Risk / Reward calculator ---- */
+.rr-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:16px;align-items:start}
+@media (max-width:900px){.rr-grid{grid-template-columns:1fr}}
+.rr-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:16px}
+.rr-card h3{margin:0 0 12px;font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold)}
+.rr-f{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;min-width:0}
+.rr-f label{font-size:11.5px;color:var(--mute)}
+.rr-f input,.rr-f select{background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 10px;font:inherit;font-size:14px;width:100%;box-sizing:border-box;min-width:0}
+.rr-f input:focus,.rr-f select:focus{outline:none;border-color:var(--gold)}
+.rr-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rr-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.rr-tp{display:grid;grid-template-columns:1.4fr 1fr;gap:8px}
+.rr-seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.rr-seg button{flex:1;background:transparent;border:none;color:var(--mute);padding:9px;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
+.rr-seg button.on{background:var(--gold);color:#111}
+.rr-seg button.on.short{background:#d6453d;color:#fff}
+.rr-out{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:12px}
+@media (max-width:600px){.rr-out{grid-template-columns:repeat(2,1fr)}.rr-row3{grid-template-columns:1fr 1fr}}
+.rr-out>div{background:var(--card);padding:11px 12px}
+.rr-out small{display:block;color:var(--mute);font-size:11px;margin-bottom:4px}
+.rr-out strong{font-size:18px;color:var(--text)}
+.rr-out .g{color:#3fb47a}.rr-out .r{color:#e0554d}.rr-out .y{color:var(--gold2)}
+.rr-badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid var(--line)}
+.rr-badge.ok{color:#3fb47a;border-color:#3fb47a}.rr-badge.bad{color:#e0554d;border-color:#e0554d}.rr-badge.mid{color:var(--gold2);border-color:var(--gold)}
+.rr-warn{border:1px solid #e0554d;background:rgba(224,85,77,.08);color:#f0a09b;border-radius:10px;padding:9px 12px;font-size:13px;margin-bottom:8px}
+.rr-warn.y{border-color:var(--gold);background:rgba(219,161,24,.08);color:var(--gold2)}
+.rr-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.rr-tbl th{text-align:left;color:var(--mute);font-weight:600;font-size:11px;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.rr-tbl td{padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.rr-wrap{overflow-x:auto}
+.rr-bar{height:8px;background:var(--line);border-radius:5px;overflow:hidden;margin:6px 0 4px}.rr-bar i{display:block;height:100%;background:#3fb47a}
+.rr-btn{background:var(--gold);color:#111;border:none;border-radius:8px;padding:9px 14px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.rr-btn.ghost{background:transparent;color:var(--gold2);border:1px solid var(--gold)}
+.rr-btn.sm{padding:5px 9px;font-size:12px}
+.rr-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.rr-notes{margin:0;padding-left:18px;color:var(--mute);font-size:12.5px;line-height:1.7}
 .sp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
 .sp-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
 .sp-card p{margin:0;font-size:14px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
@@ -625,6 +662,7 @@ body.view-section #backFab{display:block}
       <a href="#btcmonthly">BTC Monthly</a>
       <a href="#rsimap">RSI Heatmap</a>
       <a href="#volume">Volume Heatmap</a>
+      <a href="#riskreward">Risk / Reward</a>
       <a href="#socialpulse">Social Pulse</a>
       <a href="#tokenevents">Token Events</a>
       <a href="#library">Reports</a>
@@ -671,7 +709,7 @@ body.view-section #backFab{display:block}
   </div>
 </div>
 
-<div id="menuHome"><div class="wrap"><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#marketpulse"><b>Market Pulse</b><span>Fear & Greed, funding, liquidations</span></a><a class="menu-tile" href="#btcmonthly"><b>BTC Monthly</b><span>Bitcoin returns month by month</span></a><a class="menu-tile" href="#fomo"><b>FOMO Finder &amp; RSI Chart</b><span>Sentiment gauge plus price and RSI</span></a><a class="menu-tile" href="#rsimap"><b>RSI Heatmap</b><span>Overbought / oversold across ~125 coins</span></a><a class="menu-tile" href="#volume"><b>Volume Heatmap</b><span>Surging and drying-up volume by coin</span></a><a class="menu-tile" href="#socialpulse"><b>Social Pulse</b><span>Truth Social and crypto news feed</span></a><a class="menu-tile" href="#tokenevents"><b>Token Events</b><span>Unlocks, listings and airdrops</span></a><a class="menu-tile" href="#library"><b>Reports</b><span>Asset reviews and deep dives</span></a><a class="menu-tile" href="#transparency"><b>Transparency Watch</b><span>Congress and insider trading watch</span></a></div></div></div>
+<div id="menuHome"><div class="wrap"><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#marketpulse"><b>Market Pulse</b><span>Fear & Greed, funding, liquidations</span></a><a class="menu-tile" href="#btcmonthly"><b>BTC Monthly</b><span>Bitcoin returns month by month</span></a><a class="menu-tile" href="#fomo"><b>FOMO Finder &amp; RSI Chart</b><span>Sentiment gauge plus price and RSI</span></a><a class="menu-tile" href="#rsimap"><b>RSI Heatmap</b><span>Overbought / oversold across ~125 coins</span></a><a class="menu-tile" href="#volume"><b>Volume Heatmap</b><span>Surging and drying-up volume by coin</span></a><a class="menu-tile" href="#riskreward"><b>Risk / Reward Calculator</b><span>Position size, leverage and liquidation estimate</span></a><a class="menu-tile" href="#socialpulse"><b>Social Pulse</b><span>Truth Social and crypto news feed</span></a><a class="menu-tile" href="#tokenevents"><b>Token Events</b><span>Unlocks, listings and airdrops</span></a><a class="menu-tile" href="#library"><b>Reports</b><span>Asset reviews and deep dives</span></a><a class="menu-tile" href="#transparency"><b>Transparency Watch</b><span>Congress and insider trading watch</span></a></div></div></div>
 <button id="backFab" type="button">&larr; Menu</button>
 <div id="backBar"><div class="wrap"><button id="backBtn" type="button">&larr; Back to menu</button><span id="backTitle"></span></div></div>
 <section id="calendar">
@@ -993,6 +1031,80 @@ body.view-section #backFab{display:block}
     </div>
     <div class="bm-wrap"><table class="bm-tbl" id="bmTable2"><tbody><tr><td class="empty">Loading…</td></tr></tbody></table></div>
     <p class="calendar-note" style="margin-top:10px">Source: Bitstamp daily BTC/USD (Coinbase as backup), updated daily. Early years had tiny prices and very large percentage moves, so colours are capped. Past monthly patterns are not a forecast. Not financial advice.</p>
+  </div>
+</section>
+
+<section id="riskreward">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">Risk Tools</span>
+      <h2>Risk-to-Reward Calculator</h2>
+      <p>Plan the trade before you place it. Enter your entry, stop-loss and up to three take-profit targets, set your account size and the percentage you are willing to lose, and the calculator sizes the position from your risk, then shows margin, leverage impact, estimated liquidation, break-even win rate and fees. Prices are manual, with a button to pull the live price. Everything stays in your own browser.</p>
+    </div>
+    <div class="rr-grid">
+      <div>
+        <div class="rr-card">
+          <h3>1. Trade setup</h3>
+          <div class="rr-row">
+            <div class="rr-f"><label for="rrAsset">Asset</label><select id="rrAsset"></select></div>
+            <div class="rr-f"><label>Direction</label><div class="rr-seg" id="rrDir"><button type="button" class="on" data-d="long">Long</button><button type="button" data-d="short">Short</button></div></div>
+          </div>
+          <div class="rr-row">
+            <div class="rr-f"><label>Market type</label><div class="rr-seg" id="rrMkt"><button type="button" data-m="spot">Spot</button><button type="button" class="on" data-m="fut">Futures / Perp</button></div></div>
+            <div class="rr-f"><label for="rrLev">Leverage</label><select id="rrLev"></select></div>
+          </div>
+          <div class="rr-row">
+            <div class="rr-f"><label for="rrEntry">Entry price (USD)</label><input id="rrEntry" type="number" inputmode="decimal" step="any"></div>
+            <div class="rr-f"><label for="rrStop">Stop loss (USD)</label><input id="rrStop" type="number" inputmode="decimal" step="any"></div>
+          </div>
+          <div class="rr-row">
+            <div class="rr-f"><label for="rrTp1">Take profit 1 (USD)</label><div class="rr-tp"><input id="rrTp1" type="number" inputmode="decimal" step="any"><input id="rrS1" type="number" inputmode="decimal" step="any" placeholder="% of position"></div></div>
+            <div class="rr-f"><label for="rrTp2">Take profit 2 (USD)</label><div class="rr-tp"><input id="rrTp2" type="number" inputmode="decimal" step="any"><input id="rrS2" type="number" inputmode="decimal" step="any" placeholder="% of position"></div></div>
+          </div>
+          <div class="rr-row">
+            <div class="rr-f"><label for="rrTp3">Take profit 3 (USD)</label><div class="rr-tp"><input id="rrTp3" type="number" inputmode="decimal" step="any"><input id="rrS3" type="number" inputmode="decimal" step="any" placeholder="% of position"></div></div>
+            <div class="rr-f"><label>&nbsp;</label><button type="button" class="rr-btn ghost" id="rrLive">Use live price as entry</button></div>
+          </div>
+          <div class="rr-row3">
+            <div class="rr-f"><label for="rrBal">Account balance (USD)</label><input id="rrBal" type="number" inputmode="decimal" step="any"></div>
+            <div class="rr-f"><label for="rrRisk">Risk per trade (%)</label><input id="rrRisk" type="number" inputmode="decimal" step="any"></div>
+            <div class="rr-f"><label for="rrFee">Trading fee (% per side)</label><input id="rrFee" type="number" inputmode="decimal" step="any"></div>
+          </div>
+        </div>
+        <div class="rr-card">
+          <h3>2. Risk management</h3>
+          <div class="rr-row3">
+            <div class="rr-f"><label for="rrDaily">Daily loss limit (USD)</label><input id="rrDaily" type="number" inputmode="decimal" step="any"></div>
+            <div class="rr-f"><label for="rrMin">Minimum R:R</label><input id="rrMin" type="number" inputmode="decimal" step="any"></div>
+            <div class="rr-f"><label for="rrMmr">Maintenance margin (%)</label><input id="rrMmr" type="number" inputmode="decimal" step="any"></div>
+          </div>
+          <div id="rrDailyOut"></div>
+        </div>
+      </div>
+      <div>
+        <div class="rr-card">
+          <h3>Trade summary <span id="rrVerdict" style="float:right"></span></h3>
+          <div id="rrWarns"></div>
+          <div class="rr-out" id="rrOut"></div>
+          <h3 style="margin-top:14px">Leverage impact</h3>
+          <div class="rr-out" id="rrLevOut"></div>
+          <p class="calendar-note" style="margin:0">Leverage changes the margin you lock up and how close liquidation sits; it does not change the dollar loss at your stop, because the position is sized from your risk. Liquidation is an estimate for an isolated position and varies by exchange, contract and margin mode.</p>
+        </div>
+        <div class="rr-card"><h3>Trade visualisation</h3><svg id="rrChart" viewBox="0 0 520 300" style="width:100%;height:auto;display:block"></svg></div>
+      </div>
+    </div>
+    <div class="rr-card"><h3>Take-profit breakdown</h3><div class="rr-wrap"><table class="rr-tbl" id="rrTpTbl"></table></div></div>
+    <div class="rr-card">
+      <h3>Key risk notes</h3>
+      <ul class="rr-notes"><li>Leverage increases both potential gains and losses, and liquidation can happen before your stop-loss is reached if the stop is too wide for the leverage.</li><li>Actual fills can differ from planned prices because of volatility, slippage and funding or fees.</li><li>Break-even win rate is the share of trades you must win, at this R:R, just to cover losses (before fees on a series of trades).</li><li>This tool gives estimates for education and planning, not financial advice or a trade signal.</li></ul>
+    </div>
+    <div class="rr-card">
+      <h3>Saved setups</h3>
+      <div class="rr-row3" style="margin-bottom:6px"><div class="rr-f" style="grid-column:span 2"><label for="rrName">Setup name</label><input id="rrName" type="text" placeholder="e.g. BTC 10x long" maxlength="40"></div><div class="rr-f"><label>&nbsp;</label><button type="button" class="rr-btn" id="rrSave">Save setup</button></div></div>
+      <div class="rr-acts"><button type="button" class="rr-btn ghost sm" id="rrExport">Export setups</button><button type="button" class="rr-btn ghost sm" id="rrImportBtn">Import setups</button><input type="file" id="rrImport" accept="application/json,.json" style="display:none"></div>
+      <p class="calendar-note" id="rrSaveNote" style="margin:8px 0">Setups are stored in this browser only, so other members cannot see them. They are lost if you clear site data or change device, so use Export to keep a copy.</p>
+      <div class="rr-wrap"><table class="rr-tbl" id="rrSaved"></table></div>
+    </div>
   </div>
 </section>
 
@@ -3085,6 +3197,173 @@ $('rsiSize').addEventListener('click', e => { const c = e.target.closest('.filte
   document.querySelectorAll('#rsiSize .filter-chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); top = +c.dataset.n; render(); });
 function load(){ fetch('../rsi_heatmap.json?t=' + Date.now(), {cache:'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null).then(d => { if(d) D = d; buildCats(); render(); }); }
 load(); setInterval(() => { if(!document.hidden) load(); }, 300000);
+})();
+
+
+/* ---- Risk / Reward calculator ---- */
+(function(){
+const $ = id => document.getElementById(id);
+if(!$('rrAsset')) return;
+const ASSETS = ['BTC','ETH','SOL','XRP','BNB','DOGE','ADA','AVAX','LINK','SUI','TON','DOT','LTC','NEAR','APT','ARB','OP','INJ','PEPE','HYPE','ICP','Other'];
+const LEVS = [1,2,3,5,10,15,20,25,50,75,100];
+const KEY = 'ttm_rr_state_v1', SKEY = 'ttm_rr_saved_v1';
+const DEF = {asset:'BTC', dir:'long', mkt:'fut', lev:10, entry:'', stop:'', tp1:'', s1:50, tp2:'', s2:50, tp3:'', s3:0, bal:5000, risk:1, fee:0.06, daily:250, min:2, mmr:0.5};
+let S = Object.assign({}, DEF);
+function lsGet(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
+function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
+S = Object.assign(S, lsGet(KEY, {}));
+$('rrAsset').innerHTML = ASSETS.map(a => `<option>${a}</option>`).join('');
+$('rrLev').innerHTML = LEVS.map(l => `<option value="${l}">${l}×${l === 1 ? ' (no leverage)' : ''}</option>`).join('');
+const IDS = {entry:'rrEntry', stop:'rrStop', tp1:'rrTp1', s1:'rrS1', tp2:'rrTp2', s2:'rrS2', tp3:'rrTp3', s3:'rrS3', bal:'rrBal', risk:'rrRisk', fee:'rrFee', daily:'rrDaily', min:'rrMin', mmr:'rrMmr'};
+function pushInputs(){
+  Object.keys(IDS).forEach(k => { $(IDS[k]).value = S[k] === '' || S[k] == null ? '' : S[k]; });
+  $('rrAsset').value = S.asset; $('rrLev').value = String(S.lev);
+  document.querySelectorAll('#rrDir button').forEach(b => { b.classList.toggle('on', b.dataset.d === S.dir); b.classList.toggle('short', b.dataset.d === 'short'); });
+  document.querySelectorAll('#rrMkt button').forEach(b => b.classList.toggle('on', b.dataset.m === S.mkt));
+  $('rrLev').disabled = S.mkt === 'spot';
+}
+const num = v => { const n = parseFloat(v); return isFinite(n) ? n : null; };
+const usd = v => v == null || !isFinite(v) ? '—' : (v < 0 ? '-' : '') + '$' + Math.abs(v).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const pr = v => v == null || !isFinite(v) ? '—' : v >= 1000 ? v.toLocaleString(undefined, {maximumFractionDigits: 2}) : v >= 1 ? v.toFixed(3) : v >= 0.01 ? v.toFixed(5) : v.toPrecision(4);
+const qty = v => v == null || !isFinite(v) ? '—' : v >= 100 ? v.toFixed(2) : v >= 1 ? v.toFixed(4) : v.toPrecision(4);
+function calc(){
+  const long = S.dir === 'long', lev = S.mkt === 'spot' ? 1 : (num(S.lev) || 1);
+  const E = num(S.entry), SL = num(S.stop), bal = num(S.bal), rk = num(S.risk), fee = (num(S.fee) || 0) / 100, mmr = (num(S.mmr) || 0) / 100;
+  const out = {long, lev, E, SL, bal, rk, fee, mmr, warns: [], ok: false};
+  if(E == null || SL == null || bal == null || rk == null || E <= 0 || SL <= 0 || bal <= 0 || rk <= 0) return out;
+  if(long ? SL >= E : SL <= E){ out.warns.push(['bad', long ? 'For a long trade the stop-loss must be below the entry.' : 'For a short trade the stop-loss must be above the entry.']); return out; }
+  if(S.mkt === 'spot' && !long) out.warns.push(['y', 'Shorting is not possible on spot; switch to Futures / Perp to model a short.']);
+  const dist = Math.abs(E - SL);
+  out.dist = dist; out.distPct = dist / E * 100;
+  out.riskUsd = bal * rk / 100;
+  const perUnitLoss = dist + fee * (E + SL);            // loss per unit at the stop including fees on both sides
+  out.units = out.riskUsd / perUnitLoss;
+  out.notional = out.units * E;
+  out.margin = out.notional / lev;
+  out.tps = [];
+  let used = 0, profit = 0;
+  [[S.tp1, S.s1], [S.tp2, S.s2], [S.tp3, S.s3]].forEach(([p, sh], i) => {
+    const P = num(p), share = Math.max(0, num(sh) || 0);
+    if(P == null || P <= 0 || share <= 0) return;
+    if(long ? P <= E : P >= E){ out.warns.push(['bad', `Take profit ${i + 1} is on the wrong side of the entry for a ${long ? 'long' : 'short'}.`]); return; }
+    const u = out.units * share / 100, gross = u * Math.abs(P - E), fees = u * fee * (E + P), net = gross - fees;
+    used += share; profit += net;
+    out.tps.push({i: i + 1, P, share, u, gross, fees, net, ret: net / bal * 100, rr: net / out.riskUsd});
+  });
+  out.used = used; out.profit = profit;
+  if(used > 100.0001) out.warns.push(['bad', `Take-profit shares add up to ${used.toFixed(0)}%, which is more than 100% of the position.`]);
+  out.rr = out.tps.length && used > 0 ? profit / (out.riskUsd * (Math.min(used, 100) / 100)) : null; // reward per unit of risk on the part of the position that has a target
+  out.rrTotal = out.tps.length ? profit / out.riskUsd : null;
+  out.be = out.rr != null && out.rr > 0 ? 100 / (1 + out.rr) : null;
+  // liquidation estimate (isolated, linear contract): liq = entry * (1 -/+ 1/lev +/- mmr)
+  if(S.mkt === 'fut' && lev > 1){
+    out.liq = long ? E * (1 - 1 / lev + mmr) : E * (1 + 1 / lev - mmr);
+    out.liqDist = Math.abs(E - out.liq) / E * 100;
+    const stopBeyond = long ? SL <= out.liq : SL >= out.liq;
+    if(stopBeyond) out.warns.push(['bad', `Your stop is at or beyond the estimated liquidation price (${pr(out.liq)}). You would be liquidated before the stop triggers. Lower the leverage or tighten the stop.`]);
+    else if(Math.abs(SL - out.liq) / E * 100 < out.distPct * 0.25) out.warns.push(['y', `Your stop is close to the estimated liquidation price (${pr(out.liq)}). Small slippage or wicks could liquidate you first.`]);
+  }
+  if(out.margin > bal) out.warns.push(['bad', `The margin needed (${usd(out.margin)}) is more than your account balance. Use more leverage, a tighter stop or a smaller risk percentage.`]);
+  else if(out.margin > bal * 0.5) out.warns.push(['y', `This position locks up ${(out.margin / bal * 100).toFixed(0)}% of your balance as margin.`]);
+  const mn = num(S.min);
+  if(out.rr != null && mn != null && out.rr < mn) out.warns.push(['y', `Reward-to-risk 1:${out.rr.toFixed(2)} is below your minimum of 1:${mn}.`]);
+  if(!out.tps.length) out.warns.push(['y', 'Add at least one take-profit and its share of the position to see reward-to-risk.']);
+  const dl = num(S.daily);
+  out.daily = dl; out.ok = true;
+  return out;
+}
+function row(k, v, cls){ return `<div><small>${k}</small><strong class="${cls || ''}">${v}</strong></div>`; }
+function render(){
+  const c = calc();
+  $('rrWarns').innerHTML = c.warns.map(w => `<div class="rr-warn ${w[0] === 'y' ? 'y' : ''}">${w[1]}</div>`).join('');
+  if(!c.ok){
+    $('rrOut').innerHTML = row('Risk at stop', '—') + row('Potential profit', '—') + row('Position size', '—') + row('Notional', '—') + row('Risk : reward', '—') + row('Stop distance', '—');
+    $('rrLevOut').innerHTML = ''; $('rrVerdict').innerHTML = ''; $('rrTpTbl').innerHTML = '<tbody><tr><td class="na">Enter entry, stop, balance and risk to begin.</td></tr></tbody>';
+    $('rrDailyOut').innerHTML = ''; drawChart(c); return;
+  }
+  const mn = num(S.min), meets = c.rr != null && mn != null ? c.rr >= mn : null;
+  $('rrVerdict').innerHTML = c.rr == null ? '' : `<span class="rr-badge ${meets ? 'ok' : 'bad'}">R:R 1:${c.rr.toFixed(2)} ${meets ? '✓ meets target' : '✕ below target'}</span>`;
+  const sym = S.asset === 'Other' ? 'units' : S.asset;
+  $('rrOut').innerHTML = row('Risk at stop', usd(-c.riskUsd).replace('-', ''), 'r') + row('Potential profit', c.tps.length ? usd(c.profit) : '—', 'g') + row('Position size', qty(c.units) + ' ' + sym) +
+    row('Position notional', usd(c.notional)) + row('Risk : reward', c.rr == null ? '—' : '1 : ' + c.rr.toFixed(2), 'y') + row('Stop distance', c.distPct.toFixed(2) + '%') +
+    row('Break-even win rate', c.be == null ? '—' : c.be.toFixed(1) + '%') + row('Est. fees (round trip at stop)', usd(c.units * c.fee * (c.E + c.SL))) + row('Return on balance at stop', (-c.riskUsd / c.bal * 100).toFixed(2) + '%', 'r');
+  $('rrLevOut').innerHTML = row('Leverage', c.lev + '×') + row('Margin required', usd(c.margin) + `<br><span style="font-size:11px;color:var(--mute);font-weight:400">${(c.margin / c.notional * 100).toFixed(1)}% of notional</span>`) +
+    row('Liquidation (est.)', c.liq == null ? (S.mkt === 'spot' ? 'n/a (spot)' : 'n/a at 1×') : pr(c.liq) + `<br><span style="font-size:11px;color:var(--mute);font-weight:400">${c.liqDist.toFixed(1)}% from entry</span>`, c.liq != null ? 'r' : '');
+  // take-profit table
+  let t = '<thead><tr><th>Target</th><th>Price</th><th>% of position</th><th>Size</th><th>Profit (net of fees)</th><th>Return on balance</th><th>R multiple</th></tr></thead><tbody>';
+  c.tps.forEach(x => { t += `<tr><td>TP${x.i}</td><td>${pr(x.P)}</td><td>${x.share}%</td><td>${qty(x.u)}</td><td style="color:#3fb47a">${usd(x.net)}</td><td style="color:#3fb47a">+${x.ret.toFixed(2)}%</td><td>${x.rr.toFixed(2)}R</td></tr>`; });
+  if(c.tps.length) t += `<tr><td><b>Total</b></td><td></td><td><b>${c.used}%</b></td><td></td><td style="color:#3fb47a"><b>${usd(c.profit)}</b></td><td style="color:#3fb47a"><b>+${(c.profit / c.bal * 100).toFixed(2)}%</b></td><td><b>${c.rrTotal.toFixed(2)}R</b></td></tr>` + (c.used < 100 ? `<tr><td colspan="7" class="na" style="color:var(--mute)">${(100 - c.used).toFixed(0)}% of the position has no target (managed manually or left to the stop).</td></tr>` : '');
+  else t += '<tr><td colspan="7" style="color:var(--mute)">No take-profit targets set.</td></tr>';
+  $('rrTpTbl').innerHTML = t + '</tbody>';
+  // daily loss limit
+  if(c.daily != null && c.daily > 0){
+    const pct = Math.min(100, c.riskUsd / c.daily * 100), left = c.daily - c.riskUsd;
+    $('rrDailyOut').innerHTML = `<div class="rr-bar"><i style="width:${pct}%;background:${left < 0 ? '#e0554d' : '#3fb47a'}"></i></div><div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--mute)"><span>Planned risk ${usd(c.riskUsd)} (${pct.toFixed(0)}% of limit)</span><span>Remaining ${usd(Math.max(0, left))}</span></div>` + (left < 0 ? `<div class="rr-warn" style="margin-top:8px">This trade risks more than your daily loss limit.</div>` : '');
+  } else $('rrDailyOut').innerHTML = '';
+  drawChart(c);
+}
+function drawChart(c){
+  const svg = $('rrChart'); if(!c.ok){ svg.innerHTML = '<text x="260" y="150" fill="#8b8f9a" font-size="13" text-anchor="middle">Enter your levels to see the trade map</text>'; return; }
+  const lv = [{k:'Entry', p:c.E, col:'#dba118'}, {k:'Stop', p:c.SL, col:'#e0554d'}];
+  c.tps.forEach(x => lv.push({k:'TP' + x.i, p:x.P, col:'#3fb47a'}));
+  if(c.liq != null) lv.push({k:'Liq (est.)', p:c.liq, col:'#b04bd6'});
+  const ps = lv.map(l => l.p), mn = Math.min(...ps), mx = Math.max(...ps), pad = (mx - mn) * .12 || mx * .02, lo = mn - pad, hi = mx + pad, H = 300, T = 14, B = 14;
+  const y = p => T + (H - T - B) * (1 - (p - lo) / (hi - lo));
+  let g = '';
+  const ye = y(c.E), ys = y(c.SL), best = c.tps.length ? c.tps.reduce((a, b) => (c.long ? b.P > a.P : b.P < a.P) ? b : a) : null;
+  g += `<rect x="40" y="${Math.min(ye, ys)}" width="330" height="${Math.abs(ye - ys)}" fill="rgba(224,85,77,.14)"/>`;
+  if(best) g += `<rect x="40" y="${Math.min(ye, y(best.P))}" width="330" height="${Math.abs(ye - y(best.P))}" fill="rgba(63,180,122,.12)"/>`;
+  lv.sort((a, b) => b.p - a.p);
+  let lastY = -99;
+  lv.forEach(l => { const yy = y(l.p); let ly = yy; if(Math.abs(ly - lastY) < 15) ly = lastY + 15; lastY = ly;
+    g += `<line x1="40" x2="370" y1="${yy}" y2="${yy}" stroke="${l.col}" stroke-width="1.6" ${l.k === 'Entry' ? '' : 'stroke-dasharray="5 4"'}/>` +
+         `<rect x="378" y="${ly - 10}" width="132" height="20" rx="4" fill="${l.col}" opacity=".92"/><text x="384" y="${ly + 4}" font-size="11.5" font-weight="700" fill="#111">${l.k}  ${pr(l.p)}</text>`; });
+  svg.innerHTML = g + `<text x="44" y="${T + 10}" fill="#8b8f9a" font-size="10.5">${S.asset} · ${c.long ? 'Long' : 'Short'} · ${c.lev}×</text>`;
+}
+// ---- saved setups
+function loadSaved(){ return lsGet(SKEY, []); }
+function renderSaved(){
+  const list = loadSaved();
+  let h = '<thead><tr><th>Name</th><th>Asset</th><th>Dir</th><th>Type</th><th>Lev</th><th>Entry</th><th>Stop</th><th>TP1</th><th>TP2</th><th>Risk</th><th>R:R</th><th>Saved</th><th></th></tr></thead><tbody>';
+  if(!list.length) h += '<tr><td colspan="13" style="color:var(--mute)">No saved setups yet. Fill in the calculator, name it and press Save setup.</td></tr>';
+  list.forEach((x, i) => { const st = Object.assign({}, DEF, x.s), save = S; S = st; const c = calc(); S = save;
+    h += `<tr><td><b>${String(x.name).replace(/</g, '&lt;')}</b></td><td>${st.asset}</td><td style="color:${st.dir === 'long' ? '#3fb47a' : '#e0554d'}">${st.dir === 'long' ? 'Long' : 'Short'}</td><td>${st.mkt === 'spot' ? 'Spot' : 'Futures'}</td><td>${st.mkt === 'spot' ? 1 : st.lev}×</td><td>${st.entry}</td><td>${st.stop}</td><td>${st.tp1 || '—'}</td><td>${st.tp2 || '—'}</td><td>${st.risk}%</td><td>${c.rr != null ? '1:' + c.rr.toFixed(2) : '—'}</td><td>${new Date(x.t).toLocaleDateString()}</td>` +
+      `<td><div class="rr-acts" style="margin:0"><button class="rr-btn ghost sm" data-a="load" data-i="${i}">Load</button><button class="rr-btn ghost sm" data-a="copy" data-i="${i}">Copy</button><button class="rr-btn ghost sm" data-a="del" data-i="${i}">Delete</button></div></td></tr>`; });
+  $('rrSaved').innerHTML = h + '</tbody>';
+}
+function persist(){ lsSet(KEY, S); }
+function wire(){
+  Object.keys(IDS).forEach(k => $(IDS[k]).addEventListener('input', e => { S[k] = e.target.value; persist(); render(); }));
+  $('rrAsset').addEventListener('change', e => { S.asset = e.target.value; persist(); render(); });
+  $('rrLev').addEventListener('change', e => { S.lev = +e.target.value; persist(); render(); });
+  $('rrDir').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; S.dir = b.dataset.d; pushInputs(); persist(); render(); });
+  $('rrMkt').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; S.mkt = b.dataset.m; if(S.mkt === 'spot') S.dir = 'long'; pushInputs(); persist(); render(); });
+  $('rrLive').addEventListener('click', async () => {
+    const btn = $('rrLive'), a = S.asset; if(a === 'Other'){ btn.textContent = 'Pick a listed asset first'; return; }
+    btn.textContent = 'Fetching…';
+    try{ const r = await fetch(`https://www.okx.com/api/v5/market/ticker?instId=${a}-USDT`, {cache:'no-store'}); const d = await r.json(); const p = +d.data[0].last; if(!(p > 0)) throw 0;
+      S.entry = p >= 1 ? +p.toFixed(4) : +p.toPrecision(5); persist(); pushInputs(); render(); btn.textContent = `Live ${a}: ${pr(p)} (OKX) ✓`;
+    }catch(e){ btn.textContent = 'Live price unavailable — type it in'; }
+    setTimeout(() => { btn.textContent = 'Use live price as entry'; }, 4000);
+  });
+  $('rrSave').addEventListener('click', () => {
+    const n = $('rrName').value.trim() || `${S.asset} ${S.mkt === 'spot' ? 'spot' : S.lev + '×'} ${S.dir}`;
+    const list = loadSaved(); list.unshift({name: n, t: Date.now(), s: Object.assign({}, S)});
+    const ok = lsSet(SKEY, list.slice(0, 100)); $('rrName').value = '';
+    $('rrSaveNote').textContent = ok ? `Saved "${n}" in this browser. Use Export to keep a copy.` : 'Could not save: your browser is blocking site storage. Use Export instead.';
+    renderSaved();
+  });
+  $('rrSaved').addEventListener('click', e => { const b = e.target.closest('button[data-a]'); if(!b) return; const i = +b.dataset.i, list = loadSaved(), x = list[i]; if(!x) return;
+    if(b.dataset.a === 'load'){ S = Object.assign({}, DEF, x.s); persist(); pushInputs(); render(); $('rrAsset').scrollIntoView({behavior:'smooth', block:'center'}); }
+    else if(b.dataset.a === 'copy'){ list.splice(i + 1, 0, {name: x.name + ' (copy)', t: Date.now(), s: Object.assign({}, x.s)}); lsSet(SKEY, list); renderSaved(); }
+    else { list.splice(i, 1); lsSet(SKEY, list); renderSaved(); } });
+  $('rrExport').addEventListener('click', () => { const blob = new Blob([JSON.stringify({ttm_rr: 1, setups: loadSaved()}, null, 2)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ttm-risk-reward-setups.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); });
+  $('rrImportBtn').addEventListener('click', () => $('rrImport').click());
+  $('rrImport').addEventListener('change', e => { const f = e.target.files[0]; if(!f) return; const r = new FileReader();
+    r.onload = () => { try{ const d = JSON.parse(r.result), inc = (d.setups || []).filter(x => x && x.s && x.name); const list = inc.concat(loadSaved()).slice(0, 100); lsSet(SKEY, list); renderSaved(); $('rrSaveNote').textContent = `Imported ${inc.length} setup(s).`; }catch(err){ $('rrSaveNote').textContent = 'That file is not a TTM setups export.'; } };
+    r.readAsText(f); e.target.value = ''; });
+}
+pushInputs(); wire(); render(); renderSaved();
 })();
 
 /* ---- Volume heatmap ---- */
