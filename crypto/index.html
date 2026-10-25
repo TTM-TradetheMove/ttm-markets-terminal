@@ -1072,6 +1072,7 @@ body.view-section #backFab{display:block}
             <div class="rr-f"><label for="rrTp3">Take profit 3 (USD)</label><div class="rr-tp"><input id="rrTp3" type="number" inputmode="decimal" step="any"><input id="rrS3" type="number" inputmode="decimal" step="any" placeholder="% of position"></div></div>
             <div class="rr-f"><label>&nbsp;</label><button type="button" class="rr-btn ghost" id="rrLive">Use live price as entry</button></div>
           </div>
+          <p class="calendar-note" id="rrAlloc" style="margin:0 0 10px"></p>
           <div class="rr-row3">
             <div class="rr-f"><label for="rrBal">Account balance (USD)</label><input id="rrBal" type="number" inputmode="decimal" step="any"></div>
             <div class="rr-f"><label for="rrRisk">Risk per trade (%)</label><input id="rrRisk" type="number" inputmode="decimal" step="any"></div>
@@ -3282,6 +3283,8 @@ function calc(){
 function row(k, v, cls){ return `<div><small>${k}</small><strong class="${cls || ''}">${v}</strong></div>`; }
 function render(){
   const c = calc();
+  { const t = (num(S.s1) || 0) + (num(S.s2) || 0) + (num(S.s3) || 0), r = Math.round((100 - t) * 100) / 100;
+    $('rrAlloc').innerHTML = `Position split across targets: <b style="color:${t > 100.0001 ? '#e0554d' : 'var(--gold2)'}">${Math.round(t * 100) / 100}%</b> allocated` + (r > 0.0001 ? `, ${r}% left with no target` : r < -0.0001 ? ` — over by ${-r}%` : ' — fully allocated') + '. Change TP1 and TP2 gets the rest; change TP2 and TP3 gets the rest.'; }
   $('rrWarns').innerHTML = c.warns.map(w => `<div class="rr-warn ${w[0] === 'y' ? 'y' : ''}">${w[1]}</div>`).join('');
   if(!c.ok){
     $('rrOut').innerHTML = row('Risk at stop', '—') + row('Potential profit', '—') + row('Position size', '—') + row('Notional', '—') + row('Risk : reward', '—') + row('Stop distance', '—');
@@ -3340,7 +3343,13 @@ function renderSaved(){
 }
 function persist(){ lsSet(KEY, S); }
 function wire(){
-  Object.keys(IDS).forEach(k => $(IDS[k]).addEventListener('input', e => { S[k] = e.target.value; persist(); render(); }));
+  const clampPct = v => Math.max(0, Math.min(100, Math.round((parseFloat(v) || 0) * 100) / 100));
+  Object.keys(IDS).forEach(k => $(IDS[k]).addEventListener('input', e => {
+    S[k] = e.target.value;
+    // take-profit shares balance themselves: TP1 -> TP2 gets the rest, TP3 0; TP2 -> TP3 gets the rest
+    if(k === 's1'){ const a = clampPct(S.s1); S.s2 = 100 - a; S.s3 = 0; $('rrS2').value = S.s2; $('rrS3').value = S.s3; }
+    else if(k === 's2'){ const a = clampPct(S.s1), b = Math.min(clampPct(S.s2), 100 - a); if(b !== clampPct(S.s2)){ S.s2 = b; $('rrS2').value = b; } S.s3 = Math.round((100 - a - b) * 100) / 100; $('rrS3').value = S.s3; }
+    persist(); render(); }));
   // searchable asset picker: top 250 from top_coins.json, or any ticker typed in
   const list = $('rrList'); let hl = -1, shownRows = [];
   const clean = t => String(t || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 14);
