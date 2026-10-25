@@ -1,0 +1,43 @@
+name: Update top coins list
+
+on:
+  schedule:
+    - cron: "41 */6 * * *"
+  workflow_dispatch:
+  push:
+    paths:
+      - scripts/update_top_coins.py
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-top-coins
+  cancel-in-progress: false
+
+jobs:
+  top-coins:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build top coins list
+        run: python3 scripts/update_top_coins.py
+      - name: Commit
+        run: |
+          git config user.name "ttm-calendar-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add top_coins.json
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Auto-update top coins list"
+            for i in 1 2 3 4; do
+              git pull --rebase -X theirs origin main && git push && break
+              echo "Push attempt $i failed, retrying..."
+              sleep 5
+            done
+          fi
