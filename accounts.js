@@ -9,7 +9,7 @@ const pname = id => (PLANS.find(p => p[0] === id) || [0, id])[1];
 // what can be locked: key, label, plans that get it by default (Pro always gets everything)
 const CAT = [
   ['c:calendar', 'Crypto · Macro Watch', ['free']], ['c:tradinghours', 'Crypto · Trading Hours', ['free']], ['c:fomo', 'Crypto · FOMO Finder & RSI Chart', ['free']],
-  ['c:btcmonthly', 'Crypto · BTC Monthly (with cycle tops)', ['free']], ['c:tokenevents', 'Crypto · Token Events', ['free']], ['c:library', 'Crypto · Reports library', ['free']], ['c:transparency', 'Crypto · Transparency Watch', ['free']],
+  ['c:btcmonthly', 'Crypto · BTC Monthly (with cycle tops)', ['free']], ['c:tokenevents', 'Crypto · Token Events', []], ['c:library', 'Crypto · Reports library', []], ['c:transparency', 'Crypto · Transparency Watch', ['free']],
   ['c:marketpulse', 'Crypto · Market Pulse (liquidations, funding, open interest)', ['crypto']], ['c:rsimap', 'Crypto · RSI Heatmap', ['crypto']], ['c:volume', 'Crypto · Volume Heatmap', ['crypto']], ['c:socialpulse', 'Crypto · Social Pulse', ['crypto']],
   ['c:riskreward', 'Crypto · Risk / Reward calculator', ['crypto']], ['c:tradejournal', 'Crypto · Trade Tracker & win ratio', []], ['c:portfolio', 'Crypto · Portfolio Forecast', []],
   ['t:calendar', 'TradFi · Macro Watch', ['free']], ['t:tradinghours', 'TradFi · Trading Hours', ['free']], ['t:congress', 'TradFi · Congress Watch', ['free']],
