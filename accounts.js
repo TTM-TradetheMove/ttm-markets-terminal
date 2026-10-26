@@ -36,7 +36,7 @@ const modal = document.createElement('div'); modal.id = 'authModal'; modal.inner
 // magic-link return: tokens arrive in the URL fragment
 (function(){ const h = location.hash || ''; if(h.indexOf('access_token=') < 0) return; const p = new URLSearchParams(h.slice(1));
   if(p.get('access_token')) lw(AK, {access: p.get('access_token'), refresh: p.get('refresh_token'), exp: Date.now() + (+p.get('expires_in') || 3600) * 1000});
-  try{ history.replaceState(null, '', location.pathname + location.search + (TERM === 'crypto' ? '#members' : '')); window.dispatchEvent(new HashChangeEvent('hashchange')); }catch(err){} })();
+  try{ history.replaceState(null, '', location.pathname + location.search + ''); window.dispatchEvent(new HashChangeEvent('hashchange')); }catch(err){} })();
 
 async function raw(path, opt, token){
   const h = Object.assign({apikey: CFG.key, 'Content-Type': 'application/json', Authorization: 'Bearer ' + (token || CFG.key)}, (opt && opt.headers) || {});
@@ -85,7 +85,7 @@ function openAuth(html){ $('authBody').innerHTML = '<h3>TTM account</h3>' + (htm
 const closeAuth = () => modal.classList.remove('open');
 document.addEventListener('click', async ev => {
   const t = ev.target; if(!t || !t.id && !t.closest) return;
-  if(t.id === 'acctBtn'){ if(USER){ if(TERM === 'crypto') location.hash = '#members'; else location.href = BASE + 'crypto/index.html#members'; } else openAuth(); }
+  if(t.id === 'acctBtn'){ if(!USER) openAuth(); else if(TERM === 'home'){ const a = $('account'); if(a) a.scrollIntoView({behavior: 'smooth'}); } else location.href = BASE + 'index.html#account'; }
   else if(t.id === 'authClose' || t === modal) closeAuth();
   else if(t.id === 'memSignIn' || t.id === 'lockSignIn' || t.id === 'wallSignIn') openAuth();
   else if(t.id === 'authSend'){ const em = ($('authEmail').value || '').trim(); if(!/^\S+@\S+\.\S+$/.test(em)){ $('authNote').textContent = 'Enter a valid email address.'; return; }
@@ -95,7 +95,7 @@ document.addEventListener('click', async ev => {
     else $('authNote').textContent = 'Could not send the email' + (r.json && (r.json.msg || r.json.error_description) ? ': ' + (r.json.msg || r.json.error_description) : '.'); }
   else if(t.id === 'authVerify'){ const code = ($('authCode').value || '').trim(), em = t.dataset.em; if(!code) return;
     const r = await raw('/auth/v1/verify', {method: 'POST', body: JSON.stringify({type: 'email', email: em, token: code})});
-    if(r.ok && r.json && r.json.access_token){ lw(AK, {access: r.json.access_token, refresh: r.json.refresh_token, exp: Date.now() + (r.json.expires_in || 3600) * 1000}); closeAuth(); await boot(); if(TERM === 'crypto') location.hash = '#members'; }
+    if(r.ok && r.json && r.json.access_token){ lw(AK, {access: r.json.access_token, refresh: r.json.refresh_token, exp: Date.now() + (r.json.expires_in || 3600) * 1000}); closeAuth(); await boot(); }
     else $('authNote').textContent = 'That code did not work. Check it and try again.'; }
   else if(t.id === 'memSignOut'){ try{ await api('/auth/v1/logout', {method: 'POST'}); }catch(err){} try{ localStorage.removeItem(AK); localStorage.removeItem(SYNCK); }catch(err){} USER = PROF = null; SYNC = {state: 'off', at: 0}; ui(); }
 });
@@ -160,9 +160,9 @@ function ui(){
   const lw2 = $('landWall'); if(lw2){ const w = on() && SET.wall && !USER && SET.charging; lw2.style.display = w ? '' : 'none'; document.querySelectorAll('.chooser').forEach(c => { c.style.display = w ? 'none' : ''; }); }
   const m = $('memAcct');
   if(m){
-    if(!on()) m.innerHTML = '<h3>Account</h3><p style="margin:0">Free accounts are <b>coming soon</b>: sign in with your email to sync your trades across your phone, iPad and computer, and to unlock the members area. The terminal and every tool stay free and open in the meantime.</p>';
+    if(!on()) m.innerHTML = '<h3>Account</h3><p style="margin:0">Free accounts are <b>coming soon</b>: sign in with your email to sync your trades across your phone, iPad and computer, and to unlock your plan. The terminal and every tool stay free and open in the meantime.</p>';
     else if(!USER) m.innerHTML = '<h3>Account</h3><p style="margin:0 0 12px">Create a free account with just your email (no password).</p><div class="rr-acts" style="margin:0"><button class="rr-btn" id="memSignIn">Sign in / create free account</button></div>';
-    else m.innerHTML = `<h3>Account <span style="float:right">${planBadge()}</span></h3><p style="margin:0 0 6px"><b>${e(USER.email)}</b> · plan <b>${e(pname(PROF.plan))}</b></p><p class="calendar-note" style="margin:0 0 12px">Cloud sync: ${can('sync') ? ({ok: 'on' + (SYNC.at ? ', last synced ' + new Date(SYNC.at).toLocaleTimeString() : ''), saving: 'saving…', error: 'could not reach the cloud, will retry', off: 'starting…', locked: 'not included in your plan'})[SYNC.state] || 'on' : 'included with the ' + needText('sync') + ' plan'}. Your Telegram bot token is never uploaded.</p><div class="rr-acts" style="margin:0"><button class="rr-btn ghost sm" id="memSignOut">Sign out</button></div>`;
+    else m.innerHTML = `<h3>Account <span style="float:right">${planBadge()}</span></h3><p style="margin:0 0 6px"><b>${e(USER.email)}</b> · plan <b>${e(pname(PROF.plan))}</b></p><p class="calendar-note" style="margin:0 0 12px">Cloud sync: ${can('sync') ? ({ok: 'on' + (SYNC.at ? ', last synced ' + new Date(SYNC.at).toLocaleTimeString() : ''), saving: 'saving…', error: 'could not reach the cloud, will retry', off: 'starting…', locked: 'not included in your plan'})[SYNC.state] || 'on' : 'included with the ' + needText('sync') + ' plan'}. Your Telegram bot token is never uploaded.</p><div class="rr-acts" style="margin:0"><button class="rr-btn ghost sm" id="memSignOut">Sign out</button>${PROF.is_admin ? `<a class="rr-btn sm" style="text-decoration:none" href="${BASE}crypto/index.html#admin">Admin</a>` : ''}</div>`;
   }
   const tv = $('memTv');
   if(tv){ const ok = can('indicators'); tv.innerHTML = ok ? (CFG.tv && CFG.tv.length ? CFG.tv : [{name: 'TTM Indicator Suite', desc: 'Trend, momentum and cycle tools built for the TTM method.'}, {name: 'TTM Signals & Alerts', desc: 'Chart overlays that line up with the terminal.'}, {name: 'TTM Risk Tools', desc: 'Position-sizing helpers on the chart.'}]).map(x => `<div class="mem-card"><b>${e(x.name)}</b><p>${e(x.desc || '')}</p>${x.url ? `<a class="rr-btn sm" style="text-decoration:none;display:inline-block" href="${e(x.url)}" target="_blank" rel="noopener noreferrer">Open on TradingView ↗</a>` : '<span class="rr-pill be">Coming soon</span>'}</div>`).join('')
