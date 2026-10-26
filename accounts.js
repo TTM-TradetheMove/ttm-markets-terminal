@@ -39,7 +39,7 @@ const modal = document.createElement('div'); modal.id = 'authModal'; modal.inner
   try{ history.replaceState(null, '', location.pathname + location.search + ''); window.dispatchEvent(new HashChangeEvent('hashchange')); }catch(err){} })();
 
 async function raw(path, opt, token){
-  const h = Object.assign({apikey: CFG.key, 'Content-Type': 'application/json', Authorization: 'Bearer ' + (token || CFG.key)}, (opt && opt.headers) || {});
+  const h = Object.assign({apikey: CFG.key, 'Content-Type': 'application/json'}, (opt && opt.headers) || {}); if(token) h.Authorization = 'Bearer ' + token; else if(CFG.key.indexOf('eyJ') === 0) h.Authorization = 'Bearer ' + CFG.key;
   const r = await fetch(CFG.url.replace(/\/$/, '') + path, Object.assign({}, opt, {headers: h}));
   let j = null; try{ j = await r.json(); }catch(err){} return {ok: r.ok, status: r.status, json: j};
 }
