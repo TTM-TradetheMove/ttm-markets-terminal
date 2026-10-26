@@ -1,21 +1,21 @@
-TTM tradfi run 2026-10-25T22:29:01+00:00
+TTM tradfi run 2026-10-26T00:39:56+00:00
 nyfed effr: 705 rows
+ecb DFR: 1030 rows
 nyfed effr: 705 rows
 chicagofed NFCI: 121 rows
-ecb DFR: 1029 rows
   GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=WALCL&cosd=2024-01-01 -> TimeoutError: The read operation timed out
-  GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01AUM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=RRPONTSYD&cosd=2024-01-01 -> TimeoutError: The read operation timed out
-  GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01JPM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
+  GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01AUM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01GBM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
+  GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01JPM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=WTREGEN&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=STLFSI4&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2&cosd=2025-01-01 -> TimeoutError: The read operation timed out
-  GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01JPM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
-  GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01AUM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=WALCL&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=RRPONTSYD&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01GBM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
+  GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01JPM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
+  GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01AUM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=WTREGEN&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=STLFSI4&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2&cosd=2025-01-01 -> TimeoutError: The read operation timed out
@@ -25,19 +25,19 @@ treasury real-yield T5YIE: 453 rows
 series prefetch: 8/16 ok (missing: ['IRSTCB01AUM156N', 'IRSTCB01GBM156N', 'IRSTCB01JPM156N', 'WALCL', 'RRPONTSYD', 'WTREGEN', 'STLFSI4', 'BAMLH0A0HYM2'])
 rss Fed: 6 items
 rss ECB: 6 items
-rba f2-data.csv: 5 series, e.g. ['FCMYGBAG2D', 'FCMYGBAG3D', 'FCMYGBAG5D', 'FCMYGBAG10D', 'FCMYGBAGID']
-rss BoE: 6 items
 yahoo: 27/27 symbols
 markets: ok
 treasury: ok
+rss BoE: 6 items
+rba f1-data.csv: 17 series, e.g. ['FIRMMCRTD', 'FIRMMCCRT', 'FIRMMCRID', 'FIRMMCRIH', 'FIRMMCRIL', 'FIRMMCRIV']
+rba f2-data.csv: 5 series, e.g. ['FCMYGBAG2D', 'FCMYGBAG3D', 'FCMYGBAG5D', 'FCMYGBAG10D', 'FCMYGBAGID']
 au: ok
 rss RBA: 1 items
-rba f1-data.csv: 17 series, e.g. ['FIRMMCRTD', 'FIRMMCCRT', 'FIRMMCRID', 'FIRMMCRIH', 'FIRMMCRIL', 'FIRMMCRIV']
-rss BoJ: 6 items
 boe IUDBEDR: 712 rows
 policy: ok
 liquidity: EMPTY
 conditions: ok
+rss BoJ: 6 items
 rss google[policy]: 14 items
 rss google[geopolitics]: 14 items
 rss google[companies]: 14 items
@@ -46,4 +46,4 @@ news: ok
 wrote tradfi_markets.json (updated) keys=['breadth', 'correlations', 'indices', 'macro', 'risk', 'vix']
 wrote tradfi_rates.json (updated) keys=['au', 'conditions', 'expectations', 'policy', 'treasury']
 wrote tradfi_news.json (updated) keys=['central_banks', 'companies', 'geopolitics', 'liquidity', 'policy']
-done in 100s
+done in 99s
