@@ -13,3 +13,14 @@
 
 TradingView links: add them to `ttm_config.json`, for example
 `"tradingview": [{"name":"TTM Indicator","url":"https://www.tradingview.com/script/...","desc":"What it does"}]`
+
+## Plans (Free / Crypto / TradFi / Pro)
+
+- Plans and locks are controlled from the **Admin** page (Crypto terminal, `#admin`), once you are an admin.
+- **Plans on** is off by default: while off, everyone sees everything. Turn it on to apply the grid.
+- **Require sign-in** puts a sign-in in front of the whole site.
+- The grid sets, per section, which plans get it. Pro always has everything. "Reset to the planned defaults" restores the plan you specified.
+- Set each member's plan in the Members list on the same page.
+- Prices show as "Price to be confirmed" until you fill `plans` in `ttm_config.json` (monthly / annual per plan).
+- Locks run in the browser. The site's files are public, so this is a convenience gate, not a security lock.
+- If you already ran the old schema, re-run `schema.sql`; it widens the plan check to free / crypto / tradfi / pro. If it errors on existing rows, run: `update ttm_profiles set plan='crypto' where plan='member';` first.

@@ -3,7 +3,7 @@
 create table if not exists public.ttm_profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text,
-  plan text not null default 'free' check (plan in ('free','member','pro')),
+  plan text not null default 'free' check (plan in ('free','crypto','tradfi','pro')),
   is_admin boolean not null default false,
   created_at timestamptz not null default now()
 );
@@ -49,8 +49,9 @@ create policy p_set_all on public.ttm_settings for all using (public.ttm_is_admi
 
 insert into public.ttm_settings(key, value) values
   ('charging', 'false'::jsonb),
-  ('features', '{"sync":"free","portfolio":"free","excel":"free","alerts":"free"}'::jsonb)
+  ('wall', 'false'::jsonb)
 on conflict (key) do nothing;
+-- (the per-section access grid is created from the Admin page on first save)
 
 -- After you sign in once on the site, make yourself the admin (change the email):
 -- update public.ttm_profiles set is_admin = true where email = 'you@example.com';

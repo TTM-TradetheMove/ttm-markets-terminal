@@ -533,9 +533,84 @@ body.view-section #backFab{display:block}
 .menu-tile span{display:block;font-size:13px;color:var(--mute);line-height:1.45}
 @media (max-width:860px){.menu-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:420px){.menu-tile{padding:14px}.menu-tile b{font-size:15px}.menu-tile span{font-size:12px}}
+.rr-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:16px;align-items:start}
+@media (max-width:900px){.rr-grid{grid-template-columns:1fr}}
+.rr-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:16px}
+.rr-card h3{margin:0 0 12px;font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold)}
+.rr-f{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;min-width:0}
+.rr-f label{font-size:11.5px;color:var(--mute)}
+.rr-f input,.rr-f select{background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 10px;font:inherit;font-size:14px;width:100%;box-sizing:border-box;min-width:0}
+.rr-f input:focus,.rr-f select:focus{outline:none;border-color:var(--gold)}
+.rr-combo{position:relative}
+.rr-list{position:absolute;top:100%;left:0;right:0;z-index:30;margin-top:3px;background:#15151a;border:1px solid var(--gold);border-radius:8px;max-height:300px;overflow:auto;display:none;box-shadow:0 10px 30px rgba(0,0,0,.6)}
+.rr-list.open{display:block}
+.rr-list div{padding:9px 11px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(255,255,255,.05)}
+.rr-list div:hover,.rr-list div.hl{background:rgba(219,161,24,.16)}
+.rr-list div span{color:var(--mute);font-size:11.5px;white-space:nowrap}
+.rr-list .rr-hint{cursor:default;color:var(--mute);font-size:11.5px}.rr-list .rr-hint:hover{background:none}
+.rr-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rr-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.rr-tp{display:grid;grid-template-columns:1.4fr 1fr;gap:8px}
+.rr-seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.rr-seg button{flex:1;background:transparent;border:none;color:var(--mute);padding:9px;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
+.rr-seg button.on{background:var(--gold);color:#111}
+.rr-seg button.on.short{background:#d6453d;color:#fff}
+.rr-out{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:12px}
+@media (max-width:600px){.rr-out{grid-template-columns:repeat(2,1fr)}.rr-row3{grid-template-columns:1fr 1fr}}
+.rr-out>div{background:var(--card);padding:11px 12px}
+.rr-out small{display:block;color:var(--mute);font-size:11px;margin-bottom:4px}
+.rr-out strong{font-size:18px;color:var(--text)}
+.rr-out .g{color:#3fb47a}.rr-out .r{color:#e0554d}.rr-out .y{color:var(--gold2)}
+.rr-badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid var(--line)}
+.rr-badge.ok{color:#3fb47a;border-color:#3fb47a}.rr-badge.bad{color:#e0554d;border-color:#e0554d}.rr-badge.mid{color:var(--gold2);border-color:var(--gold)}
+.rr-warn{border:1px solid #e0554d;background:rgba(224,85,77,.08);color:#f0a09b;border-radius:10px;padding:9px 12px;font-size:13px;margin-bottom:8px}
+.rr-warn.y{border-color:var(--gold);background:rgba(219,161,24,.08);color:var(--gold2)}
+.rr-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.rr-tbl th{text-align:left;color:var(--mute);font-weight:600;font-size:11px;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.rr-tbl td{padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.rr-wrap{overflow-x:auto}
+.rr-bar{height:8px;background:var(--line);border-radius:5px;overflow:hidden;margin:6px 0 4px}.rr-bar i{display:block;height:100%;background:#3fb47a}
+.rr-btn{background:var(--gold);color:#111;border:none;border-radius:8px;padding:9px 14px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.rr-btn.ghost{background:transparent;color:var(--gold2);border:1px solid var(--gold)}
+.rr-btn.sm{padding:5px 9px;font-size:12px}
+.rr-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+select{color-scheme:dark}select option,select optgroup{background:#16161a;color:#e8e6e1}
+.mem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}@media (max-width:760px){.mem-grid{grid-template-columns:1fr}}
+.mem-card{border:1px solid var(--line);border-radius:12px;padding:14px;background:rgba(255,255,255,.02)}.mem-card p{color:var(--mute);font-size:13px;margin:6px 0 12px}
+
+.acct-btn{background:transparent;border:1px solid var(--gold);color:var(--gold2);padding:7px 12px;border-radius:999px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.acct-btn:hover{background:rgba(219,161,24,.12)}
+.rr-card h3::after{content:'';display:block;clear:both}
+.rr-out.c4{grid-template-columns:repeat(4,1fr)}.rr-out.c5{grid-template-columns:repeat(5,1fr)}
+@media (max-width:760px){.rr-out.c4,.rr-out.c5{grid-template-columns:repeat(2,1fr)}.rr-tfbar button{padding:6px 11px}}
+.bm-tbl td.yr.top{background:var(--gold);color:#111;font-weight:800}.bm-tbl td.yr .topflag{display:block;font-size:9px;letter-spacing:.6px;font-weight:800}
+.bm-tbl td.peak{box-shadow:inset 0 0 0 2px #dba118}
+.tool-nav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px;align-items:center}
+.tool-nav a,.tool-nav button{border:1px solid var(--line);background:transparent;color:var(--mute);padding:7px 13px;border-radius:999px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;text-decoration:none}
+.tool-nav a.cur{background:var(--gold);color:#111;border-color:var(--gold)}.tool-nav a:hover,.tool-nav button:hover{border-color:var(--gold);color:var(--gold2)}.tool-nav a.cur:hover{color:#111}
+.tool-nav .sp{flex:1}
+.rr-tfbar{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}.rr-tfbar button{border:1px solid var(--line);background:transparent;color:var(--mute);padding:5px 11px;border-radius:999px;font:inherit;font-size:12px;font-weight:600;cursor:pointer}.rr-tfbar button.on{background:var(--gold);color:#111;border-color:var(--gold)}
+.rr-mini{display:inline-block;height:8px;border-radius:4px;vertical-align:middle}
+.rr-modal{position:fixed;inset:0;z-index:2000;display:none;background:rgba(0,0,0,.78);overflow:auto;padding:4vh 14px}
+.rr-modal.open{display:block}
+.rr-modal>div{max-width:560px;margin:0 auto;background:var(--card);border:1px solid var(--gold);border-radius:14px;padding:18px 20px}
+.rr-modal h3{margin:0 0 6px;color:var(--gold);font-size:14px;letter-spacing:1.2px;text-transform:uppercase}
+.rr-opt{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1px solid var(--line);border-radius:9px;margin-bottom:8px;cursor:pointer;font-size:13.5px}
+.rr-opt input{margin-top:3px}.rr-opt.on{border-color:var(--gold);background:rgba(219,161,24,.08)}
+.rr-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:14px}
+@media (max-width:760px){.rr-stats{grid-template-columns:repeat(2,1fr)}}
+.rr-stats>div{background:var(--card);padding:11px 12px}.rr-stats small{display:block;color:var(--mute);font-size:11px;margin-bottom:4px}.rr-stats strong{font-size:19px}
+.rr-pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:700;border:1px solid var(--line)}
+.rr-pill.win{color:#3fb47a;border-color:#3fb47a}.rr-pill.loss{color:#e0554d;border-color:#e0554d}.rr-pill.be{color:var(--gold2);border-color:var(--gold)}.rr-pill.open{color:#6aa9ff;border-color:#6aa9ff}
+.rr-notes{margin:0;padding-left:18px;color:var(--mute);font-size:12.5px;line-height:1.7}
+.acct-btn{margin-left:8px}
+.rr-pill.be{color:var(--gold2);border-color:var(--gold)}
+.rr-f input,.rr-f select{width:100%;box-sizing:border-box;font-family:inherit;font-size:14px;padding:10px;border-radius:8px}
+select,select option{color-scheme:dark}select option{background:#16161a;color:#e8e6e1}
+.calendar-note{font-size:12.5px;color:var(--mute);line-height:1.6}
+
 </style>
 </head>
-<body>
+<body data-terminal="tradfi">
 
 <header class="site">
   <div class="site-inner">
@@ -550,7 +625,9 @@ body.view-section #backFab{display:block}
       <a href="#bonds">Bonds &amp; Rates</a>
       <a href="#macrointel">Macro Intel</a>
       <a href="#newsrisk">News &amp; Risk</a>
+      <a href="#tfcalc">Risk / Reward</a>
     </nav>
+    <button type="button" class="acct-btn" id="acctBtn">Sign in</button>
     <a class="tg-btn" href="https://t.me/+fxWM17n8TxE3ODc1" target="_blank" rel="noopener">Join Telegram</a>
   </div>
 </header>
@@ -559,7 +636,7 @@ body.view-section #backFab{display:block}
   <h1>Traditional markets, <em>the TTM way.</em></h1>
   <p>Same macro calendar and session clock as the Crypto terminal, built out here for forex, indices, commodities and stocks. Global market coverage below is actively being built — calendar and trading hours are live now.</p>
 </div>
-<div id="menuHome"><div class="wrap"><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#congress"><b>Congress Watch</b><span>Congress trading disclosures</span></a><a class="menu-tile" href="#globalmarkets"><b>Global Markets</b><span>Indices, FX, metals and energy</span></a><a class="menu-tile" href="#bonds"><b>Bonds &amp; Rates</b><span>Yields, curves and policy rates</span></a><a class="menu-tile" href="#macrointel"><b>Macro Intel</b><span>Central banks and financial conditions</span></a><a class="menu-tile" href="#newsrisk"><b>News &amp; Risk</b><span>Headlines and risk watch</span></a></div></div></div>
+<div id="menuHome"><div class="wrap"><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tfcalc"><b>Risk / Reward Tooling</b><span>Position size, risk and targets for forex, indices, commodities and stocks</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#congress"><b>Congress Watch</b><span>Congress trading disclosures</span></a><a class="menu-tile" href="#globalmarkets"><b>Global Markets</b><span>Indices, FX, metals and energy</span></a><a class="menu-tile" href="#bonds"><b>Bonds &amp; Rates</b><span>Yields, curves and policy rates</span></a><a class="menu-tile" href="#macrointel"><b>Macro Intel</b><span>Central banks and financial conditions</span></a><a class="menu-tile" href="#newsrisk"><b>News &amp; Risk</b><span>Headlines and risk watch</span></a></div></div></div>
 <button id="backFab" type="button">&larr; Menu</button>
 <div id="backBar"><div class="wrap"><button id="backBtn" type="button">&larr; Back to menu</button><span id="backTitle"></span></div></div>
 <section id="calendar">
@@ -881,6 +958,35 @@ body.view-section #backFab{display:block}
   </div>
 </section>
 
+<section id="tfcalc">
+  <div class="wrap">
+    <div class="section-head"><span class="tag">Risk tool</span><h2>TradFi Risk / Reward calculator</h2><p>Size a forex, index, commodity or stock trade from the amount you are willing to lose. Nothing is stored or sent anywhere.</p></div>
+    <div class="rr-grid">
+      <div class="rr-card"><h3>Trade setup</h3>
+        <div class="rr-row"><div class="rr-f"><label for="txType">Market</label><select id="txType"><option value="fx">Forex</option><option value="idx">Index (CFD)</option><option value="com">Commodity</option><option value="stk">Stock / ETF</option></select></div>
+          <div class="rr-f"><label for="txSym">Symbol (label only)</label><input id="txSym" type="text" maxlength="14" placeholder="EURUSD, NAS100, AAPL"></div></div>
+        <div class="rr-f"><label>Direction</label><div class="rr-seg"><button type="button" id="txLong" class="on">Long</button><button type="button" id="txShort">Short</button></div></div>
+        <div class="rr-row"><div class="rr-f"><label for="txBal">Account balance ($)</label><input id="txBal" type="number" inputmode="decimal" value="10000" min="0"></div>
+          <div class="rr-f"><label for="txLev">Leverage (x)</label><input id="txLev" type="number" inputmode="decimal" value="30" min="1"></div></div>
+        <div class="rr-row"><div class="rr-f"><label for="txRiskMode">Risk by</label><select id="txRiskMode"><option value="pct">% of balance</option><option value="usd">$ amount</option></select></div>
+          <div class="rr-f"><label for="txRisk" id="txRiskL">Risk per trade (%)</label><input id="txRisk" type="number" inputmode="decimal" value="1" min="0" step="any"></div></div>
+        <div class="rr-row"><div class="rr-f"><label for="txE">Entry price</label><input id="txE" type="number" inputmode="decimal" step="any" placeholder="e.g. 1.0850"></div>
+          <div class="rr-f"><label for="txSL">Stop loss</label><input id="txSL" type="number" inputmode="decimal" step="any" placeholder="e.g. 1.0800"></div></div>
+        <div class="rr-row"><div class="rr-f"><label for="txCS">Units per 1.0 lot</label><input id="txCS" type="number" inputmode="decimal" value="100000" min="0" step="any"></div>
+          <div class="rr-f"><label for="txFee">Cost per unit (spread + fees)</label><input id="txFee" type="number" inputmode="decimal" value="0" min="0" step="any"></div></div>
+        <h3 style="margin-top:8px">Take profits</h3>
+        <div class="rr-tp"><div class="rr-f"><label for="txT1">TP1 price</label><input id="txT1" type="number" inputmode="decimal" step="any"></div><div class="rr-f"><label for="txS1">Close at TP1 (%)</label><input id="txS1" type="number" inputmode="decimal" value="50"></div></div>
+        <div class="rr-tp"><div class="rr-f"><label for="txT2">TP2 price</label><input id="txT2" type="number" inputmode="decimal" step="any"></div><div class="rr-f"><label for="txS2">Close at TP2 (%)</label><input id="txS2" type="number" inputmode="decimal" value="30"></div></div>
+        <div class="rr-tp"><div class="rr-f"><label for="txT3">TP3 price</label><input id="txT3" type="number" inputmode="decimal" step="any"></div><div class="rr-f"><label for="txS3">Close at TP3 (%)</label><input id="txS3" type="number" inputmode="decimal" value="20"></div></div>
+      </div>
+      <div>
+        <div class="rr-card"><h3>Position</h3><div id="txWarn"></div><div class="rr-out" id="txOut"></div></div>
+        <div class="rr-card"><h3>Take-profit breakdown</h3><div class="rr-wrap"><table class="rr-tbl" id="txTbl"></table></div><p class="calendar-note" id="txSum" style="margin:10px 0 0"></p></div>
+      </div>
+    </div>
+    <div class="rr-card"><h3>Key risk notes</h3><ul class="rr-notes"><li>Size is risk divided by (stop distance + cost). For forex pairs whose quote currency is not your account currency, the value of a pip differs; check the lot size with your broker.</li><li>Contract sizes vary by broker. Defaults: forex 100,000 per lot; indices, commodities and stocks 1 unit. Change it to match your broker.</li><li>Gaps, slippage and wider spreads can make a loss bigger than planned. Educational tool, not advice.</li></ul></div>
+  </div>
+</section>
 <footer>
   <div class="wrap">
     <p style="text-align:center;margin:0 0 14px;font-size:13px"><a href="../index.html#about" style="color:var(--gold2)">TTM · Patience. Positioning. Prosperity. — About Trade The Move</a></p>
@@ -1929,8 +2035,40 @@ setInterval(() => {
 }, 1000);
 })();
 </script>
-
-
+<script>
+(function(){
+  const $ = id => document.getElementById(id); let long = true;
+  const n = id => { const v = parseFloat($(id).value); return isFinite(v) ? v : NaN; };
+  const f = (v, d) => isFinite(v) ? v.toLocaleString('en-US', {maximumFractionDigits: d == null ? 2 : d}) : '—';
+  const usd = v => isFinite(v) ? (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('en-US', {maximumFractionDigits: 2, minimumFractionDigits: 2}) : '—';
+  const CS = {fx: 100000, idx: 1, com: 1, stk: 1};
+  function calc(){
+    const bal = n('txBal'), lev = Math.max(1, n('txLev') || 1), E = n('txE'), SL = n('txSL'), fee = n('txFee') || 0, cs = n('txCS') || 1;
+    const rk = n('txRisk'), risk = $('txRiskMode').value === 'pct' ? bal * rk / 100 : rk;
+    const W = [], out = $('txOut'), tb = $('txTbl'); $('txSum').textContent = '';
+    if(![bal, E, SL, risk].every(isFinite) || risk <= 0){ out.innerHTML = '<div style="grid-column:1/-1"><small>Enter your balance, risk, entry and stop.</small></div>'; tb.innerHTML = ''; $('txWarn').innerHTML = ''; return; }
+    const dist = Math.abs(E - SL); if(dist <= 0){ $('txWarn').innerHTML = '<div class="rr-warn">Entry and stop cannot be the same price.</div>'; return; }
+    if(long ? SL >= E : SL <= E) W.push(long ? 'For a long, the stop must be below the entry.' : 'For a short, the stop must be above the entry.');
+    const units = risk / (dist + fee), notional = units * E, margin = notional / lev, lots = units / cs;
+    if(margin > bal) W.push('Margin needed (' + usd(margin) + ') is more than your balance. Lower the risk or the size.');
+    const tps = [1, 2, 3].map(i => ({P: n('txT' + i), s: n('txS' + i)})).filter(x => isFinite(x.P) && isFinite(x.s) && x.s > 0);
+    const tot = tps.reduce((a, x) => a + x.s, 0); if(tps.length && Math.abs(tot - 100) > 0.01) W.push('Your take-profit shares add up to ' + f(tot, 1) + '%, not 100%.');
+    tps.forEach(x => { if(long ? x.P <= E : x.P >= E) W.push('A target at ' + f(x.P, 5) + ' is on the wrong side of your entry.'); });
+    $('txWarn').innerHTML = W.map(w => '<div class="rr-warn y">' + w + '</div>').join('');
+    out.innerHTML = [['Risk if stopped', usd(risk), 'r'], ['Position (units)', f(units, 2), ''], ['Lots (' + f(cs, 0) + ' / lot)', f(lots, 3), 'y'], ['Notional value', usd(notional), ''], ['Margin at ' + f(lev, 0) + 'x', usd(margin), ''], ['Stop distance', f(dist, 5), '']].map(a => '<div><small>' + a[0] + '</small><strong class="' + a[2] + '">' + a[1] + '</strong></div>').join('');
+    let exp = 0, rows = '';
+    tps.forEach((x, i) => { const u = units * x.s / 100, mv = long ? x.P - E : E - x.P, gain = (mv - fee) * u, R = mv / dist; exp += gain; rows += '<tr><td>TP' + (i + 1) + '</td><td>' + f(x.P, 5) + '</td><td>' + f(x.s, 1) + '%</td><td>' + f(u, 2) + '</td><td>' + f(R, 2) + 'R</td><td style="color:' + (gain >= 0 ? '#3fb47a' : '#e0554d') + '">' + usd(gain) + '</td></tr>'; });
+    tb.innerHTML = tps.length ? '<thead><tr><th>Target</th><th>Price</th><th>Share</th><th>Units</th><th>Reward</th><th>Profit</th></tr></thead><tbody>' + rows + '</tbody>' : '<tbody><tr><td style="color:var(--mute)">Add a take-profit price to see the reward.</td></tr></tbody>';
+    if(tps.length) $('txSum').innerHTML = 'If every target is hit: <b>' + usd(exp) + '</b>, which is <b>' + f(exp / risk, 2) + 'R</b> against ' + usd(risk) + ' risked.';
+  }
+  $('txLong').addEventListener('click', () => { long = true; $('txLong').className = 'on'; $('txShort').className = ''; calc(); });
+  $('txShort').addEventListener('click', () => { long = false; $('txShort').className = 'on short'; $('txLong').className = ''; calc(); });
+  $('txType').addEventListener('change', () => { $('txCS').value = CS[$('txType').value]; calc(); });
+  $('txRiskMode').addEventListener('change', () => { const p = $('txRiskMode').value === 'pct'; $('txRiskL').textContent = p ? 'Risk per trade (%)' : 'Risk per trade ($)'; $('txRisk').value = p ? 1 : 100; calc(); });
+  document.querySelectorAll('#tfcalc input').forEach(i => i.addEventListener('input', calc)); calc();
+})();
+</script>
+<script src="../accounts.js"></script>
 <script>
 (function(){
   const secs = Array.from(document.querySelectorAll('body > section[id]'));
