@@ -371,6 +371,10 @@ td.num{font-variant-numeric:tabular-nums;color:var(--mute)}
 .rr-btn.sm{padding:5px 9px;font-size:12px}
 .rr-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 select{color-scheme:dark}select option,select optgroup{background:#16161a;color:#e8e6e1}
+.mem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}@media (max-width:760px){.mem-grid{grid-template-columns:1fr}}
+.mem-card{border:1px solid var(--line);border-radius:12px;padding:14px;background:rgba(255,255,255,.02)}.mem-card p{color:var(--mute);font-size:13px;margin:6px 0 12px}
+#portfolio.gated .rr-card,#portfolio.gated .filter-row{display:none}#pfGate{border:1px solid var(--gold);background:rgba(219,161,24,.08);border-radius:10px;padding:14px;margin-bottom:14px}
+.acct-btn{background:transparent;border:1px solid var(--gold);color:var(--gold2);padding:7px 12px;border-radius:999px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.acct-btn:hover{background:rgba(219,161,24,.12)}
 .rr-card h3::after{content:'';display:block;clear:both}
 .rr-out.c4{grid-template-columns:repeat(4,1fr)}.rr-out.c5{grid-template-columns:repeat(5,1fr)}
 @media (max-width:760px){.rr-out.c4,.rr-out.c5{grid-template-columns:repeat(2,1fr)}.rr-tfbar button{padding:6px 11px}}
@@ -695,11 +699,14 @@ body.view-section #backFab{display:block}
       <a href="#riskreward">Risk / Reward</a>
       <a href="#tradejournal">Trade Tracker</a>
       <a href="#portfolio">Portfolio Forecast</a>
+      <a href="#members">Members</a>
+      <a href="#admin" id="navAdmin" style="display:none">Admin</a>
       <a href="#socialpulse">Social Pulse</a>
       <a href="#tokenevents">Token Events</a>
       <a href="#library">Reports</a>
       <a href="#transparency">Transparency Watch</a>
     </nav>
+    <button type="button" class="acct-btn" id="acctBtn">Sign in</button>
     <a class="tg-btn" href="https://t.me/+fxWM17n8TxE3ODc1" target="_blank" rel="noopener">Join Telegram</a>
   </div>
 </header>
@@ -741,7 +748,7 @@ body.view-section #backFab{display:block}
   </div>
 </div>
 
-<div id="menuHome"><div class="wrap"><h2>Trading tools</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#riskreward"><b>Risk / Reward Tooling</b><span>Size a trade by risk % , risk $ or investment, with live candles, leverage and liquidation</span></a><a class="menu-tile" href="#tradejournal"><b>Trade Tracker &amp; Win Ratio</b><span>Open and closed trades by account and time frame, win rate, equity curve, Excel export</span></a><a class="menu-tile" href="#portfolio"><b>Portfolio Forecast</b><span>Spot, leverage and super / retirement: forecast vs actual at live prices</span></a></div><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#marketpulse"><b>Market Pulse</b><span>Fear & Greed, funding, liquidations</span></a><a class="menu-tile" href="#btcmonthly"><b>BTC Monthly</b><span>Bitcoin returns month by month</span></a><a class="menu-tile" href="#fomo"><b>FOMO Finder &amp; RSI Chart</b><span>Sentiment gauge plus price and RSI</span></a><a class="menu-tile" href="#rsimap"><b>RSI Heatmap</b><span>Overbought / oversold across ~125 coins</span></a><a class="menu-tile" href="#volume"><b>Volume Heatmap</b><span>Surging and drying-up volume by coin</span></a><a class="menu-tile" href="#socialpulse"><b>Social Pulse</b><span>Truth Social and crypto news feed</span></a><a class="menu-tile" href="#tokenevents"><b>Token Events</b><span>Unlocks, listings and airdrops</span></a><a class="menu-tile" href="#library"><b>Reports</b><span>Asset reviews and deep dives</span></a><a class="menu-tile" href="#transparency"><b>Transparency Watch</b><span>Congress and insider trading watch</span></a></div></div></div>
+<div id="menuHome"><div class="wrap"><h2>Trading tools</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#riskreward"><b>Risk / Reward Tooling</b><span>Size a trade by risk % , risk $ or investment, with live candles, leverage and liquidation</span></a><a class="menu-tile" href="#tradejournal"><b>Trade Tracker &amp; Win Ratio</b><span>Open and closed trades by account and time frame, win rate, equity curve, Excel export</span></a><a class="menu-tile" href="#portfolio"><b>Portfolio Forecast</b><span>Spot, leverage and super / retirement: forecast vs actual at live prices</span></a><a class="menu-tile" href="#members"><b>Members &amp; TradingView</b><span>Free account, cloud sync and the TTM TradingView indicators (coming soon)</span></a></div><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#marketpulse"><b>Market Pulse</b><span>Fear & Greed, funding, liquidations</span></a><a class="menu-tile" href="#btcmonthly"><b>BTC Monthly</b><span>Bitcoin returns month by month</span></a><a class="menu-tile" href="#fomo"><b>FOMO Finder &amp; RSI Chart</b><span>Sentiment gauge plus price and RSI</span></a><a class="menu-tile" href="#rsimap"><b>RSI Heatmap</b><span>Overbought / oversold across ~125 coins</span></a><a class="menu-tile" href="#volume"><b>Volume Heatmap</b><span>Surging and drying-up volume by coin</span></a><a class="menu-tile" href="#socialpulse"><b>Social Pulse</b><span>Truth Social and crypto news feed</span></a><a class="menu-tile" href="#tokenevents"><b>Token Events</b><span>Unlocks, listings and airdrops</span></a><a class="menu-tile" href="#library"><b>Reports</b><span>Asset reviews and deep dives</span></a><a class="menu-tile" href="#transparency"><b>Transparency Watch</b><span>Congress and insider trading watch</span></a></div></div></div>
 <button id="backFab" type="button">&larr; Menu</button>
 <div id="backBar"><div class="wrap"><button id="backBtn" type="button">&larr; Back to menu</button><span id="backTitle"></span></div></div>
 <section id="calendar">
@@ -1200,6 +1207,7 @@ body.view-section #backFab{display:block}
       <h2>Portfolio Forecast</h2>
       <p>Your tracker, valued against live prices. For each account (spot, leverage, super / retirement) this shows your realised balance, what the account is worth right now with open trades marked to the market, the forecast if every target is hit, and the worst case if every stop is hit. Prices come live from OKX and refresh every 30 seconds while this page is open.</p>
     </div>
+    <div id="pfGate" style="display:none"></div>
     <div class="filter-row" id="pfScope" style="margin-bottom:12px"></div>
     <div class="rr-card"><h3>Forecast vs actual <span id="pfStamp" style="float:right;color:var(--mute);text-transform:none;letter-spacing:0;font-size:12px"></span></h3><div class="rr-out c5" id="pfTiles"></div><svg id="pfChart" viewBox="0 0 800 300" style="width:100%;height:auto;display:block"></svg></div>
     <div class="rr-card"><h3>By account</h3><div class="rr-wrap"><table class="rr-tbl" id="pfAcc"></table></div></div>
@@ -1207,6 +1215,22 @@ body.view-section #backFab{display:block}
     <p class="calendar-note">How to read it: <b>Actual now</b> = realised balance plus the open P&amp;L of your open trades at the live price (targets already passed are counted as filled, a stop already passed as taken). <b>Forecast</b> = realised balance plus the planned profit if every target of every open trade is hit. <b>Worst</b> = every stop hit. <b>Expected</b> weights those two by that account's own win rate once it has at least 5 closed trades. These are projections from your own plans, not predictions of the market, and fills on your exchange will differ. Not financial advice.</p>
   </div>
 </section>
+<section id="members">
+  <div class="wrap">
+    <div class="section-head"><span class="tag">Members</span><h2>Your TTM account</h2><p>A free account syncs your trade tracker, balances and saved plans across your phone, iPad and computer, and gives you one place for the TTM TradingView indicators.</p></div>
+    <div class="rr-card" id="memAcct"></div>
+    <div class="rr-card"><h3>TTM indicators on TradingView</h3><div class="mem-grid" id="memTv"></div></div>
+    <div class="rr-card"><h3>What is included</h3><div id="memPlans"></div></div>
+  </div>
+</section>
+<section id="admin">
+  <div class="wrap">
+    <div class="section-head"><span class="tag">Admin</span><h2>Plans &amp; members</h2><p>Choose whether to charge, which features need which plan, and set individual members' plans.</p></div>
+    <div id="admBody"></div>
+  </div>
+</section>
+<div class="rr-modal" id="authModal"><div id="authBody"></div></div>
+
 <section id="volume">
   <div class="wrap">
     <div class="section-head">
@@ -3312,7 +3336,7 @@ const KEY = 'ttm_rr_state_v1', SKEY = 'ttm_rr_saved_v1';
 const DEF = {asset:'BTC', dir:'long', mkt:'fut', lev:10, entry:'', stop:'', tp1:'', s1:50, tp2:'', s2:50, tp3:'', s3:0, bal:5000, risk:1, fee:0.06, daily:250, min:2, mmr:0.5, acc:'lev', tf:'h1', mode:'pct', rusd:50, inv:1000};
 let S = Object.assign({}, DEF);
 function lsGet(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
-function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
+function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); if(window.ttmSync && (k === 'ttm_rr_saved_v1' || k === 'ttm_rr_bals_v1')) window.ttmSync.dirty(); return true; }catch(e){ return false; } }
 S = Object.assign(S, lsGet(KEY, {}));
 const BKEY = 'ttm_rr_bals_v1';
 const BALS = Object.assign({spot: 5000, lev: num0(S.bal) || 5000, super: 5000}, lsGet(BKEY, {}));
@@ -4139,18 +4163,19 @@ function wire(){
   $('pfScope').addEventListener('change', e => { if(e.target.id === 'pfSrc'){ SRC = e.target.value; lsSet(SRCKEY, SRC); TK.t = 0; pushInputs(); liveLoad(); } });
   const tg0 = lsGet(TGKEY, {}); $('tgTok').value = tg0.tok || ''; $('tgChat').value = tg0.chat || ''; $('tgOn').checked = !!tg0.on;
   const tgNote = t => { $('tgNote').textContent = t; };
-  $('tgSave').addEventListener('click', () => { lsSet(TGKEY, {tok: $('tgTok').value.trim(), chat: $('tgChat').value.trim(), on: $('tgOn').checked}); tgNote($('tgOn').checked ? 'Saved. Alerts are on while this page is open.' : 'Saved. Alerts are off.'); });
-  $('tgTest').addEventListener('click', async () => { lsSet(TGKEY, {tok: $('tgTok').value.trim(), chat: $('tgChat').value.trim(), on: $('tgOn').checked}); tgNote('Sending…'); const ok = await tgSend('✅ <b>TTM Trade Tracker</b> is connected. You will get a message here when a take-profit is hit on one of your open trades.'); tgNote(ok ? 'Test sent. Check your Telegram.' : 'Could not send. Check the token and chat ID, and that you have sent your bot a message first.'); });
+  $('tgSave').addEventListener('click', () => { if(window.ttmCan && !ttmCan('alerts')){ ttmUpsell('alerts'); return; } lsSet(TGKEY, {tok: $('tgTok').value.trim(), chat: $('tgChat').value.trim(), on: $('tgOn').checked}); tgNote($('tgOn').checked ? 'Saved. Alerts are on while this page is open.' : 'Saved. Alerts are off.'); });
+  $('tgTest').addEventListener('click', async () => { if(window.ttmCan && !ttmCan('alerts')){ ttmUpsell('alerts'); return; } lsSet(TGKEY, {tok: $('tgTok').value.trim(), chat: $('tgChat').value.trim(), on: $('tgOn').checked}); tgNote('Sending…'); const ok = await tgSend('✅ <b>TTM Trade Tracker</b> is connected. You will get a message here when a take-profit is hit on one of your open trades.'); tgNote(ok ? 'Test sent. Check your Telegram.' : 'Could not send. Check the token and chat ID, and that you have sent your bot a message first.'); });
   $('rrBal').addEventListener('input', e => { BALS[S.acc] = e.target.value; lsSet(BKEY, BALS); render(); renderSaved(); });
   $('rrAcc').addEventListener('change', e => { S.acc = e.target.value; persist(); pushInputs(); render(); });
   $('rrTf').addEventListener('change', e => { S.tf = e.target.value; persist(); pushInputs(); render(); loadCandles(); });
   $('rrTfChips').addEventListener('click', e => { const au = e.target.closest('button[data-auto]'); if(au){ autoFit(); return; } const b = e.target.closest('button[data-t]'); if(!b) return; S.tf = b.dataset.t; persist(); pushInputs(); render(); loadCandles(); });
   $('rrSz').addEventListener('click', e => { const b = e.target.closest('button[data-z]'); if(!b) return; S.mode = b.dataset.z; persist(); pushInputs(); render(); });
-  $('rrXlsx').addEventListener('click', downloadXlsx); $('jXlsx').addEventListener('click', downloadXlsx);
+  const xl = () => { if(window.ttmCan && !ttmCan('excel')){ ttmUpsell('excel'); return; } downloadXlsx(); }; $('rrXlsx').addEventListener('click', xl); $('jXlsx').addEventListener('click', xl);
   $('pfScope').addEventListener('click', e => { const b = e.target.closest('button[data-s]'); if(!b) return; pfScope = b.dataset.s; renderPortfolio(); });
   wireJournal(); wireEdit();
 }
 pushInputs(); wire(); render(); renderSaved();
+window.ttmRR = {refresh(){ Object.assign(BALS, lsGet(BKEY, {})); pushInputs(); render(); renderSaved(); }};
 })();
 
 /* ---- Volume heatmap ---- */
@@ -4347,6 +4372,155 @@ fill(['BTC','ETH','SOL','XRP','BNB','DOGE','ADA','LINK']);
 fetch('../rsi_heatmap.json', {cache:'no-store'}).then(r => r.ok ? r.json() : null).then(d => { if(d && d.coins) fill(d.coins.map(x => x.s)); }).catch(() => {});
 window.addEventListener('hashchange', () => { if(location.hash === '#fomo') go(); });
 go();
+})();
+</script>
+<script>
+/* ---- Accounts: optional sign-in (Supabase), cloud sync, plans, admin ---- */
+(function(){
+const $ = id => document.getElementById(id);
+const AK = 'ttm_auth_v1', SYNCK = 'ttm_sync_meta_v1', DATAKEYS = ['ttm_rr_saved_v1', 'ttm_rr_bals_v1'];
+const ORDER = {free: 0, member: 1, pro: 2}, FEATS = {sync: 'Cloud sync of trades', portfolio: 'Portfolio Forecast', excel: 'Excel export', alerts: 'Telegram alerts'};
+let CFG = {url: '', key: '', tv: []}, USER = null, PROF = null, SET = {charging: false, features: {sync: 'free', portfolio: 'free', excel: 'free', alerts: 'free'}}, SYNC = {state: 'off', at: 0};
+const ls = (k, d) => { try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } };
+const lw = (k, v) => { try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } };
+const e = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const on = () => !!(CFG.url && CFG.key);
+
+// magic-link return: tokens arrive in the URL fragment
+(function(){ const h = location.hash || ''; if(h.indexOf('access_token=') < 0) return; const p = new URLSearchParams(h.slice(1));
+  if(p.get('access_token')){ lw(AK, {access: p.get('access_token'), refresh: p.get('refresh_token'), exp: Date.now() + (+p.get('expires_in') || 3600) * 1000}); }
+  try{ history.replaceState(null, '', location.pathname + location.search + '#members'); }catch(err){} })();
+
+async function raw(path, opt, token){
+  const h = Object.assign({apikey: CFG.key, 'Content-Type': 'application/json', Authorization: 'Bearer ' + (token || CFG.key)}, (opt && opt.headers) || {});
+  const r = await fetch(CFG.url.replace(/\/$/, '') + path, Object.assign({}, opt, {headers: h}));
+  let j = null; try{ j = await r.json(); }catch(err){} return {ok: r.ok, status: r.status, json: j};
+}
+async function token(){
+  const s = ls(AK, null); if(!s) return null;
+  if(s.exp - 60000 > Date.now()) return s.access;
+  if(!s.refresh) return null;
+  const r = await raw('/auth/v1/token?grant_type=refresh_token', {method: 'POST', body: JSON.stringify({refresh_token: s.refresh})});
+  if(r.ok && r.json && r.json.access_token){ lw(AK, {access: r.json.access_token, refresh: r.json.refresh_token, exp: Date.now() + (r.json.expires_in || 3600) * 1000}); return r.json.access_token; }
+  try{ localStorage.removeItem(AK); }catch(err){} return null;
+}
+async function api(path, opt){ const t = await token(); return raw(path, opt, t); }
+
+async function boot(){
+  try{ const r = await fetch('../ttm_config.json?t=' + Date.now(), {cache: 'no-store'}); if(r.ok){ const c = await r.json(); CFG = {url: c.supabase_url || '', key: c.supabase_anon_key || '', tv: c.tradingview || []}; } }catch(err){}
+  if(on()){
+    try{ const r = await raw('/rest/v1/ttm_settings?select=key,value'); if(r.ok && Array.isArray(r.json)) r.json.forEach(x => { if(x.key === 'charging') SET.charging = x.value === true || x.value === 'true'; if(x.key === 'features' && x.value) SET.features = Object.assign(SET.features, x.value); }); }catch(err){}
+    const t = await token();
+    if(t){ const u = await raw('/auth/v1/user', {}, t); if(u.ok && u.json && u.json.id){ USER = {id: u.json.id, email: u.json.email}; const p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email`); PROF = (p.ok && p.json && p.json[0]) || {plan: 'free', is_admin: false}; } }
+  }
+  ui(); if(USER) syncInit();
+}
+function can(f){
+  if(!on() || !SET.charging) return true; if(PROF && PROF.is_admin) return true;
+  const need = (SET.features || {})[f] || 'free'; if(need === 'free') return true;
+  return !!(USER && PROF && ORDER[PROF.plan] >= ORDER[need]);
+}
+function upsell(f){
+  const need = (SET.features || {})[f] || 'member', label = FEATS[f] || f;
+  openAuth(USER ? `<p><b>${e(label)}</b> is part of the <b>${e(need)}</b> plan. Paid plans are not open for self-sign-up yet; ask TTM on Telegram and we will sort it.</p><div class="rr-acts"><button class="rr-btn ghost" id="authClose">Close</button></div>`
+    : `<p><b>${e(label)}</b> is part of the <b>${e(need)}</b> plan. Sign in to continue.</p>` + signInForm());
+}
+window.ttmCan = can; window.ttmUpsell = upsell;
+
+// ---------- sign-in modal
+function signInForm(){ return on() ? `<div class="rr-f" style="margin-bottom:10px"><label for="authEmail">Email</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:10px;font:inherit"></div><div class="rr-acts" style="margin:0"><button class="rr-btn" id="authSend">Email me a sign-in link</button><button class="rr-btn ghost" id="authClose">Cancel</button></div><p class="calendar-note" id="authNote" style="margin:10px 0 0">No password. We email a one-time link (and a code). Creating an account is free.</p>` : '<p>Accounts are coming soon. The terminal stays free and open in the meantime.</p><div class="rr-acts"><button class="rr-btn ghost" id="authClose">Close</button></div>'; }
+function openAuth(html){ $('authBody').innerHTML = '<h3>TTM account</h3>' + (html || signInForm()); $('authModal').classList.add('open'); }
+function closeAuth(){ $('authModal').classList.remove('open'); }
+document.addEventListener('click', async ev => {
+  const t = ev.target;
+  if(t.id === 'acctBtn'){ if(USER) location.hash = '#members'; else openAuth(); }
+  else if(t.id === 'authClose' || t.id === 'authModal') closeAuth();
+  else if(t.id === 'memSignIn') openAuth();
+  else if(t.id === 'authSend'){ const em = ($('authEmail').value || '').trim(); if(!/^\S+@\S+\.\S+$/.test(em)){ $('authNote').textContent = 'Enter a valid email address.'; return; }
+    t.disabled = true; $('authNote').textContent = 'Sending…';
+    const r = await raw('/auth/v1/otp?redirect_to=' + encodeURIComponent(location.origin + location.pathname), {method: 'POST', body: JSON.stringify({email: em, create_user: true})});
+    t.disabled = false;
+    if(r.ok){ $('authBody').innerHTML = `<h3>Check your email</h3><p>We sent a sign-in link to <b>${e(em)}</b>. Open it on this device, or type the code from the email here:</p><div class="rr-f" style="margin-bottom:10px"><input id="authCode" inputmode="numeric" autocomplete="one-time-code" placeholder="6-digit code" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:10px;font:inherit"></div><div class="rr-acts" style="margin:0"><button class="rr-btn" id="authVerify" data-em="${e(em)}">Sign in with code</button><button class="rr-btn ghost" id="authClose">Close</button></div><p class="calendar-note" id="authNote" style="margin:10px 0 0">Nothing arrived? Check spam, or try again in a minute.</p>`; }
+    else $('authNote').textContent = 'Could not send the email' + (r.json && (r.json.msg || r.json.error_description) ? ': ' + (r.json.msg || r.json.error_description) : '.'); }
+  else if(t.id === 'authVerify'){ const code = ($('authCode').value || '').trim(), em = t.dataset.em; if(!code) return;
+    const r = await raw('/auth/v1/verify', {method: 'POST', body: JSON.stringify({type: 'email', email: em, token: code})});
+    if(r.ok && r.json && r.json.access_token){ lw(AK, {access: r.json.access_token, refresh: r.json.refresh_token, exp: Date.now() + (r.json.expires_in || 3600) * 1000}); closeAuth(); await boot(); location.hash = '#members'; }
+    else $('authNote').textContent = 'That code did not work. Check it and try again.'; }
+  else if(t.id === 'memSignOut'){ try{ await api('/auth/v1/logout', {method: 'POST'}); }catch(err){} try{ localStorage.removeItem(AK); localStorage.removeItem(SYNCK); }catch(err){} USER = PROF = null; SYNC = {state: 'off', at: 0}; ui(); }
+});
+
+// ---------- cloud sync of tracker data (never includes the Telegram token)
+const localDoc = () => ({saved: ls(DATAKEYS[0], []), bals: ls(DATAKEYS[1], {})});
+const emptyDoc = d => !(d.saved && d.saved.length) && !(d.bals && Object.keys(d.bals).length);
+function mergeDocs(a, b){
+  const rank = x => x.status === 'closed' ? 2 : x.status === 'open' ? 1 : 0, m = {};
+  (b.saved || []).concat(a.saved || []).forEach(x => { if(!x) return; const k = x.id || (x.name + '|' + x.t); const o = m[k]; if(!o || rank(x) > rank(o)) m[k] = x; });
+  return {saved: Object.keys(m).map(k => m[k]).sort((p, q) => (q.t || 0) - (p.t || 0)), bals: Object.assign({}, a.bals || {}, b.bals || {})};
+}
+function applyDoc(d){ try{ localStorage.setItem(DATAKEYS[0], JSON.stringify(d.saved || [])); localStorage.setItem(DATAKEYS[1], JSON.stringify(d.bals || {})); }catch(err){} if(window.ttmRR) window.ttmRR.refresh(); }
+let dirtyT = null, pushing = false;
+async function pushNow(){
+  if(!USER || !can('sync') || pushing) return; pushing = true; SYNC.state = 'saving'; ui();
+  try{
+    const meta = ls(SYNCK, {}), cur = await api(`/rest/v1/ttm_user_data?user_id=eq.${USER.id}&select=data,updated_at`);
+    let doc = localDoc();
+    if(cur.ok && cur.json && cur.json[0] && Date.parse(cur.json[0].updated_at) > (meta.ts || 0) + 1500){ doc = mergeDocs(doc, cur.json[0].data || {}); applyDoc(doc); }
+    const now = new Date().toISOString(), r = await api('/rest/v1/ttm_user_data', {method: 'POST', headers: {Prefer: 'resolution=merge-duplicates'}, body: JSON.stringify({user_id: USER.id, data: doc, updated_at: now})});
+    if(r.ok){ lw(SYNCK, {uid: USER.id, ts: Date.parse(now)}); SYNC = {state: 'ok', at: Date.now()}; } else SYNC.state = 'error';
+  }catch(err){ SYNC.state = 'error'; }
+  pushing = false; ui();
+}
+window.ttmSync = {dirty(){ if(!USER || !can('sync')) return; clearTimeout(dirtyT); dirtyT = setTimeout(pushNow, 1500); }};
+async function syncInit(){
+  if(!can('sync')){ SYNC.state = 'locked'; ui(); return; }
+  try{
+    const meta = ls(SYNCK, {}), cur = await api(`/rest/v1/ttm_user_data?user_id=eq.${USER.id}&select=data,updated_at`), local = localDoc();
+    const row = cur.ok && cur.json && cur.json[0];
+    if(!row){ if(!emptyDoc(local)) await pushNow(); else SYNC = {state: 'ok', at: Date.now()}; }
+    else if(meta.uid !== USER.id){ if(emptyDoc(local)) applyDoc(row.data || {}); else applyDoc(mergeDocs(local, row.data || {})); await pushNow(); }
+    else if(Date.parse(row.updated_at) > (meta.ts || 0) + 1500){ applyDoc(row.data || {}); lw(SYNCK, {uid: USER.id, ts: Date.parse(row.updated_at)}); SYNC = {state: 'ok', at: Date.now()}; }
+    else SYNC = {state: 'ok', at: Date.now()};
+  }catch(err){ SYNC.state = 'error'; }
+  ui();
+}
+setInterval(() => { if(USER && !document.hidden && can('sync') && !dirtyT) syncInit(); }, 90000);
+
+// ---------- UI
+function planBadge(){ return PROF ? `<span class="rr-pill be" style="text-transform:capitalize">${e(PROF.plan)}${PROF.is_admin ? ' · admin' : ''}</span>` : ''; }
+function ui(){
+  const b = $('acctBtn'); if(b) b.textContent = USER ? (USER.email || 'Account').split('@')[0].slice(0, 14) : 'Sign in';
+  const na = $('navAdmin'); if(na) na.style.display = PROF && PROF.is_admin ? '' : 'none';
+  const pf = $('portfolio'); if(pf){ const g = !can('portfolio'); pf.classList.toggle('gated', g); const gt = $('pfGate'); if(gt){ gt.style.display = g ? '' : 'none'; gt.innerHTML = g ? `<b>Portfolio Forecast</b> is part of the ${e((SET.features || {}).portfolio || 'member')} plan. ${USER ? 'Paid plans are not open for self-sign-up yet; ask TTM on Telegram.' : 'Sign in to continue.'}` : ''; } }
+  const m = $('memAcct');
+  if(m){
+    if(!on()) m.innerHTML = '<h3>Account</h3><p style="margin:0">Free accounts are <b>coming soon</b>: sign in with your email to sync your trades across your phone, iPad and computer, and to unlock the members area. The terminal and every tool stay free and open in the meantime.</p>';
+    else if(!USER) m.innerHTML = '<h3>Account</h3><p style="margin:0 0 12px">Create a free account with just your email (no password) to sync your tracker, balances and saved plans across all your devices.</p><div class="rr-acts" style="margin:0"><button class="rr-btn" id="memSignIn">Sign in / create free account</button></div>';
+    else m.innerHTML = `<h3>Account <span style="float:right">${planBadge()}</span></h3><p style="margin:0 0 6px"><b>${e(USER.email)}</b></p><p class="calendar-note" style="margin:0 0 12px">Cloud sync: ${can('sync') ? ({ok: 'on' + (SYNC.at ? ', last synced ' + new Date(SYNC.at).toLocaleTimeString() : ''), saving: 'saving…', error: 'could not reach the cloud, will retry', off: 'starting…', locked: 'not included in your plan'})[SYNC.state] || 'on' : 'not included in your plan'}. Your Telegram bot token is never uploaded.</p><div class="rr-acts" style="margin:0"><button class="rr-btn ghost sm" id="memSignOut">Sign out</button></div>`;
+  }
+  const tv = $('memTv');
+  if(tv) tv.innerHTML = (CFG.tv && CFG.tv.length ? CFG.tv : [{name: 'TTM Indicator Suite', desc: 'Trend, momentum and cycle tools built for the TTM method.'}, {name: 'TTM Signals & Alerts', desc: 'Chart overlays that line up with the terminal.'}, {name: 'TTM Risk Tools', desc: 'Position-sizing helpers on the chart.'}]).map(x => `<div class="mem-card"><b>${e(x.name)}</b><p>${e(x.desc || '')}</p>${x.url ? `<a class="rr-btn sm" style="text-decoration:none;display:inline-block" href="${e(x.url)}" target="_blank" rel="noopener noreferrer">Open on TradingView ↗</a>` : '<span class="rr-pill be">Coming soon</span>'}</div>`).join('');
+  const pl = $('memPlans');
+  if(pl) pl.innerHTML = !on() || !SET.charging ? '<p style="margin:0">Everything in the terminal is <b>free right now</b>. If TTM introduces paid plans, they will be announced first and existing members will be told what changes.</p>' : `<div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Feature</th><th>Needs plan</th></tr></thead><tbody>${Object.keys(FEATS).map(k => `<tr><td>${FEATS[k]}</td><td style="text-transform:capitalize">${e((SET.features || {})[k] || 'free')}</td></tr>`).join('')}</tbody></table></div>`;
+  adminUi();
+}
+async function adminUi(){
+  const a = $('admBody'); if(!a || !$('admin').classList.contains('active')) return;
+  if(!PROF || !PROF.is_admin){ a.innerHTML = '<div class="rr-card"><p style="margin:0">Admins only.</p></div>'; return; }
+  const r = await api('/rest/v1/ttm_profiles?select=id,email,plan,is_admin,created_at&order=created_at.desc&limit=500'), users = (r.ok && Array.isArray(r.json)) ? r.json : [];
+  const sel = (id, v, extra) => `<select ${id} ${extra || ''} style="background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 9px;font:inherit">${['free', 'member', 'pro'].map(p => `<option value="${p}" ${p === v ? 'selected' : ''}>${p}</option>`).join('')}</select>`;
+  a.innerHTML = `<div class="rr-card"><h3>Charging</h3><label style="display:flex;gap:10px;align-items:center;font-size:14px"><input type="checkbox" id="admCharge" ${SET.charging ? 'checked' : ''} style="width:auto"> Charge for paid features (when off, every feature is free for everyone)</label>
+    <div class="rr-wrap" style="margin-top:12px"><table class="rr-tbl"><thead><tr><th>Feature</th><th>Plan needed</th></tr></thead><tbody>${Object.keys(FEATS).map(k => `<tr><td>${FEATS[k]}</td><td>${sel('data-feat="' + k + '"', (SET.features || {})[k] || 'free')}</td></tr>`).join('')}</tbody></table></div>
+    <div class="rr-acts"><button class="rr-btn sm" id="admSaveSet">Save charging settings</button></div><p class="calendar-note" id="admNote" style="margin:8px 0 0">Plan checks in the browser are a convenience, not a lock: the site is static and its code is public. Real enforcement for paid content needs the content itself moved behind the backend.</p></div>
+    <div class="rr-card"><h3>Members (${users.length})</h3><div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Email</th><th>Joined</th><th>Plan</th></tr></thead><tbody>${users.map(u => `<tr><td>${e(u.email)}${u.is_admin ? ' <span class="rr-pill be">admin</span>' : ''}</td><td>${new Date(u.created_at).toLocaleDateString()}</td><td>${sel('data-uid="' + u.id + '"', u.plan)}</td></tr>`).join('') || '<tr><td colspan="3" style="color:var(--mute)">No members yet.</td></tr>'}</tbody></table></div></div>`;
+}
+document.addEventListener('change', async ev => { const t = ev.target;
+  if(t.dataset && t.dataset.uid){ const r = await api(`/rest/v1/ttm_profiles?id=eq.${t.dataset.uid}`, {method: 'PATCH', body: JSON.stringify({plan: t.value})}); t.style.borderColor = r.ok ? '#3fb47a' : '#e0554d'; } });
+document.addEventListener('click', async ev => { if(ev.target.id !== 'admSaveSet') return;
+  const feats = {}; document.querySelectorAll('#admBody select[data-feat]').forEach(s => { feats[s.dataset.feat] = s.value; }); const ch = $('admCharge').checked;
+  const r = await api('/rest/v1/ttm_settings', {method: 'POST', headers: {Prefer: 'resolution=merge-duplicates'}, body: JSON.stringify([{key: 'charging', value: ch}, {key: 'features', value: feats}])});
+  if(r.ok){ SET.charging = ch; SET.features = feats; $('admNote').textContent = 'Saved.'; ui(); } else $('admNote').textContent = 'Could not save (are you an admin?).'; });
+window.addEventListener('hashchange', () => { setTimeout(() => { adminUi(); ui(); }, 80); });
+boot();
 })();
 </script>
 <script>
