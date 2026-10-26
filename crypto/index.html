@@ -675,6 +675,7 @@ body.view-section #backFab{display:block}
 .rc-stat{font-size:13px;color:var(--mute)}
 .rc-stat b{color:var(--gold2);font-size:15px}
 #rcCoin{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit}
+#rrMkt{pointer-events:none;opacity:.75}
 #riskreward.no-tracker .trk-only{display:none !important}
 </style>
 </head>
@@ -1089,6 +1090,10 @@ body.view-section #backFab{display:block}
         <div class="rr-card">
           <h3>1. Trade setup</h3>
           <div class="rr-row">
+            <div class="rr-f"><label for="rrAcc">1. Account type (pick first)</label><select id="rrAcc"></select></div>
+            <div class="rr-f"><label>&nbsp;</label><div class="calendar-note" style="margin:0" id="rrAccHint"></div></div>
+          </div>
+          <div class="rr-row">
             <div class="rr-f"><label for="rrSrc">Live price &amp; candles from</label><select id="rrSrc"></select></div>
             <div class="rr-f"><label>&nbsp;</label><div class="calendar-note" style="margin:0">Pick the exchange you trade on. If it cannot be reached the terminal falls back to OKX.</div></div>
           </div>
@@ -1097,11 +1102,10 @@ body.view-section #backFab{display:block}
             <div class="rr-f"><label>Direction</label><div class="rr-seg" id="rrDir"><button type="button" class="on" data-d="long">Long</button><button type="button" data-d="short">Short</button></div></div>
           </div>
           <div class="rr-row">
-            <div class="rr-f"><label>Market type</label><div class="rr-seg" id="rrMkt"><button type="button" data-m="spot">Spot</button><button type="button" class="on" data-m="fut">Futures / Perp</button></div></div>
+            <div class="rr-f"><label>Market type (set by account)</label><div class="rr-seg" id="rrMkt"><button type="button" data-m="spot">Spot</button><button type="button" class="on" data-m="fut">Futures / Perp</button></div></div>
             <div class="rr-f"><label for="rrLev">Leverage</label><select id="rrLev"></select></div>
           </div>
           <div class="rr-row">
-            <div class="rr-f"><label for="rrAcc">Account type</label><select id="rrAcc"></select></div>
             <div class="rr-f"><label for="rrTf">Time frame you are trading</label><select id="rrTf"></select></div>
           </div>
           <div class="rr-row">
@@ -3348,7 +3352,7 @@ $('rrTf').innerHTML = [['m5', '5 min'], ['m15', '15 min'], ['h1', '1 hour'], ['h
 const IDS = {entry:'rrEntry', stop:'rrStop', tp1:'rrTp1', s1:'rrS1', tp2:'rrTp2', s2:'rrS2', tp3:'rrTp3', s3:'rrS3', risk:'rrRisk', rusd:'rrRusd', inv:'rrInv', fee:'rrFee', daily:'rrDaily', min:'rrMin', mmr:'rrMmr'};
 function pushInputs(){
   Object.keys(IDS).forEach(k => { $(IDS[k]).value = S[k] === '' || S[k] == null ? '' : S[k]; });
-  $('rrBal').value = BALS[S.acc] == null ? '' : BALS[S.acc];
+  $('rrBal').value = BALS[S.acc] == null ? '' : BALS[S.acc]; $('rrAccHint').textContent = S.acc === 'lev' ? 'Futures / perps, starting at 3x. Change the leverage below if you need to.' : (S.acc === 'super' ? 'Retirement: spot only, no leverage, long only.' : 'Spot: no leverage, long only.');
   $('rrBalL').textContent = 'Starting balance — ' + ({spot: 'Spot portfolio', lev: 'Leverage / futures', super: 'Super / retirement'}[S.acc] || '') + ' (USD)';
   $('rrAsset').value = S.asset; $('rrAcc').value = S.acc; $('rrTf').value = S.tf; $('rrSrc').value = SRC;
   if(S.mkt === 'spot'){ $('rrLev').innerHTML = '<option value="1">None (spot)</option>'; $('rrLev').value = '1'; }
@@ -3914,7 +3918,7 @@ function renderPortfolio(){
   const dl = (v, base) => base > 0 ? `<br><span style="font-size:11px;font-weight:400;color:${v - base >= 0 ? '#3fb47a' : '#e0554d'}">${v - base >= 0 ? '+' : ''}${((v - base) / base * 100).toFixed(1)}% vs start</span>` : '';
   const sub = (v, base, t) => hasOpen ? `<br><span style="font-size:11px;font-weight:400;color:var(--mute)">${v - base >= 0 ? '+' : '−'}${usd(Math.abs(v - base)).replace('-', '')} ${t}</span>` : '';
   $('pfTiles').innerHTML = row('Starting balance', usd(T.start)) + row('Realised balance', usd(T.real) + dl(T.real, T.start)) + row('Actual now (live)', usd(T.actual) + dl(T.actual, T.start), T.actual >= T.real ? 'g' : 'r') +
-    row('If every open target hits', hasOpen ? usd(T.best) + sub(T.best, T.real, 'on open trades') : '—' + '<br><span style="font-size:11px;font-weight:400;color:var(--mute)">no open trades</span>', 'g') + row('If every open stop hits', hasOpen ? usd(T.worst) + sub(T.worst, T.real, 'on open trades') : '—' + '<br><span style="font-size:11px;font-weight:400;color:var(--mute)">no open trades</span>', 'r');
+    row('If every open target hits', hasOpen ? usd(T.best) + sub(T.best, T.real, 'on open trades') : '—' + '<br><span style="font-size:11px;font-weight:400;color:var(--mute)">no open trades</span>', 'g') + row('If every open stop hits', hasOpen ? usd(T.worst - T.real) + `<br><span style="font-size:11px;font-weight:400;color:var(--mute)">total risked on open trades · account would be ${usd(T.worst)}</span>` : '—' + '<br><span style="font-size:11px;font-weight:400;color:var(--mute)">no open trades</span>', 'r');
   $('pfStamp').textContent = PSTAMP ? `Prices ${new Date(PSTAMP).toLocaleTimeString()} · ${SRCS[PUSED || SRC]} live` : (hasOpen ? 'Fetching live prices…' : '');
   const svg = $('pfChart'), cl = closedOf('all').filter(x => ids.includes(accOf(x))), narrow = svg.getBoundingClientRect().width < 600, W = narrow ? 520 : 800, H = narrow ? 320 : 300, L = narrow ? 50 : 60, R = narrow ? 128 : 140, Tp = 14, Bt = 24, fs = narrow ? 12 : 10.5;
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
@@ -3931,8 +3935,8 @@ function renderPortfolio(){
     g += `<line x1="${x0}" y1="${Y(hist[n - 1])}" x2="${x1}" y2="${Y(f[1])}" stroke="${f[2]}" stroke-width="${f[0] === 'Actual now' ? 2.4 : 1.6}" ${f[0] === 'Actual now' ? '' : 'stroke-dasharray="6 4"'}/><circle cx="${x1}" cy="${Y(f[1])}" r="4" fill="${f[2]}"/><rect x="${x1 + 8}" y="${ty - fs / 2 - 4}" width="${R - 12}" height="${fs + 8}" rx="4" fill="${f[2]}"/><text x="${x1 + 13}" y="${ty + fs / 2 - 1}" font-size="${fs}" font-weight="700" fill="#111">${f[0]} ${Math.round(f[1]).toLocaleString()}</text>`; });
   g += `<text x="${L}" y="${H - 6}" font-size="${fs - .5}" fill="#6c707b">Start</text>` + (n > 1 ? `<text x="${x0}" y="${H - 6}" font-size="${fs - .5}" fill="#6c707b" text-anchor="middle">Today (${n - 1} closed)</text>` : '');
   svg.innerHTML = g;
-  let h = '<thead><tr><th>Account</th><th>Realised balance</th><th>Open P&amp;L now</th><th>Actual now</th><th>Expected</th><th>If targets hit</th><th>If stops hit</th><th>Open</th></tr></thead><tbody>';
-  const rowA = (nm, d, b) => { const f = t => b ? `<b>${t}</b>` : t, has = d.n > 0; h += `<tr><td>${f(esc(nm))}</td><td>${usd(d.real)}</td><td style="color:${d.unreal >= 0 ? '#3fb47a' : '#e0554d'}">${has ? usd(d.unreal) : '—'}</td><td>${f(usd(d.actual))}</td><td>${d.exp == null || !has ? '—' : usd(d.exp)}</td><td style="color:#3fb47a">${has ? usd(d.best) : '—'}</td><td style="color:#e0554d">${has ? usd(d.worst) : '—'}</td><td>${d.n}</td></tr>`; };
+  let h = '<thead><tr><th>Account</th><th>Realised balance</th><th>Open P&amp;L now</th><th>Actual now</th><th>Expected</th><th>If targets hit</th><th>If stops hit (loss)</th><th>Open</th></tr></thead><tbody>';
+  const rowA = (nm, d, b) => { const f = t => b ? `<b>${t}</b>` : t, has = d.n > 0; h += `<tr><td>${f(esc(nm))}</td><td>${usd(d.real)}</td><td style="color:${d.unreal >= 0 ? '#3fb47a' : '#e0554d'}">${has ? usd(d.unreal) : '—'}</td><td>${f(usd(d.actual))}</td><td>${d.exp == null || !has ? '—' : usd(d.exp)}</td><td style="color:#3fb47a">${has ? usd(d.best) : '—'}</td><td style="color:#e0554d">${has ? usd(d.worst - d.real) : '—'}</td><td>${d.n}</td></tr>`; };
   D.forEach(d => rowA(accName(d.id), {real: d.A.equity, unreal: d.unreal, actual: d.actual, exp: d.exp, best: d.best, worst: d.worst, n: d.opens.length}));
   if(D.length > 1) rowA('All accounts', {real: T.real, unreal: T.unreal, actual: T.actual, exp: hasOpen ? T.exp : null, best: T.best, worst: T.worst, n: D.reduce((t, d) => t + d.opens.length, 0)}, true);
   $('pfAcc').innerHTML = h + '</tbody>';
@@ -4135,7 +4139,7 @@ function wire(){
   fetch('../top_coins.json?t=' + Date.now(), {cache: 'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null).then(d => { if(d && d.coins && d.coins.length > 20){ COINS = d.coins.map(c => ({s: c.s, n: c.n, r: c.r, p: c.p})); } });
   $('rrLev').addEventListener('change', e => { S.lev = +e.target.value; persist(); render(); });
   $('rrDir').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; S.dir = b.dataset.d; pushInputs(); persist(); render(); });
-  $('rrMkt').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; S.mkt = b.dataset.m; if(S.mkt === 'spot'){ S.dir = 'long'; if(S.acc === 'lev') S.acc = 'spot'; } else if(S.acc === 'spot') S.acc = 'lev'; pushInputs(); persist(); render(); });
+  
   $('rrLive').addEventListener('click', async () => {
     const btn = $('rrLive'), a = S.asset; if(!a){ btn.textContent = 'Pick an asset first'; return; }
     btn.textContent = 'Fetching…'; TK.t = 0;
@@ -4165,7 +4169,7 @@ function wire(){
   $('tgSave').addEventListener('click', () => { if(window.ttmCan && !ttmCan('alerts')){ ttmUpsell('alerts'); return; } lsSet(TGKEY, {tok: $('tgTok').value.trim(), chat: $('tgChat').value.trim(), on: $('tgOn').checked}); tgNote($('tgOn').checked ? 'Saved. Alerts are on while this page is open.' : 'Saved. Alerts are off.'); });
   $('tgTest').addEventListener('click', async () => { if(window.ttmCan && !ttmCan('alerts')){ ttmUpsell('alerts'); return; } lsSet(TGKEY, {tok: $('tgTok').value.trim(), chat: $('tgChat').value.trim(), on: $('tgOn').checked}); tgNote('Sending…'); const ok = await tgSend('✅ <b>TTM Trade Tracker</b> is connected. You will get a message here when a take-profit is hit on one of your open trades.'); tgNote(ok ? 'Test sent. Check your Telegram.' : 'Could not send. Check the token and chat ID, and that you have sent your bot a message first.'); });
   $('rrBal').addEventListener('input', e => { BALS[S.acc] = e.target.value; lsSet(BKEY, BALS); render(); renderSaved(); });
-  $('rrAcc').addEventListener('change', e => { S.acc = e.target.value; persist(); pushInputs(); render(); });
+  $('rrAcc').addEventListener('change', e => { S.acc = e.target.value; if(S.acc === 'lev'){ S.mkt = 'fut'; S.lev = 3; } else { S.mkt = 'spot'; S.dir = 'long'; } persist(); pushInputs(); render(); });
   $('rrTf').addEventListener('change', e => { S.tf = e.target.value; persist(); pushInputs(); render(); loadCandles(); });
   $('rrTfChips').addEventListener('click', e => { const au = e.target.closest('button[data-auto]'); if(au){ autoFit(); return; } const b = e.target.closest('button[data-t]'); if(!b) return; S.tf = b.dataset.t; persist(); pushInputs(); render(); loadCandles(); });
   $('rrSz').addEventListener('click', e => { const b = e.target.closest('button[data-z]'); if(!b) return; S.mode = b.dataset.z; persist(); pushInputs(); render(); });
