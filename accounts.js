@@ -12,7 +12,7 @@ const CAT = [
   ['c:btcmonthly', 'Crypto · BTC Monthly (with cycle tops)', ['free']], ['c:tokenevents', 'Crypto · Token Events', []], ['c:library', 'Crypto · Reports library', []], ['c:transparency', 'Crypto · Transparency Watch', ['free']],
   ['c:marketpulse', 'Crypto · Market Pulse (liquidations, funding, open interest)', ['crypto']], ['c:rsimap', 'Crypto · RSI Heatmap', ['crypto']], ['c:volume', 'Crypto · Volume Heatmap', ['crypto']], ['c:socialpulse', 'Crypto · Social Pulse', ['crypto']],
   ['c:riskreward', 'Crypto · Risk / Reward calculator', ['crypto']], ['c:tradejournal', 'Crypto · Trade Tracker & win ratio', []], ['c:portfolio', 'Crypto · Portfolio Forecast', []],
-  ['t:calendar', 'TradFi · Macro Watch', ['free']], ['t:tradinghours', 'TradFi · Trading Hours', ['free']], ['t:congress', 'TradFi · Congress Watch', ['free']],
+  ['t:calendar', 'TradFi · Macro Watch', ['free']], ['t:tradinghours', 'TradFi · Trading Hours', ['free']], ['t:congress', 'TradFi · Congress Watch', []],
   ['t:globalmarkets', 'TradFi · Global Markets', ['tradfi']], ['t:bonds', 'TradFi · Bonds & Rates', ['tradfi']], ['t:macrointel', 'TradFi · Macro Intel', ['tradfi']], ['t:newsrisk', 'TradFi · News & Risk', ['tradfi']], ['t:tfcalc', 'TradFi · Risk / Reward calculator', ['tradfi']],
   ['indicators', 'TTM indicators on TradingView', []], ['sync', 'Cloud sync of trades', []], ['excel', 'Excel export', []], ['alerts', 'Telegram trade alerts', []]
 ];
@@ -149,7 +149,7 @@ function planCards(){
   const inPlan = (k, p) => { const a = SET.access[k] || []; return a.indexOf(p) >= 0; }, free = CAT.filter(c => inPlan(c[0], 'free')), lab = c => c[1].replace(/ \(.*\)$/, '');
   const only = p => CAT.filter(c => inPlan(c[0], p) && !inPlan(c[0], 'free'));
   const pro = CAT.filter(c => !inPlan(c[0], 'free') && !inPlan(c[0], 'crypto') && !inPlan(c[0], 'tradfi'));
-  const price = p => { const x = (CFG.plans || {})[p]; return x && (x.monthly || x.annual) ? `${x.monthly ? '$' + e(x.monthly) + ' / month' : ''}${x.monthly && x.annual ? ' · ' : ''}${x.annual ? '$' + e(x.annual) + ' / year' : ''}` : (p === 'free' ? 'Free' : 'Price to be confirmed'); };
+  const price = p => { const x = (CFG.plans || {})[p]; return x && (x.monthly || x.annual) ? `${x.monthly ? '$' + e(x.monthly) + ' / month' : ''}${x.monthly && x.annual ? ' · ' : ''}${x.annual ? '$' + e(x.annual) + ' / year' : ''} AUD` : (p === 'free' ? 'Free' : 'Price to be confirmed'); };
   const card = (p, head, items) => `<div class="plan-card ${PROF && PROF.plan === p ? 'me' : ''}"><h4>${pname(p)}</h4><div class="pr">${price(p)}${PROF && PROF.plan === p ? ' · <b style="color:var(--gold2)">your plan</b>' : ''}</div><div style="font-size:12px;color:var(--mute);margin-bottom:4px">${head}</div><ul>${items.map(c => `<li>${e(lab(c))}</li>`).join('') || '<li>—</li>'}</ul></div>`;
   return `<div class="plan-grid">${card('free', 'Includes', free)}${card('crypto', 'Everything in Free, plus', only('crypto'))}${card('tradfi', 'Everything in Free, plus', only('tradfi'))}${card('pro', 'Everything in Crypto and TradFi, plus', pro)}</div>`;
 }
