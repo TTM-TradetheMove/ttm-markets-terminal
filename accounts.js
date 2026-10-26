@@ -143,13 +143,38 @@ function applyGates(){
   // the crypto calculator without the tracker: hide the parts that need it
   const rr = $('riskreward'); if(rr) rr.classList.toggle('no-tracker', !can('c:tradejournal'));
 }
+
+// ---------- local currency (from the device's time zone / language); USDT is treated as 1 USD
+const TZC = {'Australia': 'AUD', 'Pacific/Auckland': 'NZD', 'Europe/London': 'GBP', 'Europe/Dublin': 'EUR', 'Asia/Tokyo': 'JPY', 'Asia/Seoul': 'KRW', 'Asia/Singapore': 'SGD', 'Asia/Hong_Kong': 'HKD', 'Asia/Kolkata': 'INR', 'Asia/Calcutta': 'INR', 'Asia/Dubai': 'AED', 'Asia/Manila': 'PHP', 'Asia/Bangkok': 'THB', 'Asia/Jakarta': 'IDR', 'Asia/Kuala_Lumpur': 'MYR', 'Asia/Ho_Chi_Minh': 'VND', 'Asia/Shanghai': 'CNY', 'Asia/Taipei': 'TWD', 'Asia/Istanbul': 'TRY', 'Europe/Istanbul': 'TRY', 'Europe/Zurich': 'CHF', 'Europe/Stockholm': 'SEK', 'Europe/Oslo': 'NOK', 'Europe/Copenhagen': 'DKK', 'Europe/Warsaw': 'PLN', 'Europe/Prague': 'CZK', 'Europe/Moscow': 'RUB', 'America/Toronto': 'CAD', 'America/Vancouver': 'CAD', 'America/Edmonton': 'CAD', 'America/Halifax': 'CAD', 'America/Winnipeg': 'CAD', 'America/Sao_Paulo': 'BRL', 'America/Mexico_City': 'MXN', 'America/Argentina': 'ARS', 'America/Bogota': 'COP', 'America/Santiago': 'CLP', 'Africa/Johannesburg': 'ZAR', 'Africa/Lagos': 'NGN', 'Africa/Nairobi': 'KES', 'Africa/Cairo': 'EGP', 'Asia/Jerusalem': 'ILS'};
+const REG = {AU: 'AUD', NZ: 'NZD', GB: 'GBP', US: 'USD', CA: 'CAD', JP: 'JPY', KR: 'KRW', SG: 'SGD', HK: 'HKD', IN: 'INR', AE: 'AED', PH: 'PHP', TH: 'THB', ID: 'IDR', MY: 'MYR', VN: 'VND', CN: 'CNY', TW: 'TWD', TR: 'TRY', CH: 'CHF', SE: 'SEK', NO: 'NOK', DK: 'DKK', PL: 'PLN', CZ: 'CZK', RU: 'RUB', BR: 'BRL', MX: 'MXN', AR: 'ARS', CO: 'COP', CL: 'CLP', ZA: 'ZAR', NG: 'NGN', KE: 'KES', EG: 'EGP', IL: 'ILS', DE: 'EUR', FR: 'EUR', ES: 'EUR', IT: 'EUR', NL: 'EUR', IE: 'EUR', PT: 'EUR', AT: 'EUR', BE: 'EUR', FI: 'EUR', GR: 'EUR'};
+function localCur(){
+  let tz = ''; try{ tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; }catch(err){}
+  if(TZC[tz]) return TZC[tz]; const k = Object.keys(TZC).find(x => tz.indexOf(x + '/') === 0); if(k) return TZC[k];
+  if(tz.indexOf('Europe/') === 0) return 'EUR';
+  let reg = ''; try{ const m = (navigator.language || '').match(/[-_]([A-Za-z]{2})$/); reg = m ? m[1].toUpperCase() : ''; }catch(err){}
+  return REG[reg] || (tz.indexOf('America/') === 0 ? 'USD' : '');
+}
+let FX = null;
+async function fxLoad(){
+  const cur = localCur(); if(!cur || cur === 'USD') return;
+  const c = ls('ttm_fx_v1', null); if(c && c.cur === cur && Date.now() - c.t < 12 * 36e5){ FX = c; return; }
+  let rate = null;
+  try{ const r = await fetch('https://open.er-api.com/v6/latest/USD'); const j = await r.json(); if(j && j.rates && j.rates[cur]) rate = j.rates[cur]; }catch(err){}
+  if(!rate){ try{ const r = await fetch('https://api.frankfurter.app/latest?from=USD&to=' + cur); const j = await r.json(); if(j && j.rates && j.rates[cur]) rate = j.rates[cur]; }catch(err){} }
+  if(rate){ FX = {cur, rate, t: Date.now()}; lw('ttm_fx_v1', FX); } else if(c && c.cur === cur) FX = c;
+}
+function fxTxt(usd){
+  if(!FX || !isFinite(usd)) return '';
+  try{ return ` <span style="color:var(--mute)">≈ ${new Intl.NumberFormat(navigator.language || 'en', {style: 'currency', currency: FX.cur, currencyDisplay: 'code', maximumFractionDigits: 0}).format(usd * FX.rate)}</span>`; }catch(err){ return ''; }
+}
 // ---------- UI
 function planBadge(){ return PROF ? `<span class="rr-pill be">${e(pname(PROF.plan))}${PROF.is_admin ? ' · admin' : ''}</span>` : ''; }
 function planCards(){
   const inPlan = (k, p) => { const a = SET.access[k] || []; return a.indexOf(p) >= 0; }, free = CAT.filter(c => inPlan(c[0], 'free')), lab = c => c[1].replace(/ \(.*\)$/, '');
   const only = p => CAT.filter(c => inPlan(c[0], p) && !inPlan(c[0], 'free'));
   const pro = CAT.filter(c => !inPlan(c[0], 'free') && !inPlan(c[0], 'crypto') && !inPlan(c[0], 'tradfi'));
-  const price = p => { const x = (CFG.plans || {})[p]; return x && (x.monthly || x.annual) ? `${x.monthly ? '$' + e(x.monthly) + ' / month' : ''}${x.monthly && x.annual ? ' · ' : ''}${x.annual ? '$' + e(x.annual) + ' / year' : ''} AUD` : (p === 'free' ? 'Free' : 'Price to be confirmed'); };
+  const price = p => { const x = (CFG.plans || {})[p]; if(!(x && (x.monthly || x.annual))) return p === 'free' ? 'Free' : 'Price to be confirmed';
+    const one = (v, t) => `<b>${e(v)} USDT</b> / ${t}${fxTxt(+v)}`; return [x.monthly ? one(x.monthly, 'month') : '', x.annual ? one(x.annual, 'year') : ''].filter(Boolean).join('<br>'); };
   const card = (p, head, items) => `<div class="plan-card ${PROF && PROF.plan === p ? 'me' : ''}"><h4>${pname(p)}</h4><div class="pr">${price(p)}${PROF && PROF.plan === p ? ' · <b style="color:var(--gold2)">your plan</b>' : ''}</div><div style="font-size:12px;color:var(--mute);margin-bottom:4px">${head}</div><ul>${items.map(c => `<li>${e(lab(c))}</li>`).join('') || '<li>—</li>'}</ul></div>`;
   return `<div class="plan-grid">${card('free', 'Includes', free)}${card('crypto', 'Everything in Free, plus', only('crypto'))}${card('tradfi', 'Everything in Free, plus', only('tradfi'))}${card('pro', 'Everything in Crypto and TradFi, plus', pro)}</div>`;
 }
@@ -193,5 +218,6 @@ document.addEventListener('click', async ev => {
   const r = await api('/rest/v1/ttm_settings', {method: 'POST', headers: {Prefer: 'resolution=merge-duplicates'}, body: JSON.stringify([{key: 'charging', value: ch}, {key: 'wall', value: wall}, {key: 'access', value: acc}])});
   if(r.ok){ SET.charging = ch; SET.wall = wall; SET.access = acc; $('admNote').textContent = 'Saved.'; ui(); } else $('admNote').textContent = 'Could not save (are you an admin?).'; });
 window.addEventListener('hashchange', () => { setTimeout(() => { adminUi(); ui(); }, 80); });
+fxLoad().then(() => { if(FX) ui(); });
 boot();
 })();
