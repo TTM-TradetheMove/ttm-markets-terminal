@@ -3900,15 +3900,16 @@ function barHtml(x, s){
   return h + '</div>';
 }
 function openTbl(items, noteEmpty){
-  let o = '<thead><tr><th>Trade</th><th>Account</th><th>Asset</th><th>Dir</th><th>Entry</th><th>Live</th><th>Move</th><th>Realised P&amp;L</th><th>Open P&amp;L</th><th>Total</th><th style="min-width:190px">Stop ● Entry ● Targets</th><th>Status</th><th></th></tr></thead><tbody>';
+  let o = '<thead><tr><th>Trade</th><th>Account</th><th>Asset</th><th>Dir</th><th>Entry</th><th>Margin</th><th>Live</th><th>Move</th><th>Realised P&amp;L</th><th>Open P&amp;L</th><th>Total</th><th style="min-width:190px">Stop ● Entry ● Targets</th><th>Status</th><th></th></tr></thead><tbody>';
   const list = loadSaved();
-  if(!items.length) o += `<tr><td colspan="13" style="color:var(--mute)">${noteEmpty || 'No open trades. Open one from the Risk-to-Reward calculator and it appears here at live prices.'}</td></tr>`;
+  if(!items.length) o += `<tr><td colspan="14" style="color:var(--mute)">${noteEmpty || 'No open trades. Open one from the Risk-to-Reward calculator and it appears here at live prices.'}</td></tr>`;
   const c = v => v > 0.005 ? '#3fb47a' : v < -0.005 ? '#e0554d' : 'var(--text)';
   items.forEach(x => { const s = openState(x), i = list.findIndex(y => y.id === x.id), anyHit = s.hits && s.hits.some(Boolean), moved = x.snap.SL === x.snap.E;
-    o += `<tr><td><b>${esc(x.name)}</b><br><small style="color:var(--mute)">${x.snap.mkt === 'spot' ? 'Spot' : x.snap.lev + '×'} · ${esc(tfName(tfOf(x)))}</small></td><td>${esc(accName(accOf(x)))}</td><td>${esc(x.snap.asset)}</td><td style="color:${x.snap.long ? '#3fb47a' : '#e0554d'}">${x.snap.long ? 'Long' : 'Short'}</td><td>${pr(x.snap.E)}</td><td>${s.pp ? pr(s.pp.p) + (s.pp.live ? '' : ' <small style="color:var(--mute)">(snapshot)</small>') : '—'}</td>` +
+    o += `<tr><td><b>${esc(x.name)}</b><br><small style="color:var(--mute)">${x.snap.mkt === 'spot' ? 'Spot' : x.snap.lev + '×'} · ${esc(tfName(tfOf(x)))}</small></td><td>${esc(accName(accOf(x)))}</td><td>${esc(x.snap.asset)}</td><td style="color:${x.snap.long ? '#3fb47a' : '#e0554d'}">${x.snap.long ? 'Long' : 'Short'}</td><td>${pr(x.snap.E)}</td><td><b>${usd(x.snap.margin)}</b><br><small style="color:var(--mute)">${x.snap.mkt === 'spot' ? 'full cost' : 'size ' + usd(x.snap.notional)}</small></td><td>${s.pp ? pr(s.pp.p) + (s.pp.live ? '' : ' <small style="color:var(--mute)">(snapshot)</small>') : '—'}</td>` +
       `<td style="color:${c(s.move)}">${s.move == null ? '—' : (s.move >= 0 ? '+' : '') + s.move.toFixed(2) + '%'}</td><td style="color:${c(s.real)}">${s.pp ? usd(s.real) : '—'}</td><td style="color:${c(s.open)}">${s.pp ? usd(s.open) : '—'}</td><td style="color:${c(s.pnl)}"><b>${s.pp ? usd(s.pnl) : '—'}</b></td><td>${barHtml(x, s)}</td>` +
       `<td style="color:${s.stopped ? '#e0554d' : anyHit ? '#3fb47a' : 'var(--mute)'}">${s.label}${moved ? '<br><small style="color:var(--gold2)">Stop at entry</small>' : ''}</td>` +
       `<td><div class="rr-acts" style="margin:0"><button class="rr-btn sm" data-j="close" data-i="${i}">Close / update</button><button class="rr-btn ghost sm" data-j="edit" data-i="${i}">Edit / add</button>${anyHit && !moved ? `<button class="rr-btn ghost sm" data-j="be" data-i="${i}">Move stop to entry</button>` : ''}<button class="rr-btn ghost sm" data-j="load" data-i="${i}">Load</button><button class="rr-btn ghost sm" data-j="del" data-i="${i}">Cancel</button></div></td></tr>`; });
+  if(items.length){ const tm = items.reduce((a, x) => a + (x.snap.margin || 0), 0), tn = items.reduce((a, x) => a + (x.snap.notional || 0), 0); o += `<tr><td colspan="5" style="text-align:right;color:var(--mute)"><b>Total margin locked</b> across ${items.length} open trade${items.length > 1 ? 's' : ''}</td><td><b style="color:var(--gold2)">${usd(tm)}</b><br><small style="color:var(--mute)">size ${usd(tn)}</small></td><td colspan="8"></td></tr>`; }
   return o + '</tbody>';
 }
 async function tgSend(text){
