@@ -1,4 +1,4 @@
-Run at 2026-10-26T21:36:02.376002+00:00
+Run at 2026-10-27T00:49:26.151767+00:00
 
 page title: 'Calendar | Forex Factory'
 page url after load: 'https://www.forexfactory.com/calendar'
@@ -14,17 +14,17 @@ TARGET ROW: date='Thu Oct 29' currency='USD' title='Unemployment Claims' actual=
 TARGET ROW: date='Thu Oct 29' currency='JPY' title='Unemployment Rate' actual=''
 TARGET ROW: date='Fri Oct 30' currency='EUR' title='German Unemployment Change' actual=''
 TARGET ROW: date='Fri Oct 30' currency='EUR' title='Unemployment Rate' actual=''
-matched-actuals by date: {'2026-10-26': 2}
-Scraped 2 live actual values from forexfactory.com
+matched-actuals by date: {'2026-10-26': 4}
+Scraped 4 live actual values from forexfactory.com
 Past events without actual (11): 2026-10-06 USD API Weekly Statistical Bulletin; 2026-10-07 USD FOMC Meeting Minutes; 2026-10-08 GBP BOE Credit Conditions Survey; 2026-10-08 EUR Eurogroup Meetings; 2026-10-08 EUR ECB Monetary Policy Meeting Accounts; 2026-10-09 EUR ECOFIN Meetings; 2026-10-14 EUR EU Economic Summit; 2026-10-14 USD Beige Book; 2026-10-14 USD API Weekly Statistical Bulletin; 2026-10-15 EUR EU Economic Summit; 2026-10-20 USD API Weekly Statistical Bulletin
-Scraped GBP keys: [('2026-10-01', 'GBP', 'nationwidehpimm'), ('2026-10-01', 'GBP', 'finalmanufacturingpmi'), ('2026-10-05', 'GBP', 'finalservicespmi'), ('2026-10-06', 'GBP', 'constructionpmi'), ('2026-10-06', 'GBP', 'housingequitywithdrawalqq'), ('2026-10-07', 'GBP', 'lloydshpimm'), ('2026-10-07', 'GBP', 'ricshousepricebalance'), ('2026-10-12', 'GBP', 'brcretailsalesmonitoryy'), ('2026-10-14', 'GBP', 'cbleadingindexmm'), ('2026-10-15', 'GBP', 'gdpmm'), ('2026-10-15', 'GBP', 'constructionoutputmm'), ('2026-10-15', 'GBP', 'goodstradebalance'), ('2026-10-15', 'GBP', 'indexofservices3m3m'), ('2026-10-15', 'GBP', 'industrialproductionmm'), ('2026-10-15', 'GBP', 'manufacturingproductionmm'), ('2026-10-18', 'GBP', 'rightmovehpimm'), ('2026-10-20', 'GBP', 'averageearningsindex3my'), ('2026-10-20', 'GBP', 'claimantcountchange'), ('2026-10-20', 'GBP', 'unemploymentrate'), ('2026-10-20', 'GBP', '10ybondauction'), ('2026-10-22', 'GBP', 'cbiindustrialorderexpectations'), ('2026-10-22', 'GBP', 'gfkconsumerconfidence'), ('2026-10-23', 'GBP', 'retailsalesmm'), ('2026-10-23', 'GBP', 'flashmanufacturingpmi'), ('2026-10-23', 'GBP', 'flashservicespmi'), ('2026-10-26', 'GBP', 'cbirealizedsales')]
+Scraped GBP keys: [('2026-10-01', 'GBP', 'nationwidehpimm'), ('2026-10-01', 'GBP', 'finalmanufacturingpmi'), ('2026-10-05', 'GBP', 'finalservicespmi'), ('2026-10-06', 'GBP', 'constructionpmi'), ('2026-10-06', 'GBP', 'housingequitywithdrawalqq'), ('2026-10-07', 'GBP', 'lloydshpimm'), ('2026-10-07', 'GBP', 'ricshousepricebalance'), ('2026-10-12', 'GBP', 'brcretailsalesmonitoryy'), ('2026-10-14', 'GBP', 'cbleadingindexmm'), ('2026-10-15', 'GBP', 'gdpmm'), ('2026-10-15', 'GBP', 'constructionoutputmm'), ('2026-10-15', 'GBP', 'goodstradebalance'), ('2026-10-15', 'GBP', 'indexofservices3m3m'), ('2026-10-15', 'GBP', 'industrialproductionmm'), ('2026-10-15', 'GBP', 'manufacturingproductionmm'), ('2026-10-18', 'GBP', 'rightmovehpimm'), ('2026-10-20', 'GBP', 'averageearningsindex3my'), ('2026-10-20', 'GBP', 'claimantcountchange'), ('2026-10-20', 'GBP', 'unemploymentrate'), ('2026-10-20', 'GBP', '10ybondauction'), ('2026-10-22', 'GBP', 'cbiindustrialorderexpectations'), ('2026-10-22', 'GBP', 'gfkconsumerconfidence'), ('2026-10-23', 'GBP', 'retailsalesmm'), ('2026-10-23', 'GBP', 'flashmanufacturingpmi'), ('2026-10-23', 'GBP', 'flashservicespmi'), ('2026-10-26', 'GBP', 'cbirealizedsales'), ('2026-10-26', 'GBP', 'brcshoppriceindexyy')]
 
 -- month scrape --
-month oct.2026: title='Calendar | Forex Factory' url='https://www.forexfactory.com/calendar?month=oct.2026' rows=464 tracked=294
-month oct.2026: 294 rows for tracked currencies; sample: [{'date': 'Thu Oct 1', 'time': '2:00am', 'cur': 'GBP', 'impact': 'icon icon--ff-impact-yel', 'title': 'Nationwide HPI m/m', 'actual': '-0.2%', 'forecast': '0.0%', 'previous': '0.2%'}, {'date': 'Thu Oct 1', 'time': '3:15am', 'cur': 'EUR', 'impact': 'icon icon--ff-impact-yel', 'title': 'Spanish Manufacturing PMI', 'actual': '51.0', 'forecast': '50.2', 'previous': '49.5'}]
-month oct.2026: page timezone calibrated to America/New_York (64 matching rows)
+month oct.2026: title='Calendar | Forex Factory' url='https://www.forexfactory.com/calendar?month=oct.2026' rows=464 tracked=290
+month oct.2026: 290 rows for tracked currencies; sample: [{'date': 'Thu Oct 1', 'time': '2:00am', 'cur': 'GBP', 'impact': 'icon icon--ff-impact-yel', 'title': 'Nationwide HPI m/m', 'actual': '-0.2%', 'forecast': '0.0%', 'previous': '0.2%'}, {'date': 'Thu Oct 1', 'time': '3:15am', 'cur': 'EUR', 'impact': 'icon icon--ff-impact-yel', 'title': 'Spanish Manufacturing PMI', 'actual': '51.0', 'forecast': '50.2', 'previous': '49.5'}]
+month oct.2026: page timezone calibrated to America/New_York (60 matching rows)
 month oct.2026: added 227 events not already in the weekly feeds
 month nov.2026: title='Just a moment...' url='https://www.forexfactory.com/calendar?month=nov.2026' rows=0 tracked=0
 month nov.2026: first rows: []
 month nov.2026: 0 rows for tracked currencies; sample: []
-month-ahead fallback (financecalendar.com): 292 rows read, 216 events after 2026-10-30 added
+month-ahead fallback (financecalendar.com): 288 rows read, 216 events after 2026-10-30 added
