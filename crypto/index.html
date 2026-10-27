@@ -3748,6 +3748,8 @@ function wireJournal(){
     else if(a === 'open'){ const save = S; S = Object.assign({}, DEF, x.s); const c = calc(); S = save; startTrade(c, x.s, x.name, i); }
     else if(a === 'close'){ openClose(i); }
     else if(a === 'edit'){ openEdit(i); }
+    else if(a === 'filled'){ x.fill = 'filled'; saveAll(list); renderSaved(); render(); }
+    else if(a === 'pend'){ x.fill = 'pending'; { const pq = priceOf(x.snap.asset); if(pq) x.side = pq.p > x.snap.E ? 1 : -1; } x.hit = (x.snap.tps || []).map(() => false); saveAll(list); renderSaved(); render(); }
     else if(a === 'be'){ x.snap.SL = x.snap.E; x.snap.slMoved = true; saveAll(list); renderSaved(); render(); }
     else if(a === 'reopen'){ x.status = 'open'; delete x.res; saveAll(list); renderSaved(); render(); }
     else if(a === 'del'){ if(x.status === 'closed' || x.status === 'open'){ if(!confirm(x.status === 'open' ? 'Cancel this open trade and release its margin?' : 'Delete this closed trade from your history? Your balance will change back.')) return; } list.splice(i, 1); saveAll(list); renderSaved(); render(); } }
@@ -3765,8 +3767,9 @@ function startTrade(c, setup, name, replaceIdx){
   if(!c.ok || c.warns.some(w => w[0] === 'bad')){ note.textContent = 'Fix the red warnings first, then open the trade.'; note.style.color = '#e0554d'; return false; }
   if(!c.tps.length){ note.textContent = 'Add at least one take-profit target before opening the trade.'; note.style.color = '#e0554d'; return false; }
   const list = loadSaved(), item = {id: uid(), name: (name || '').trim() || `${setup.asset} ${setup.mkt === 'spot' ? 'spot' : setup.lev + '×'} ${setup.dir}`, t: Date.now(), opened: Date.now(), s: Object.assign({}, setup), status: 'open', snap: snapOf(c, setup)};
+  const pp0 = priceOf(setup.asset), E0 = item.snap.E; item.fill = pp0 && Math.abs(pp0.p / E0 - 1) > 0.001 ? 'pending' : 'filled'; if(item.fill === 'pending') item.side = pp0.p > E0 ? 1 : -1;   // entry not reached yet = a limit order waiting to fill
   if(replaceIdx != null && list[replaceIdx]) list[replaceIdx] = Object.assign(list[replaceIdx], item, {id: list[replaceIdx].id || item.id}); else list.unshift(item);
-  saveAll(list); note.style.color = ''; note.innerHTML = `Opened “${esc(item.name)}”: ${usd(c.margin)} margin locked, ${usd(c.avail - c.margin)} left to trade with. When it plays out, close it in the <a href="#tradejournal" style="color:var(--gold2)">trade tracker</a> to update your balance.`;
+  saveAll(list); note.style.color = ''; note.innerHTML = `Opened “${esc(item.name)}”: ${usd(c.margin)} margin locked, ${usd(c.avail - c.margin)} left to trade with. ${item.fill === 'pending' ? ` Entry ${pr(E0)} is not at the market yet (live ${pr(pp0.p)}), so it shows as waiting for entry and its P&amp;L starts when price reaches it.` : ''} When it plays out, close it in the <a href="#tradejournal" style="color:var(--gold2)">trade tracker</a> to update your balance.`;
   $('rrName').value = ''; render(); renderSaved(); return true;
 }
 // ---- price source (exchange) + live candles
@@ -3875,10 +3878,14 @@ async function liveLoad(){
 }
 function priceOf(a){ if(PRICES[a] > 0) return {p: PRICES[a], live: true}; const c = COINS.find(x => x.s === a); return c && c.p ? {p: c.p, live: false} : null; }
 const hitsOf = (x, p) => x.snap.tps.map((t, i) => !!(x.hit && x.hit[i]) || (p != null && (x.snap.long ? p >= t.P : p <= t.P)));
+// A waiting (limit or stop-entry) order fills when price touches the entry from the side it started on.
+const fillSide = (x, p) => x.side || (x.snap.long ? 1 : -1);   // +1: market above entry at the start, -1: below (older trades: long = above, short = below)
+const entryReached = (x, p) => fillSide(x) > 0 ? p <= x.snap.E : p >= x.snap.E;
 function openState(x){
   const sn = x.snap, pp = priceOf(sn.asset), long = sn.long, nt = sn.tps.length;
   const best = settle(sn, sn.tps.map(() => true), sn.E), stH = hitsOf(x, null), worst = settle(sn, stH, sn.SL);
   const far = nt ? sn.tps.reduce((a, b) => (long ? b.P > a.P : b.P < a.P) ? b : a).P : sn.E;
+  if(x.fill === 'pending' && !(pp && entryReached(x, pp.p))) return {pp, pending: true, real: 0, open: 0, pnl: 0, best, worst, hits: stH.map(() => false), far, move: null, away: pp ? (sn.E - pp.p) / pp.p * 100 : null, label: 'Waiting for entry'};
   if(!pp) return {pp: null, real: 0, open: 0, pnl: 0, best, worst, hits: stH, label: 'No price', move: null, far};
   const p = pp.p, stopped = long ? p <= sn.SL : p >= sn.SL, hits = hitsOf(x, p), nh = hits.filter(Boolean).length;
   const total = stopped ? worst : settle(sn, hits, p); let real = 0; sn.tps.forEach((t, i) => { if(hits[i]){ const u = sn.units * t.share / 100; real += u * Math.abs(t.P - sn.E) - u * sn.fee * (sn.E + t.P); } });
@@ -3906,9 +3913,9 @@ function openTbl(items, noteEmpty){
   const c = v => v > 0.005 ? '#3fb47a' : v < -0.005 ? '#e0554d' : 'var(--text)';
   items.forEach(x => { const s = openState(x), i = list.findIndex(y => y.id === x.id), anyHit = s.hits && s.hits.some(Boolean), moved = x.snap.SL === x.snap.E;
     o += `<tr><td><b>${esc(x.name)}</b><br><small style="color:var(--mute)">${x.snap.mkt === 'spot' ? 'Spot' : x.snap.lev + '×'} · ${esc(tfName(tfOf(x)))}</small></td><td>${esc(accName(accOf(x)))}</td><td>${esc(x.snap.asset)}</td><td style="color:${x.snap.long ? '#3fb47a' : '#e0554d'}">${x.snap.long ? 'Long' : 'Short'}</td><td>${pr(x.snap.E)}</td><td><b>${usd(x.snap.margin)}</b><br><small style="color:var(--mute)">${x.snap.mkt === 'spot' ? 'full cost' : 'size ' + usd(x.snap.notional)}</small></td><td>${s.pp ? pr(s.pp.p) + (s.pp.live ? '' : ' <small style="color:var(--mute)">(snapshot)</small>') : '—'}</td>` +
-      `<td style="color:${c(s.move)}">${s.move == null ? '—' : (s.move >= 0 ? '+' : '') + s.move.toFixed(2) + '%'}</td><td style="color:${c(s.real)}">${s.pp ? usd(s.real) : '—'}</td><td style="color:${c(s.open)}">${s.pp ? usd(s.open) : '—'}</td><td style="color:${c(s.pnl)}"><b>${s.pp ? usd(s.pnl) : '—'}</b></td><td>${barHtml(x, s)}</td>` +
-      `<td style="color:${s.stopped ? '#e0554d' : anyHit ? '#3fb47a' : 'var(--mute)'}">${s.label}${moved ? '<br><small style="color:var(--gold2)">Stop at entry</small>' : ''}</td>` +
-      `<td><div class="rr-acts" style="margin:0"><button class="rr-btn sm" data-j="close" data-i="${i}">Close / update</button><button class="rr-btn ghost sm" data-j="edit" data-i="${i}">Edit / add</button>${anyHit && !moved ? `<button class="rr-btn ghost sm" data-j="be" data-i="${i}">Move stop to entry</button>` : ''}<button class="rr-btn ghost sm" data-j="load" data-i="${i}">Load</button><button class="rr-btn ghost sm" data-j="del" data-i="${i}">Cancel</button></div></td></tr>`; });
+      `<td style="color:${c(s.move)}">${s.move == null ? '—' : (s.move >= 0 ? '+' : '') + s.move.toFixed(2) + '%'}</td><td style="color:${c(s.real)}">${s.pp && !s.pending ? usd(s.real) : '—'}</td><td style="color:${c(s.open)}">${s.pp && !s.pending ? usd(s.open) : '—'}</td><td style="color:${c(s.pnl)}"><b>${s.pp && !s.pending ? usd(s.pnl) : '—'}</b></td><td>${barHtml(x, s)}</td>` +
+      `<td style="color:${s.pending ? 'var(--gold2)' : s.stopped ? '#e0554d' : anyHit ? '#3fb47a' : 'var(--mute)'}">${s.label}${s.pending && s.away != null ? `<br><small style="color:var(--mute)">entry ${pr(x.snap.E)} is ${Math.abs(s.away).toFixed(2)}% ${s.away < 0 ? 'below' : 'above'} live</small>` : ''}${moved ? '<br><small style="color:var(--gold2)">Stop at entry</small>' : ''}</td>` +
+      `<td><div class="rr-acts" style="margin:0"><button class="rr-btn sm" data-j="close" data-i="${i}">Close / update</button><button class="rr-btn ghost sm" data-j="edit" data-i="${i}">Edit / add</button>${anyHit && !moved ? `<button class="rr-btn ghost sm" data-j="be" data-i="${i}">Move stop to entry</button>` : ''}${s.pending ? `<button class="rr-btn ghost sm" data-j="filled" data-i="${i}">Mark as filled</button>` : (!anyHit && !s.stopped ? `<button class="rr-btn ghost sm" data-j="pend" data-i="${i}">Not filled yet</button>` : '')}<button class="rr-btn ghost sm" data-j="load" data-i="${i}">Load</button><button class="rr-btn ghost sm" data-j="del" data-i="${i}">Cancel</button></div></td></tr>`; });
   if(items.length){ const tm = items.reduce((a, x) => a + (x.snap.margin || 0), 0), tn = items.reduce((a, x) => a + (x.snap.notional || 0), 0); o += `<tr><td colspan="5" style="text-align:right;color:var(--mute)"><b>Total margin locked</b> across ${items.length} open trade${items.length > 1 ? 's' : ''}</td><td><b style="color:var(--gold2)">${usd(tm)}</b><br><small style="color:var(--mute)">size ${usd(tn)}</small></td><td colspan="8"></td></tr>`; }
   return o + '</tbody>';
 }
@@ -3923,7 +3930,9 @@ async function tgSend(text){
 function trackHits(){
   const list = loadSaved(); let changed = false; const cfg = lsGet(TGKEY, {});
   list.forEach(x => { if(x.status !== 'open' || !x.snap) return; const pp = priceOf(x.snap.asset); if(!pp || !pp.live) return;
-    const sn = x.snap, p = pp.p; x.hit = x.hit || sn.tps.map(() => false); x.sent = x.sent || {tp: sn.tps.map(() => false), sl: false};
+    const sn = x.snap, p = pp.p;
+    if(x.fill === 'pending'){ if(entryReached(x, p)){ x.fill = 'filled'; x.filledAt = Date.now(); changed = true; if(cfg.on) tgSend(`✅ <b>Entry reached</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nPrice ${pr(p)} reached your entry ${pr(sn.E)}. The trade is now live in your tracker.\n<i>${esc(x.name)} · TTM Trade Tracker</i>`); } else return; }
+    x.hit = x.hit || sn.tps.map(() => false); x.sent = x.sent || {tp: sn.tps.map(() => false), sl: false};
     sn.tps.forEach((t, i) => { const crossed = sn.long ? p >= t.P : p <= t.P;
       if(crossed && !x.hit[i]){ x.hit[i] = true; changed = true; }
       if(x.hit[i] && !x.sent.tp[i]){ x.sent.tp[i] = true; changed = true;
