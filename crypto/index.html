@@ -1474,7 +1474,8 @@ body.view-section #backFab{display:block}
     <button class="filter-chip active" data-v="btc">BTC</button><button class="filter-chip" data-v="eth">ETH</button><button class="filter-chip" data-v="xrp">XRP</button><button class="filter-chip" data-v="sol">SOL</button></div></div>
   <div class="bh-ctl"><span class="fl-label">Window after release</span><div class="filter-row" id="bhWin">
     <button class="filter-chip" data-v="0">15m</button><button class="filter-chip" data-v="1">1h</button>
-    <button class="filter-chip active" data-v="2">4h</button><button class="filter-chip" data-v="3">24h</button></div></div>
+    <button class="filter-chip active" data-v="2">4h</button><button class="filter-chip" data-v="3">24h</button><button class="filter-chip" data-v="6">Weekly (7d)</button></div></div>
+  <div class="bh-ctl"><span class="fl-label">Trend into the release</span><div class="filter-row" id="bhLead"><button class="filter-chip" data-v="24">Prior 24h</button><button class="filter-chip active" data-v="7">Prior 7 days</button></div></div>
   <div class="bh-ctl"><span class="fl-label">"Pump / dump" size</span><div class="filter-row" id="bhThr">
     <button class="filter-chip" data-v="0.5">0.5%</button><button class="filter-chip active" data-v="1">1%</button>
     <button class="filter-chip" data-v="2">2%</button></div></div>
@@ -2787,8 +2788,13 @@ setInterval(updateTradingHours, 1000);
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let BH = null, GROUPS = {};
-const WIN = ['15m','1h','4h','24h'];
-const st = {key:null, asset:'btc', win:2, thr:1};
+const WIN = {0:'15m',1:'1h',2:'4h',3:'24h',6:'7d'};          // index into each price array
+const BIDX = {0:0,1:1,2:2,3:3,6:4};                            // index into the baseline list
+const st = {key:null, asset:'btc', win:2, thr:1, lead:'7'};
+const LEADIDX = {'24':7,'7':8}, LEADTHR = {'24':1,'7':3};     // prior-24h / prior-7d move, and the +/- % that counts as a trend
+const REGIMES = [['D','Declining into it'],['S','Sideways into it'],['U','Rising into it']];
+const leadOf = (r, asset) => r[asset] ? r[asset][LEADIDX[st.lead]] : null;
+const regimeOf = (r, asset) => { const v = leadOf(r, asset); if(v == null) return null; const t = LEADTHR[st.lead]; return v <= -t ? 'D' : v >= t ? 'U' : 'S'; };
 const BUCKETS = [['A','Above consensus'], ['I','In line with consensus'], ['B','Below consensus']];
 const sg = (x, dp=2) => x == null ? '—' : (x > 0 ? '+' : x < 0 ? '−' : '') + Math.abs(x).toFixed(dp) + '%';
 const cc = x => x == null ? '' : x > 0 ? 'bias-up' : x < 0 ? 'bias-down' : 'bias-neutral';
@@ -2813,9 +2819,13 @@ function stats(list, asset, wi, thr){
 }
 function label(key){
   if(key === 'ALL|All releases') return 'All tracked releases combined';
+  if(key === 'US|Federal Funds Rate') return 'US FOMC rate decision';
   const [c, t] = key.split('|');
   return ((typeof countryLabel !== 'undefined' && countryLabel[c]) || c) + ' ' + t;
 }
+const regName = c => c === 'D' ? 'Declining' : c === 'U' ? 'Rising' : c === 'S' ? 'Sideways' : '';
+function intoCell(r){ const v = leadOf(r, st.asset), g = regimeOf(r, st.asset); if(v == null) return '<span style="color:var(--mute)">—</span>';
+  return `<span class="${g === 'D' ? 'bias-down' : g === 'U' ? 'bias-up' : 'bias-neutral'}">${g === 'D' ? '▼' : g === 'U' ? '▲' : '▬'} ${regName(g)}</span><span class="bh-sub">${sg(v, 1)} prior ${st.lead === '7' ? '7d' : '24h'}</span>`; }
 function open(key){
   if(key) st.key = key;
   $('bhDrawer').classList.add('open'); $('bhScrim').classList.add('open'); $('bhDrawer').setAttribute('aria-hidden', 'false');
@@ -2833,18 +2843,30 @@ function render(){
   const keys = Object.keys(GROUPS).filter(k => GROUPS[k].length >= 1).sort((a, b) => a.startsWith('ALL|') ? -1 : b.startsWith('ALL|') ? 1 : label(a).localeCompare(label(b)));
   if(!st.key || !GROUPS[st.key] || !keys.includes(st.key)) st.key = keys[0];
   $('bhEvent').innerHTML = keys.map(k => `<option value="${esc(k)}" ${k === st.key ? 'selected' : ''}>${esc(label(k))} (${GROUPS[k].length})</option>`).join('');
-  const QUICK = [['ALL|All releases','All'],['US|CPI y/y','CPI'],['US|Core CPI m/m','Core CPI'],['US|PPI m/m','PPI'],['US|Retail Sales m/m','Retail'],['US|Non-Farm Employment Change','NFP'],['US|Unemployment Claims','Claims'],['US|ISM Manufacturing PMI','ISM']].filter(q => GROUPS[q[0]]);
+  const QUICK = [['ALL|All releases','All'],['US|CPI y/y','CPI'],['US|Core CPI m/m','Core CPI'],['US|PPI m/m','PPI'],['US|Retail Sales m/m','Retail'],['US|Non-Farm Employment Change','NFP'],['US|Unemployment Claims','Claims'],['US|Federal Funds Rate','FOMC'],['US|ISM Manufacturing PMI','ISM']].filter(q => GROUPS[q[0]]);
   $('bhQuick').innerHTML = QUICK.map(q => `<button class="filter-chip ${q[0] === st.key ? 'active' : ''}" data-k="${esc(q[0])}">${q[1]}</button>`).join('');
   $('bhTitle').textContent = label(st.key);
   const list = GROUPS[st.key], A = st.asset.toUpperCase(), W = WIN[st.win], T = st.thr;
   const all = stats(list, st.asset, st.win, T);
-  const base = st.asset === 'btc' && BH.baseline && BH.baseline[st.win];
+  const base = st.asset === 'btc' && BH.baseline && BH.baseline[BIDX[st.win]];
   const isAll = st.key === 'ALL|All releases';
   const recent = [...list].sort((a, b) => (b.u || b.d).localeCompare(a.u || a.d)).slice(0, 15);
   const verdict = c => c === 'A' ? '<b class="bias-up">Above</b>' : c === 'B' ? '<b class="bias-down">Below</b>' : c === 'I' ? 'In line' : '—';
-  let html = `<div class="bh-h4" style="margin-top:6px">Recent releases${isAll ? '' : ' — ' + esc(label(st.key))}</div><table class="bh-tbl"><thead><tr><th>Release</th><th>Actual</th><th>Fcst</th><th>Prev</th><th>vs fcst</th><th style="text-align:right">${A} ${W}</th></tr></thead><tbody>` +
+  let html = `<div class="bh-h4" style="margin-top:6px">Recent releases${isAll ? '' : ' — ' + esc(label(st.key))}</div><table class="bh-tbl"><thead><tr><th>Release</th><th>Actual</th><th>Fcst</th><th>Prev</th><th>vs fcst</th><th>Into it</th><th style="text-align:right">${A} after ${W}</th></tr></thead><tbody>` +
     recent.map(r => { const v = r[st.asset] && r[st.asset][st.win];
-      return `<tr><td>${esc(r.t)}<span class="bh-sub">${esc(r.d)}</span></td><td>${esc(r.a)}</td><td>${esc(r.f)}</td><td>${esc(r.p)}</td><td>${verdict(r.s)}</td><td style="text-align:right" class="${cc(v)}">${sg(v)}</td></tr>`; }).join('') + `</tbody></table>`;
+      return `<tr><td>${esc(r.t)}<span class="bh-sub">${esc(r.d)}</span></td><td>${esc(r.a)}</td><td>${esc(r.f)}</td><td>${esc(r.p)}</td><td>${verdict(r.s)}</td><td>${intoCell(r)}</td><td style="text-align:right" class="${cc(v)}">${sg(v)}</td></tr>`; }).join('') + `</tbody></table>`;
+  // ---- trend into the release -> what happened after
+  const L = LEADIDX[st.lead], withLead = list.filter(r => r[st.asset] && r[st.asset][L] != null);
+  html += `<div class="bh-h4">Trend into the release → ${A} after ${W}</div>`;
+  if(!withLead.length){
+    html += `<p class="bh-note">The "trend into it" and weekly numbers are filled in by the data job on its next run, then appear here automatically.</p>`;
+  } else {
+    const cell = (sub) => { const s = stats(sub, st.asset, st.win, T); return s.n ? `<b>${s.up.toFixed(0)}%</b> up · <span class="${cc(s.avg)}">${sg(s.avg, 1)}</span><span class="bh-sub">n=${s.n}${s.n < 5 ? ' · small' : ''}</span>` : '<span style="color:var(--mute)">—</span>'; };
+    html += `<table class="bh-tbl"><thead><tr><th>${A} was…</th><th>All prints</th><th>Above</th><th>In line</th><th>Below</th></tr></thead><tbody>` +
+      REGIMES.map(([g, nm]) => { const sub = withLead.filter(r => regimeOf(r, st.asset) === g);
+        return `<tr><td>${nm}</td><td>${cell(sub)}</td><td>${cell(sub.filter(r => r.s === 'A'))}</td><td>${cell(sub.filter(r => r.s === 'I'))}</td><td>${cell(sub.filter(r => r.s === 'B'))}</td></tr>`; }).join('') + `</tbody></table>
+      <p class="bh-note">"Declining / rising" means ${A} moved ${LEADTHR[st.lead]}% or more over the ${st.lead === '7' ? '7 days' : '24 hours'} before the release; anything smaller is sideways. Each cell shows how often ${A} was higher ${W} after, and the average move.</p>`;
+  }
   html += `<div class="bh-h4">If the print is… (${esc(label(st.key))})</div>`;
   BUCKETS.forEach(([code, name]) => {
     const s = stats(list.filter(r => r.s === code), st.asset, st.win, T);
@@ -2873,10 +2895,11 @@ function render(){
 }
 
 // ---- calendar integration: History buttons + data-driven bias on released rows
+const ALIAS = {'US|Federal Funds Rate Decision':'US|Federal Funds Rate', 'US|FOMC Rate Decision':'US|Federal Funds Rate'};
 function decorate(){
   if(!BH) return;
   document.querySelectorAll('#calendarBody tr').forEach(tr => {
-    const key = tr.dataset.bkey, g = GROUPS[key];
+    const key = ALIAS[tr.dataset.bkey] || tr.dataset.bkey, g = GROUPS[key];
     if(!g || g.length < 1 || tr.dataset.bhDone === '1') return;
     tr.dataset.bhDone = '1';
     const cell = tr.lastElementChild; if(!cell) return;
@@ -2914,7 +2937,7 @@ function chips(id, fn){
   $(id).addEventListener('click', e => { const c = e.target.closest('.filter-chip'); if(!c) return;
     document.querySelectorAll('#' + id + ' .filter-chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); fn(c.dataset.v); render(); });
 }
-chips('bhAsset', v => st.asset = v); chips('bhWin', v => st.win = Number(v)); chips('bhThr', v => st.thr = Number(v));
+chips('bhAsset', v => st.asset = v); chips('bhWin', v => st.win = Number(v)); chips('bhThr', v => st.thr = Number(v)); chips('bhLead', v => st.lead = v);
 $('bhBody').addEventListener('click', e => { const r = e.target.closest('tr.pick'); if(r){ st.key = r.dataset.k; render(); $('bhDrawer').scrollTo({top:0, behavior:'smooth'}); } });
 
 fetch('../crypto_bias_history.json?t=' + Date.now()).then(r => r.ok ? r.json() : null).catch(() => null).then(d => {

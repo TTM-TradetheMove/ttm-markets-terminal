@@ -3,7 +3,7 @@
 
 For each tracked release (CPI, NFP, FOMC rate, ...) we store the outcome
 vs consensus (above / in line / below) and how BTC and ETH moved afterwards
-(+15m, +1h, +4h, +24h, plus the 4h high/low excursion). The dashboard turns
+(+15m, +1h, +4h, +24h, +7d, the 4h high/low excursion, and the 24h / 7d move INTO the release). The dashboard turns
 this into "X% of the time BTC was higher 4h after a hot CPI" style stats.
 
 Sources (all free, no keys):
@@ -302,7 +302,12 @@ def get_candles(asset, start, end):
 
 
 def reaction(candles, ts):
-    """[r15, r1h, r4h, r24h, hi4h, lo4h] in percent, or None if no price at release."""
+    """[r15, r1h, r4h, r24h, hi4h, lo4h, r7d, pre24h, pre7d] in percent, or None if no price at release.
+
+    r7d  = move from the release price to 7 days after (the weekly view).
+    pre24h / pre7d = how price moved INTO the release (price at release vs 24h / 7d earlier),
+    used to tell a release into a decline, sideways chop, or a rally.
+    """
     c0 = candles.get(ts)
     if not c0:
         return None
@@ -315,13 +320,24 @@ def reaction(candles, ts):
                 return c[3]
         return None
 
+    def open_before(sec):
+        for off in (0, GRAN, -GRAN, 2 * GRAN, -2 * GRAN, 4 * GRAN):
+            c = candles.get(ts - sec + off)
+            if c:
+                return c[0]
+        return None
+
     def pct(x):
         return None if x is None else round((x / p0 - 1) * 100, 3)
+
+    def pre(x):
+        return None if not x else round((p0 / x - 1) * 100, 3)
 
     hi = [candles[t][1] for t in range(ts, ts + 4 * 3600, GRAN) if t in candles]
     lo = [candles[t][2] for t in range(ts, ts + 4 * 3600, GRAN) if t in candles]
     return [pct(close_at(GRAN)), pct(close_at(3600)), pct(close_at(4 * 3600)),
-            pct(close_at(24 * 3600)), pct(max(hi)) if hi else None, pct(min(lo)) if lo else None]
+            pct(close_at(24 * 3600)), pct(max(hi)) if hi else None, pct(min(lo)) if lo else None,
+            pct(close_at(7 * 24 * 3600)), pre(open_before(24 * 3600)), pre(open_before(7 * 24 * 3600))]
 
 
 def baseline(candles):
@@ -330,7 +346,7 @@ def baseline(candles):
     if len(ts) < 2000:
         return None
     out = []
-    for sec in (GRAN, 3600, 4 * 3600, 24 * 3600):
+    for sec in (GRAN, 3600, 4 * 3600, 24 * 3600, 7 * 24 * 3600):
         up = n = 0
         tot = 0.0
         for t in ts[::4]:  # hourly grid keeps it fast
@@ -388,6 +404,12 @@ def main():
     for r in recs.values():
         rel = datetime.strptime(r["u"], "%Y-%m-%dT%H:%MZ").replace(tzinfo=timezone.utc)
         incomplete = (not r.get("btc")) or r["btc"][3] is None or any(not r.get(a) for a in ASSETS)
+        # migration: records stored before the weekly / lead-in fields existed get them filled in once
+        if not incomplete and any(len(r[a]) < 9 for a in ASSETS if r.get(a)):
+            incomplete = True
+        # recent releases: keep filling the 7-day window until it exists
+        if not incomplete and rel > now - timedelta(days=30) and any(r[a][6] is None for a in ASSETS if r.get(a)):
+            incomplete = True
         if incomplete and rel < now - timedelta(hours=25):
             need.append(rel)
         elif incomplete and rel < now - timedelta(minutes=30):
@@ -395,8 +417,8 @@ def main():
     prices_src = existing.get("price_source")
     base = existing.get("baseline")
     if need:
-        start = min(need) - timedelta(hours=2)
-        end = min(now, max(need) + timedelta(hours=26))
+        start = min(need) - timedelta(days=7, hours=2)
+        end = min(now, max(need) + timedelta(days=8))
         log(f"fetching prices {start:%Y-%m-%d} -> {end:%Y-%m-%d} for {len(need)} releases")
         cand = {}
         for asset in ASSETS:
@@ -407,7 +429,7 @@ def main():
             base = baseline(cand["btc"]) or base
         for r in recs.values():
             rel = datetime.strptime(r["u"], "%Y-%m-%dT%H:%MZ").replace(tzinfo=timezone.utc)
-            if rel < start + timedelta(hours=1) or rel > end:
+            if rel < start + timedelta(days=7) or rel > end:
                 continue
             ts = int(rel.timestamp())
             for asset in ASSETS:
@@ -418,7 +440,7 @@ def main():
 
     events = sorted((r for r in recs.values() if r.get("btc")), key=lambda r: (r["d"], r["t"]))
     out = {"generated_at": now.replace(microsecond=0).isoformat(), "price_source": prices_src,
-           "windows": ["15m", "1h", "4h", "24h"], "baseline": base, "n": len(events),
+           "windows": ["15m", "1h", "4h", "24h"], "extra": {"6": "7d after", "7": "prior 24h", "8": "prior 7d"}, "baseline": base, "n": len(events),
            "first": events[0]["d"] if events else None, "last": events[-1]["d"] if events else None,
            "events": events}
     if events or not existing:
