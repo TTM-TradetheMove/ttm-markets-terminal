@@ -3912,10 +3912,12 @@ function openTbl(items, noteEmpty){
   if(items.length){ const tm = items.reduce((a, x) => a + (x.snap.margin || 0), 0), tn = items.reduce((a, x) => a + (x.snap.notional || 0), 0); o += `<tr><td colspan="5" style="text-align:right;color:var(--mute)"><b>Total margin locked</b> across ${items.length} open trade${items.length > 1 ? 's' : ''}</td><td><b style="color:var(--gold2)">${usd(tm)}</b><br><small style="color:var(--mute)">size ${usd(tn)}</small></td><td colspan="8"></td></tr>`; }
   return o + '</tbody>';
 }
+let TGERR = '';
 async function tgSend(text){
-  const c = lsGet(TGKEY, {}); if(!c.tok || !c.chat) return false;
+  TGERR = ''; const c = lsGet(TGKEY, {}); if(!c.tok || !c.chat){ TGERR = 'Enter both the bot token and the chat ID first.'; return false; }
+  if(!/^\d{6,}:[A-Za-z0-9_-]{30,}$/.test(c.tok)){ TGERR = 'That does not look like a full bot token. A real one looks like 1234567890:AAH... and is about 46 characters long. Copy it again from @BotFather (/mybots, then API Token).'; return false; }
   const body = new URLSearchParams({chat_id: c.chat, text, parse_mode: 'HTML', disable_web_page_preview: 'true'});
-  try{ const r = await fetch(`https://api.telegram.org/bot${c.tok}/sendMessage`, {method: 'POST', body}); const d = await r.json(); return !!d.ok; }
+  try{ const r = await fetch(`https://api.telegram.org/bot${c.tok}/sendMessage`, {method: 'POST', body}); const d = await r.json(); if(!d.ok) TGERR = d.error_code === 401 ? 'Telegram says the bot token is not valid (Unauthorized). Copy it again from @BotFather.' : d.error_code === 400 && /chat not found/i.test(d.description || '') ? 'Telegram says the chat was not found. Check the chat ID, and send your bot a message (press Start) first.' : d.error_code === 403 ? 'The bot is blocked or has not been started. Open your bot in Telegram and press Start, then try again.' : 'Telegram said: ' + (d.description || 'unknown error'); return !!d.ok; }
   catch(e){ try{ await fetch(`https://api.telegram.org/bot${c.tok}/sendMessage`, {method: 'POST', body, mode: 'no-cors'}); return true; }catch(e2){ return false; } }
 }
 function trackHits(){
@@ -4190,7 +4192,7 @@ function wire(){
   const tg0 = lsGet(TGKEY, {}); $('tgTok').value = tg0.tok || ''; $('tgChat').value = tg0.chat || ''; $('tgOn').checked = !!tg0.on;
   const tgNote = t => { $('tgNote').textContent = t; };
   $('tgSave').addEventListener('click', () => { if(window.ttmCan && !ttmCan('alerts')){ ttmUpsell('alerts'); return; } lsSet(TGKEY, {tok: $('tgTok').value.trim(), chat: $('tgChat').value.trim(), on: $('tgOn').checked}); tgNote($('tgOn').checked ? 'Saved. Alerts are on while this page is open.' : 'Saved. Alerts are off.'); });
-  $('tgTest').addEventListener('click', async () => { if(window.ttmCan && !ttmCan('alerts')){ ttmUpsell('alerts'); return; } lsSet(TGKEY, {tok: $('tgTok').value.trim(), chat: $('tgChat').value.trim(), on: $('tgOn').checked}); tgNote('Sending…'); const ok = await tgSend('✅ <b>TTM Trade Tracker</b> is connected. You will get a message here when a take-profit is hit on one of your open trades.'); tgNote(ok ? 'Test sent. Check your Telegram.' : 'Could not send. Check the token and chat ID, and that you have sent your bot a message first.'); });
+  $('tgTest').addEventListener('click', async () => { if(window.ttmCan && !ttmCan('alerts')){ ttmUpsell('alerts'); return; } lsSet(TGKEY, {tok: $('tgTok').value.trim(), chat: $('tgChat').value.trim(), on: $('tgOn').checked}); tgNote('Sending…'); const ok = await tgSend('✅ <b>TTM Trade Tracker</b> is connected. You will get a message here when a take-profit is hit on one of your open trades.'); tgNote(ok ? 'Test sent. Check your Telegram.' : 'Could not send. ' + (TGERR || 'Check the token and chat ID, and that you have sent your bot a message first.')); });
   $('rrBal').addEventListener('input', e => { BALS[S.acc] = e.target.value; lsSet(BKEY, BALS); render(); renderSaved(); });
   $('rrAcc').addEventListener('change', e => { S.acc = e.target.value; if(S.acc === 'lev'){ S.mkt = 'fut'; S.lev = 3; } else { S.mkt = 'spot'; S.dir = 'long'; } persist(); pushInputs(); render(); });
   $('rrTf').addEventListener('change', e => { S.tf = e.target.value; persist(); pushInputs(); render(); loadCandles(); });
