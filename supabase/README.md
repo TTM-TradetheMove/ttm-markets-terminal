@@ -24,3 +24,10 @@ TradingView links: add them to `ttm_config.json`, for example
 - Prices show as "Price to be confirmed" until you fill `plans` in `ttm_config.json` (monthly / annual per plan).
 - Locks run in the browser. The site's files are public, so this is a convenience gate, not a security lock.
 - If you already ran the old schema, re-run `schema.sql`; it widens the plan check to free / crypto / tradfi / pro. If it errors on existing rows, run: `update ttm_profiles set plan='crypto' where plan='member';` first.
+
+## Usage tracking (hidden Usage dashboard)
+
+1. In Supabase, open **SQL Editor -> New query**, paste the contents of `supabase/usage.sql`, and press Run.
+2. Open the site, sign in as admin, go to **Admin**. The **Usage** area is at the bottom of that page.
+3. It records anonymous events (pages opened, buttons clicked, features used, how long, which device) and never what people type. Admins, Do Not Track browsers, and any device with tracking turned off are not counted.
+4. The data is kept until you press **Clear older than 90 days** or **Clear ALL usage data**. **Export CSV** downloads everything first.

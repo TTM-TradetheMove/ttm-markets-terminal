@@ -2827,7 +2827,7 @@ const regName = c => c === 'D' ? 'Declining' : c === 'U' ? 'Rising' : c === 'S' 
 function intoCell(r){ const v = leadOf(r, st.asset), g = regimeOf(r, st.asset); if(v == null) return '<span style="color:var(--mute)">—</span>';
   return `<span class="${g === 'D' ? 'bias-down' : g === 'U' ? 'bias-up' : 'bias-neutral'}">${g === 'D' ? '▼' : g === 'U' ? '▲' : '▬'} ${regName(g)}</span><span class="bh-sub">${sg(v, 1)} prior ${st.lead === '7' ? '7d' : '24h'}</span>`; }
 function open(key){
-  if(key) st.key = key;
+  if(key) st.key = key; window.ttmTrack && ttmTrack('feat', 'history_open', {key: String(st.key || '').slice(0, 60)});
   $('bhDrawer').classList.add('open'); $('bhScrim').classList.add('open'); $('bhDrawer').setAttribute('aria-hidden', 'false');
   render();
 }
@@ -3718,7 +3718,7 @@ function wireEdit(){
     if(!ed) return;
     if(e.target.id === 'edCancel'){ $('rrModal').classList.remove('open'); ed = null; }
     else if(e.target.id === 'edLive'){ const x = loadSaved()[ed.i]; let pp = priceOf(x.snap.asset); if(!pp || !pp.live){ const t = await getTickers(); if(t){ PRICES = t.map; PSTAMP = t.t; PUSED = t.used; pp = priceOf(x.snap.asset); } } if(pp){ ed.addp = pp.p >= 1 ? +pp.p.toFixed(4) : +pp.p.toPrecision(5); $('edAddP').value = ed.addp; edPrev(); } else e.target.textContent = 'No live price for ' + x.snap.asset; }
-    else if(e.target.id === 'edSave'){ const c = editCalc(); if(c.errs.length) return; const list = loadSaved(), x = list[ed.i], old = x.snap;
+    else if(e.target.id === 'edSave'){ const c = editCalc(); if(c.errs.length) return; window.ttmTrack && ttmTrack('feat', 'edit_trade'); const list = loadSaved(), x = list[ed.i], old = x.snap;
       x.snap = c.snap; x.snap.slMoved = c.SL === c.E;
       const hit = x.hit || [], sent = x.sent || {tp: [], sl: false};
       x.hit = c.tps.map((t, k) => !!hit[k]); x.sent = {tp: c.tps.map((t, k) => !!(sent.tp && sent.tp[k]) && old.tps[k] && old.tps[k].P === t.P), sl: false};
@@ -3739,7 +3739,7 @@ function wireJournal(){
     if(e.target.id === 'rrCancelClose'){ $('rrModal').classList.remove('open'); cur = null; }
     else if(e.target.id === 'rrConfirm'){ const m = modalCalc(), list = loadSaved(), x = list[cur.i];
       x.status = 'closed'; x.res = {pnl: Math.round(m.pnl * 100) / 100, r: m.pnl / x.snap.riskUsd, how: m.how, closed: Date.now()};
-      saveAll(list); $('rrModal').classList.remove('open'); cur = null; render(); renderSaved(); }
+      saveAll(list); window.ttmTrack && ttmTrack('feat', 'close_trade', {how: String(m.how || '').slice(0, 20), win: m.pnl > 0, r: Math.round(m.pnl / x.snap.riskUsd)}); $('rrModal').classList.remove('open'); cur = null; render(); renderSaved(); }
   });
   $('rrModal').addEventListener('mousedown', e => { if(e.target === $('rrModal')){ $('rrModal').classList.remove('open'); cur = null; ed = null; } });
   function act(b){ const a = b.dataset.a || b.dataset.j, i = +b.dataset.i, list = loadSaved(), x = list[i]; if(!x) return;
@@ -3769,7 +3769,7 @@ function startTrade(c, setup, name, replaceIdx){
   const list = loadSaved(), item = {id: uid(), name: (name || '').trim() || `${setup.asset} ${setup.mkt === 'spot' ? 'spot' : setup.lev + '×'} ${setup.dir}`, t: Date.now(), opened: Date.now(), s: Object.assign({}, setup), status: 'open', snap: snapOf(c, setup)};
   const pp0 = priceOf(setup.asset), E0 = item.snap.E; item.fill = pp0 && Math.abs(pp0.p / E0 - 1) > 0.001 ? 'pending' : 'filled'; if(item.fill === 'pending') item.side = pp0.p > E0 ? 1 : -1;   // entry not reached yet = a limit order waiting to fill
   if(replaceIdx != null && list[replaceIdx]) list[replaceIdx] = Object.assign(list[replaceIdx], item, {id: list[replaceIdx].id || item.id}); else list.unshift(item);
-  saveAll(list); note.style.color = ''; note.innerHTML = `Opened “${esc(item.name)}”: ${usd(c.margin)} margin locked, ${usd(c.avail - c.margin)} left to trade with. ${item.fill === 'pending' ? ` Entry ${pr(E0)} is not at the market yet (live ${pr(pp0.p)}), so it shows as waiting for entry and its P&amp;L starts when price reaches it.` : ''} When it plays out, close it in the <a href="#tradejournal" style="color:var(--gold2)">trade tracker</a> to update your balance.`;
+  saveAll(list); window.ttmTrack && ttmTrack('feat', 'open_trade', {asset: String(item.snap.asset).slice(0, 12), acc: setup.acc, mkt: item.snap.mkt, dir: item.snap.long ? 'long' : 'short', lev: item.snap.mkt === 'spot' ? 0 : item.snap.lev, tf: setup.tf, waiting: item.fill === 'pending'}); note.style.color = ''; note.innerHTML = `Opened “${esc(item.name)}”: ${usd(c.margin)} margin locked, ${usd(c.avail - c.margin)} left to trade with. ${item.fill === 'pending' ? ` Entry ${pr(E0)} is not at the market yet (live ${pr(pp0.p)}), so it shows as waiting for entry and its P&amp;L starts when price reaches it.` : ''} When it plays out, close it in the <a href="#tradejournal" style="color:var(--gold2)">trade tracker</a> to update your balance.`;
   $('rrName').value = ''; render(); renderSaved(); return true;
 }
 // ---- price source (exchange) + live candles
@@ -4130,6 +4130,7 @@ function buildTtmWorkbook(){
   return wb;
 }
 function downloadXlsx(){
+  window.ttmTrack && ttmTrack('feat', 'excel_export');
   const wb = buildTtmWorkbook(), url = URL.createObjectURL(wb.blob()), a = document.createElement('a'), n = new Date();
   a.href = url; a.download = `TTM-Trade-Tracker-${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}.xlsx`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
@@ -4183,12 +4184,13 @@ function wire(){
     setTimeout(() => { btn.textContent = 'Use live price as entry'; }, 4500);
   });
   $('rrSave').addEventListener('click', () => {
+    window.ttmTrack && ttmTrack('feat', 'save_plan');
     const c = calc(); const n = $('rrName').value.trim() || `${S.asset} ${S.mkt === 'spot' ? 'spot' : S.lev + '×'} ${S.dir}`;
     const list = loadSaved(); list.unshift({id: uid(), name: n, t: Date.now(), s: Object.assign({}, S), status: 'saved'});
     const ok = saveAll(list); $('rrName').value = ''; const note = $('rrOpenNote'); note.style.color = '';
     note.textContent = ok ? `Saved “${n}” as a plan (no margin locked). Open it from the saved plans list when you take the trade.` : 'Could not save: your browser is blocking site storage. Use Export instead.';
     renderSaved(); });
-  $('rrExch').addEventListener('click', e => { if(e.target.id !== 'rrTicket') return; const c = calc(); if(!c.ok){ e.target.textContent = 'Fill in the setup first'; setTimeout(() => { e.target.textContent = 'Copy order ticket'; }, 2500); return; }
+  $('rrExch').addEventListener('click', e => { if(e.target.id !== 'rrTicket') return; window.ttmTrack && ttmTrack('feat', 'order_ticket'); const c = calc(); if(!c.ok){ e.target.textContent = 'Fill in the setup first'; setTimeout(() => { e.target.textContent = 'Copy order ticket'; }, 2500); return; }
     const t = `${S.asset}/USDT ${c.long ? 'LONG' : 'SHORT'} ${S.mkt === 'spot' ? 'spot' : c.lev + 'x isolated'}\nEntry ${pr(c.E)}\nStop ${pr(c.SL)}\n` + c.tps.map(x => `TP${x.i} ${pr(x.P)} (${x.share}%)`).join('\n') + `\nSize ${qty(c.units)} ${S.asset} (notional ${usd(c.notional)})\nMargin ${usd(c.margin)} · Risk ${usd(c.riskUsd)}`;
     (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => { e.target.textContent = 'Copied ✓'; }).catch(() => { e.target.textContent = 'Copy blocked'; }); setTimeout(() => { e.target.textContent = 'Copy order ticket'; }, 2500); });
   $('rrOpen').addEventListener('click', () => startTrade(calc(), S, $('rrName').value));
@@ -4201,7 +4203,7 @@ function wire(){
   const tg0 = lsGet(TGKEY, {}); $('tgTok').value = tg0.tok || ''; $('tgChat').value = tg0.chat || ''; $('tgOn').checked = !!tg0.on;
   const tgNote = t => { $('tgNote').textContent = t; };
   $('tgSave').addEventListener('click', () => { if(window.ttmCan && !ttmCan('alerts')){ ttmUpsell('alerts'); return; } lsSet(TGKEY, {tok: $('tgTok').value.trim(), chat: $('tgChat').value.trim(), on: $('tgOn').checked}); tgNote($('tgOn').checked ? 'Saved. Alerts are on while this page is open.' : 'Saved. Alerts are off.'); });
-  $('tgTest').addEventListener('click', async () => { if(window.ttmCan && !ttmCan('alerts')){ ttmUpsell('alerts'); return; } lsSet(TGKEY, {tok: $('tgTok').value.trim(), chat: $('tgChat').value.trim(), on: $('tgOn').checked}); tgNote('Sending…'); const ok = await tgSend('✅ <b>TTM Trade Tracker</b> is connected. You will get a message here when a take-profit is hit on one of your open trades.'); tgNote(ok ? 'Test sent. Check your Telegram.' : 'Could not send. ' + (TGERR || 'Check the token and chat ID, and that you have sent your bot a message first.')); });
+  $('tgTest').addEventListener('click', async () => { window.ttmTrack && ttmTrack('feat', 'telegram_test'); if(window.ttmCan && !ttmCan('alerts')){ ttmUpsell('alerts'); return; } lsSet(TGKEY, {tok: $('tgTok').value.trim(), chat: $('tgChat').value.trim(), on: $('tgOn').checked}); tgNote('Sending…'); const ok = await tgSend('✅ <b>TTM Trade Tracker</b> is connected. You will get a message here when a take-profit is hit on one of your open trades.'); tgNote(ok ? 'Test sent. Check your Telegram.' : 'Could not send. ' + (TGERR || 'Check the token and chat ID, and that you have sent your bot a message first.')); });
   $('rrBal').addEventListener('input', e => { BALS[S.acc] = e.target.value; lsSet(BKEY, BALS); render(); renderSaved(); });
   $('rrAcc').addEventListener('change', e => { S.acc = e.target.value; if(S.acc === 'lev'){ S.mkt = 'fut'; S.lev = 3; } else { S.mkt = 'spot'; S.dir = 'long'; } persist(); pushInputs(); render(); });
   $('rrTf').addEventListener('change', e => { S.tf = e.target.value; persist(); pushInputs(); render(); loadCandles(); });

@@ -52,6 +52,65 @@ async function token(){
 }
 async function api(path, opt){ return raw(path, opt, await token()); }
 
+
+// ---------- anonymous usage tracking (what is opened and clicked, never what is typed). Off for admins, Do Not Track and ?notrack=1.
+(function(){ try{ const q = new URLSearchParams(location.search).get('notrack'); if(q === '1') localStorage.setItem('ttm_no_track', '1'); else if(q === '0') localStorage.removeItem('ttm_no_track'); }catch(err){} })();
+const TRK = {q: [], ready: false, sec: '', t0: Date.now(), secT: Date.now(), errs: 0, lastClick: '', lastAt: 0};
+const trkOff = () => { try{ if(localStorage.getItem('ttm_no_track') === '1') return true; }catch(err){} return navigator.doNotTrack === '1' || window.doNotTrack === '1' || navigator.globalPrivacyControl === true; };
+const rid = () => Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10);
+const VID = (() => { try{ let v = localStorage.getItem('ttm_vid_v1'); if(!v){ v = rid(); localStorage.setItem('ttm_vid_v1', v); } return v; }catch(err){ return rid(); } })();
+const SID = (() => { try{ let s = sessionStorage.getItem('ttm_sid_v1'); if(!s){ s = rid(); sessionStorage.setItem('ttm_sid_v1', s); let n = +localStorage.getItem('ttm_visits_v1') || 0; localStorage.setItem('ttm_visits_v1', String(n + 1)); } return s; }catch(err){ return rid(); } })();
+const VISITS = (() => { try{ return +localStorage.getItem('ttm_visits_v1') || 1; }catch(err){ return 1; } })();
+const DEV = (() => { const w = Math.min(screen.width || 1024, window.innerWidth || 1024); return w < 700 ? 'mobile' : w < 1100 ? 'tablet' : 'desktop'; })();
+function track(ev, tg, p){
+  if(!on() || trkOff()) return;
+  TRK.q.push({vid: VID, sid: SID, uid: USER ? USER.id : null, pg: TERM, ev, tg: tg == null ? null : String(tg).slice(0, 110), dv: DEV, p: p || {}});
+  if(TRK.q.length > 300) TRK.q.shift();
+}
+window.ttmTrack = (ev, name, p) => track(ev, TERM + '|' + name, p);
+async function trkFlush(unload){
+  if(!TRK.ready || !TRK.q.length || !on()) return;
+  const rows = TRK.q.splice(0, 100); let tk = null;
+  try{ if(unload){ const s = ls(AK, null); tk = s && s.exp - 30000 > Date.now() ? s.access : null; } else tk = await token(); }catch(err){}
+  rows.forEach(r => { if(!tk) r.uid = null; });
+  try{ const r = await fetch(CFG.url.replace(/\/$/, '') + '/rest/v1/ttm_events', {method: 'POST', keepalive: true, headers: {apikey: CFG.key, 'Content-Type': 'application/json', Prefer: 'return=minimal', ...(tk ? {Authorization: 'Bearer ' + tk} : {})}, body: JSON.stringify(rows)}); if(!r.ok && r.status >= 500 && TRK.q.length < 100) TRK.q.unshift(...rows); }catch(err){ if(TRK.q.length < 100) TRK.q.unshift(...rows); }
+}
+const secNow = () => { const o = new URLSearchParams(location.search).get('only'); const h = (location.hash || '').slice(1); return h.indexOf('access_token') >= 0 ? TRK.sec : (TERM === 'home' ? 'home' : (o || h || 'menu')); };
+function trkDwell(){ const s = Math.round((Date.now() - TRK.secT) / 1000); if(TRK.sec && s >= 1 && s < 7200) track('dwell', TERM + '|' + TRK.sec, {s}); TRK.secT = Date.now(); }
+function trkSection(){
+  const id = secNow(); if(id === TRK.sec) return; trkDwell(); TRK.sec = id; track('view', TERM + '|' + id);
+  setTimeout(() => { const el = document.getElementById(id); if(el && el.classList && el.classList.contains('locked')) track('lock', TERM + '|' + id); }, 500);
+}
+function trkStart(){
+  if(TRK.started) return; TRK.started = true;
+  TRK.ready = true;
+  if(PROF && PROF.is_admin){ try{ localStorage.setItem('ttm_no_track', '1'); }catch(err){} TRK.q.length = 0; return; }
+  if(trkOff()){ TRK.q.length = 0; return; }
+  let ref = ''; try{ const u = new URL(document.referrer); if(u.host && u.host !== location.host) ref = u.host.replace(/^www\./, ''); }catch(err){}
+  let tz = ''; try{ tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; }catch(err){}
+  track('start', null, {n: VISITS, ref, tz, lang: (navigator.language || '').slice(0, 8), w: Math.round((window.innerWidth || 0) / 100) * 100});
+  trkSection(); trkFlush();
+}
+window.addEventListener('hashchange', () => { if(TRK.ready) trkSection(); });
+document.addEventListener('click', ev => {
+  if(!TRK.ready && !on()) return; const t = ev.target && ev.target.closest ? ev.target.closest('button, a, .menu-tile, .filter-chip, summary') : null; if(!t || t.closest('#authBody input')) return;
+  let name = '';
+  if(t.id) name = t.id;
+  else if(t.classList.contains('filter-chip')) name = 'chip:' + ((t.parentElement && t.parentElement.id) || '') + ':' + (t.dataset.v || t.dataset.a || t.textContent.trim().slice(0, 20));
+  else if(t.tagName === 'A'){ const h = t.getAttribute('href') || ''; try{ const u = new URL(h, location.href); name = u.host && u.host !== location.host ? 'ext:' + u.host.replace(/^www\./, '') : (h.charAt(0) === '#' ? h : 'link:' + u.pathname.replace(/^.*ttm-markets-terminal\//, '') + u.hash); }catch(err){ name = h.slice(0, 40); } }
+  else name = (t.dataset.j || t.dataset.m || t.dataset.d || t.dataset.a || t.textContent.trim().slice(0, 30));
+  if(!name) return; const now = Date.now(); if(name === TRK.lastClick && now - TRK.lastAt < 400) return; TRK.lastClick = name; TRK.lastAt = now;
+  track('click', TERM + '|' + name);
+}, true);
+document.addEventListener('change', ev => { const t = ev.target; if(!t || t.tagName !== 'SELECT' || !(t.id || t.name) || t.closest('#admin, #authBody')) return; track('choice', TERM + '|' + (t.id || t.name) + '=' + String(t.value).slice(0, 30)); }, true);
+window.addEventListener('error', ev => { if(TRK.errs++ < 5) track('error', String(ev.message || 'error').slice(0, 100), {pg: TERM}); });
+const trkEnd = () => { if(!TRK.ready || TRK.ended) return; TRK.ended = true; trkDwell(); track('end', null, {dur: Math.round((Date.now() - TRK.t0) / 1000)}); trkFlush(true); };
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'hidden'){ trkDwell(); trkFlush(true); } else { TRK.secT = Date.now(); } });
+window.addEventListener('pagehide', trkEnd);
+setInterval(() => { if(!document.hidden) trkFlush(); }, 8000);
+document.addEventListener('click', ev => { const t = ev.target; if(t && t.id === 'ttmTrkToggle'){ ev.preventDefault(); try{ if(localStorage.getItem('ttm_no_track') === '1') localStorage.removeItem('ttm_no_track'); else localStorage.setItem('ttm_no_track', '1'); }catch(err){} trkNote(); } });
+function trkNote(){ const n = document.getElementById('ttmTrkNote'); if(!n) return; const off = trkOff(); n.innerHTML = 'We count which pages and buttons are used, never what you type, to improve the terminal. Tracking is currently <b>' + (off ? 'off' : 'on') + '</b> for this device. <a href="#" id="ttmTrkToggle" style="color:var(--gold2)">' + (off ? 'Turn on' : 'Turn off') + '</a>'; }
+
 async function boot(){
   try{ const r = await fetch(BASE + 'ttm_config.json?t=' + Date.now(), {cache: 'no-store'}); if(r.ok){ const c = await r.json(); CFG = {url: c.supabase_url || '', key: c.supabase_anon_key || '', tv: c.tradingview || [], plans: c.plans || {}}; } }catch(err){}
   if(on()){
@@ -59,7 +118,7 @@ async function boot(){
     const t = await token();
     if(t){ const u = await raw('/auth/v1/user', {}, t); if(u.ok && u.json && u.json.id){ USER = {id: u.json.id, email: u.json.email}; const p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email`); PROF = (p.ok && p.json && p.json[0]) || {plan: 'free', is_admin: false}; } }
   }
-  ui(); if(USER) syncInit();
+  ui(); if(USER) syncInit(); trkStart(); trkNote();
 }
 // access: does the current visitor get this section or feature?
 function can(key){
@@ -72,6 +131,7 @@ function can(key){
 }
 const needText = key => { const a = (SET.access[key] || []).filter(x => x !== 'pro'); const l = a.length ? a.map(pname) : []; return (l.length ? l.join(' or ') + ' or ' : '') + 'Pro'; };
 function upsell(key){
+  track('lock', TERM + '|feat:' + key);
   const label = (CAT.find(c => c[0] === key) || [0, key, 0])[1].replace(/^(Crypto|TradFi) · /, '');
   if(SET.wall && !USER){ openAuth('<p>Sign in to continue. It is free and takes a minute.</p>' + signInForm()); return; }
   openAuth(USER ? `<p><b>${e(label)}</b> is included with the <b>${e(needText(key))}</b> plan. You are on <b>${e(pname(PROF.plan))}</b>. Paid plans are not open for self-sign-up yet; ask TTM on Telegram.</p><div class="row"><button class="ttm-btn ghost" id="authClose">Close</button></div>`
@@ -81,7 +141,7 @@ window.ttmCan = can; window.ttmUpsell = upsell;
 
 // ---------- sign-in modal
 function signInForm(){ return on() ? `<label for="authEmail"><small>Email</small></label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"><div class="row"><button class="ttm-btn" id="authSend">Email me a sign-in link</button><button class="ttm-btn ghost" id="authClose">Cancel</button></div><p id="authNote" style="margin:12px 0 0"><small>No password. We email a one-time link and a code. Creating an account is free.</small></p>` : '<p>Accounts are coming soon. The terminal stays free and open in the meantime.</p><div class="row"><button class="ttm-btn ghost" id="authClose">Close</button></div>'; }
-function openAuth(html){ $('authBody').innerHTML = '<h3>TTM account</h3>' + (html || signInForm()); modal.classList.add('open'); }
+function openAuth(html){ track('auth_open', TERM); $('authBody').innerHTML = '<h3>TTM account</h3>' + (html || signInForm()); modal.classList.add('open'); }
 const closeAuth = () => modal.classList.remove('open');
 document.addEventListener('click', async ev => {
   const t = ev.target; if(!t || !t.id && !t.closest) return;
@@ -91,11 +151,12 @@ document.addEventListener('click', async ev => {
   else if(t.id === 'authSend'){ const em = ($('authEmail').value || '').trim(); if(!/^\S+@\S+\.\S+$/.test(em)){ $('authNote').textContent = 'Enter a valid email address.'; return; }
     t.disabled = true; $('authNote').textContent = 'Sending…';
     const r = await raw('/auth/v1/otp?redirect_to=' + encodeURIComponent(location.origin + location.pathname), {method: 'POST', body: JSON.stringify({email: em, create_user: true})}); t.disabled = false;
+    if(r.ok) track('auth_sent', TERM);
     if(r.ok) $('authBody').innerHTML = `<h3>Check your email</h3><p>We sent a sign-in link to <b>${e(em)}</b>. Open it on this device, or type the code from the email here:</p><input id="authCode" inputmode="numeric" autocomplete="one-time-code" placeholder="6-digit code"><div class="row"><button class="ttm-btn" id="authVerify" data-em="${e(em)}">Sign in with code</button><button class="ttm-btn ghost" id="authClose">Close</button></div><p id="authNote" style="margin:12px 0 0"><small>Nothing arrived? Check spam, or try again in a minute.</small></p>`;
     else $('authNote').textContent = 'Could not send the email' + (r.json && (r.json.msg || r.json.error_description) ? ': ' + (r.json.msg || r.json.error_description) : '.'); }
   else if(t.id === 'authVerify'){ const code = ($('authCode').value || '').trim(), em = t.dataset.em; if(!code) return;
     const r = await raw('/auth/v1/verify', {method: 'POST', body: JSON.stringify({type: 'email', email: em, token: code})});
-    if(r.ok && r.json && r.json.access_token){ lw(AK, {access: r.json.access_token, refresh: r.json.refresh_token, exp: Date.now() + (r.json.expires_in || 3600) * 1000}); closeAuth(); await boot(); }
+    if(r.ok && r.json && r.json.access_token){ lw(AK, {access: r.json.access_token, refresh: r.json.refresh_token, exp: Date.now() + (r.json.expires_in || 3600) * 1000}); track('auth_ok', TERM); closeAuth(); await boot(); }
     else $('authNote').textContent = 'That code did not work. Check it and try again.'; }
   else if(t.id === 'memSignOut'){ try{ await api('/auth/v1/logout', {method: 'POST'}); }catch(err){} try{ localStorage.removeItem(AK); localStorage.removeItem(SYNCK); }catch(err){} USER = PROF = null; SYNC = {state: 'off', at: 0}; ui(); }
 });
@@ -206,8 +267,77 @@ async function adminUi(){
     <label style="display:flex;gap:10px;align-items:center;font-size:14px"><input type="checkbox" id="admWall" ${SET.wall ? 'checked' : ''} style="width:auto"> <span><b>Require sign-in.</b> Visitors must sign in before anything opens (only applies when plans are on).</span></label></div>
     <div class="rr-card"><h3>What each plan sees</h3><div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Section or feature</th>${PLANS.map(p => `<th style="text-align:center">${p[1]}</th>`).join('')}</tr></thead><tbody>${CAT.map(c => `<tr><td>${e(c[1])}</td>${PLANS.map(p => cell(c[0], p[0])).join('')}</tr>`).join('')}</tbody></table></div>
     <div class="rr-acts"><button class="rr-btn sm" id="admSaveSet">Save</button><button class="rr-btn ghost sm" id="admReset">Reset to the planned defaults</button></div><p class="calendar-note" id="admNote" style="margin:8px 0 0">Pro always has everything. Free means open to everyone, signed in or not. Locks work in the browser, so they hide and block what the page shows; the site is static and its code and data files are public, so real protection for paid content needs that content moved behind the backend. Prices are set in ttm_config.json.</p></div>
-    <div class="rr-card"><h3>Members (${users.length})</h3><div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Email</th><th>Joined</th><th>Plan</th></tr></thead><tbody>${users.map(u => `<tr><td>${e(u.email)}${u.is_admin ? ' <span class="rr-pill be">admin</span>' : ''}</td><td>${new Date(u.created_at).toLocaleDateString()}</td><td>${sel('data-uid="' + u.id + '"', u.plan)}</td></tr>`).join('') || '<tr><td colspan="3" style="color:var(--mute)">No members yet.</td></tr>'}</tbody></table></div></div>`;
+    <div class="rr-card"><h3>Members (${users.length})</h3><div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Email</th><th>Joined</th><th>Plan</th></tr></thead><tbody>${users.map(u => `<tr><td>${e(u.email)}${u.is_admin ? ' <span class="rr-pill be">admin</span>' : ''}</td><td>${new Date(u.created_at).toLocaleDateString()}</td><td>${sel('data-uid="' + u.id + '"', u.plan)}</td></tr>`).join('') || '<tr><td colspan="3" style="color:var(--mute)">No members yet.</td></tr>'}</tbody></table></div></div>
+    <div id="usageBox"></div>`;
+  usageUi();
 }
+
+// ---------- Usage dashboard (admin only)
+let UR = {range: '30', data: null, busy: false, err: ''};
+const BTN = {rrOpen: 'Open trade', rrSave: 'Save as plan', rrXlsx: 'Download Excel', jXlsx: 'Download Excel (tracker)', rrLive: 'Use live price as entry', rrExport: 'Backup JSON', rrImportBtn: 'Restore JSON', tgSave: 'Telegram save', tgTest: 'Telegram test', bhTab: 'Bias history tab', rrConfirm: 'Confirm trade result', acctBtn: 'Sign in / account button', admSaveSet: 'Admin save', rrCopy: 'Copy order ticket'};
+function uLabel(tg){
+  const i = String(tg).indexOf('|'), pg = i > 0 ? tg.slice(0, i) : '', th = i > 0 ? tg.slice(i + 1) : tg, P = {crypto: 'Crypto', tradfi: 'TradFi', home: 'Home'}[pg] || pg;
+  let name = th; const cat = CAT.find(c => c[0] === (pg === 'tradfi' ? 't:' : 'c:') + th); if(cat) name = cat[1].replace(/^(Crypto|TradFi) · /, ''); else if(BTN[th]) name = BTN[th]; else if(th === 'menu') name = 'Terminal menu'; else if(th === 'home') name = 'Front page'; else if(th.indexOf('feat:') === 0){ const c2 = CAT.find(c => c[0] === th.slice(5)); name = 'Locked feature: ' + (c2 ? c2[1] : th.slice(5)); }
+  return e(name) + (P ? ` <span style="color:var(--mute);font-size:11px">${e(P)}</span>` : '');
+}
+function uBars(rows, key, fmt){ const mx = Math.max(1, ...rows.map(r => +r[key] || 0)); return rows.map(r => `<tr><td>${fmt ? fmt(r) : uLabel(r.tg)}</td><td style="width:42%"><div style="background:rgba(219,161,24,.15);border-radius:4px;height:8px"><div style="width:${Math.round((+r[key] || 0) / mx * 100)}%;background:var(--gold);height:8px;border-radius:4px"></div></div></td><td style="text-align:right;white-space:nowrap"><b>${(+r[key] || 0).toLocaleString()}</b>${r.visitors != null ? ` <span style="color:var(--mute);font-size:11px">· ${r.visitors} ${r.visitors === 1 ? 'person' : 'people'}</span>` : ''}${r.avg_s != null ? ` <span style="color:var(--mute);font-size:11px">· ${r.avg_s}s avg</span>` : ''}</td></tr>`).join(''); }
+const uTbl = (title, rows, key, fmt, note) => `<div class="rr-card"><h3>${title}</h3>${rows && rows.length ? `<div class="rr-wrap"><table class="rr-tbl"><tbody>${uBars(rows, key, fmt)}</tbody></table></div>` : '<p class="calendar-note" style="margin:0">Nothing yet.</p>'}${note ? `<p class="calendar-note" style="margin:8px 0 0">${note}</p>` : ''}</div>`;
+function uDaily(d){
+  if(!d.length) return '<p class="calendar-note" style="margin:0">No visits in this range yet.</p>';
+  const W = 760, H = 150, pl = 30, n = d.length, bw = Math.max(3, Math.min(26, (W - pl) / n - 3)), mx = Math.max(1, ...d.map(x => x.visitors)), step = (W - pl) / n;
+  let g = `<line x1="${pl}" y1="${H - 18}" x2="${W}" y2="${H - 18}" stroke="#2a2a2e"/><text x="2" y="12" font-size="10" fill="#9a978f">${mx}</text>`;
+  d.forEach((x, i) => { const h = Math.round(x.visitors / mx * (H - 34)), s = Math.round(x.sessions / mx * (H - 34)), cx = pl + i * step + step / 2;
+    g += `<g><title>${x.day}: ${x.visitors} visitors, ${x.sessions} visits, ${x.views} page views</title><rect x="${cx - bw / 2}" y="${H - 18 - h}" width="${bw}" height="${h}" rx="2" fill="#dba118"/><rect x="${cx - bw / 2}" y="${H - 18 - s}" width="${bw}" height="2" fill="#f2c14e"/></g>`;
+    if(n <= 14 || i % Math.ceil(n / 10) === 0) g += `<text x="${cx}" y="${H - 4}" font-size="9" text-anchor="middle" fill="#9a978f">${x.day.slice(5)}</text>`; });
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${g}</svg>`;
+}
+function uHours(h){
+  const grid = Array.from({length: 7}, () => Array(24).fill(0)); h.forEach(x => { if(x.dow >= 0 && x.dow < 7) grid[x.dow][x.hr] = x.n; }); const mx = Math.max(1, ...h.map(x => x.n)), DN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  return '<div class="rr-wrap"><table style="border-collapse:separate;border-spacing:2px;font-size:10px;color:var(--mute)"><tr><td></td>' + Array.from({length: 24}, (_, i) => `<td style="text-align:center">${i % 3 === 0 ? i : ''}</td>`).join('') + '</tr>' +
+    grid.map((row, d) => `<tr><td style="padding-right:6px">${DN[d]}</td>${row.map((v, hr) => `<td title="${DN[d]} ${hr}:00 · ${v} visits" style="width:18px;height:16px;border-radius:3px;background:${v ? `rgba(219,161,24,${(0.12 + 0.88 * v / mx).toFixed(2)})` : 'rgba(255,255,255,.04)'}"></td>`).join('')}</tr>`).join('') + '</table></div>';
+}
+function uRender(D){
+  const k = D.kpi || {}, f = D.funnel || {}, tile = (l, v, s) => `<div><small>${l}</small><strong>${v}</strong>${s ? `<br><span style="font-size:11px;color:var(--mute)">${s}</span>` : ''}</div>`;
+  const pct = (a, b) => b ? Math.round(a / b * 100) + '%' : '—', dur = s => s == null ? '—' : s >= 60 ? Math.floor(s / 60) + 'm ' + (s % 60) + 's' : s + 's';
+  let h = `<div class="rr-card"><h3>Overview</h3><div class="rr-out c4">${tile('People (unique browsers)', (k.visitors || 0).toLocaleString())}${tile('Visits', (k.sessions || 0).toLocaleString(), (k.visitors ? (k.sessions / k.visitors).toFixed(1) : 0) + ' per person')}${tile('Page views', (k.views || 0).toLocaleString())}${tile('Average visit', dur(D.avg_dur))}${tile('Came back', pct(D.returning || 0, k.visitors || 0), (D.returning || 0) + ((D.returning || 0) === 1 ? ' person' : ' people') + ' visited more than once')}${tile('Signed-in members active', k.members || 0)}${tile('Actions recorded', (k.events || 0).toLocaleString())}${tile('Data since', k.first ? new Date(k.first).toLocaleDateString() : '—')}</div></div>
+  <div class="rr-card"><h3>Visitors per day</h3>${uDaily(D.daily || [])}<p class="calendar-note" style="margin:6px 0 0">Gold bar = people, thin line on top = visits.</p></div>
+  <div class="rr-card"><h3>Sign-up funnel (people)</h3><div class="rr-out c5">${tile('Visited', f.visitors || 0)}${tile('Saw a locked item', f.lock_seen || 0, pct(f.lock_seen, f.visitors) + ' of visitors')}${tile('Opened sign-in', f.auth_open || 0, pct(f.auth_open, f.visitors))}${tile('Asked for a link', f.auth_sent || 0, pct(f.auth_sent, f.auth_open) + ' of those')}${tile('Signed in', f.auth_ok || 0, pct(f.auth_ok, f.auth_sent) + ' of those')}</div></div>`;
+  h += `<div class="rr-grid" style="align-items:start"><div>${uTbl('Most opened sections', D.sections, 'views')}${uTbl('Most clicked buttons and links', D.clicks, 'n')}${uTbl('Features used', D.features, 'n', null, 'Trades opened and closed, exports, alerts and the History drawer. Only the kind of action is recorded, never amounts or prices.')}</div><div>${uTbl('Wanted but locked (demand for paid sections)', D.locks, 'n', null, 'How often people opened a section or feature their plan does not include. A good guide to what to put in which plan.')}${uTbl('Dropdown choices (account, time frame, exchange, leverage)', D.choices, 'n', r => { const i = r.tg.indexOf('|'), v = r.tg.slice(i + 1).split('='); return e(v[0].replace(/^rr/, '')) + ' = <b>' + e(v[1] || '') + '</b>'; })}${uTbl('Devices', D.devices, 'n', r => e(r.tg))}${uTbl('Where people came from', D.referrers, 'n', r => e(r.tg))}${uTbl('Time zones', D.zones, 'n', r => e(r.tg))}</div></div>`;
+  h += `<div class="rr-card"><h3>When people visit (your time zone)</h3>${uHours(D.hours || [])}</div>`;
+  h += `<div class="rr-card"><h3>Signed-in members</h3>${(D.members || []).length ? `<div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Member</th><th>Plan</th><th>Visits</th><th>Actions</th><th>Favourite section</th><th>Last seen</th></tr></thead><tbody>${D.members.map(m => `<tr><td>${e(m.email)}</td><td>${e(pname(m.plan))}</td><td>${m.sessions}</td><td>${m.events}</td><td>${m.top ? uLabel(m.top) : '—'}</td><td>${new Date(m.last).toLocaleString()}</td></tr>`).join('')}</tbody></table></div>` : '<p class="calendar-note" style="margin:0">No signed-in activity yet.</p>'}</div>`;
+  if((D.errors || []).length) h += uTbl('Page errors (things to fix)', D.errors, 'n', r => e(r.tg));
+  return h;
+}
+async function usageUi(){
+  const box = $('usageBox'); if(!box || UR.busy) return;
+  const range = UR.range, since = range === 'all' ? '-infinity' : new Date(Date.now() - (+range) * 864e5).toISOString(); let tz = 'UTC'; try{ tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; }catch(err){}
+  const head = `<div class="rr-card"><h3>Usage</h3><p class="calendar-note" style="margin:0 0 10px">Anonymous counts of what is opened and clicked, never what is typed. Your own visits are not counted (admins, and any device where tracking is turned off). The data stays until you clear it.</p>
+    <div class="rr-acts" style="align-items:center"><select id="usgRange" style="background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 9px;font:inherit">${[['1', 'Last 24 hours'], ['7', 'Last 7 days'], ['30', 'Last 30 days'], ['90', 'Last 90 days'], ['all', 'All time']].map(o => `<option value="${o[0]}" ${o[0] === range ? 'selected' : ''}>${o[1]}</option>`).join('')}</select>
+    <button class="rr-btn ghost sm" id="usgRefresh">Refresh</button><button class="rr-btn ghost sm" id="usgCsv">Export CSV</button><button class="rr-btn ghost sm" id="usgClearOld">Clear older than 90 days</button><button class="rr-btn ghost sm" id="usgClearAll" style="border-color:#e0554d;color:#e0554d">Clear ALL usage data</button></div><p class="calendar-note" id="usgNote" style="margin:8px 0 0"></p></div>`;
+  box.innerHTML = head + '<p class="calendar-note">Loading…</p>'; UR.busy = true;
+  try{ const r = await api('/rest/v1/rpc/ttm_usage_summary', {method: 'POST', body: JSON.stringify({p_since: since, p_tz: tz})});
+    if(r.ok && r.json) box.innerHTML = head + uRender(r.json);
+    else box.innerHTML = head + `<div class="rr-warn y">Usage data is not set up yet. In Supabase, open SQL Editor and run supabase/usage.sql from the repo, then press Refresh.${r.json && r.json.message ? ' (' + e(r.json.message) + ')' : ''}</div>`;
+  }catch(err){ box.innerHTML = head + '<div class="rr-warn y">Could not load usage data.</div>'; }
+  UR.busy = false;
+}
+document.addEventListener('change', ev => { if(ev.target.id === 'usgRange'){ UR.range = ev.target.value; usageUi(); } });
+document.addEventListener('click', async ev => {
+  const id = ev.target.id, note = txt => { const n = $('usgNote'); if(n) n.textContent = txt; };
+  if(id === 'usgRefresh') usageUi();
+  else if(id === 'usgClearAll' || id === 'usgClearOld'){
+    const old = id === 'usgClearOld'; if(!confirm(old ? 'Delete usage data older than 90 days? This cannot be undone.' : 'Delete ALL usage data? This cannot be undone. Export a CSV first if you want a copy.')) return;
+    const q = old ? 'ts=lt.' + encodeURIComponent(new Date(Date.now() - 90 * 864e5).toISOString()) : 'id=gt.0';
+    const r = await api('/rest/v1/ttm_events?' + q, {method: 'DELETE', headers: {Prefer: 'count=exact,return=minimal'}});
+    note(r.ok ? 'Cleared.' : 'Could not clear (are you signed in as admin?).'); if(r.ok) usageUi();
+  } else if(id === 'usgCsv'){
+    note('Preparing the file…'); let rows = [], from = 0;
+    for(let i = 0; i < 200; i++){ const r = await api('/rest/v1/ttm_events?select=*&order=id.asc', {headers: {Range: from + '-' + (from + 999), 'Range-Unit': 'items'}}); if(!r.ok || !Array.isArray(r.json)){ note('Could not export.'); return; } rows = rows.concat(r.json); if(r.json.length < 1000) break; from += 1000; }
+    const cols = ['id', 'ts', 'vid', 'sid', 'uid', 'pg', 'ev', 'tg', 'dv', 'p'], esc2 = v => { v = v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    const csv = cols.join(',') + '\n' + rows.map(r => cols.map(c => esc2(r[c])).join(',')).join('\n'), a2 = document.createElement('a');
+    a2.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv'})); a2.download = 'ttm-usage-' + new Date().toISOString().slice(0, 10) + '.csv'; document.body.appendChild(a2); a2.click(); a2.remove(); note('Exported ' + rows.length.toLocaleString() + ' rows.');
+  }
+});
 document.addEventListener('change', async ev => { const t = ev.target;
   if(t.dataset && t.dataset.uid){ const r = await api(`/rest/v1/ttm_profiles?id=eq.${t.dataset.uid}`, {method: 'PATCH', body: JSON.stringify({plan: t.value})}); t.style.borderColor = r.ok ? '#3fb47a' : '#e0554d'; } });
 document.addEventListener('click', async ev => {
