@@ -3631,7 +3631,7 @@ function renderJournal(){
 // ---- close / update modal
 let cur = null;
 function openClose(i){
-  const list = loadSaved(), x = list[i]; if(!x || !x.snap) return; cur = {i, mode: 'partial', hits: x.snap.tps.map(() => false), rest: 'stop', custom: '', actual: ''};
+  const list = loadSaved(), x = list[i]; if(!x || !x.snap) return; cur = {i, mode: 'partial', hits: x.snap.tps.map(() => false), rest: 'stop', custom: '', actual: '', price: '', pct: 100, pctTxt: '100'};
   drawModal();
   $('rrModal').classList.add('open');
 }
@@ -3640,11 +3640,20 @@ function modalCalc(){
   let hits = sn.tps.map(() => false), rest = sn.SL, how = '';
   if(cur.mode === 'full'){ hits = sn.tps.map(() => true); rest = sn.E; how = `All ${sn.tps.length} target${sn.tps.length > 1 ? 's' : ''} hit`; }
   else if(cur.mode === 'sl'){ how = 'Stopped out at the original stop'; }
+  else if(cur.mode === 'price'){ const P = num(cur.price), f = Math.min(100, Math.max(0, num(cur.pctTxt) || 0)) / 100;
+    if(P == null || P <= 0 || !f){ return {pnl: 0, how: P == null ? 'Enter an exit price or press Use live price' : 'Enter how much to close', x, sn, bad: true, f}; }
+    const u = sn.units * f, mv = sn.long ? P - sn.E : sn.E - P, pnl = u * mv - u * sn.fee * (sn.E + P), act2 = num(cur.actual);
+    return {pnl: act2 != null ? act2 : pnl, how: `${Math.round(f * 1000) / 10}% of the position closed at ${pr(P)}${f < 1 ? '; the rest stays open' : ''}${act2 != null ? ' · P&L as entered from my exchange' : ''}`, x, sn, f, P}; }
   else { hits = cur.hits; const n = hits.filter(Boolean).length;
     if(cur.rest === 'stop') rest = sn.SL; else if(cur.rest === 'be') rest = sn.E; else rest = num(cur.custom) != null ? num(cur.custom) : sn.E;
     how = (n ? `TP${hits.map((h, k) => h ? k + 1 : 0).filter(Boolean).join(' + TP')} hit` : 'No target hit') + '; rest ' + (cur.rest === 'stop' ? 'stopped at the original stop' : cur.rest === 'be' ? 'closed at break-even (entry)' : `closed at ${pr(rest)}`); }
   let pnl = settle(sn, hits, rest); const act = num(cur.actual); if(act != null){ pnl = act; how += ' · P&L as entered from my exchange'; }
   return {pnl, how, x, sn};
+}
+function calcOutHtml(m, x, sn, A){
+  const f = m.f != null ? m.f : 1, after = A.equity + m.pnl, rk = sn.riskUsd * f;
+  return `<div class="rr-out" style="grid-template-columns:repeat(3,1fr)">${row('Result', m.bad ? '—' : usd(m.pnl), m.bad ? '' : m.pnl >= 0 ? 'g' : 'r')}${row('R multiple', m.bad ? '—' : (m.pnl / (rk || 1)).toFixed(2) + 'R')}${row('Balance after', m.bad ? '—' : usd(after), m.bad ? '' : after >= A.equity ? 'g' : 'r')}</div>
+    <p class="calendar-note" style="margin:0 0 12px">${esc(m.how)}. ${m.bad ? '' : `Closing releases ${usd(sn.margin * f)} of locked margin.`}</p>`;
 }
 function drawModal(){
   const x = loadSaved()[cur.i], sn = x.snap, m = modalCalc(), A = acct(accOf(x));
@@ -3652,14 +3661,18 @@ function drawModal(){
   const after = A.equity + m.pnl;
   $('rrModalBody').innerHTML = `<h3>Close / update trade</h3><p style="margin:0 0 12px;font-size:13.5px"><b>${esc(x.name)}</b> · ${esc(sn.asset)} ${sn.long ? 'long' : 'short'} · entry ${pr(sn.E)} · stop ${pr(sn.SL)} · margin locked ${usd(sn.margin)}</p>` +
     optBox('full', 'Fully played out (all targets hit)', 'Every take-profit was reached. Adds your planned profit to the account.') + optBox('sl', 'Stop loss hit', 'Stopped out for the planned loss. Takes the risk amount off the account.') +
+    optBox('price', 'Close at a price (live price, full or part)', 'Close all or a share of the position at the live price or a price you type. A part close books that share and leaves the rest open.') +
+    (cur.mode === 'price' ? (() => { const lv = priceOf(sn.asset); return `<div style="margin:2px 0 12px 4px"><div style="font-size:12px;color:var(--mute);margin-bottom:6px">Exit price (USD)</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><input id="rrPrice" type="number" step="any" inputmode="decimal" placeholder="Exit price" value="${esc(cur.price)}" style="flex:1;min-width:140px;box-sizing:border-box;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 10px;font:inherit"><button type="button" class="rr-btn ghost sm" id="rrUseLive" ${lv ? '' : 'disabled'}>${lv ? 'Use live price (' + pr(lv.p) + ')' : 'Live price not available'}</button></div>
+      <div style="font-size:12px;color:var(--mute);margin:10px 0 6px">How much of the position</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${[25, 50, 75, 100].map(v => `<button type="button" class="rr-btn ${num(cur.pctTxt) === v ? '' : 'ghost'} sm" data-pct="${v}">${v === 100 ? 'Full 100%' : v + '%'}</button>`).join('')}<input id="rrPct" type="number" step="any" min="1" max="100" inputmode="decimal" value="${esc(cur.pctTxt)}" style="width:80px;box-sizing:border-box;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 10px;font:inherit"><span style="color:var(--mute);font-size:13px">%</span></div></div>`; })() : '') +
     optBox('partial', 'Partly played out', 'Some targets hit, then the rest was stopped, closed at break-even, or closed by hand at a price you choose (for example a stop moved into profit).') +
     (cur.mode === 'partial' ? `<div style="margin:2px 0 12px 4px"><div style="font-size:12px;color:var(--mute);margin-bottom:6px">Targets that were hit</div>${sn.tps.map((t, k) => `<label style="display:inline-flex;gap:6px;margin-right:14px;font-size:13.5px"><input type="checkbox" data-hit="${k}" ${cur.hits[k] ? 'checked' : ''}> TP${k + 1} (${pr(t.P)}, ${t.share}%)</label>`).join('') || '<span style="color:var(--mute)">This trade had no targets.</span>'}
       <div style="font-size:12px;color:var(--mute);margin:10px 0 6px">The rest of the position ended…</div>
       <select id="rrRest" class="rr-f" style="background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 10px;font:inherit;width:100%"><option value="stop" ${cur.rest === 'stop' ? 'selected' : ''}>Stopped at the original stop (${pr(sn.SL)})</option><option value="be" ${cur.rest === 'be' ? 'selected' : ''}>At break-even (entry ${pr(sn.E)})</option><option value="custom" ${cur.rest === 'custom' ? 'selected' : ''}>At a price I choose (e.g. stop moved into profit)</option></select>
-      ${cur.rest === 'custom' ? `<input id="rrCustom" type="number" step="any" inputmode="decimal" placeholder="Exit price (USD)" value="${esc(cur.custom)}" style="margin-top:8px;width:100%;box-sizing:border-box;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 10px;font:inherit">` : ''}</div>` : '') +
+      ${cur.rest === 'custom' ? `<input id="rrCustom" type="number" step="any" inputmode="decimal" placeholder="Exit price (USD)" value="${esc(cur.custom)}" style="margin-top:8px;width:100%;box-sizing:border-box;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 10px;font:inherit"><button type="button" class="rr-btn ghost sm" id="rrUseLive2" style="margin-top:8px">Use live price</button>` : ''}</div>` : '') +
     `<div class="rr-f"><label for="rrActual">Actual P&amp;L from my exchange (optional, overrides the estimate)</label><input id="rrActual" type="number" step="any" inputmode="decimal" placeholder="e.g. 142.50 or -48.20" value="${esc(cur.actual)}"></div>
-    <div class="rr-out" style="grid-template-columns:repeat(3,1fr)">${row('Result', usd(m.pnl), m.pnl >= 0 ? 'g' : 'r')}${row('R multiple', (m.pnl / sn.riskUsd).toFixed(2) + 'R')}${row('Balance after', usd(after), after >= A.equity ? 'g' : 'r')}</div>
-    <p class="calendar-note" style="margin:0 0 12px">${esc(m.how)}. Closing releases ${usd(sn.margin)} of locked margin.</p>
+    <div id="rrCalcOut">${calcOutHtml(m, x, sn, A)}</div>
     <div class="rr-acts" style="margin:0"><button type="button" class="rr-btn" id="rrConfirm">Confirm result</button><button type="button" class="rr-btn ghost" id="rrCancelClose">Cancel</button></div>`;
 }
 // ---- edit an open trade: stop, targets, add to the position
@@ -3740,11 +3753,20 @@ function wireJournal(){
     else if(e.target.dataset.hit != null){ cur.hits[+e.target.dataset.hit] = e.target.checked; drawModal(); }
     else if(e.target.id === 'rrRest'){ cur.rest = e.target.value; drawModal(); }
   });
-  $('rrModalBody').addEventListener('input', e => { if(e.target.id === 'rrCustom'){ cur.custom = e.target.value; refreshModalNums(e.target); } else if(e.target.id === 'rrActual'){ cur.actual = e.target.value; refreshModalNums(e.target); } });
-  function refreshModalNums(active){ const id = active.id, pos = active.selectionStart, v = active.value; drawModal(); const el = $(id); if(el){ el.focus(); try{ el.setSelectionRange(pos, pos); }catch(err){} el.value = v; } }
+  $('rrModalBody').addEventListener('input', e => { const id = e.target.id; if(id === 'rrCustom') cur.custom = e.target.value; else if(id === 'rrActual') cur.actual = e.target.value; else if(id === 'rrPrice') cur.price = e.target.value; else if(id === 'rrPct'){ cur.pctTxt = e.target.value; document.querySelectorAll('#rrModalBody [data-pct]').forEach(b => b.classList.toggle('ghost', num(cur.pctTxt) !== +b.dataset.pct)); } else return; refreshModalNums(); });
+  // update only the result numbers, so the box you are typing in is never redrawn (that is what made typing come out backwards)
+  function refreshModalNums(){ const o = $('rrCalcOut'); if(!o || !cur) return; const x = loadSaved()[cur.i]; o.innerHTML = calcOutHtml(modalCalc(), x, x.snap, acct(accOf(x))); }
   $('rrModalBody').addEventListener('click', e => {
     if(e.target.id === 'rrCancelClose'){ $('rrModal').classList.remove('open'); cur = null; }
+    else if(e.target.id === 'rrUseLive' || e.target.id === 'rrUseLive2'){ const x = loadSaved()[cur.i], lv = priceOf(x.snap.asset); if(lv){ const v = String(lv.p); if(e.target.id === 'rrUseLive') cur.price = v; else cur.custom = v; drawModal(); } }
+    else if(e.target.dataset.pct){ cur.pctTxt = e.target.dataset.pct; drawModal(); }
     else if(e.target.id === 'rrConfirm'){ const m = modalCalc(), list = loadSaved(), x = list[cur.i];
+      if(m.bad){ const o = $('rrCalcOut'); if(o) o.querySelector('p').style.color = '#e0554d'; return; }
+      if(cur.mode === 'price' && m.f < 1){ // part close: book the closed share as its own trade, shrink the open one
+        const f = m.f, part = JSON.parse(JSON.stringify(x)); part.id = uid(); part.name = x.name + ' (' + Math.round(f * 1000) / 10 + '% closed)'; part.status = 'closed'; part.snap = Object.assign({}, x.snap);
+        ['units', 'notional', 'margin', 'riskUsd'].forEach(k => { part.snap[k] = x.snap[k] * f; x.snap[k] = x.snap[k] * (1 - f); });
+        part.res = {pnl: Math.round(m.pnl * 100) / 100, r: m.pnl / part.snap.riskUsd, how: m.how, closed: Date.now()}; delete part.hit; delete part.sent;
+        list.splice(cur.i + 1, 0, part); saveAll(list); window.ttmTrack && ttmTrack('feat', 'close_part', {pct: Math.round(f * 100)}); $('rrModal').classList.remove('open'); cur = null; render(); renderSaved(); return; }
       x.status = 'closed'; x.res = {pnl: Math.round(m.pnl * 100) / 100, r: m.pnl / x.snap.riskUsd, how: m.how, closed: Date.now()};
       saveAll(list); window.ttmTrack && ttmTrack('feat', 'close_trade', {how: String(m.how || '').slice(0, 20), win: m.pnl > 0, r: Math.round(m.pnl / x.snap.riskUsd)}); $('rrModal').classList.remove('open'); cur = null; render(); renderSaved(); }
   });
