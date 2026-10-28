@@ -92,6 +92,9 @@ function trkStart(){
   track('start', null, {n: VISITS, ref, tz, lang: (navigator.language || '').slice(0, 8), w: Math.round((window.innerWidth || 0) / 100) * 100});
   trkSection(); trkFlush();
 }
+// Back button: return to whichever page you opened Insights from (Admin if unknown).
+document.addEventListener('click', ev => { const b = ev.target.closest && ev.target.closest('#insBack,#insBack2'); if(!b) return; ev.preventDefault(); const t = INS.from && INS.from !== '#insights' ? INS.from : '#admin'; location.hash = t; window.scrollTo(0, 0); });
+window.addEventListener('hashchange', ev => { try{ const o = new URL(ev.oldURL).hash; if(o && o !== '#insights') INS.from = o; }catch(err){} });
 window.addEventListener('hashchange', () => { if(TRK.ready) trkSection(); });
 document.addEventListener('click', ev => {
   if(!TRK.ready && !on()) return; const t = ev.target && ev.target.closest ? ev.target.closest('button, a, .menu-tile, .filter-chip, summary') : null; if(!t || t.closest('#authBody input')) return;
@@ -266,7 +269,7 @@ function ui(){
   if(tv){ const ok = can('indicators'); tv.innerHTML = ok ? (CFG.tv && CFG.tv.length ? CFG.tv : [{name: 'TTM Indicator Suite', desc: 'Trend, momentum and cycle tools built for the TTM method.'}, {name: 'TTM Signals & Alerts', desc: 'Chart overlays that line up with the terminal.'}, {name: 'TTM Risk Tools', desc: 'Position-sizing helpers on the chart.'}]).map(x => `<div class="mem-card"><b>${e(x.name)}</b><p>${e(x.desc || '')}</p>${x.url ? `<a class="rr-btn sm" style="text-decoration:none;display:inline-block" href="${e(x.url)}" target="_blank" rel="noopener noreferrer">Open on TradingView ↗</a>` : '<span class="rr-pill be">Coming soon</span>'}</div>`).join('')
     : `<div class="mem-card" style="grid-column:1/-1"><b>🔒 TTM indicators on TradingView</b><p>The TTM TradingView indicators are included with the <b>${e(needText('indicators'))}</b> plan. They are coming soon.</p></div>`; }
   const pl = $('memPlans'); if(pl) pl.innerHTML = (!on() || !SET.charging ? '<p style="margin:0 0 12px">Everything in the terminal is <b>free right now</b>. These are the planned plans; they will be announced before anything changes.</p>' : '') + planCards();
-  adminUi();
+  adminUi(); insUi();
 }
 async function adminUi(){
   const a = $('admBody'); if(!a || !$('admin').classList.contains('active')) return;
@@ -281,69 +284,169 @@ async function adminUi(){
     <div class="rr-card"><h3>What each plan sees</h3><div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Section or feature</th>${PLANS.map(p => `<th style="text-align:center">${p[1]}</th>`).join('')}</tr></thead><tbody>${CAT.map(c => `<tr><td>${e(c[1])}</td>${PLANS.map(p => cell(c[0], p[0])).join('')}</tr>`).join('')}</tbody></table></div>
     <div class="rr-acts"><button class="rr-btn sm" id="admSaveSet">Save</button><button class="rr-btn ghost sm" id="admReset">Reset to the planned defaults</button></div><p class="calendar-note" id="admNote" style="margin:8px 0 0">Pro always has everything. Free means open to everyone, signed in or not. Locks work in the browser, so they hide and block what the page shows; the site is static and its code and data files are public, so real protection for paid content needs that content moved behind the backend. Prices are set in ttm_config.json.</p></div>
     <div class="rr-card"><h3>Members (${users.length})</h3><div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Email</th><th>Joined</th><th>Plan</th><th></th></tr></thead><tbody>${users.map(u => `<tr><td>${e(u.email)}${u.is_admin ? ' <span class="rr-pill be">admin</span>' : ''}</td><td>${new Date(u.created_at).toLocaleDateString()}</td><td>${sel('data-uid="' + u.id + '"', u.plan)}</td><td>${USER && u.id === USER.id ? '' : `<button class="rr-btn ghost sm" data-delu="${e(u.id)}" data-em="${e(u.email)}" style="border-color:#e0554d;color:#e0554d">Delete</button>`}</td></tr>`).join('') || '<tr><td colspan="4" style="color:var(--mute)">No members yet.</td></tr>'}</tbody></table></div></div>
-    <div id="usageBox"></div>`;
-  usageUi();
+    <div class="rr-card"><h3>Usage insights</h3><p class="calendar-note" style="margin:0 0 10px">An executive summary of what people open and click: trends against the previous period, what is useful and what is not, where visitors are, and charts you can click into.</p><a class="rr-btn" style="text-decoration:none;display:inline-block" href="#insights">Open Insights →</a></div>`;
 }
 
-// ---------- Usage dashboard (admin only)
-let UR = {range: '30', data: null, busy: false, err: ''};
+// ---------- Insights page (admin only): #insights
+let INS = {days: '7', data: null, busy: false, detail: null};
 const BTN = {rrOpen: 'Open trade', rrSave: 'Save as plan', rrXlsx: 'Download Excel', jXlsx: 'Download Excel (tracker)', rrLive: 'Use live price as entry', rrExport: 'Backup JSON', rrImportBtn: 'Restore JSON', tgSave: 'Telegram save', tgTest: 'Telegram test', bhTab: 'Bias history tab', rrConfirm: 'Confirm trade result', acctBtn: 'Sign in / account button', admSaveSet: 'Admin save', rrCopy: 'Copy order ticket'};
 function uLabel(tg){
   const i = String(tg).indexOf('|'), pg = i > 0 ? tg.slice(0, i) : '', th = i > 0 ? tg.slice(i + 1) : tg, P = {crypto: 'Crypto', tradfi: 'TradFi', home: 'Home'}[pg] || pg;
   let name = th; const cat = CAT.find(c => c[0] === (pg === 'tradfi' ? 't:' : 'c:') + th); if(cat) name = cat[1].replace(/^(Crypto|TradFi) · /, ''); else if(BTN[th]) name = BTN[th]; else if(th === 'menu') name = 'Terminal menu'; else if(th === 'home') name = 'Front page'; else if(th.indexOf('feat:') === 0){ const c2 = CAT.find(c => c[0] === th.slice(5)); name = 'Locked feature: ' + (c2 ? c2[1] : th.slice(5)); }
   return e(name) + (P ? ` <span style="color:var(--mute);font-size:11px">${e(P)}</span>` : '');
 }
-function uBars(rows, key, fmt){ const mx = Math.max(1, ...rows.map(r => +r[key] || 0)); return rows.map(r => `<tr><td>${fmt ? fmt(r) : uLabel(r.tg)}</td><td style="width:42%"><div style="background:rgba(219,161,24,.15);border-radius:4px;height:8px"><div style="width:${Math.round((+r[key] || 0) / mx * 100)}%;background:var(--gold);height:8px;border-radius:4px"></div></div></td><td style="text-align:right;white-space:nowrap"><b>${(+r[key] || 0).toLocaleString()}</b>${r.visitors != null ? ` <span style="color:var(--mute);font-size:11px">· ${r.visitors} ${r.visitors === 1 ? 'person' : 'people'}</span>` : ''}${r.avg_s != null ? ` <span style="color:var(--mute);font-size:11px">· ${r.avg_s}s avg</span>` : ''}</td></tr>`).join(''); }
-const uTbl = (title, rows, key, fmt, note) => `<div class="rr-card"><h3>${title}</h3>${rows && rows.length ? `<div class="rr-wrap"><table class="rr-tbl"><tbody>${uBars(rows, key, fmt)}</tbody></table></div>` : '<p class="calendar-note" style="margin:0">Nothing yet.</p>'}${note ? `<p class="calendar-note" style="margin:8px 0 0">${note}</p>` : ''}</div>`;
-function uDaily(d){
+function regionOf(tz){
+  tz = String(tz || ''); if(!tz || tz === 'unknown') return 'Unknown';
+  if(/^(Australia|Pacific\/(Auckland|Chatham|Fiji))/.test(tz)) return 'Australia & NZ';
+  if(/^Europe\/(London|Dublin|Belfast|Jersey|Guernsey|Isle_of_Man)|^GB$/.test(tz)) return 'UK & Ireland';
+  if(/^(Europe|Atlantic\/(Reykjavik|Azores|Madeira|Faroe|Canary))/.test(tz)) return tz === 'Europe/Istanbul' ? 'Middle East' : 'Europe';
+  if(/^America\/(Sao_Paulo|Argentina|Buenos_Aires|Bogota|Lima|Santiago|Caracas|Montevideo|Asuncion|La_Paz|Guayaquil|Mexico_City|Panama|Costa_Rica|Guatemala|El_Salvador|Havana|Santo_Domingo|Puerto_Rico|Bahia|Fortaleza|Manaus|Recife)/.test(tz)) return 'Latin America';
+  if(/^(America|US|Canada|Pacific\/Honolulu)/.test(tz)) return 'US & Canada';
+  if(/^Asia\/(Dubai|Riyadh|Tehran|Qatar|Kuwait|Baghdad|Jerusalem|Tel_Aviv|Beirut|Amman|Muscat|Bahrain|Baku|Tbilisi|Yerevan)/.test(tz)) return 'Middle East';
+  if(/^Asia\/(Kolkata|Calcutta|Colombo|Karachi|Dhaka|Kathmandu)/.test(tz)) return 'India & South Asia';
+  if(/^(Asia|Indian)/.test(tz)) return 'Asia';
+  if(/^Africa/.test(tz)) return 'Africa';
+  return 'Other';
+}
+const uPct = (a, b) => b ? Math.round(a / b * 100) : 0;
+const uDur = s => s == null ? '—' : s >= 60 ? Math.floor(s / 60) + 'm ' + (s % 60) + 's' : s + 's';
+const uChg = (c, p, prevOn) => { if(!prevOn) return ''; c = +c || 0; p = +p || 0; if(!p && !c) return '<span class="ins-chg">–</span>'; if(!p) return '<span class="ins-chg up">new</span>'; const x = Math.round((c - p) / p * 100); return `<span class="ins-chg ${x > 2 ? 'up' : x < -2 ? 'dn' : ''}">${x > 0 ? '▲' : x < 0 ? '▼' : '='} ${Math.abs(x)}%</span>`; };
+const uMap = (rows, key) => { const m = {}; (rows || []).forEach(r => { m[r[key || 'tg']] = r; }); return m; };
+function uRows(rows, key, ev, prev, prevOn, fmt, limit){
+  rows = (rows || []).slice(0, limit || 12); if(!rows.length) return '<p class="calendar-note" style="margin:0">Nothing yet.</p>';
+  const mx = Math.max(1, ...rows.map(r => +r[key] || 0)), pm = uMap(prev);
+  return '<div class="rr-wrap"><table class="rr-tbl"><tbody>' + rows.map(r => `<tr ${ev ? `class="ins-row" data-dev="${ev}" data-dtg="${e(r.tg)}" title="Click for the detail"` : ''}><td>${fmt ? fmt(r) : uLabel(r.tg)}</td><td style="width:34%"><div class="ins-bar"><div style="width:${Math.round((+r[key] || 0) / mx * 100)}%"></div></div></td><td style="text-align:right;white-space:nowrap"><b>${(+r[key] || 0).toLocaleString()}</b>${r.visitors != null ? ` <span class="ins-sub">· ${r.visitors} ${r.visitors == 1 ? 'person' : 'people'}</span>` : ''}</td><td style="text-align:right;white-space:nowrap">${uChg(r[key], pm[r.tg] && pm[r.tg][key], prevOn)}</td></tr>`).join('') + '</tbody></table></div>';
+}
+function uDaily(d, hourly){
   if(!d.length) return '<p class="calendar-note" style="margin:0">No visits in this range yet.</p>';
-  const W = 760, H = 150, pl = 30, n = d.length, bw = Math.max(3, Math.min(26, (W - pl) / n - 3)), mx = Math.max(1, ...d.map(x => x.visitors)), step = (W - pl) / n;
+  const W = 760, H = 160, pl = 30, n = d.length, bw = Math.max(3, Math.min(26, (W - pl) / n - 3)), mx = Math.max(1, ...d.map(x => x.visitors)), step = (W - pl) / n;
+  const lab = x => x.day.length > 10 ? x.day.slice(11) + 'h' : x.day.slice(5);
   let g = `<line x1="${pl}" y1="${H - 18}" x2="${W}" y2="${H - 18}" stroke="#2a2a2e"/><text x="2" y="12" font-size="10" fill="#9a978f">${mx}</text>`;
-  d.forEach((x, i) => { const h = Math.round(x.visitors / mx * (H - 34)), s = Math.round(x.sessions / mx * (H - 34)), cx = pl + i * step + step / 2;
-    g += `<g><title>${x.day}: ${x.visitors} visitors, ${x.sessions} visits, ${x.views} page views</title><rect x="${cx - bw / 2}" y="${H - 18 - h}" width="${bw}" height="${h}" rx="2" fill="#dba118"/><rect x="${cx - bw / 2}" y="${H - 18 - s}" width="${bw}" height="2" fill="#f2c14e"/></g>`;
-    if(n <= 14 || i % Math.ceil(n / 10) === 0) g += `<text x="${cx}" y="${H - 4}" font-size="9" text-anchor="middle" fill="#9a978f">${x.day.slice(5)}</text>`; });
-  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${g}</svg>`;
+  d.forEach((x, i) => { const h = Math.round(x.visitors / mx * (H - 34)), s = Math.round(x.sessions / mx * (H - 34)), cx = pl + i * step + step / 2, t = `${x.day.replace('T', ' ')}${x.day.length > 10 ? ':00' : ''} · ${x.visitors} people, ${x.sessions} visits, ${x.views} page views, ${x.actions || 0} actions`;
+    g += `<g class="insbar" data-t="${e(t)}" style="cursor:pointer"><title>${e(t)}</title><rect x="${cx - step / 2}" y="0" width="${step}" height="${H - 18}" fill="transparent"/><rect x="${cx - bw / 2}" y="${H - 18 - h}" width="${bw}" height="${h}" rx="2" fill="#dba118"/><rect x="${cx - bw / 2}" y="${H - 18 - s}" width="${bw}" height="2" fill="#f2c14e"/></g>`;
+    if(n <= 14 || i % Math.ceil(n / 10) === 0) g += `<text x="${cx}" y="${H - 4}" font-size="9" text-anchor="middle" fill="#9a978f">${lab(x)}</text>`; });
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${g}</svg><p class="calendar-note insread" style="margin:4px 0 0">Tap a bar for its numbers. Gold bar = people, thin line on top = visits.</p>`;
 }
 function uHours(h){
   const grid = Array.from({length: 7}, () => Array(24).fill(0)); h.forEach(x => { if(x.dow >= 0 && x.dow < 7) grid[x.dow][x.hr] = x.n; }); const mx = Math.max(1, ...h.map(x => x.n)), DN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   return '<div class="rr-wrap"><table style="border-collapse:separate;border-spacing:2px;font-size:10px;color:var(--mute)"><tr><td></td>' + Array.from({length: 24}, (_, i) => `<td style="text-align:center">${i % 3 === 0 ? i : ''}</td>`).join('') + '</tr>' +
     grid.map((row, d) => `<tr><td style="padding-right:6px">${DN[d]}</td>${row.map((v, hr) => `<td title="${DN[d]} ${hr}:00 · ${v} visits" style="width:18px;height:16px;border-radius:3px;background:${v ? `rgba(219,161,24,${(0.12 + 0.88 * v / mx).toFixed(2)})` : 'rgba(255,255,255,.04)'}"></td>`).join('')}</tr>`).join('') + '</table></div>';
 }
-function uRender(D){
-  const k = D.kpi || {}, f = D.funnel || {}, tile = (l, v, s) => `<div><small>${l}</small><strong>${v}</strong>${s ? `<br><span style="font-size:11px;color:var(--mute)">${s}</span>` : ''}</div>`;
-  const pct = (a, b) => b ? Math.round(a / b * 100) + '%' : '—', dur = s => s == null ? '—' : s >= 60 ? Math.floor(s / 60) + 'm ' + (s % 60) + 's' : s + 's';
-  let h = `<div class="rr-card"><h3>Overview</h3><div class="rr-out c4">${tile('People (unique browsers)', (k.visitors || 0).toLocaleString())}${tile('Visits', (k.sessions || 0).toLocaleString(), (k.visitors ? (k.sessions / k.visitors).toFixed(1) : 0) + ' per person')}${tile('Page views', (k.views || 0).toLocaleString())}${tile('Average visit', dur(D.avg_dur))}${tile('Came back', pct(D.returning || 0, k.visitors || 0), (D.returning || 0) + ((D.returning || 0) === 1 ? ' person' : ' people') + ' visited more than once')}${tile('Signed-in members active', k.members || 0)}${tile('Actions recorded', (k.events || 0).toLocaleString())}${tile('Data since', k.first ? new Date(k.first).toLocaleDateString() : '—')}</div></div>
-  <div class="rr-card"><h3>Visitors per day</h3>${uDaily(D.daily || [])}<p class="calendar-note" style="margin:6px 0 0">Gold bar = people, thin line on top = visits.</p></div>
-  <div class="rr-card"><h3>Sign-up funnel (people)</h3><div class="rr-out c5">${tile('Visited', f.visitors || 0)}${tile('Saw a locked item', f.lock_seen || 0, pct(f.lock_seen, f.visitors) + ' of visitors')}${tile('Opened sign-in', f.auth_open || 0, pct(f.auth_open, f.visitors))}${tile('Asked for a link', f.auth_sent || 0, pct(f.auth_sent, f.auth_open) + ' of those')}${tile('Signed in', f.auth_ok || 0, pct(f.auth_ok, f.auth_sent) + ' of those')}</div></div>`;
-  h += `<div class="rr-grid" style="align-items:start"><div>${uTbl('Most opened sections', D.sections, 'views')}${uTbl('Most clicked buttons and links', D.clicks, 'n')}${uTbl('Features used', D.features, 'n', null, 'Trades opened and closed, exports, alerts and the History drawer. Only the kind of action is recorded, never amounts or prices.')}</div><div>${uTbl('Wanted but locked (demand for paid sections)', D.locks, 'n', null, 'How often people opened a section or feature their plan does not include. A good guide to what to put in which plan.')}${uTbl('Dropdown choices (account, time frame, exchange, leverage)', D.choices, 'n', r => { const i = r.tg.indexOf('|'), v = r.tg.slice(i + 1).split('='); return e(v[0].replace(/^rr/, '')) + ' = <b>' + e(v[1] || '') + '</b>'; })}${uTbl('Devices', D.devices, 'n', r => e(r.tg))}${uTbl('Where people came from', D.referrers, 'n', r => e(r.tg))}${uTbl('Time zones', D.zones, 'n', r => e(r.tg))}</div></div>`;
-  h += `<div class="rr-card"><h3>When people visit (your time zone)</h3>${uHours(D.hours || [])}</div>`;
-  h += `<div class="rr-card"><h3>Signed-in members</h3>${(D.members || []).length ? `<div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Member</th><th>Plan</th><th>Visits</th><th>Actions</th><th>Favourite section</th><th>Last seen</th></tr></thead><tbody>${D.members.map(m => `<tr><td>${e(m.email)}</td><td>${e(pname(m.plan))}</td><td>${m.sessions}</td><td>${m.events}</td><td>${m.top ? uLabel(m.top) : '—'}</td><td>${new Date(m.last).toLocaleString()}</td></tr>`).join('')}</tbody></table></div>` : '<p class="calendar-note" style="margin:0">No signed-in activity yet.</p>'}</div>`;
-  if(D.ignored > 0) h += `<p class="calendar-note">${D.ignored} browser${D.ignored === 1 ? '' : 's'} with bot-like activity (thousands of actions or over 100 visits in this range) ${D.ignored === 1 ? 'was' : 'were'} left out of these numbers.</p>`;
-  if((D.errors || []).length) h += uTbl('Page errors (things to fix)', D.errors, 'n', r => e(r.tg));
+function uRegions(zones, pz, prevOn, sel){
+  const R = {}, add = (z, key) => { const rg = regionOf(z.tg); (R[rg] = R[rg] || {n: 0, p: 0, z: []}); R[rg][key] += +z.n || 0; if(key === 'n') R[rg].z.push(z); };
+  (zones || []).forEach(z => add(z, 'n')); (pz || []).forEach(z => add(z, 'p'));
+  const rows = Object.keys(R).map(k => ({tg: k, n: R[k].n, p: R[k].p, z: R[k].z})).sort((a, b) => b.n - a.n), tot = rows.reduce((s, r) => s + r.n, 0), mx = Math.max(1, ...rows.map(r => r.n));
+  if(!rows.length) return '<p class="calendar-note" style="margin:0">No visits yet.</p>';
+  return '<div class="rr-wrap"><table class="rr-tbl"><tbody>' + rows.map(r => `<tr class="ins-row" data-reg="${e(r.tg)}" title="Click to see the time zones"><td>${e(r.tg)}</td><td style="width:34%"><div class="ins-bar"><div style="width:${Math.round(r.n / mx * 100)}%"></div></div></td><td style="text-align:right;white-space:nowrap"><b>${r.n}</b> <span class="ins-sub">· ${uPct(r.n, tot)}%</span></td><td style="text-align:right">${uChg(r.n, r.p, prevOn)}</td></tr>` +
+    (sel === r.tg ? `<tr><td colspan="4" style="padding:2px 0 10px 14px"><span class="ins-sub">${r.z.map(z => e(String(z.tg).replace(/^.*\//, '').replace(/_/g, ' ')) + ' <b>' + z.n + '</b>').join(' · ')}</span></td></tr>` : '')).join('') + '</tbody></table></div>';
+}
+// plain-English findings
+function uStory(D){
+  const c = D.cur, p = D.prev, prevOn = !!p, k = c.kpi || {}, out = [], V = k.visitors || 0, thin = V < 20;
+  const per = D.days == null ? 'overall' : D.days === 1 ? 'in the last 24 hours' : 'in the last ' + D.days + ' days';
+  const pk = p ? p.kpi || {} : {}, chg = (a, b) => b ? Math.round((a - b) / b * 100) : null;
+  if(!V){ out.push({t: 'info', x: `No visitors recorded ${per} yet. Once people use the terminal this page fills in on its own.`}); return out; }
+  out.push({t: 'info', x: `${V.toLocaleString()} ${V === 1 ? 'person' : 'people'} visited ${per}, making ${(k.sessions || 0).toLocaleString()} visits and ${(k.views || 0).toLocaleString()} page views.`});
+  if(prevOn){ const x = chg(V, pk.visitors || 0); if(x == null) out.push({t: 'up', x: pk.visitors === 0 && V ? 'Audience is new compared with the period before.' : ''}); else out.push({t: x > 5 ? 'up' : x < -5 ? 'dn' : 'info', x: `Audience is ${x > 5 ? 'growing' : x < -5 ? 'shrinking' : 'steady'}: ${x > 0 ? '+' : ''}${x}% people against the previous ${D.days === 1 ? '24 hours' : D.days + ' days'}.`}); }
+  if(thin) out.push({t: 'warn', x: `Small sample (${V} ${V === 1 ? 'person' : 'people'}). Treat the findings below as early hints, not proof.`});
+  const sm = uMap(c.sections), psm = uMap(p && p.sections), cat = CAT.filter(x => /^[ct]:/.test(x[0]));
+  const rows = cat.map(x => { const tg = (x[0][0] === 't' ? 'tradfi|' : 'crypto|') + x[0].slice(2), r = sm[tg] || {views: 0, visitors: 0}; return {tg, name: x[1].replace(/^(Crypto|TradFi) · /, ''), views: +r.views || 0, people: +r.visitors || 0, avg: r.avg_s, prev: psm[tg] ? +psm[tg].views || 0 : 0}; });
+  const top = rows.slice().sort((a, b) => b.people - a.people)[0];
+  if(top && top.people) out.push({t: 'up', x: `Most used section: ${top.name}, opened by ${top.people} ${top.people === 1 ? 'person' : 'people'} (${uPct(top.people, V)}% of visitors).`});
+  const rise = rows.filter(r => prevOn && r.views >= 5 && r.prev && (r.views - r.prev) / r.prev >= .4).sort((a, b) => b.views / (b.prev || 1) - a.views / (a.prev || 1)).slice(0, 3);
+  if(rise.length) out.push({t: 'up', x: 'Rising: ' + rise.map(r => `${r.name} (+${Math.round((r.views - r.prev) / r.prev * 100)}%)`).join(', ') + '.'});
+  const fall = rows.filter(r => prevOn && r.prev >= 5 && (r.views - r.prev) / r.prev <= -.4).sort((a, b) => a.views / a.prev - b.views / b.prev).slice(0, 3);
+  if(fall.length) out.push({t: 'dn', x: 'Falling: ' + fall.map(r => `${r.name} (${Math.round((r.views - r.prev) / r.prev * 100)}%)`).join(', ') + '.'});
+  const unused = rows.filter(r => !r.views); if(unused.length && !thin) out.push({t: 'dn', x: `Not opened by anyone ${per}: ${unused.map(r => r.name).join(', ')}. Candidates to leave alone, merge or promote.`});
+  const quick = rows.filter(r => r.people >= 3 && r.avg != null && r.avg < 8); if(quick.length) out.push({t: 'warn', x: `People leave quickly from ${quick.map(r => r.name).join(', ')} (under 8 seconds). It may not be what they expected or the data may be slow to load.`});
+  const lk = (c.locks || [])[0]; if(lk) out.push({t: 'info', x: `Most wanted locked item: ${String(lk.tg).replace(/^[^|]*\|/, '').replace(/^feat:/, '')} (${lk.visitors} ${lk.visitors == 1 ? 'person' : 'people'} tried it). Good guide for what people would pay for.`});
+  const f = c.funnel || {}; if(f.auth_open) out.push({t: f.auth_ok ? 'up' : 'warn', x: `Sign-in: ${f.auth_open} opened it, ${f.auth_sent || 0} asked for a link, ${f.auth_ok || 0} signed in.`});
+  const feats = (c.features || [])[0]; if(feats) out.push({t: 'info', x: `Most used feature: ${String(feats.tg).replace(/^[^|]*\|/, '')} (${feats.n} times).`});
+  const R = {}; (c.zones || []).forEach(z => { const rg = regionOf(z.tg); R[rg] = (R[rg] || 0) + (+z.n || 0); }); const rg = Object.keys(R).sort((a, b) => R[b] - R[a]); if(rg.length){ const tot = Object.values(R).reduce((a, b) => a + b, 0); out.push({t: 'info', x: `Audience is mostly ${rg[0]} (${uPct(R[rg[0]], tot)}%)${rg[1] ? ', then ' + rg[1] + ' (' + uPct(R[rg[1]], tot) + '%)' : ''}. Region is a guess from the device time zone.`}); }
+  const hr = {}; (c.hours || []).forEach(x => { hr[x.hr] = (hr[x.hr] || 0) + x.n; }); const bh = Object.keys(hr).sort((a, b) => hr[b] - hr[a])[0]; if(bh != null && !thin) out.push({t: 'info', x: `Busiest hour is ${String(bh).padStart(2, '0')}:00 your time.`});
+  const ret = c.returning || 0; if(V >= 10) out.push({t: ret / V >= .3 ? 'up' : 'info', x: `${uPct(ret, V)}% of visitors came back more than once.`});
+  if((c.errors || []).length) out.push({t: 'dn', x: `${c.errors.length} page error type${c.errors.length === 1 ? '' : 's'} recorded. See Page errors below.`});
+  return out.filter(o => o.x);
+}
+function uScore(D){
+  const c = D.cur, p = D.prev, prevOn = !!p, V = (c.kpi || {}).visitors || 0, sm = uMap(c.sections), psm = uMap(p && p.sections);
+  const rows = CAT.filter(x => /^[ct]:/.test(x[0])).map(x => { const tg = (x[0][0] === 't' ? 'tradfi|' : 'crypto|') + x[0].slice(2), r = sm[tg] || {}, pr = psm[tg] || {}, views = +r.views || 0, people = +r.visitors || 0, pv = +pr.views || 0; let v = ['Steady', 'be'];
+    if(!views) v = ['Unused', 'dn']; else if(prevOn && views >= 5 && pv && (views - pv) / pv >= .4) v = ['Rising', 'up']; else if(prevOn && pv >= 5 && (views - pv) / pv <= -.4) v = ['Falling', 'dn']; else if(uPct(people, V) >= 30) v = ['Popular', 'up']; else if(V >= 10 && uPct(people, V) < 5) v = ['Rarely used', 'dn'];
+    return {tg, name: x[1], views, people, avg: r.avg_s, pv, v}; }).sort((a, b) => b.people - a.people || b.views - a.views);
+  return `<div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Section or tool</th><th>People</th><th>% of visitors</th><th>Views</th><th>Avg time</th><th>vs before</th><th>Verdict</th></tr></thead><tbody>${rows.map(r => `<tr class="ins-row" data-dev="view" data-dtg="${e(r.tg)}"><td>${e(r.name)}</td><td>${r.people}</td><td>${uPct(r.people, V)}%</td><td>${r.views}</td><td>${r.avg != null ? uDur(+r.avg) : '—'}</td><td>${uChg(r.views, r.pv, prevOn)}</td><td><span class="ins-tag ${r.v[1]}">${r.v[0]}</span></td></tr>`).join('')}</tbody></table></div>`;
+}
+function uInsRender(D){
+  const c = D.cur, p = D.prev, prevOn = !!p, k = c.kpi || {}, pk = p ? p.kpi || {} : {}, V = k.visitors || 0;
+  const tile = (l, v, pv) => `<div><small>${l}</small><strong>${v}</strong>${prevOn ? `<br>${uChg(typeof v === 'string' ? parseFloat(v) : v, pv, true)}` : ''}</div>`;
+  const label = D.days == null ? 'All time' : D.days === 1 ? 'Last 24 hours' : 'Last ' + D.days + ' days', plabel = D.days === 1 ? 'the 24 hours before' : 'the ' + D.days + ' days before';
+  const story = uStory(D), ic = {up: '▲', dn: '▼', warn: '!', info: '•'};
+  let h = `<div class="rr-card"><h3>Executive summary · ${label}</h3><ul class="ins-story">${story.map(s => `<li class="${s.t}"><span>${ic[s.t]}</span>${e(s.x)}</li>`).join('')}</ul>${prevOn ? `<p class="calendar-note" style="margin:8px 0 0">Arrows compare with ${plabel}.</p>` : ''}</div>`;
+  h += `<div class="rr-card"><h3>The numbers</h3><div class="rr-out c4">${tile('People', V.toLocaleString(), pk.visitors)}${tile('Visits', (k.sessions || 0).toLocaleString(), pk.sessions)}${tile('Page views', (k.views || 0).toLocaleString(), pk.views)}${tile('Actions (clicks and features)', ((c.daily || []).reduce((s, x) => s + (+x.actions || 0), 0)).toLocaleString(), (p && p.daily || []).reduce((s, x) => s + (+x.actions || 0), 0))}${tile('Average visit', uDur(c.avg_dur), p && p.avg_dur)}${tile('Came back', uPct(c.returning || 0, V) + '%', p ? uPct(p.returning || 0, pk.visitors || 0) : 0)}${tile('Signed-in members', k.members || 0, pk.members)}${tile('Data since', k.first ? new Date(k.first).toLocaleDateString() : '—')}</div></div>`;
+  h += `<div class="rr-card"><h3>Visitors ${c.hourly ? 'per hour' : 'per day'}</h3>${uDaily(c.daily || [], c.hourly)}</div>`;
+  h += `<div class="rr-card"><h3>What is useful and what is not</h3><p class="calendar-note" style="margin:0 0 8px">Every section and tool scored on how many people open it. Click a row for the detail.</p>${uScore(D)}</div>`;
+  const P = p || {}, rrow = (ttl, rows, key, ev, prev, note) => `<div class="rr-card"><h3>${ttl}</h3>${uRows(rows, key, ev, prev, prevOn)}${note ? `<p class="calendar-note" style="margin:8px 0 0">${note}</p>` : ''}</div>`;
+  h += `<div class="rr-grid" style="align-items:start"><div>${rrow('Most clicked buttons and links', c.clicks, 'n', 'click', P.clicks)}${rrow('Features used', c.features, 'n', 'feat', P.features, 'Trades opened and closed, exports, alerts, the History drawer. Only the kind of action is recorded, never amounts or prices.')}${rrow('Wanted but locked', c.locks, 'n', 'lock', P.locks, 'People who tried a section or feature their plan does not include: a good guide for what goes in which plan.')}</div>
+  <div><div class="rr-card"><h3>Where people are (by time zone)</h3><p class="calendar-note" style="margin:0 0 8px">Region is a guess from the device time zone (US, UK, Australia, Asia…). No country or location is ever stored. A VPN shows its own zone. Click a region to see its zones.</p>${uRegions(c.zones, P.zones, prevOn, INS.reg)}</div>
+  ${rrow('Devices', c.devices, 'n', null, P.devices)}
+  ${rrow('Where people came from', (c.referrers || []), 'n', null, P.referrers)}
+  ${rrow('Dropdown choices (account, time frame, exchange, leverage)', c.choices, 'n', null, P.choices)}</div></div>`;
+  h += `<div class="rr-card"><h3>When people visit (your time zone)</h3>${uHours(c.hours || [])}</div>`;
+  const f = c.funnel || {}, ft = (l, v, s) => `<div><small>${l}</small><strong>${v}</strong>${s ? `<br><span class="ins-sub">${s}</span>` : ''}</div>`;
+  h += `<div class="rr-card"><h3>Sign-up funnel (people)</h3><div class="rr-out c5">${ft('Visited', f.visitors || 0)}${ft('Saw a locked item', f.lock_seen || 0, uPct(f.lock_seen, f.visitors) + '% of visitors')}${ft('Opened sign-in', f.auth_open || 0, uPct(f.auth_open, f.visitors) + '%')}${ft('Asked for a link', f.auth_sent || 0, uPct(f.auth_sent, f.auth_open) + '% of those')}${ft('Signed in', f.auth_ok || 0, uPct(f.auth_ok, f.auth_sent) + '% of those')}</div></div>`;
+  h += `<div class="rr-card"><h3>Signed-in members</h3>${(c.members || []).length ? `<div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Member</th><th>Plan</th><th>Visits</th><th>Actions</th><th>Favourite section</th><th>Last seen</th></tr></thead><tbody>${c.members.map(m => `<tr><td>${e(m.email)}</td><td>${e(pname(m.plan))}</td><td>${m.sessions}</td><td>${m.events}</td><td>${m.top ? uLabel(m.top) : '—'}</td><td>${new Date(m.last).toLocaleString()}</td></tr>`).join('')}</tbody></table></div>` : '<p class="calendar-note" style="margin:0">No signed-in activity in this range.</p>'}</div>`;
+  if((c.errors || []).length) h += rrow('Page errors (things to fix)', c.errors, 'n', null, null);
+  h += '<div class="rr-acts"><a class="rr-btn ghost sm" href="#admin" id="insBack2" style="text-decoration:none">← Back</a></div>';
+  if(c.ignored > 0) h += `<p class="calendar-note">${c.ignored} browser${c.ignored === 1 ? '' : 's'} with bot-like activity ${c.ignored === 1 ? 'was' : 'were'} left out of these numbers.</p>`;
   return h;
 }
-async function usageUi(){
-  const box = $('usageBox'); if(!box || UR.busy) return;
-  const range = UR.range, since = range === 'all' ? '-infinity' : new Date(Date.now() - (+range) * 864e5).toISOString(); let tz = 'UTC'; try{ tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; }catch(err){}
-  const head = `<div class="rr-card"><h3>Usage</h3><p class="calendar-note" style="margin:0 0 10px">Anonymous counts of what is opened and clicked, never what is typed. Your own visits are not counted (admins, and any device where tracking is turned off). The data stays until you clear it.</p>
-    <div class="rr-acts" style="align-items:center"><select id="usgRange" style="background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 9px;font:inherit">${[['1', 'Last 24 hours'], ['7', 'Last 7 days'], ['30', 'Last 30 days'], ['90', 'Last 90 days'], ['all', 'All time']].map(o => `<option value="${o[0]}" ${o[0] === range ? 'selected' : ''}>${o[1]}</option>`).join('')}</select>
-    <button class="rr-btn ghost sm" id="usgRefresh">Refresh</button><button class="rr-btn ghost sm" id="usgCsv">Export CSV</button><button class="rr-btn ghost sm" id="usgClearOld">Clear older than 90 days</button><button class="rr-btn ghost sm" id="usgClearAll" style="border-color:#e0554d;color:#e0554d">Clear ALL usage data</button></div><p class="calendar-note" id="usgNote" style="margin:8px 0 0"></p></div>`;
-  box.innerHTML = head + '<p class="calendar-note">Loading…</p>'; UR.busy = true;
-  try{ const r = await api('/rest/v1/rpc/ttm_usage_summary', {method: 'POST', body: JSON.stringify({p_since: since, p_tz: tz})});
-    if(r.ok && r.json) box.innerHTML = head + uRender(r.json);
-    else box.innerHTML = head + `<div class="rr-warn y">Usage data is not set up yet. In Supabase, open SQL Editor and run supabase/usage.sql from the repo, then press Refresh.${r.json && r.json.message ? ' (' + e(r.json.message) + ')' : ''}</div>`;
-  }catch(err){ box.innerHTML = head + '<div class="rr-warn y">Could not load usage data.</div>'; }
-  UR.busy = false;
+const insCss = `<style>.ins-bar{background:rgba(219,161,24,.15);border-radius:4px;height:8px}.ins-bar>div{background:var(--gold);height:8px;border-radius:4px}.ins-sub{color:var(--mute);font-size:11px}.ins-chg{font-size:11px;color:var(--mute)}.ins-chg.up{color:#3fb47a}.ins-chg.dn{color:#e0554d}.ins-row{cursor:pointer}.ins-row:hover td{background:rgba(219,161,24,.06)}.ins-tag{font-size:11px;border-radius:999px;padding:2px 8px;border:1px solid var(--line);color:var(--mute);white-space:nowrap}.ins-tag.up{color:#3fb47a;border-color:#3fb47a}.ins-tag.dn{color:#e0554d;border-color:#e0554d}.ins-story{list-style:none;margin:0;padding:0}.ins-story li{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px;line-height:1.45}.ins-story li:last-child{border:0}.ins-story li>span{width:16px;flex:none;color:var(--mute)}.ins-story li.up>span{color:#3fb47a}.ins-story li.dn>span{color:#e0554d}.ins-story li.warn>span{color:var(--gold)}.ins-top{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.ins-pane{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:900;display:flex;justify-content:flex-end}.ins-pane>div{background:var(--bg,#0e0e10);border-left:1px solid var(--line);width:min(560px,100%);height:100%;overflow:auto;padding:18px}</style>`;
+function uDetail(d, ev, tg){
+  const tot = d.people || 0, rgs = {}; (d.zones || []).forEach(z => { const r = regionOf(z.tg); rgs[r] = (rgs[r] || 0) + (+z.n || 0); });
+  const reg = Object.keys(rgs).map(k => ({tg: k, n: rgs[k]})).sort((a, b) => b.n - a.n), nxt = (d.next || []).map(x => ({tg: x.tg, n: x.n, visitors: x.people, ev: x.ev}));
+  const daily = (d.daily || []).map(x => ({day: x.day, visitors: x.people, sessions: x.people, views: x.n, actions: x.n}));
+  const evn = {view: 'opened', click: 'clicked', feat: 'used', lock: 'tried (locked)'}[ev] || ev;
+  return `<div class="ins-top"><h3 style="margin:0;flex:1">${uLabel(tg)}</h3><button class="rr-btn ghost sm" id="insClose">Close ✕</button></div>
+  <p style="margin:10px 0">${(d.total || 0).toLocaleString()} times ${evn} by <b>${tot}</b> ${tot === 1 ? 'person' : 'people'}.</p>
+  <div class="rr-card"><h3>Over time</h3>${uDaily(daily)}</div>
+  <div class="rr-card"><h3>Who (by region)</h3>${uRows(reg, 'n', null, null, false)}</div>
+  <div class="rr-card"><h3>Devices</h3>${uRows(d.devices, 'n', null, null, false, r => e(r.tg))}</div>
+  <div class="rr-card"><h3>What those visits did as well</h3>${uRows(nxt, 'n', null, null, false)}</div>
+  <div class="rr-card"><h3>When</h3>${uHours(d.hours || [])}</div>`;
 }
-document.addEventListener('change', ev => { if(ev.target.id === 'usgRange'){ UR.range = ev.target.value; usageUi(); } });
+async function insUi(){
+  const root = $('insBody'); if(!root || !$('insights') || !$('insights').classList.contains('active')) return;
+  if(!PROF || !PROF.is_admin){ root.innerHTML = '<div class="rr-card"><p style="margin:0">Admins only. Sign in with an admin account.</p></div>'; return; }
+  if(INS.busy) return;
+  const sel = `<select id="usgRange" style="background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 9px;font:inherit">${[['1', 'Last 24 hours'], ['7', 'Last 7 days'], ['30', 'Last 30 days'], ['90', 'Last 90 days'], ['all', 'All time']].map(o => `<option value="${o[0]}" ${o[0] === INS.days ? 'selected' : ''}>${o[1]}</option>`).join('')}</select>`;
+  const head = `${insCss}<div class="rr-card"><div class="ins-top"><a class="rr-btn ghost sm" href="#admin" id="insBack" style="text-decoration:none">← Back</a>${sel}<button class="rr-btn ghost sm" id="usgRefresh">Refresh</button><button class="rr-btn ghost sm" id="usgCsv">Export CSV</button><button class="rr-btn ghost sm" id="usgClearOld">Clear older than 90 days</button><button class="rr-btn ghost sm" id="usgClearAll" style="border-color:#e0554d;color:#e0554d">Clear ALL</button></div><p class="calendar-note" id="usgNote" style="margin:8px 0 0">Anonymous counts of what is opened and clicked, never what is typed. Your own visits are not counted. Data stays until you clear it.</p></div>`;
+  root.innerHTML = head + '<p class="calendar-note">Loading…</p>'; INS.busy = true;
+  let tz = 'UTC'; try{ tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; }catch(err){}
+  try{ const r = await api('/rest/v1/rpc/ttm_usage_report', {method: 'POST', body: JSON.stringify({p_days: INS.days === 'all' ? null : +INS.days, p_tz: tz})});
+    if(r.ok && r.json && r.json.cur){ INS.data = r.json; INS.head = head; root.innerHTML = head + uInsRender(r.json) + '<div id="insPane"></div>'; }
+    else root.innerHTML = head + `<div class="rr-warn y">Usage data is not set up yet (or this account is not an admin). In Supabase open SQL Editor, run supabase/usage.sql from the repo, then press Refresh.${r.json && r.json.message ? ' (' + e(r.json.message) + ')' : ''}</div>`;
+  }catch(err){ root.innerHTML = head + '<div class="rr-warn y">Could not load usage data.</div>'; }
+  INS.busy = false;
+}
+document.addEventListener('change', ev => { if(ev.target.id === 'usgRange'){ INS.days = ev.target.value; insUi(); } });
+document.addEventListener('click', async ev => {
+  const g = ev.target.closest && ev.target.closest('.insbar'); if(g){ const t = g.closest('.rr-card').querySelector('.insread'); if(t) t.textContent = g.dataset.t; return; }
+  const row = ev.target.closest && ev.target.closest('.ins-row');
+  if(row && row.dataset.reg){ INS.reg = INS.reg === row.dataset.reg ? null : row.dataset.reg; const sc = window.scrollY; if(INS.data){ $('insBody').innerHTML = INS.head + uInsRender(INS.data) + '<div id="insPane"></div>'; window.scrollTo(0, sc); } return; }
+  if(row && row.dataset.dev){
+    const pane = $('insPane'); if(!pane) return; pane.innerHTML = '<div class="ins-pane"><div><p class="calendar-note">Loading…</p></div></div>';
+    let tz = 'UTC'; try{ tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; }catch(err){}
+    const r = await api('/rest/v1/rpc/ttm_usage_detail', {method: 'POST', body: JSON.stringify({p_ev: row.dataset.dev, p_tg: row.dataset.dtg, p_days: INS.days === 'all' ? null : +INS.days, p_tz: tz})});
+    pane.innerHTML = '<div class="ins-pane" id="insShade"><div>' + (r.ok && r.json ? uDetail(r.json, row.dataset.dev, row.dataset.dtg) : '<p class="calendar-note">Could not load the detail.</p><button class="rr-btn ghost sm" id="insClose">Close</button>') + '</div></div>'; return; }
+  if(ev.target.id === 'insClose' || ev.target.id === 'insShade'){ const pn = $('insPane'); if(pn) pn.innerHTML = ''; return; }
+});
 document.addEventListener('click', async ev => {
   const id = ev.target.id, note = txt => { const n = $('usgNote'); if(n) n.textContent = txt; };
-  if(id === 'usgRefresh') usageUi();
+  if(id === 'usgRefresh') insUi();
   else if(id === 'usgClearAll' || id === 'usgClearOld'){
     const old = id === 'usgClearOld'; if(!confirm(old ? 'Delete usage data older than 90 days? This cannot be undone.' : 'Delete ALL usage data? This cannot be undone. Export a CSV first if you want a copy.')) return;
     const q = old ? 'ts=lt.' + encodeURIComponent(new Date(Date.now() - 90 * 864e5).toISOString()) : 'id=gt.0';
     const r = await api('/rest/v1/ttm_events?' + q, {method: 'DELETE', headers: {Prefer: 'count=exact,return=minimal'}});
-    note(r.ok ? 'Cleared.' : 'Could not clear (are you signed in as admin?).'); if(r.ok) usageUi();
+    note(r.ok ? 'Cleared.' : 'Could not clear (are you signed in as admin?).'); if(r.ok) insUi();
   } else if(id === 'usgCsv'){
     note('Preparing the file…'); let rows = [], from = 0;
     for(let i = 0; i < 200; i++){ const r = await api('/rest/v1/ttm_events?select=*&order=id.asc', {headers: {Range: from + '-' + (from + 999), 'Range-Unit': 'items'}}); if(!r.ok || !Array.isArray(r.json)){ note('Could not export.'); return; } rows = rows.concat(r.json); if(r.json.length < 1000) break; from += 1000; }
@@ -361,7 +464,7 @@ document.addEventListener('click', async ev => {
   const ch = $('admCharge').checked, wall = $('admWall').checked;
   const r = await api('/rest/v1/ttm_settings', {method: 'POST', headers: {Prefer: 'resolution=merge-duplicates'}, body: JSON.stringify([{key: 'charging', value: ch}, {key: 'wall', value: wall}, {key: 'track', value: $('admTrack').checked}, {key: 'access', value: acc}])});
   if(r.ok){ SET.charging = ch; SET.wall = wall; SET.track = $('admTrack').checked; SET.access = acc; $('admNote').textContent = 'Saved.'; ui(); } else $('admNote').textContent = 'Could not save (are you an admin?).'; });
-window.addEventListener('hashchange', () => { setTimeout(() => { adminUi(); ui(); }, 80); });
+window.addEventListener('hashchange', () => { setTimeout(() => { adminUi(); insUi(); ui(); }, 80); });
 fxLoad().then(() => { if(FX) ui(); });
 boot();
 })();

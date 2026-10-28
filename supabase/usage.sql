@@ -74,17 +74,19 @@ end $$;
 drop trigger if exists ttm_events_guard on public.ttm_events;
 create trigger ttm_events_guard before insert on public.ttm_events for each row execute function public.ttm_events_guard();
 
--- One call that returns every number the Usage page shows (admins only).
-create or replace function public.ttm_usage_summary(p_since timestamptz default '-infinity', p_tz text default 'UTC')
+-- Reports for the Insights page (admins only). One window = everything the page shows for a period.
+drop function if exists public.ttm_usage_summary(timestamptz, text);
+
+create or replace function public.ttm_usage_block(p_from timestamptz, p_to timestamptz, p_tz text)
 returns jsonb language plpgsql security definer set search_path = public stable as $$
-declare r jsonb;
+declare r jsonb; v_hour boolean := p_from > '-infinity' and (p_to - p_from) <= interval '2 days';
 begin
-  if not public.ttm_is_admin() then raise exception 'admins only'; end if;
-  with raw as (select * from public.ttm_events where ts >= p_since),
+  with raw as (select * from public.ttm_events where ts >= p_from and ts < p_to),
        bad as (select vid from raw group by vid having count(*) > 4000 or count(distinct sid) > 100),
        e as (select * from raw where vid not in (select vid from bad))
   select jsonb_build_object(
     'ignored', (select count(*) from bad),
+    'hourly', v_hour,
     'kpi', (select jsonb_build_object('events', count(*), 'visitors', count(distinct vid), 'sessions', count(distinct sid),
               'members', count(distinct uid), 'views', count(*) filter (where ev = 'view'),
               'first', min(ts), 'last', max(ts)) from e),
@@ -92,33 +94,35 @@ begin
     'returning', (select count(*) from (select vid from e where ev = 'start' group by vid
                   having max(case when (p->>'n') ~ '^[0-9]+$' then (p->>'n')::int else 1 end) > 1) x),
     'daily', (select coalesce(jsonb_agg(d order by day), '[]') from (
-                select (ts at time zone p_tz)::date as day, count(distinct vid) as visitors, count(distinct sid) as sessions,
-                       count(*) filter (where ev = 'view') as views from e group by 1) d),
+                select case when v_hour then to_char(date_trunc('hour', ts at time zone p_tz), 'YYYY-MM-DD"T"HH24')
+                            else to_char((ts at time zone p_tz)::date, 'YYYY-MM-DD') end as day,
+                       count(distinct vid) as visitors, count(distinct sid) as sessions,
+                       count(*) filter (where ev = 'view') as views, count(*) filter (where ev in ('click','feat')) as actions
+                from e group by 1) d),
     'sections', (select coalesce(jsonb_agg(s order by views desc), '[]') from (
                 select v.tg, v.views, v.visitors, round(d.avg_s) as avg_s from
                   (select tg, count(*) as views, count(distinct vid) as visitors from e where ev = 'view' and tg is not null group by tg) v
                   left join (select tg, avg((p->>'s')::numeric) as avg_s from e where ev = 'dwell' and (p->>'s') ~ '^[0-9]+$' group by tg) d using (tg)
-                  order by v.views desc limit 40) s),
+                  order by v.views desc limit 80) s),
     'clicks', (select coalesce(jsonb_agg(c order by n desc), '[]') from (
                 select tg, count(*) as n, count(distinct vid) as visitors from e where ev = 'click' and tg is not null
-                group by tg order by n desc limit 40) c),
+                group by tg order by n desc limit 60) c),
     'features', (select coalesce(jsonb_agg(c order by n desc), '[]') from (
                 select tg, count(*) as n, count(distinct vid) as visitors from e where ev = 'feat' and tg is not null
-                group by tg order by n desc limit 30) c),
+                group by tg order by n desc limit 40) c),
     'locks', (select coalesce(jsonb_agg(c order by n desc), '[]') from (
                 select tg, count(*) as n, count(distinct vid) as visitors from e where ev = 'lock' and tg is not null
                 group by tg order by n desc limit 30) c),
     'choices', (select coalesce(jsonb_agg(c order by n desc), '[]') from (
-                select tg, count(*) as n from e where ev = 'choice' and tg is not null
-                group by tg order by n desc limit 50) c),
+                select tg, count(*) as n from e where ev = 'choice' and tg is not null group by tg order by n desc limit 80) c),
     'devices', (select coalesce(jsonb_agg(c order by n desc), '[]') from (
-                select coalesce(dv, 'unknown') as tg, count(distinct sid) as n from e where ev = 'start' group by 1) c),
+                select coalesce(dv, 'unknown') as tg, count(distinct vid) as n from e where ev = 'start' group by 1) c),
     'referrers', (select coalesce(jsonb_agg(c order by n desc), '[]') from (
                 select coalesce(nullif(p->>'ref', ''), 'direct') as tg, count(distinct sid) as n from e where ev = 'start'
                 group by 1 order by n desc limit 15) c),
     'zones', (select coalesce(jsonb_agg(c order by n desc), '[]') from (
-                select coalesce(nullif(p->>'tz', ''), 'unknown') as tg, count(distinct vid) as n from e where ev = 'start'
-                group by 1 order by n desc limit 15) c),
+                select coalesce(nullif(p->>'tz', ''), 'unknown') as tg, count(distinct vid) as n, count(distinct sid) as visits
+                from e where ev = 'start' group by 1 order by n desc limit 80) c),
     'hours', (select coalesce(jsonb_agg(c), '[]') from (
                 select extract(dow from ts at time zone p_tz)::int as dow, extract(hour from ts at time zone p_tz)::int as hr,
                        count(distinct sid) as n from e where ev = 'start' group by 1, 2) c),
@@ -140,5 +144,48 @@ begin
   ) into r;
   return r;
 end $$;
-revoke all on function public.ttm_usage_summary(timestamptz, text) from public, anon;
-grant execute on function public.ttm_usage_summary(timestamptz, text) to authenticated;
+revoke all on function public.ttm_usage_block(timestamptz, timestamptz, text) from public, anon, authenticated;
+
+-- Current period and the period before it (p_days null = all time, no comparison).
+create or replace function public.ttm_usage_report(p_days int default null, p_tz text default 'UTC')
+returns jsonb language plpgsql security definer set search_path = public stable as $$
+declare v_now timestamptz := now() + interval '1 minute';
+begin
+  if not public.ttm_is_admin() then raise exception 'admins only'; end if;
+  if p_days is null then
+    return jsonb_build_object('days', null, 'cur', public.ttm_usage_block('-infinity', v_now, p_tz), 'prev', null, 'generated', now());
+  end if;
+  return jsonb_build_object('days', p_days, 'generated', now(),
+    'cur',  public.ttm_usage_block(now() - make_interval(days => p_days), v_now, p_tz),
+    'prev', public.ttm_usage_block(now() - make_interval(days => 2 * p_days), now() - make_interval(days => p_days), p_tz));
+end $$;
+revoke all on function public.ttm_usage_report(int, text) from public, anon;
+grant execute on function public.ttm_usage_report(int, text) to authenticated;
+
+-- Drill-down for one item (a section, button or feature): trend, devices, places, times, and what those visitors did next.
+create or replace function public.ttm_usage_detail(p_ev text, p_tg text, p_days int default 30, p_tz text default 'UTC')
+returns jsonb language plpgsql security definer set search_path = public stable as $$
+declare r jsonb; v_since timestamptz := case when p_days is null then '-infinity'::timestamptz else now() - make_interval(days => p_days) end;
+begin
+  if not public.ttm_is_admin() then raise exception 'admins only'; end if;
+  with w as (select * from public.ttm_events where ts >= v_since and ev = p_ev and tg = p_tg),
+       s as (select distinct sid from w),
+       o as (select ev, tg, vid from public.ttm_events where ts >= v_since and sid in (select sid from s) and ev in ('view','click','feat','lock')
+             and not (ev = p_ev and tg = p_tg))
+  select jsonb_build_object(
+    'total', (select count(*) from w), 'people', (select count(distinct vid) from w),
+    'daily', (select coalesce(jsonb_agg(d order by day), '[]') from (
+                select to_char((ts at time zone p_tz)::date, 'YYYY-MM-DD') as day, count(*) as n, count(distinct vid) as people from w group by 1) d),
+    'devices', (select coalesce(jsonb_agg(c order by n desc), '[]') from (select coalesce(dv, 'unknown') as tg, count(distinct vid) as n from w group by 1) c),
+    'zones', (select coalesce(jsonb_agg(c order by n desc), '[]') from (
+                select coalesce(nullif(st.p->>'tz', ''), 'unknown') as tg, count(distinct st.vid) as n
+                from public.ttm_events st where st.ev = 'start' and st.sid in (select sid from s) and st.ts >= v_since group by 1 order by n desc limit 20) c),
+    'hours', (select coalesce(jsonb_agg(c), '[]') from (
+                select extract(dow from ts at time zone p_tz)::int as dow, extract(hour from ts at time zone p_tz)::int as hr, count(*) as n from w group by 1, 2) c),
+    'next', (select coalesce(jsonb_agg(c order by n desc), '[]') from (
+                select ev, tg, count(*) as n, count(distinct vid) as people from o group by ev, tg order by n desc limit 14) c)
+  ) into r;
+  return r;
+end $$;
+revoke all on function public.ttm_usage_detail(text, text, int, text) from public, anon;
+grant execute on function public.ttm_usage_detail(text, text, int, text) to authenticated;
