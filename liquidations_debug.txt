@@ -1,22 +1,22 @@
-Run at 2026-10-28T05:46:55.346923+00:00
+Run at 2026-10-28T11:44:49.788160+00:00
 
 OKX: 526 swap contract sizes loaded
 Binance: connected (wss://fstream.binance.com/market/ws/!forceOrder@arr)
 OKX: connected + subscribed
-OKX: raw message #1: {"event":"notice","msg":"WebSocket port 8443 will be retired soon. Please migrate to port 443.","code":"64010","connId":"abb4d39a"}
+OKX: raw message #1: {"event":"notice","msg":"WebSocket port 8443 will be retired soon. Please migrate to port 443.","code":"64010","connId":"6b996761"}
 Bybit: connected
-OKX: raw message #2: {"event":"subscribe","arg":{"channel":"liquidation-orders","instType":"SWAP"},"connId":"abb4d39a"}
-Bybit: raw message #1 sample: {"success":true,"ret_msg":"","conn_id":"db2939feuaeaest9cam0-6zvcg","req_id":"","op":"subscribe"}
+OKX: raw message #2: {"event":"subscribe","arg":{"channel":"liquidation-orders","instType":"SWAP"},"connId":"6b996761"}
+Bybit: raw message #1 sample: {"success":true,"ret_msg":"","conn_id":"db295l8v1rcd9dect95g-7917v","req_id":"","op":"subscribe"}
 Bybit: subscribe ack -- success=True ret_msg=
-Bybit: raw message #2 sample: {"success":true,"ret_msg":"","conn_id":"db2939feuaeaest9cam0-6zvcg","req_id":"","op":"subscribe"}
+Bybit: raw message #2 sample: {"success":true,"ret_msg":"","conn_id":"db295l8v1rcd9dect95g-7917v","req_id":"","op":"subscribe"}
 Bybit: subscribe ack -- success=True ret_msg=
-Bybit: raw message #3 sample: {"success":true,"ret_msg":"","conn_id":"db2939feuaeaest9cam0-6zvcg","req_id":"","op":"subscribe"}
+Bybit: raw message #3 sample: {"success":true,"ret_msg":"","conn_id":"db295l8v1rcd9dect95g-7917v","req_id":"","op":"subscribe"}
 Bybit: subscribe ack -- success=True ret_msg=
-Bybit: raw message #4 sample: {"success":true,"ret_msg":"","conn_id":"db2939feuaeaest9cam0-6zvcg","req_id":"","op":"subscribe"}
+Bybit: raw message #4 sample: {"success":true,"ret_msg":"","conn_id":"db295l8v1rcd9dect95g-7917v","req_id":"","op":"subscribe"}
 Bybit: subscribe ack -- success=True ret_msg=
-Bybit: raw message #5 sample: {"success":true,"ret_msg":"","conn_id":"db2939feuaeaest9cam0-6zvcg","req_id":"","op":"subscribe"}
+Bybit: raw message #5 sample: {"success":true,"ret_msg":"","conn_id":"db295l8v1rcd9dect95g-7917v","req_id":"","op":"subscribe"}
 Bybit: subscribe ack -- success=True ret_msg=
-Bybit: raw message #6 sample: {"success":true,"ret_msg":"","conn_id":"db2939feuaeaest9cam0-6zvcg","req_id":"","op":"subscribe"}
+Bybit: raw message #6 sample: {"success":true,"ret_msg":"","conn_id":"db295l8v1rcd9dect95g-7917v","req_id":"","op":"subscribe"}
 Bybit: subscribe ack -- success=True ret_msg=
 Bybit: subscribe ack -- success=True ret_msg=
 Bybit: subscribe ack -- success=True ret_msg=
@@ -43,17 +43,17 @@ Bybit: subscribe ack -- success=True ret_msg=
 Bybit: subscribe ack -- success=True ret_msg=
 Bybit: subscribe ack -- success=True ret_msg=
 HTX: connected + subscribed
-HTX: message #1: {"status":"error","ts":1793166137339,"id":"ttm","err-code":"bad-request","err-msg":"invalid topic public.*.liquidation_orders"}
-Binance: first raw message sample: {"e":"forceOrder","E":1793166148212,"o":{"s":"APRUSDT","S":"SELL","o":"LIMIT","f":"IOC","q":"73114","p":"0.0496000","ap":"0.0503060","X":"FILLED","l":"1500","z":"73114","T":1793166147216,"ps":"APRUSDT","st":1}}
-OKX: raw message #3: {"arg":{"channel":"liquidation-orders","instType":"SWAP"},"data":[{"details":[{"bkLoss":"0","bkPx":"0.3375","ccy":"","posSide":"long","side":"sell","sz":"5347","ts":"1793166172712"}],"instFamily":"CRV-USDT","instId":"CRV-USDT-SWAP","instType":"SWAP","uly":"CRV-USDT"}]}
-OKX: capture window closed, 7 raw messages, 5 liquidations parsed
-Bybit: capture window closed, 30 raw messages received, 0 events parsed
+HTX: message #1: {"status":"error","ts":1793187611802,"id":"ttm","err-code":"bad-request","err-msg":"invalid topic public.*.liquidation_orders"}
+OKX: raw message #3: {"arg":{"channel":"liquidation-orders","instType":"SWAP"},"data":[{"details":[{"bkLoss":"0","bkPx":"0.0532","ccy":"","posSide":"long","side":"sell","sz":"17","ts":"1793187612035"}],"instFamily":"CHIP-USDT","instId":"CHIP-USDT-SWAP","instType":"SWAP","uly":"CHIP-USDT"}]}
+Binance: first raw message sample: {"e":"forceOrder","E":1793187613085,"o":{"s":"HAEDALUSDT","S":"SELL","o":"LIMIT","f":"IOC","q":"52091","p":"0.0273900","ap":"0.0288015","X":"FILLED","l":"6512","z":"52091","T":1793187612202,"ps":"HAEDALUSDT","st":1}}
+OKX: capture window closed, 12 raw messages, 10 liquidations parsed
+Bybit: capture window closed, 31 raw messages received, 0 events parsed
 HTX: capture window closed, 55 raw messages, 0 liquidations parsed
-Binance: capture window closed, 22 raw messages received, 0 events parsed
-Gate: 92 rows returned, 92 new liquidations counted
-Deribit: 7371 trades scanned, 0 liquidation entries counted
-Totals: 119 liquidations seen this run across 45 symbols; 132 5-min buckets kept
-Captured 0 new liquidation events this run
-Rolling log: 18 existing + 0 new -> 11 after dedupe/trim
-Mark prices: {'BTCUSDT': 80785.57, 'ETHUSDT': 2350.1}
+Binance: capture window closed, 56 raw messages received, 1 events parsed
+Gate: 178 rows returned, 178 new liquidations counted
+Deribit: 7947 trades scanned, 0 liquidation entries counted
+Totals: 245 liquidations seen this run across 51 symbols; 119 5-min buckets kept
+Captured 1 new liquidation events this run
+Rolling log: 11 existing + 1 new -> 11 after dedupe/trim
+Mark prices: {'BTCUSDT': 81282.46, 'ETHUSDT': 2361.33}
 Price history points: BTC=5 ETH=5
