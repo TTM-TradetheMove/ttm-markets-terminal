@@ -19,7 +19,7 @@ const CAT = [
 // Free means "everyone who is signed in or not"; paid lists add the plan (Crypto items are also in Pro, etc.)
 const DEF = {}; CAT.forEach(c => { DEF[c[0]] = c[2].slice(); });
 let CFG = {url: '', key: '', tv: [], plans: {}}, USER = null, PROF = null, SYNC = {state: 'off', at: 0};
-let SET = {charging: false, wall: false, access: JSON.parse(JSON.stringify(DEF))};
+let SET = {charging: false, wall: false, track: true, access: JSON.parse(JSON.stringify(DEF))};
 const ls = (k, d) => { try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } };
 const lw = (k, v) => { try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } };
 const e = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
@@ -56,7 +56,7 @@ async function api(path, opt){ return raw(path, opt, await token()); }
 // ---------- anonymous usage tracking (what is opened and clicked, never what is typed). Off for admins, Do Not Track and ?notrack=1.
 (function(){ try{ const q = new URLSearchParams(location.search).get('notrack'); if(q === '1') localStorage.setItem('ttm_no_track', '1'); else if(q === '0') localStorage.removeItem('ttm_no_track'); }catch(err){} })();
 const TRK = {q: [], ready: false, sec: '', t0: Date.now(), secT: Date.now(), errs: 0, lastClick: '', lastAt: 0};
-const trkOff = () => { try{ if(localStorage.getItem('ttm_no_track') === '1') return true; }catch(err){} return navigator.doNotTrack === '1' || window.doNotTrack === '1' || navigator.globalPrivacyControl === true; };
+const trkOff = () => { try{ if(localStorage.getItem('ttm_no_track') === '1') return true; }catch(err){} return navigator.doNotTrack === '1' || window.doNotTrack === '1' || navigator.globalPrivacyControl === true || navigator.webdriver === true || !SET.track; };
 const rid = () => Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10);
 const VID = (() => { try{ let v = localStorage.getItem('ttm_vid_v1'); if(!v){ v = rid(); localStorage.setItem('ttm_vid_v1', v); } return v; }catch(err){ return rid(); } })();
 const SID = (() => { try{ let s = sessionStorage.getItem('ttm_sid_v1'); if(!s){ s = rid(); sessionStorage.setItem('ttm_sid_v1', s); let n = +localStorage.getItem('ttm_visits_v1') || 0; localStorage.setItem('ttm_visits_v1', String(n + 1)); } return s; }catch(err){ return rid(); } })();
@@ -114,7 +114,7 @@ function trkNote(){ const n = document.getElementById('ttmTrkNote'); if(!n) retu
 async function boot(){
   try{ const r = await fetch(BASE + 'ttm_config.json?t=' + Date.now(), {cache: 'no-store'}); if(r.ok){ const c = await r.json(); CFG = {url: c.supabase_url || '', key: c.supabase_anon_key || '', tv: c.tradingview || [], plans: c.plans || {}}; } }catch(err){}
   if(on()){
-    try{ const r = await raw('/rest/v1/ttm_settings?select=key,value'); if(r.ok && Array.isArray(r.json)) r.json.forEach(x => { if(x.key === 'charging') SET.charging = x.value === true || x.value === 'true'; if(x.key === 'wall') SET.wall = x.value === true || x.value === 'true'; if(x.key === 'access' && x.value && typeof x.value === 'object') Object.keys(x.value).forEach(k => { SET.access[k] = x.value[k]; }); }); }catch(err){}
+    try{ const r = await raw('/rest/v1/ttm_settings?select=key,value'); if(r.ok && Array.isArray(r.json)) r.json.forEach(x => { if(x.key === 'charging') SET.charging = x.value === true || x.value === 'true'; if(x.key === 'wall') SET.wall = x.value === true || x.value === 'true'; if(x.key === 'track') SET.track = !(x.value === false || x.value === 'false'); if(x.key === 'access' && x.value && typeof x.value === 'object') Object.keys(x.value).forEach(k => { SET.access[k] = x.value[k]; }); }); }catch(err){}
     const t = await token();
     if(t){ const u = await raw('/auth/v1/user', {}, t); if(u.ok && u.json && u.json.id){ USER = {id: u.json.id, email: u.json.email}; const p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email`); PROF = (p.ok && p.json && p.json[0]) || {plan: 'free', is_admin: false}; } }
   }
@@ -158,6 +158,17 @@ document.addEventListener('click', async ev => {
     const r = await raw('/auth/v1/verify', {method: 'POST', body: JSON.stringify({type: 'email', email: em, token: code})});
     if(r.ok && r.json && r.json.access_token){ lw(AK, {access: r.json.access_token, refresh: r.json.refresh_token, exp: Date.now() + (r.json.expires_in || 3600) * 1000}); track('auth_ok', TERM); closeAuth(); await boot(); }
     else $('authNote').textContent = 'That code did not work. Check it and try again.'; }
+  else if(t.id === 'memDelete'){
+    const ok = prompt('This permanently deletes your account and the trades saved to the cloud. Trades stored in this browser stay on this device. Type DELETE to confirm.'); if(ok !== 'DELETE') return;
+    const r = await api('/rest/v1/rpc/ttm_delete_me', {method: 'POST', body: '{}'});
+    if(r.ok){ try{ localStorage.removeItem(AK); localStorage.removeItem(SYNCK); }catch(err){} USER = PROF = null; SYNC = {state: 'off', at: 0}; ui(); const m = $('memAcct'); if(m) m.innerHTML = '<h3>Account</h3><p style="margin:0">Your account has been deleted.</p>'; }
+    else alert('Could not delete the account: ' + ((r.json && (r.json.message || r.json.hint)) || 'delete-account.sql has not been run in Supabase yet.'));
+  }
+  else if(t.dataset && t.dataset.delu){
+    if(!confirm('Delete ' + t.dataset.em + '? This removes their account and cloud-saved data and cannot be undone.')) return;
+    const r = await api('/rest/v1/rpc/ttm_admin_delete_user', {method: 'POST', body: JSON.stringify({p_id: t.dataset.delu})});
+    if(r.ok) adminUi(); else alert('Could not delete: ' + ((r.json && (r.json.message || r.json.hint)) || 'delete-account.sql has not been run in Supabase yet.'));
+  }
   else if(t.id === 'memSignOut'){ try{ await api('/auth/v1/logout', {method: 'POST'}); }catch(err){} try{ localStorage.removeItem(AK); localStorage.removeItem(SYNCK); }catch(err){} USER = PROF = null; SYNC = {state: 'off', at: 0}; ui(); }
 });
 
@@ -248,7 +259,7 @@ function ui(){
   if(m){
     if(!on()) m.innerHTML = '<h3>Account</h3><p style="margin:0">Free accounts are <b>coming soon</b>: sign in with your email to sync your trades across your phone, iPad and computer, and to unlock your plan. The terminal and every tool stay free and open in the meantime.</p>';
     else if(!USER) m.innerHTML = '<h3>Account</h3><p style="margin:0 0 12px">Create a free account with just your email (no password).</p><div class="rr-acts" style="margin:0"><button class="rr-btn" id="memSignIn">Sign in / create free account</button></div>';
-    else m.innerHTML = `<h3>Account <span style="float:right">${planBadge()}</span></h3><p style="margin:0 0 6px"><b>${e(USER.email)}</b> · plan <b>${e(pname(PROF.plan))}</b></p><p class="calendar-note" style="margin:0 0 12px">Cloud sync: ${can('sync') ? ({ok: 'on' + (SYNC.at ? ', last synced ' + new Date(SYNC.at).toLocaleTimeString() : ''), saving: 'saving…', error: 'could not reach the cloud, will retry', off: 'starting…', locked: 'not included in your plan'})[SYNC.state] || 'on' : 'included with the ' + needText('sync') + ' plan'}. Your Telegram bot token is never uploaded.</p><div class="rr-acts" style="margin:0"><button class="rr-btn ghost sm" id="memSignOut">Sign out</button>${PROF.is_admin ? `<a class="rr-btn sm" style="text-decoration:none" href="${BASE}crypto/index.html#admin">Admin</a>` : ''}</div>`;
+    else m.innerHTML = `<h3>Account <span style="float:right">${planBadge()}</span></h3><p style="margin:0 0 6px"><b>${e(USER.email)}</b> · plan <b>${e(pname(PROF.plan))}</b></p><p class="calendar-note" style="margin:0 0 12px">Cloud sync: ${can('sync') ? ({ok: 'on' + (SYNC.at ? ', last synced ' + new Date(SYNC.at).toLocaleTimeString() : ''), saving: 'saving…', error: 'could not reach the cloud, will retry', off: 'starting…', locked: 'not included in your plan'})[SYNC.state] || 'on' : 'included with the ' + needText('sync') + ' plan'}. Your Telegram bot token is never uploaded.</p><div class="rr-acts" style="margin:0"><button class="rr-btn ghost sm" id="memSignOut">Sign out</button><button class="rr-btn ghost sm" id="memDelete" style="border-color:#e0554d;color:#e0554d">Delete my account</button>${PROF.is_admin ? `<a class="rr-btn sm" style="text-decoration:none" href="${BASE}crypto/index.html#admin">Admin</a>` : ''}</div>`;
   }
   const tv = $('memTv');
   if(tv){ const ok = can('indicators'); tv.innerHTML = ok ? (CFG.tv && CFG.tv.length ? CFG.tv : [{name: 'TTM Indicator Suite', desc: 'Trend, momentum and cycle tools built for the TTM method.'}, {name: 'TTM Signals & Alerts', desc: 'Chart overlays that line up with the terminal.'}, {name: 'TTM Risk Tools', desc: 'Position-sizing helpers on the chart.'}]).map(x => `<div class="mem-card"><b>${e(x.name)}</b><p>${e(x.desc || '')}</p>${x.url ? `<a class="rr-btn sm" style="text-decoration:none;display:inline-block" href="${e(x.url)}" target="_blank" rel="noopener noreferrer">Open on TradingView ↗</a>` : '<span class="rr-pill be">Coming soon</span>'}</div>`).join('')
@@ -264,10 +275,11 @@ async function adminUi(){
   const cell = (k, p) => p === 'pro' ? '<td style="text-align:center">✓</td>' : `<td style="text-align:center"><input type="checkbox" data-ak="${k}" data-ap="${p}" ${(SET.access[k] || []).indexOf(p) >= 0 ? 'checked' : ''}></td>`;
   a.innerHTML = `<div class="rr-card"><h3>Switches</h3>
     <label style="display:flex;gap:10px;align-items:center;font-size:14px;margin-bottom:8px"><input type="checkbox" id="admCharge" ${SET.charging ? 'checked' : ''} style="width:auto"> <span><b>Plans on.</b> When off, every section and feature is open to everyone.</span></label>
+    <label style="display:flex;gap:10px;align-items:center;font-size:14px;margin-bottom:8px"><input type="checkbox" id="admTrack" ${SET.track ? 'checked' : ''} style="width:auto"> <span><b>Collect usage data.</b> Untick to pause all tracking instantly (also blocks the database from accepting new events).</span></label>
     <label style="display:flex;gap:10px;align-items:center;font-size:14px"><input type="checkbox" id="admWall" ${SET.wall ? 'checked' : ''} style="width:auto"> <span><b>Require sign-in.</b> Visitors must sign in before anything opens (only applies when plans are on).</span></label></div>
     <div class="rr-card"><h3>What each plan sees</h3><div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Section or feature</th>${PLANS.map(p => `<th style="text-align:center">${p[1]}</th>`).join('')}</tr></thead><tbody>${CAT.map(c => `<tr><td>${e(c[1])}</td>${PLANS.map(p => cell(c[0], p[0])).join('')}</tr>`).join('')}</tbody></table></div>
     <div class="rr-acts"><button class="rr-btn sm" id="admSaveSet">Save</button><button class="rr-btn ghost sm" id="admReset">Reset to the planned defaults</button></div><p class="calendar-note" id="admNote" style="margin:8px 0 0">Pro always has everything. Free means open to everyone, signed in or not. Locks work in the browser, so they hide and block what the page shows; the site is static and its code and data files are public, so real protection for paid content needs that content moved behind the backend. Prices are set in ttm_config.json.</p></div>
-    <div class="rr-card"><h3>Members (${users.length})</h3><div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Email</th><th>Joined</th><th>Plan</th></tr></thead><tbody>${users.map(u => `<tr><td>${e(u.email)}${u.is_admin ? ' <span class="rr-pill be">admin</span>' : ''}</td><td>${new Date(u.created_at).toLocaleDateString()}</td><td>${sel('data-uid="' + u.id + '"', u.plan)}</td></tr>`).join('') || '<tr><td colspan="3" style="color:var(--mute)">No members yet.</td></tr>'}</tbody></table></div></div>
+    <div class="rr-card"><h3>Members (${users.length})</h3><div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Email</th><th>Joined</th><th>Plan</th><th></th></tr></thead><tbody>${users.map(u => `<tr><td>${e(u.email)}${u.is_admin ? ' <span class="rr-pill be">admin</span>' : ''}</td><td>${new Date(u.created_at).toLocaleDateString()}</td><td>${sel('data-uid="' + u.id + '"', u.plan)}</td><td>${USER && u.id === USER.id ? '' : `<button class="rr-btn ghost sm" data-delu="${e(u.id)}" data-em="${e(u.email)}" style="border-color:#e0554d;color:#e0554d">Delete</button>`}</td></tr>`).join('') || '<tr><td colspan="4" style="color:var(--mute)">No members yet.</td></tr>'}</tbody></table></div></div>
     <div id="usageBox"></div>`;
   usageUi();
 }
@@ -305,6 +317,7 @@ function uRender(D){
   h += `<div class="rr-grid" style="align-items:start"><div>${uTbl('Most opened sections', D.sections, 'views')}${uTbl('Most clicked buttons and links', D.clicks, 'n')}${uTbl('Features used', D.features, 'n', null, 'Trades opened and closed, exports, alerts and the History drawer. Only the kind of action is recorded, never amounts or prices.')}</div><div>${uTbl('Wanted but locked (demand for paid sections)', D.locks, 'n', null, 'How often people opened a section or feature their plan does not include. A good guide to what to put in which plan.')}${uTbl('Dropdown choices (account, time frame, exchange, leverage)', D.choices, 'n', r => { const i = r.tg.indexOf('|'), v = r.tg.slice(i + 1).split('='); return e(v[0].replace(/^rr/, '')) + ' = <b>' + e(v[1] || '') + '</b>'; })}${uTbl('Devices', D.devices, 'n', r => e(r.tg))}${uTbl('Where people came from', D.referrers, 'n', r => e(r.tg))}${uTbl('Time zones', D.zones, 'n', r => e(r.tg))}</div></div>`;
   h += `<div class="rr-card"><h3>When people visit (your time zone)</h3>${uHours(D.hours || [])}</div>`;
   h += `<div class="rr-card"><h3>Signed-in members</h3>${(D.members || []).length ? `<div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Member</th><th>Plan</th><th>Visits</th><th>Actions</th><th>Favourite section</th><th>Last seen</th></tr></thead><tbody>${D.members.map(m => `<tr><td>${e(m.email)}</td><td>${e(pname(m.plan))}</td><td>${m.sessions}</td><td>${m.events}</td><td>${m.top ? uLabel(m.top) : '—'}</td><td>${new Date(m.last).toLocaleString()}</td></tr>`).join('')}</tbody></table></div>` : '<p class="calendar-note" style="margin:0">No signed-in activity yet.</p>'}</div>`;
+  if(D.ignored > 0) h += `<p class="calendar-note">${D.ignored} browser${D.ignored === 1 ? '' : 's'} with bot-like activity (thousands of actions or over 100 visits in this range) ${D.ignored === 1 ? 'was' : 'were'} left out of these numbers.</p>`;
   if((D.errors || []).length) h += uTbl('Page errors (things to fix)', D.errors, 'n', r => e(r.tg));
   return h;
 }
@@ -345,8 +358,8 @@ document.addEventListener('click', async ev => {
   if(ev.target.id !== 'admSaveSet') return;
   const acc = {}; CAT.forEach(c => { acc[c[0]] = []; }); document.querySelectorAll('#admBody input[data-ak]').forEach(i => { if(i.checked) acc[i.dataset.ak].push(i.dataset.ap); });
   const ch = $('admCharge').checked, wall = $('admWall').checked;
-  const r = await api('/rest/v1/ttm_settings', {method: 'POST', headers: {Prefer: 'resolution=merge-duplicates'}, body: JSON.stringify([{key: 'charging', value: ch}, {key: 'wall', value: wall}, {key: 'access', value: acc}])});
-  if(r.ok){ SET.charging = ch; SET.wall = wall; SET.access = acc; $('admNote').textContent = 'Saved.'; ui(); } else $('admNote').textContent = 'Could not save (are you an admin?).'; });
+  const r = await api('/rest/v1/ttm_settings', {method: 'POST', headers: {Prefer: 'resolution=merge-duplicates'}, body: JSON.stringify([{key: 'charging', value: ch}, {key: 'wall', value: wall}, {key: 'track', value: $('admTrack').checked}, {key: 'access', value: acc}])});
+  if(r.ok){ SET.charging = ch; SET.wall = wall; SET.track = $('admTrack').checked; SET.access = acc; $('admNote').textContent = 'Saved.'; ui(); } else $('admNote').textContent = 'Could not save (are you an admin?).'; });
 window.addEventListener('hashchange', () => { setTimeout(() => { adminUi(); ui(); }, 80); });
 fxLoad().then(() => { if(FX) ui(); });
 boot();

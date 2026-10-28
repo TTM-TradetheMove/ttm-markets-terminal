@@ -20,11 +20,26 @@ create index if not exists ttm_events_uid_idx on public.ttm_events (uid, ts) whe
 
 alter table public.ttm_events enable row level security;
 
+create or replace function public.ttm_track_on() returns boolean
+language sql security definer set search_path = public stable as
+$$ select coalesce((select value <> 'false'::jsonb from public.ttm_settings where key = 'track'), true) $$;
+grant execute on function public.ttm_track_on() to anon, authenticated;
+
+-- Firewall 1: only well-formed events from the site are accepted (fixed event names, ids, sizes).
 drop policy if exists ev_insert on public.ttm_events;
 create policy ev_insert on public.ttm_events for insert to anon, authenticated
-  with check (length(ev) <= 24 and length(vid) <= 40 and length(sid) <= 40
-              and coalesce(length(tg), 0) <= 120 and coalesce(length(pg), 0) <= 12
-              and pg_column_size(p) < 1500 and (uid is null or uid = auth.uid()));
+  with check (
+    public.ttm_track_on()
+    and ev in ('start','end','view','dwell','click','choice','feat','lock','error','auth_open','auth_sent','auth_ok')
+    and pg in ('home','crypto','tradfi')
+    and (dv is null or dv in ('mobile','tablet','desktop'))
+    and vid ~ '^[a-z0-9]{8,32}$' and sid ~ '^[a-z0-9]{8,32}$'
+    and coalesce(length(tg), 0) <= 110 and (tg is null or tg !~ '[[:cntrl:]]')
+    and jsonb_typeof(p) = 'object' and pg_column_size(p) < 1000
+    and (ev <> 'dwell' or ((p->>'s') ~ '^[0-9]{1,4}$'))
+    and (ev <> 'end'   or ((p->>'dur') ~ '^[0-9]{1,6}$'))
+    and (uid is null or uid = auth.uid())
+  );
 drop policy if exists ev_select on public.ttm_events;
 create policy ev_select on public.ttm_events for select to authenticated using (public.ttm_is_admin());
 drop policy if exists ev_delete on public.ttm_events;
@@ -33,14 +48,43 @@ create policy ev_delete on public.ttm_events for delete to authenticated using (
 grant insert on public.ttm_events to anon, authenticated;
 grant select, delete on public.ttm_events to authenticated;
 
+-- Firewall 2: blocks scripts and floods. Counts per minute (per network address, per browser, and overall) in a small
+-- table that is cleared automatically. The address is only used as a one-way hash for that count; it is never stored with the events.
+create table if not exists public.ttm_rate (k text not null, w timestamptz not null, n int not null default 0, primary key (k, w));
+alter table public.ttm_rate enable row level security;   -- no policies: nobody can read it through the API
+
+create or replace function public.ttm_events_guard() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare v_h json; v_ip text; v_ua text; v_n int; v_win timestamptz := date_trunc('minute', now()); v_key text; v_lim int;
+begin
+  begin v_h := nullif(current_setting('request.headers', true), '')::json; exception when others then v_h := null; end;
+  v_ua := lower(coalesce(v_h->>'user-agent', ''));
+  if v_ua ~ '(bot|crawl|spider|headless|curl/|wget|python|scrapy|httpclient|postman|java/|go-http|node-fetch|axios|libwww|phantom|selenium)' then
+    raise exception 'blocked' using errcode = '42501';
+  end if;
+  v_ip := trim(split_part(coalesce(v_h->>'cf-connecting-ip', v_h->>'x-forwarded-for', v_h->>'x-real-ip', 'unknown'), ',', 1));
+  for v_key, v_lim in select * from (values ('ip:' || md5(v_ip || current_date::text), 300), ('vid:' || new.vid, 120), ('all', 2500)) as t(a, b) loop
+    insert into public.ttm_rate as r (k, w, n) values (v_key, v_win, 1)
+      on conflict (k, w) do update set n = r.n + 1 returning r.n into v_n;
+    if v_n > v_lim then raise exception 'rate limit' using errcode = '42501'; end if;
+  end loop;
+  if random() < 0.01 then delete from public.ttm_rate where w < now() - interval '2 hours'; end if;
+  return new;
+end $$;
+drop trigger if exists ttm_events_guard on public.ttm_events;
+create trigger ttm_events_guard before insert on public.ttm_events for each row execute function public.ttm_events_guard();
+
 -- One call that returns every number the Usage page shows (admins only).
 create or replace function public.ttm_usage_summary(p_since timestamptz default '-infinity', p_tz text default 'UTC')
 returns jsonb language plpgsql security definer set search_path = public stable as $$
 declare r jsonb;
 begin
   if not public.ttm_is_admin() then raise exception 'admins only'; end if;
-  with e as (select * from public.ttm_events where ts >= p_since)
+  with raw as (select * from public.ttm_events where ts >= p_since),
+       bad as (select vid from raw group by vid having count(*) > 4000 or count(distinct sid) > 100),
+       e as (select * from raw where vid not in (select vid from bad))
   select jsonb_build_object(
+    'ignored', (select count(*) from bad),
     'kpi', (select jsonb_build_object('events', count(*), 'visitors', count(distinct vid), 'sessions', count(distinct sid),
               'members', count(distinct uid), 'views', count(*) filter (where ev = 'view'),
               'first', min(ts), 'last', max(ts)) from e),

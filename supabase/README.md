@@ -31,3 +31,9 @@ TradingView links: add them to `ttm_config.json`, for example
 2. Open the site, sign in as admin, go to **Admin**. The **Usage** area is at the bottom of that page.
 3. It records anonymous events (pages opened, buttons clicked, features used, how long, which device) and never what people type. Admins, Do Not Track browsers, and any device with tracking turned off are not counted.
 4. The data is kept until you press **Clear older than 90 days** or **Clear ALL usage data**. **Export CSV** downloads everything first.
+
+## Usage firewall and account deletion
+
+- `usage.sql` now includes a firewall: only well-formed events are accepted (fixed event names, ids, sizes), scripts and bots are refused, and floods are rate-limited per network address, per browser and overall. The address is only used as a one-way hash for the count and is not stored with events. Run it again if you already ran an earlier version; it is safe to repeat.
+- Admin has a **Collect usage data** switch that pauses all tracking instantly. The Usage page leaves bot-like browsers out of the numbers.
+- Run `supabase/delete-account.sql` once to enable **Delete my account** (on the account card) and the **Delete** button next to each member in Admin. Deleting removes the account and its cloud-saved data. Usage events are kept but detached from the person. The only admin cannot be deleted.
