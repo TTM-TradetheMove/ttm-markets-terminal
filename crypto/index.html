@@ -3362,7 +3362,10 @@ load(); setInterval(() => { if(!document.hidden) load(); }, 300000);
 (function(){
 const $ = id => document.getElementById(id);
 if(!$('rrAsset')) return;
+const EXTRA_COINS = [['BIO','Bio Protocol'],['DEEP','DeepBook'],['CC','Canton'],['FET','Fetch.ai'],['LDO','Lido DAO'],['ONDO','Ondo'],['SKY','Sky'],['MKR','Maker'],['XPL','Plasma'],['HBAR','Hedera'],['IMX','Immutable'],['VIRTUAL','Virtuals Protocol'],['SUPRA','Supra'],['MET','Meteora'],['WLD','Worldcoin'],['TAO','Bittensor'],['RENDER','Render'],['SEI','Sei'],['TIA','Celestia'],['JUP','Jupiter'],['PENDLE','Pendle'],['ENA','Ethena'],['AAVE','Aave'],['UNI','Uniswap'],['ATOM','Cosmos'],['FIL','Filecoin'],['ARKM','Arkham'],['PYTH','Pyth Network']];
+const addExtra = () => EXTRA_COINS.forEach(([s, n]) => { if(!COINS.some(c => c.s === s)) COINS.push({s, n, r: 999, p: null}); });
 let COINS = ['BTC','ETH','SOL','XRP','BNB','DOGE','ADA','AVAX','LINK','SUI','TON','DOT','LTC','NEAR','APT','ARB','OP','INJ','PEPE','HYPE','ICP'].map((s, i) => ({s, n: '', r: i + 1, p: null}));  // replaced by ../top_coins.json when it loads
+addExtra();
 const LEVS = [1,2,3,5,10,15,20,25,50,75,100];
 const KEY = 'ttm_rr_state_v1', SKEY = 'ttm_rr_saved_v1';
 const DEF = {asset:'BTC', dir:'long', mkt:'fut', lev:10, entry:'', stop:'', tp1:'', s1:50, tp2:'', s2:50, tp3:'', s3:0, bal:5000, risk:1, fee:0.06, daily:250, min:2, mmr:0.5, acc:'lev', tf:'h1', mode:'pct', rusd:50, inv:1000};
@@ -4200,7 +4203,7 @@ function wire(){
   });
   list.addEventListener('mousedown', e => { const it = e.target.closest('div[data-i],div[data-c]'); if(!it) return; e.preventDefault(); choose(it.dataset.c || shownRows[+it.dataset.i].s); });
   $('rrAsset').addEventListener('blur', e => { list.classList.remove('open'); const v = clean(e.target.value); if(v && v !== S.asset) choose(v); else e.target.value = S.asset; });
-  fetch('../top_coins.json?t=' + Date.now(), {cache: 'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null).then(d => { if(d && d.coins && d.coins.length > 20){ COINS = d.coins.map(c => ({s: c.s, n: c.n, r: c.r, p: c.p})); } });
+  fetch('../top_coins.json?t=' + Date.now(), {cache: 'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null).then(d => { if(d && d.coins && d.coins.length > 20){ COINS = d.coins.map(c => ({s: c.s, n: c.n, r: c.r, p: c.p})); addExtra(); } });
   $('rrLev').addEventListener('change', e => { S.lev = +e.target.value; persist(); render(); });
   $('rrDir').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; S.dir = b.dataset.d; pushInputs(); persist(); render(); });
   
