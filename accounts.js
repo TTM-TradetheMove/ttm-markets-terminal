@@ -10,7 +10,7 @@ const pname = id => (PLANS.find(p => p[0] === id) || [0, id])[1];
 const CAT = [
   ['c:calendar', 'Crypto · Macro Watch', ['free']], ['c:tradinghours', 'Crypto · Trading Hours', ['free']], ['c:fomo', 'Crypto · FOMO Finder & RSI Chart', ['free']],
   ['c:btcmonthly', 'Crypto · BTC Monthly (with cycle tops)', ['free']], ['c:tokenevents', 'Crypto · Token Events', []], ['c:library', 'Crypto · Reports library', []], ['c:transparency', 'Crypto · Transparency Watch', ['free']],
-  ['c:marketpulse', 'Crypto · Market Pulse (liquidations, funding, open interest)', ['crypto']], ['c:rsimap', 'Crypto · RSI Heatmap', ['crypto']], ['c:volume', 'Crypto · Volume Heatmap', ['crypto']], ['c:socialpulse', 'Crypto · Social Pulse', ['crypto']],
+  ['c:marketpulse', 'Crypto · Market Pulse (liquidations, funding, open interest)', ['crypto']], ['c:rsimap', 'Crypto · RSI Heatmap', ['crypto']], ['c:maxpain', 'Crypto · Max Pain (options, with RSI confluence)', ['crypto']], ['c:volume', 'Crypto · Volume Heatmap', ['crypto']], ['c:socialpulse', 'Crypto · Social Pulse', ['crypto']],
   ['c:riskreward', 'Crypto · Risk / Reward calculator', ['crypto']], ['c:tradejournal', 'Crypto · Trade Tracker & win ratio', []], ['c:portfolio', 'Crypto · Portfolio Forecast', []],
   ['t:calendar', 'TradFi · Macro Watch', ['free']], ['t:tradinghours', 'TradFi · Trading Hours', ['free']], ['t:congress', 'TradFi · Congress Watch', []],
   ['t:globalmarkets', 'TradFi · Global Markets', ['tradfi']], ['t:bonds', 'TradFi · Bonds & Rates', ['tradfi']], ['t:macrointel', 'TradFi · Macro Intel', ['tradfi']], ['t:newsrisk', 'TradFi · News & Risk', ['tradfi']], ['t:tfcalc', 'TradFi · Risk / Reward calculator', ['tradfi']],

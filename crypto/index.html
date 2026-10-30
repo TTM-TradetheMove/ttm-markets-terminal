@@ -697,6 +697,7 @@ body.view-section #backFab{display:block}
       <a href="#fomo">FOMO Finder &amp; RSI</a>
       <a href="#btcmonthly">BTC Monthly</a>
       <a href="#rsimap">RSI Heatmap</a>
+      <a href="#maxpain">Max Pain</a>
       <a href="#volume">Volume Heatmap</a>
       <a href="#riskreward">Risk / Reward</a>
       <a href="#tradejournal">Trade Tracker</a>
@@ -750,7 +751,7 @@ body.view-section #backFab{display:block}
   </div>
 </div>
 
-<div id="menuHome"><div class="wrap"><h2>Trading tools</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#riskreward"><b>Risk / Reward Tooling</b><span>Size a trade by risk % , risk $ or investment, with live candles, leverage and liquidation</span></a><a class="menu-tile" href="#tradejournal"><b>Trade Tracker &amp; Win Ratio</b><span>Open and closed trades by account and time frame, win rate, equity curve, Excel export</span></a><a class="menu-tile" href="#portfolio"><b>Portfolio Forecast</b><span>Spot, leverage and super / retirement: forecast vs actual at live prices</span></a><a class="menu-tile" href="#members"><b>TradingView Indicators</b><span>TTM indicators for TradingView (coming soon)</span></a></div><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#marketpulse"><b>Market Pulse</b><span>Fear & Greed, funding, liquidations</span></a><a class="menu-tile" href="#btcmonthly"><b>BTC Monthly</b><span>Bitcoin returns month by month</span></a><a class="menu-tile" href="#fomo"><b>FOMO Finder &amp; RSI Chart</b><span>Sentiment gauge plus price and RSI</span></a><a class="menu-tile" href="#rsimap"><b>RSI Heatmap</b><span>Overbought / oversold across ~125 coins</span></a><a class="menu-tile" href="#volume"><b>Volume Heatmap</b><span>Surging and drying-up volume by coin</span></a><a class="menu-tile" href="#socialpulse"><b>Social Pulse</b><span>Truth Social and crypto news feed</span></a><a class="menu-tile" href="#tokenevents"><b>Token Events</b><span>Unlocks, listings and airdrops</span></a><a class="menu-tile" href="#library"><b>Reports</b><span>Asset reviews and deep dives</span></a><a class="menu-tile" href="#transparency"><b>Transparency Watch</b><span>Congress and insider trading watch</span></a></div></div></div>
+<div id="menuHome"><div class="wrap"><h2>Trading tools</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#riskreward"><b>Risk / Reward Tooling</b><span>Size a trade by risk % , risk $ or investment, with live candles, leverage and liquidation</span></a><a class="menu-tile" href="#tradejournal"><b>Trade Tracker &amp; Win Ratio</b><span>Open and closed trades by account and time frame, win rate, equity curve, Excel export</span></a><a class="menu-tile" href="#portfolio"><b>Portfolio Forecast</b><span>Spot, leverage and super / retirement: forecast vs actual at live prices</span></a><a class="menu-tile" href="#members"><b>TradingView Indicators</b><span>TTM indicators for TradingView (coming soon)</span></a></div><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#marketpulse"><b>Market Pulse</b><span>Fear & Greed, funding, liquidations</span></a><a class="menu-tile" href="#btcmonthly"><b>BTC Monthly</b><span>Bitcoin returns month by month</span></a><a class="menu-tile" href="#fomo"><b>FOMO Finder &amp; RSI Chart</b><span>Sentiment gauge plus price and RSI</span></a><a class="menu-tile" href="#rsimap"><b>RSI Heatmap</b><span>Overbought / oversold across ~125 coins</span></a><a class="menu-tile" href="#maxpain"><b>Max Pain</b><span>Options max pain by token, with RSI confluence</span></a><a class="menu-tile" href="#volume"><b>Volume Heatmap</b><span>Surging and drying-up volume by coin</span></a><a class="menu-tile" href="#socialpulse"><b>Social Pulse</b><span>Truth Social and crypto news feed</span></a><a class="menu-tile" href="#tokenevents"><b>Token Events</b><span>Unlocks, listings and airdrops</span></a><a class="menu-tile" href="#library"><b>Reports</b><span>Asset reviews and deep dives</span></a><a class="menu-tile" href="#transparency"><b>Transparency Watch</b><span>Congress and insider trading watch</span></a></div></div></div>
 <button id="backFab" type="button">&larr; Menu</button>
 <div id="backBar"><div class="wrap"><button id="backBtn" type="button">&larr; Back to menu</button><span id="backTitle"></span></div></div>
 <section id="calendar">
@@ -1272,6 +1273,21 @@ body.view-section #backFab{display:block}
     <div class="rsi-tiles" id="volTiles"></div>
     <div class="rsi-wrap" id="volTblWrap" style="display:none"><table class="rsi-tbl" id="volTable"><tbody><tr><td class="na">Loading…</td></tr></tbody></table></div>
     <p class="calendar-note" style="margin-top:10px">Volume is OKX spot USDT volume, refreshed about every 10 minutes. The newest candle is still forming, so a young candle can read low early on. Positive or negative means the latest candle closed up or down, not a split of buyers and sellers. Heavy volume on a down candle is not necessarily more selling than buying. Not financial advice.</p>
+  </div>
+</section>
+
+<section id="maxpain">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">Max Pain</span>
+      <h2>Where options expiry pulls price</h2>
+      <p>Max pain is the price where the most options expire worthless, so option buyers lose the most and sellers keep the most. Price often drifts toward it as expiry nears, strongest in the final days. Pick a token and an expiry to see where the open interest sits, then check it against RSI on the timeframe you trade.</p>
+      <p id="mpUpdated" class="calendar-note" style="margin-top:8px">Loading options data…</p>
+    </div>
+    <div class="filter-row" id="mpCoins" style="margin-bottom:8px"></div>
+    <div class="filter-row" id="mpExp" style="margin-bottom:12px"></div>
+    <div id="mpBody"></div>
+    <p class="calendar-note" style="margin-top:12px">Data: Deribit public options open interest, refreshed about every 30 minutes. Only tokens with listed options appear (mainly BTC, ETH, SOL, XRP and a few large altcoins). Max pain is a tendency, not a guarantee, and large expiries or news can override it. This is education, not financial advice.</p>
   </div>
 </section>
 
@@ -3834,7 +3850,7 @@ const TICK = {
 };
 function aggC(rows, ms){ const g = {}; rows.forEach(x => { const k = Math.floor(x.t / ms), b = g[k]; if(!b) g[k] = {t: k * ms, o: x.o, h: x.h, l: x.l, c: x.c}; else { b.h = Math.max(b.h, x.h); b.l = Math.min(b.l, x.l); b.c = x.c; } }); return Object.keys(g).sort((p, q) => p - q).map(k => g[k]); }
 async function getCandles(a, tf){
-  const order = [SRC].concat(SRC === 'okx' ? [] : ['okx']);
+  const order = [SRC, 'bybit', 'okx', 'binance', 'mexc', 'bitget'].filter((x, i, ar) => ar.indexOf(x) === i);
   for(const src of order){
     try{ const spec = TFBASE[src][tf], iv = Array.isArray(spec) ? spec[0] : spec, nat = Array.isArray(spec) ? spec[1] : 0;
       let rows = await FETCH[src](a, iv, nat ? Math.ceil(110 * TFMS[tf] / nat) : 110);
@@ -3847,9 +3863,18 @@ let TK = {src: '', map: {}, t: 0, used: ''};
 async function getTickers(){
   if(Date.now() - TK.t < 8000 && TK.src === SRC) return TK;
   for(const src of [SRC].concat(SRC === 'okx' ? [] : ['okx'])){
-    try{ const m = await TICK[src](); if(Object.keys(m).length > 20){ TK = {src: SRC, map: m, t: Date.now(), used: src}; return TK; } }catch(e){}
+    try{ const m = await TICK[src](); if(Object.keys(m).length > 20){ await fillGaps(m, src); TK = {src: SRC, map: m, t: Date.now(), used: src}; return TK; } }catch(e){}
   }
   return null;
+}
+// Coins your chosen exchange does not list (BIO, for example) are filled in live from Bybit, then the other exchanges.
+let GAP = {t: 0, maps: {}}, GAPSRC = {};
+async function fillGaps(m, used){
+  if(Date.now() - GAP.t > 20000){ GAP.maps = {}; GAP.t = Date.now(); }
+  for(const src of ['bybit', 'okx', 'binance', 'mexc', 'bitget']){
+    if(src === used) continue;
+    try{ const g = GAP.maps[src] || (GAP.maps[src] = await TICK[src]()); Object.keys(g).forEach(k => { if(!(m[k] > 0) && g[k] > 0){ m[k] = g[k]; GAPSRC[k] = src; } }); }catch(e){ GAP.maps[src] = {}; }
+  }
 }
 let CAN = {key: '', rows: [], err: '', src: ''}, ctok = 0, ctimer = null;
 const secOn = id => { const s = document.getElementById(id); return !!(s && s.classList.contains('active')); };
@@ -4211,7 +4236,7 @@ function wire(){
     const btn = $('rrLive'), a = S.asset; if(!a){ btn.textContent = 'Pick an asset first'; return; }
     btn.textContent = 'Fetching…'; TK.t = 0;
     const t = await getTickers(), p = t && t.map[a];
-    if(p > 0){ S.entry = p >= 1 ? +p.toFixed(4) : +p.toPrecision(5); persist(); pushInputs(); render(); loadCandles(); btn.textContent = `Live ${a}: ${pr(p)} (${SRCS[t.used]}${t.used !== SRC ? ', ' + SRCS[SRC] + ' unavailable' : ''}) ✓`; }
+    if(p > 0){ S.entry = p >= 1 ? +p.toFixed(4) : +p.toPrecision(5); persist(); pushInputs(); render(); loadCandles(); const fs = GAPSRC[a]; btn.textContent = fs ? `Live ${a}: ${pr(p)} (${SRCS[fs]}, ${SRCS[SRC]} does not list it) ✓` : `Live ${a}: ${pr(p)} (${SRCS[t.used]}${t.used !== SRC ? ', ' + SRCS[SRC] + ' unavailable' : ''}) ✓`; }
     else { const c = COINS.find(x => x.s === a); if(c && c.p){ S.entry = c.p >= 1 ? +c.p.toFixed(4) : +c.p.toPrecision(5); persist(); pushInputs(); render(); btn.textContent = `${a}: ${pr(c.p)} from the list snapshot (not live)`; } else btn.textContent = 'No live price for ' + a; }
     setTimeout(() => { btn.textContent = 'Use live price as entry'; }, 4500);
   });
@@ -4470,5 +4495,77 @@ go();
   show();
 })();
 </script>
+<script>
+(function(){
+const $ = id => document.getElementById(id);
+if(!$('mpBody')) return;
+let D = null, R = null, coin = 'BTC', ei = 0, tf = '4h';
+const TFS = [['15m', '15m'], ['1h', '1h'], ['4h', '4h'], ['8h', '8h'], ['12h', '12h'], ['1d', '1D'], ['1w', '1W']];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const px = v => v == null ? '—' : v >= 100 ? '$' + Math.round(v).toLocaleString() : v >= 1 ? '$' + v.toFixed(2) : '$' + v.toPrecision(3);
+const num = v => v >= 1000 ? Math.round(v).toLocaleString() : v >= 10 ? v.toFixed(1) : v.toFixed(2);
+function zone(r){ return r == null ? ['No data', 'be'] : r >= 70 ? ['Overbought', 'dn'] : r >= 60 ? ['Strong', 'be'] : r > 40 ? ['Neutral', 'be'] : r > 30 ? ['Weak', 'be'] : ['Oversold', 'up']; }
+function load(){
+  fetch('../maxpain.json?t=' + Date.now(), {cache: 'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null).then(d => { D = d; return fetch('../rsi_heatmap.json?t=' + Date.now(), {cache: 'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null); }).then(r => { R = r; if(D && D.coins && !D.coins[coin]) coin = Object.keys(D.coins)[0]; draw(); });
+}
+function chips(){
+  const cs = Object.keys(D.coins); $('mpCoins').innerHTML = cs.map(c => `<button class="filter-chip ${c === coin ? 'active' : ''}" data-c="${esc(c)}">${esc(c)}</button>`).join('');
+  const ex = D.coins[coin].expiries; if(ei >= ex.length) ei = 0;
+  $('mpExp').innerHTML = ex.map((e, i) => `<button class="filter-chip ${i === ei ? 'active' : ''}" data-e="${i}">${esc(e.label)} · ${e.days < 1 ? 'today' : Math.round(e.days) + 'd'}</button>`).join('');
+}
+function chart(c, e){
+  const S = e.strikes; if(!S.length) return '';
+  const W = 900, H = 330, pl = 46, pr = 10, top = 14, mid = 214, bot = 20, n = S.length, step = (W - pl - pr) / n, bw = Math.max(2, Math.min(18, step * 0.38));
+  const mx = Math.max(...S.map(s => Math.max(s.c, s.p)), 1e-9), pmx = Math.max(...S.map(s => s.pain), 1), pmin = Math.min(...S.map(s => s.pain));
+  const X = i => pl + i * step + step / 2, spot = c.spot;
+  // x position for any price by interpolating between strikes
+  const xp = v => { if(v <= S[0].k) return X(0); if(v >= S[n - 1].k) return X(n - 1); let i = 0; while(i < n - 2 && S[i + 1].k < v) i++; return X(i) + (v - S[i].k) / (S[i + 1].k - S[i].k) * (X(i + 1) - X(i)); };
+  let g = `<text x="2" y="${top + 8}" font-size="10" fill="#9a978f">${num(mx)}</text><text x="2" y="${mid - 4}" font-size="10" fill="#9a978f">0</text><line x1="${pl}" y1="${mid - 18}" x2="${W - pr}" y2="${mid - 18}" stroke="#2a2a2e"/>`;
+  const h0 = mid - 18 - top;
+  S.forEach((s, i) => { const hc = s.c / mx * h0, hp = s.p / mx * h0, t = `${px(s.k)} · calls ${num(s.c)} · puts ${num(s.p)} · pain ${px(s.pain)}`;
+    g += `<g class="mpbar" data-t="${esc(t)}" style="cursor:pointer"><title>${esc(t)}</title><rect x="${X(i) - step / 2}" y="${top}" width="${step}" height="${mid - 18 - top}" fill="transparent"/><rect x="${X(i) - bw - 0.5}" y="${mid - 18 - hc}" width="${bw}" height="${hc}" fill="#3fb47a" rx="1.5"/><rect x="${X(i) + 0.5}" y="${mid - 18 - hp}" width="${bw}" height="${hp}" fill="#e0554d" rx="1.5"/></g>`;
+    if(n <= 16 || i % Math.ceil(n / 14) === 0) g += `<text x="${X(i)}" y="${mid - 4}" font-size="9" text-anchor="middle" fill="#9a978f">${s.k >= 1000 ? Math.round(s.k / 100) / 10 + 'k' : s.k}</text>`; });
+  // pain curve panel
+  const ph = H - mid - bot - 6, py = v => mid + 8 + ph - (v - pmin) / Math.max(1e-9, pmax(pmx, pmin) - pmin) * ph; function pmax(a, b){ return a === b ? a + 1 : a; }
+  g += `<text x="${W / 2}" y="${mid + 12}" font-size="10" text-anchor="middle" fill="#9a978f">Total payout to option holders at each settlement price</text><polyline fill="none" stroke="#dba118" stroke-width="2" points="${S.map((s, i) => X(i) + ',' + py(s.pain)).join(' ')}"/>`;
+  const mpi = S.findIndex(s => s.k === e.max_pain); if(mpi >= 0) g += `<circle cx="${X(mpi)}" cy="${py(S[mpi].pain)}" r="4.5" fill="#dba118"/>`;
+  // vertical lines
+  g += `<line x1="${xp(e.max_pain)}" y1="${top}" x2="${xp(e.max_pain)}" y2="${H - bot}" stroke="#dba118" stroke-width="1.5" stroke-dasharray="5 4"/><text x="${Math.min(W - 80, xp(e.max_pain) + 4)}" y="${top + 10}" font-size="11" fill="#dba118">Max pain ${px(e.max_pain)}</text>`;
+  const sx = xp(spot); g += `<line x1="${sx}" y1="${top}" x2="${sx}" y2="${H - bot}" stroke="#e8e6e0" stroke-width="1.2" stroke-dasharray="2 3"/><text x="${Math.min(W - 70, sx + 4)}" y="${top + 24}" font-size="11" fill="#e8e6e0">Now ${px(spot)}</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${g}</svg><p class="calendar-note mpread" style="margin:4px 0 0">Tap a strike for its numbers. <span style="color:#3fb47a">Green = calls</span>, <span style="color:#e0554d">red = puts</span> (open interest, in ${esc(coin)}). Gold line = total payout if the coin settled at each strike; its lowest point is max pain.</p>`;
+}
+function conf(c, e){
+  const rc = R && R.coins && R.coins.find(x => x.s === coin), r = rc && rc.r ? rc.r[tf] : null, z = zone(r), d = (c.spot - e.max_pain) / e.max_pain * 100, ad = Math.abs(d);
+  const tfl = (TFS.find(t => t[0] === tf) || [tf, tf])[1], when = e.days <= 3 ? 'Expiry is very close, so the pull is at its strongest.' : e.days <= 10 ? 'Expiry is close enough for the pull to matter.' : 'Expiry is still far off, so treat this as a weak pull.';
+  let kind = 'be', head, body;
+  if(ad < 2){ head = 'Price is sitting on max pain'; body = `${esc(coin)} is within ${ad.toFixed(1)}% of max pain, so there is little pull either way.${r != null ? ` RSI is ${r} (${z[0].toLowerCase()}) on ${tfl}.` : ''} Pinning near this level into expiry is common.`; }
+  else if(d > 0 && r != null && r >= 70){ kind = 'dn'; head = 'Confluence: pull-back risk'; body = `Price is ${ad.toFixed(1)}% above max pain and RSI is ${r} (overbought) on ${tfl}. Both point to a drift down toward ${px(e.max_pain)}.`; }
+  else if(d < 0 && r != null && r <= 30){ kind = 'up'; head = 'Confluence: bounce potential'; body = `Price is ${ad.toFixed(1)}% below max pain and RSI is ${r} (oversold) on ${tfl}. Both point to a drift up toward ${px(e.max_pain)}.`; }
+  else if(d > 0 && r != null && r <= 30){ kind = 'warn'; head = 'Mixed signals'; body = `Price is ${ad.toFixed(1)}% above max pain (pull is down) but RSI is ${r} (oversold) on ${tfl} (momentum favours a bounce). The signals disagree; wait for one to give way.`; }
+  else if(d < 0 && r != null && r >= 70){ kind = 'warn'; head = 'Mixed signals'; body = `Price is ${ad.toFixed(1)}% below max pain (pull is up) but RSI is ${r} (overbought) on ${tfl} (momentum favours a pause). The signals disagree.`; }
+  else { head = d > 0 ? 'Price above max pain' : 'Price below max pain'; body = `Price is ${ad.toFixed(1)}% ${d > 0 ? 'above' : 'below'} max pain, a pull ${d > 0 ? 'down' : 'up'} toward ${px(e.max_pain)}. RSI is ${r == null ? 'not available' : r + ' (' + z[0].toLowerCase() + ')'} on ${tfl}, so there is no extreme to confirm or fight it.`; }
+  const ic = {up: '▲', dn: '▼', warn: '!', be: '•'}[kind], col = {up: '#3fb47a', dn: '#e0554d', warn: '#dba118', be: '#9a978f'}[kind];
+  const row = rc && rc.r ? TFS.map(t => { const v = rc.r[t[0]], zz = zone(v); return `<span style="display:inline-block;margin:0 10px 6px 0;font-size:12.5px"><span style="color:var(--mute)">${t[1]}</span> <b style="color:${v >= 70 ? '#e0554d' : v <= 30 ? '#3fb47a' : 'inherit'}">${v == null ? '—' : v}</b></span>`; }).join('') : '';
+  return `<div class="rr-card"><h3>Confluence with RSI</h3><div class="filter-row" id="mpTf" style="margin:0 0 12px">${TFS.map(t => `<button class="filter-chip ${t[0] === tf ? 'active' : ''}" data-t="${t[0]}">${t[1]}</button>`).join('')}</div>
+    <p style="margin:0 0 6px;font-size:15px"><b style="color:${col}">${ic} ${head}</b></p><p style="margin:0 0 10px;font-size:14px;line-height:1.5">${body} ${when}</p>${row ? `<div style="border-top:1px solid var(--line);padding-top:10px"><div style="font-size:12px;color:var(--mute);margin-bottom:4px">RSI(14) on every timeframe (70+ overbought, 30 or below oversold)</div>${row}</div>` : '<p class="calendar-note" style="margin:0">RSI data is not available for this token.</p>'}</div>`;
+}
+function draw(){
+  if(!D || !D.coins || !Object.keys(D.coins).length){ $('mpUpdated').textContent = 'Options data is not loaded yet. It fills in after the first scheduled run (or run the "Update max pain" workflow in GitHub Actions).'; $('mpBody').innerHTML = ''; $('mpCoins').innerHTML = $('mpExp').innerHTML = ''; return; }
+  chips(); const c = D.coins[coin], e = c.expiries[ei], ago = Math.max(0, Math.round((Date.now() - new Date(D.generated_at)) / 60000));
+  $('mpUpdated').textContent = `Updated ${ago < 90 ? ago + ' min' : Math.round(ago / 60) + ' h'} ago · source ${D.source}`;
+  const d = (c.spot - e.max_pain) / e.max_pain * 100, tile = (l, v, s) => `<div><small>${l}</small><strong>${v}</strong>${s ? `<br><span style="font-size:11px;color:var(--mute)">${s}</span>` : ''}</div>`;
+  $('mpBody').innerHTML = `<div class="rr-card"><div class="rr-out c5" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">${tile('Max pain', px(e.max_pain), 'expires ' + esc(e.label))}${tile('Price now', px(c.spot), (d >= 0 ? '+' : '') + d.toFixed(1) + '% vs max pain')}${tile('Put / call ratio', e.pc == null ? '—' : e.pc, e.pc == null ? '' : e.pc > 1 ? 'more puts (bearish lean)' : 'more calls (bullish lean)')}${tile('Open interest', '$' + (e.notional >= 1e9 ? (e.notional / 1e9).toFixed(2) + 'B' : (e.notional / 1e6).toFixed(1) + 'M'), num(e.call_oi) + ' calls · ' + num(e.put_oi) + ' puts')}${tile('Time left', e.days < 1 ? 'Under 1 day' : e.days.toFixed(1) + ' days')}</div></div>
+    <div class="rr-card"><h3>${esc(coin)} options by strike · ${esc(e.label)}</h3>${chart(c, e)}</div>${conf(c, e)}`;
+}
+document.addEventListener('click', ev => {
+  const t = ev.target; if(!$('maxpain') || !$('maxpain').contains(t)) return;
+  const bar = t.closest('.mpbar'); if(bar){ const n = $('maxpain').querySelector('.mpread'); if(n) n.textContent = bar.dataset.t; return; }
+  const b = t.closest('.filter-chip'); if(!b) return;
+  if(b.dataset.c){ coin = b.dataset.c; ei = 0; draw(); } else if(b.dataset.e != null){ ei = +b.dataset.e; draw(); } else if(b.dataset.t){ tf = b.dataset.t; draw(); }
+});
+load(); setInterval(load, 10 * 60 * 1000);
+})();
+</script>
+
 </body>
 </html>

@@ -1,0 +1,49 @@
+name: Update max pain
+
+on:
+  schedule:
+    - cron: "7,37 * * * *"
+  workflow_dispatch: {}
+  push:
+    paths:
+      - scripts/update_maxpain.py
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-maxpain
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch options data
+        run: python3 scripts/update_maxpain.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "ttm-calendar-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add maxpain.json 2>/dev/null || true
+          git add -f maxpain_debug.txt 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No changes to maxpain.json"
+          else
+            git commit -m "Auto-update max pain"
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "Push attempt $i failed, retrying..."
+              sleep 5
+            done
+          fi
