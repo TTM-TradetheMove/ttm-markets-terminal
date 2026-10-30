@@ -3,7 +3,7 @@
 create table if not exists public.ttm_profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text,
-  plan text not null default 'free' check (plan in ('free','crypto','tradfi','pro')),
+  plan text not null default 'free' check (plan in ('free','premium','pro')),
   is_admin boolean not null default false,
   created_at timestamptz not null default now()
 );

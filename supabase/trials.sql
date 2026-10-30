@@ -2,6 +2,11 @@
 -- A member with plan_until set keeps their plan until that moment, then drops back to Free automatically.
 -- (The site also treats an expired plan as Free straight away, so nothing depends on the clean-up below running on time.)
 
+-- Plans are now Free / Premium (Crypto + TradFi together) / Pro. Older Crypto and TradFi members become Premium.
+alter table public.ttm_profiles drop constraint if exists ttm_profiles_plan_check;
+update public.ttm_profiles set plan = 'premium' where plan in ('crypto','tradfi');
+alter table public.ttm_profiles add constraint ttm_profiles_plan_check check (plan in ('free','premium','pro'));
+
 alter table public.ttm_profiles add column if not exists plan_until timestamptz;
 alter table public.ttm_profiles add column if not exists plan_note text;   -- e.g. 'giveaway', 'paid', 'trial'
 
@@ -33,7 +38,7 @@ language plpgsql security definer set search_path = public as $$
 declare v_found text[]; v_missing text[]; v_until timestamptz;
 begin
   if not public.ttm_is_admin() then raise exception 'admins only'; end if;
-  if p_plan not in ('free','crypto','tradfi','pro') then raise exception 'unknown plan'; end if;
+  if p_plan not in ('free','premium','pro') then raise exception 'unknown plan'; end if;
   v_until := case when p_days is null then null else now() + make_interval(days => p_days) end;
   with em as (select distinct lower(btrim(x)) as e from unnest(p_emails) x where btrim(x) <> ''),
        up as (update public.ttm_profiles p set plan = p_plan, plan_until = v_until, plan_note = p_note
