@@ -11,14 +11,14 @@ const pname = id => (PLANS.find(p => p[0] === id) || [0, id])[1];
 const CAT = [
   ['c:calendar', 'Crypto · Macro Watch', ['free']], ['c:tradinghours', 'Crypto · Trading Hours', ['free']], ['c:fomo', 'Crypto · FOMO Finder & RSI Chart', ['free']],
   ['c:btcmonthly', 'Crypto · BTC Monthly (with cycle tops)', ['free']], ['c:tokenevents', 'Crypto · Token Events', []], ['c:library', 'Crypto · Reports library', []], ['c:transparency', 'Crypto · Transparency Watch', ['free']],
-  ['c:marketpulse', 'Crypto · Market Pulse (liquidations, funding, open interest)', ['premium']], ['c:rsimap', 'Crypto · RSI Heatmap', ['premium']], ['c:maxpain', 'Crypto · Max Pain (options, with RSI confluence)', ['premium']], ['c:volume', 'Crypto · Volume Heatmap', ['premium']], ['c:socialpulse', 'Crypto · Social Pulse', ['premium']],
+  ['c:marketpulse', 'Crypto · Market Pulse (liquidations, funding, open interest)', ['premium']], ['c:rsimap', 'Crypto · RSI Heatmap', ['premium']], ['c:painzones', 'Crypto · Pain Zones (any coin: average cost, support / resistance, RSI)', [], 'off'], ['c:maxpain', 'Crypto · Max Pain (options, with RSI confluence)', ['premium']], ['c:volume', 'Crypto · Volume Heatmap', ['premium']], ['c:socialpulse', 'Crypto · Social Pulse', ['premium']],
   ['c:riskreward', 'Crypto · Risk / Reward calculator', ['premium']], ['c:tradejournal', 'Crypto · Trade Tracker & win ratio', []], ['c:portfolio', 'Crypto · Portfolio Forecast', []],
   ['t:calendar', 'TradFi · Macro Watch', ['free']], ['t:tradinghours', 'TradFi · Trading Hours', ['free']], ['t:congress', 'TradFi · Congress Watch', []],
   ['t:globalmarkets', 'TradFi · Global Markets', ['premium']], ['t:bonds', 'TradFi · Bonds & Rates', ['premium']], ['t:macrointel', 'TradFi · Macro Intel', ['premium']], ['t:newsrisk', 'TradFi · News & Risk', ['premium']], ['t:tfcalc', 'TradFi · Risk / Reward calculator', ['premium']],
   ['indicators', 'TTM indicators on TradingView', []], ['sync', 'Cloud sync of trades', []], ['excel', 'Excel export', []], ['alerts', 'Telegram trade alerts', []]
 ];
 // Free means "everyone who is signed in or not"; paid lists add the plan (Crypto items are also in Pro, etc.)
-const DEF = {}; CAT.forEach(c => { DEF[c[0]] = c[2].slice(); if(DEF[c[0]].indexOf('pro') < 0) DEF[c[0]].push('pro'); });   // Pro has its own tick boxes; default is everything on
+const DEF = {}; CAT.forEach(c => { DEF[c[0]] = c[2].slice(); if(DEF[c[0]].indexOf('pro') < 0 && c[3] !== 'off') DEF[c[0]].push('pro'); });   // Pro has its own tick boxes; default is everything on
 let CFG = {url: '', key: '', tv: [], plans: {}}, USER = null, PROF = null, SYNC = {state: 'off', at: 0};
 let SET = {charging: false, wall: false, track: true, access: JSON.parse(JSON.stringify(DEF))};
 const ls = (k, d) => { try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } };
@@ -28,7 +28,7 @@ const on = () => !!(CFG.url && CFG.key);
 const css = document.createElement('style');
 css.textContent = `.acct-btn{background:transparent;border:1px solid var(--gold,#dba118);color:var(--gold2,#f2c14e);padding:7px 12px;border-radius:999px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.acct-btn:hover{background:rgba(219,161,24,.12)}
 section.locked>.wrap>*:not(.lock-panel){display:none !important}.lock-panel{border:1px solid var(--gold,#dba118);background:rgba(219,161,24,.08);border-radius:14px;padding:26px 22px;max-width:640px;margin:30px auto}.lock-panel h3{margin:0 0 8px;color:var(--gold2,#f2c14e);font-size:20px}.lock-panel p{margin:0 0 14px;color:var(--text,#e8e6e1);font-size:14.5px;line-height:1.55}
-a[data-lk]::before{content:'🔒 '}.ttm-btn{background:var(--gold,#dba118);color:#111;border:none;border-radius:8px;padding:10px 16px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}.ttm-btn.ghost{background:transparent;color:var(--gold2,#f2c14e);border:1px solid var(--gold,#dba118)}
+a[data-lk]::before{content:'🔒 '}a[data-hid]{display:none !important}.ttm-btn{background:var(--gold,#dba118);color:#111;border:none;border-radius:8px;padding:10px 16px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}.ttm-btn.ghost{background:transparent;color:var(--gold2,#f2c14e);border:1px solid var(--gold,#dba118)}
 #authModal{position:fixed;inset:0;z-index:3000;display:none;background:rgba(0,0,0,.78);overflow:auto;padding:6vh 14px}#authModal.open{display:block}#authBody{max-width:460px;margin:0 auto;background:var(--card,#16161a);border:1px solid var(--gold,#dba118);border-radius:14px;padding:20px 22px;color:var(--text,#e8e6e1)}#authBody h3{margin:0 0 10px;color:var(--gold,#dba118);font-size:14px;letter-spacing:1.2px;text-transform:uppercase}#authBody input{width:100%;box-sizing:border-box;background:rgba(255,255,255,.04);border:1px solid var(--line,#2b2b30);color:inherit;border-radius:8px;padding:10px;font:inherit;margin:4px 0 12px}#authBody .row{display:flex;gap:8px;flex-wrap:wrap}#authBody small{color:var(--mute,#8b8f9a)}
 .plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}@media (max-width:760px){.plan-grid{grid-template-columns:1fr}}@media (max-width:520px){.plan-grid{grid-template-columns:1fr}}.plan-card{border:1px solid var(--line,#2b2b30);border-radius:12px;padding:14px;background:rgba(255,255,255,.02)}.plan-card.me{border-color:var(--gold,#dba118)}.plan-card h4{margin:0;color:var(--gold2,#f2c14e);font-size:17px}.plan-card .pr{font-size:13px;color:var(--mute,#8b8f9a);margin:4px 0 8px}.plan-card ul{margin:0;padding-left:18px;font-size:13px;line-height:1.55}`;
 document.head.appendChild(css);
@@ -216,7 +216,8 @@ function applyGates(){
       lp.innerHTML = SET.wall && !USER ? `<h3>Sign in to continue</h3><p>Create a free TTM account, or sign in, to open the terminal.</p><button class="ttm-btn" id="lockSignIn">Sign in / create free account</button>`
         : `<h3>🔒 ${e(title)}</h3><p>This section is included with the <b>${e(needText(key))}</b> plan.${USER ? ` You are on <b>${e(pname(PROF.plan))}</b>. Paid plans are not open for self-sign-up yet; ask TTM on Telegram.` : ' Sign in to see what your plan includes.'}</p>${USER ? '' : '<button class="ttm-btn" id="lockSignIn">Sign in / create free account</button>'}`; }
     else if(lp) lp.remove();
-    document.querySelectorAll(`a[href="#${sec.id}"]`).forEach(a => { if(lock) a.setAttribute('data-lk', '1'); else a.removeAttribute('data-lk'); }); });
+    const offAll = lock && (SET.access[key] || []).length === 0; document.querySelectorAll(`a[href="#${sec.id}"]`).forEach(a => { if(lock) a.setAttribute('data-lk', '1'); else a.removeAttribute('data-lk'); if(offAll) a.setAttribute('data-hid', '1'); else a.removeAttribute('data-hid'); });
+    if(offAll){ const l2 = wrap.querySelector(':scope > .lock-panel'); if(l2) l2.innerHTML = '<h3>Coming soon</h3><p>This section is not available yet.</p>'; } });
   // the crypto calculator without the tracker: hide the parts that need it
   const rr = $('riskreward'); if(rr) rr.classList.toggle('no-tracker', !can('c:tradejournal'));
 }

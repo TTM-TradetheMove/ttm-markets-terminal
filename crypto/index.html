@@ -698,6 +698,7 @@ body.view-section #backFab{display:block}
       <a href="#btcmonthly">BTC Monthly</a>
       <a href="#rsimap">RSI Heatmap</a>
       <a href="#maxpain">Max Pain</a>
+      <a href="#painzones">Pain Zones</a>
       <a href="#volume">Volume Heatmap</a>
       <a href="#riskreward">Risk / Reward</a>
       <a href="#tradejournal">Trade Tracker</a>
@@ -751,7 +752,7 @@ body.view-section #backFab{display:block}
   </div>
 </div>
 
-<div id="menuHome"><div class="wrap"><h2>Trading tools</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#riskreward"><b>Risk / Reward Tooling</b><span>Size a trade by risk % , risk $ or investment, with live candles, leverage and liquidation</span></a><a class="menu-tile" href="#tradejournal"><b>Trade Tracker &amp; Win Ratio</b><span>Open and closed trades by account and time frame, win rate, equity curve, Excel export</span></a><a class="menu-tile" href="#portfolio"><b>Portfolio Forecast</b><span>Spot, leverage and super / retirement: forecast vs actual at live prices</span></a><a class="menu-tile" href="#members"><b>TradingView Indicators</b><span>TTM indicators for TradingView (coming soon)</span></a></div><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#marketpulse"><b>Market Pulse</b><span>Fear & Greed, funding, liquidations</span></a><a class="menu-tile" href="#btcmonthly"><b>BTC Monthly</b><span>Bitcoin returns month by month</span></a><a class="menu-tile" href="#fomo"><b>FOMO Finder &amp; RSI Chart</b><span>Sentiment gauge plus price and RSI</span></a><a class="menu-tile" href="#rsimap"><b>RSI Heatmap</b><span>Overbought / oversold across ~125 coins</span></a><a class="menu-tile" href="#maxpain"><b>Max Pain</b><span>Options max pain by token, with RSI confluence</span></a><a class="menu-tile" href="#volume"><b>Volume Heatmap</b><span>Surging and drying-up volume by coin</span></a><a class="menu-tile" href="#socialpulse"><b>Social Pulse</b><span>Truth Social and crypto news feed</span></a><a class="menu-tile" href="#tokenevents"><b>Token Events</b><span>Unlocks, listings and airdrops</span></a><a class="menu-tile" href="#library"><b>Reports</b><span>Asset reviews and deep dives</span></a><a class="menu-tile" href="#transparency"><b>Transparency Watch</b><span>Congress and insider trading watch</span></a></div></div></div>
+<div id="menuHome"><div class="wrap"><h2>Trading tools</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#riskreward"><b>Risk / Reward Tooling</b><span>Size a trade by risk % , risk $ or investment, with live candles, leverage and liquidation</span></a><a class="menu-tile" href="#tradejournal"><b>Trade Tracker &amp; Win Ratio</b><span>Open and closed trades by account and time frame, win rate, equity curve, Excel export</span></a><a class="menu-tile" href="#portfolio"><b>Portfolio Forecast</b><span>Spot, leverage and super / retirement: forecast vs actual at live prices</span></a><a class="menu-tile" href="#members"><b>TradingView Indicators</b><span>TTM indicators for TradingView (coming soon)</span></a></div><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#marketpulse"><b>Market Pulse</b><span>Fear & Greed, funding, liquidations</span></a><a class="menu-tile" href="#btcmonthly"><b>BTC Monthly</b><span>Bitcoin returns month by month</span></a><a class="menu-tile" href="#fomo"><b>FOMO Finder &amp; RSI Chart</b><span>Sentiment gauge plus price and RSI</span></a><a class="menu-tile" href="#rsimap"><b>RSI Heatmap</b><span>Overbought / oversold across ~125 coins</span></a><a class="menu-tile" href="#painzones"><b>Pain Zones</b><span>Average holder cost, support / resistance and RSI for any coin</span></a><a class="menu-tile" href="#maxpain"><b>Max Pain</b><span>Options max pain by token, with RSI confluence</span></a><a class="menu-tile" href="#volume"><b>Volume Heatmap</b><span>Surging and drying-up volume by coin</span></a><a class="menu-tile" href="#socialpulse"><b>Social Pulse</b><span>Truth Social and crypto news feed</span></a><a class="menu-tile" href="#tokenevents"><b>Token Events</b><span>Unlocks, listings and airdrops</span></a><a class="menu-tile" href="#library"><b>Reports</b><span>Asset reviews and deep dives</span></a><a class="menu-tile" href="#transparency"><b>Transparency Watch</b><span>Congress and insider trading watch</span></a></div></div></div>
 <button id="backFab" type="button">&larr; Menu</button>
 <div id="backBar"><div class="wrap"><button id="backBtn" type="button">&larr; Back to menu</button><span id="backTitle"></span></div></div>
 <section id="calendar">
@@ -1273,6 +1274,21 @@ body.view-section #backFab{display:block}
     <div class="rsi-tiles" id="volTiles"></div>
     <div class="rsi-wrap" id="volTblWrap" style="display:none"><table class="rsi-tbl" id="volTable"><tbody><tr><td class="na">Loading…</td></tr></tbody></table></div>
     <p class="calendar-note" style="margin-top:10px">Volume is OKX spot USDT volume, refreshed about every 10 minutes. The newest candle is still forming, so a young candle can read low early on. Positive or negative means the latest candle closed up or down, not a split of buyers and sellers. Heavy volume on a down candle is not necessarily more selling than buying. Not financial advice.</p>
+  </div>
+</section>
+
+<section id="painzones">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">Pain Zones</span>
+      <h2>Where holders hurt, for any coin</h2>
+      <p>Works on any token, with or without options. It builds a volume-at-price map from real candles to find where most coins changed hands (the average holder's cost), then adds support and resistance and RSI. Price far below the average cost means most recent buyers are underwater. That is where bounces fail at resistance, or where capitulation lows form.</p>
+    </div>
+    <div class="rsi-ctl"><input id="pzCoin" class="rsi-search" type="search" list="pzList" placeholder="Type a ticker, e.g. SOL, BIO" autocomplete="off" spellcheck="false" value="BTC"><datalist id="pzList"></datalist><button class="rr-btn sm" id="pzGo" type="button">Analyse</button></div>
+    <div class="filter-row" id="pzTf" style="margin-bottom:6px"><button class="filter-chip" data-t="1h">1h</button><button class="filter-chip active" data-t="4h">4h</button><button class="filter-chip" data-t="1d">1D</button><button class="filter-chip" data-t="1w">1W</button></div>
+    <p class="calendar-note" id="pzSt" style="margin:0 0 12px">Pick a token and press Analyse.</p>
+    <div id="pzBody"></div>
+    <p class="calendar-note" style="margin-top:12px">Levels come from recent exchange candles (Bybit, then OKX), so they update every time you analyse. Cost levels are an estimate from volume, not real wallet data. Education only, not financial advice.</p>
   </div>
 </section>
 
@@ -4564,6 +4580,76 @@ document.addEventListener('click', ev => {
   if(b.dataset.c){ coin = b.dataset.c; ei = 0; draw(); } else if(b.dataset.e != null){ ei = +b.dataset.e; draw(); } else if(b.dataset.t){ tf = b.dataset.t; draw(); }
 });
 load(); setInterval(load, 10 * 60 * 1000);
+})();
+</script>
+
+<script>
+(function(){
+const $ = id => document.getElementById(id); if(!$('pzBody')) return;
+let tf = '4h';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const px = v => v == null ? '—' : v >= 1000 ? '$' + Math.round(v).toLocaleString() : v >= 1 ? '$' + v.toFixed(2) : '$' + v.toPrecision(3);
+const pc = v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
+const IV = {'1h': {b: '60', o: '1H', s: 3600e3}, '4h': {b: '240', o: '4H', s: 4 * 3600e3}, '1d': {b: 'D', o: '1D', s: 864e5}, '1w': {b: 'W', o: '1W', s: 7 * 864e5}};
+async function getJ(u){ const r = await fetch(u, {cache: 'no-store'}); if(!r.ok) throw new Error(r.status); return r.json(); }
+async function candles(a, t){
+  const v = IV[t];
+  try{ const d = await getJ(`https://api.bybit.com/v5/market/kline?category=spot&symbol=${a}USDT&interval=${v.b}&limit=500`); const l = d.result.list; if(l && l.length > 40) return {rows: l.map(x => ({t: +x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4], v: +x[5]})).sort((p, q) => p.t - q.t), src: 'Bybit'}; }catch(e){}
+  try{ const d = await getJ(`https://www.okx.com/api/v5/market/candles?instId=${a}-USDT&bar=${v.o}&limit=300`); if(d.data && d.data.length > 40) return {rows: d.data.map(x => ({t: +x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4], v: +x[5]})).sort((p, q) => p.t - q.t), src: 'OKX'}; }catch(e){}
+  return null;
+}
+function rsi(c, n = 14){ if(c.length < n + 2) return null; let g = 0, l = 0; for(let i = 1; i <= n; i++){ const d = c[i] - c[i - 1]; g += Math.max(d, 0); l += Math.max(-d, 0); } g /= n; l /= n;
+  for(let i = n + 1; i < c.length; i++){ const d = c[i] - c[i - 1]; g = (g * (n - 1) + Math.max(d, 0)) / n; l = (l * (n - 1) + Math.max(-d, 0)) / n; } return l === 0 ? 100 : Math.round((100 - 100 / (1 + g / l)) * 10) / 10; }
+function analyse(rows){
+  const price = rows[rows.length - 1].c, lo = Math.min(...rows.map(r => r.l)), hi = Math.max(...rows.map(r => r.h)), NB = 48, st = (hi - lo) / NB || 1, bins = Array(NB).fill(0);
+  rows.forEach(r => { const a = Math.max(0, Math.floor((r.l - lo) / st)), b = Math.min(NB - 1, Math.floor((r.h - lo) / st)), n = b - a + 1; for(let i = a; i <= b; i++) bins[i] += r.v / n; });
+  const tot = bins.reduce((x, y) => x + y, 0), poc = bins.indexOf(Math.max(...bins));
+  // value area: grow from the POC until 70% of volume
+  let a = poc, b = poc, acc = bins[poc]; while(acc < tot * .7 && (a > 0 || b < NB - 1)){ const up = b < NB - 1 ? bins[b + 1] : -1, dn = a > 0 ? bins[a - 1] : -1; if(up >= dn){ b++; acc += bins[b]; } else { a--; acc += bins[a]; } }
+  let pv = 0, vv = 0; rows.forEach(r => { const tp = (r.h + r.l + r.c) / 3; pv += tp * r.v; vv += r.v; }); const vwap = vv ? pv / vv : price;
+  // support / resistance from swing pivots, merged when within 1%
+  const piv = []; for(let i = 4; i < rows.length - 4; i++){ let H = true, L = true; for(let k = 1; k <= 4; k++){ if(rows[i].h <= rows[i - k].h || rows[i].h <= rows[i + k].h) H = false; if(rows[i].l >= rows[i - k].l || rows[i].l >= rows[i + k].l) L = false; } if(H) piv.push(rows[i].h); if(L) piv.push(rows[i].l); }
+  piv.sort((x, y) => x - y); const cl = []; piv.forEach(p => { const c = cl[cl.length - 1]; if(c && Math.abs(p - c.p) / c.p < 0.01){ c.p = (c.p * c.n + p) / (c.n + 1); c.n++; } else cl.push({p, n: 1}); });
+  const sup = cl.filter(c => c.p < price).sort((x, y) => y.p - x.p).slice(0, 3), res = cl.filter(c => c.p > price).sort((x, y) => x.p - y.p).slice(0, 3);
+  return {price, lo, hi, st, bins, poc, va: [lo + a * st, lo + (b + 1) * st], pocP: lo + (poc + .5) * st, vwap, sup, res, rsi: rsi(rows.map(r => r.c)), n: rows.length};
+}
+function chart(A){
+  const W = 900, H = 420, pl = 70, pr = 14, top = 10, bot = 10, ph = H - top - bot, y = v => top + (1 - (v - A.lo) / (A.hi - A.lo)) * ph, mx = Math.max(...A.bins), bw = W - pl - pr - 150;
+  let g = '';
+  A.bins.forEach((v, i) => { const p0 = A.lo + i * A.st, inVA = p0 + A.st > A.va[0] && p0 < A.va[1], w = v / mx * bw, yy = y(p0 + A.st), h = Math.max(1, y(p0) - yy - 1);
+    g += `<rect x="${pl}" y="${yy}" width="${w}" height="${h}" fill="${i === A.poc ? '#dba118' : inVA ? 'rgba(219,161,24,.45)' : 'rgba(255,255,255,.14)'}" rx="1.5"><title>${px(p0)}–${px(p0 + A.st)}</title></rect>`; });
+  const line = (v, col, lab, dash, dy) => `<line x1="${pl}" y1="${y(v)}" x2="${W - pr - 140}" y2="${y(v)}" stroke="${col}" stroke-width="1.3" ${dash ? 'stroke-dasharray="5 4"' : ''}/><text x="${W - pr - 136}" y="${y(v) + 4 + (dy || 0)}" font-size="11.5" fill="${col}">${lab} ${px(v)}</text>`;
+  A.sup.forEach((s, i) => g += line(s.p, '#3fb47a', 'Support', true, 0)); A.res.forEach(s => g += line(s.p, '#e0554d', 'Resist', true, 0));
+  g += line(A.vwap, '#8ab4ff', 'Avg cost', false, 0) + line(A.pocP, '#dba118', 'Most traded', false, 0) + line(A.price, '#ffffff', 'Now', false, 0);
+  for(let i = 0; i <= 4; i++){ const v = A.lo + (A.hi - A.lo) * i / 4; g += `<text x="2" y="${y(v) + 4}" font-size="10.5" fill="#9a978f">${px(v)}</text>`; }
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${g}</svg><p class="calendar-note" style="margin:4px 0 0">Bars = volume traded at each price (bright = busiest, medium = the zone holding 70% of volume). Blue = volume-weighted average cost of recent buyers.</p>`;
+}
+function read(A, coin){
+  const d = (A.price - A.vwap) / A.vwap * 100, r = A.rsi, ns = A.sup[0], nr = A.res[0], dS = ns ? (A.price - ns.p) / A.price * 100 : null, dR = nr ? (nr.p - A.price) / A.price * 100 : null, inVA = A.price >= A.va[0] && A.price <= A.va[1];
+  let kind = 'be', head, body;
+  if(d < -8 && r != null && r <= 32){ kind = 'up'; head = 'Capitulation zone'; body = `${coin} trades ${Math.abs(d).toFixed(1)}% below the average cost of recent buyers and RSI is ${r} (oversold). Most holders are underwater and selling is stretched, which is where relief bounces tend to start. The average-cost line ${px(A.vwap)} is the first level that gets tested.`; }
+  else if(d > 8 && r != null && r >= 68){ kind = 'dn'; head = 'Profit-taking zone'; body = `${coin} is ${d.toFixed(1)}% above the average cost of recent buyers and RSI is ${r} (overbought). Most holders sit in profit, so selling pressure builds easily. A drop back toward ${px(A.vwap)} is the usual pull.`; }
+  else if(dR != null && dR < 2 && r != null && r >= 60){ kind = 'warn'; head = 'Pressing into resistance'; body = `Price is ${dR.toFixed(1)}% under resistance at ${px(nr.p)} with RSI ${r}. Holders from that level are likely to sell to break even, so this is where rallies often stall.`; }
+  else if(dS != null && dS < 2 && r != null && r <= 40){ kind = 'up'; head = 'Sitting on support'; body = `Price is ${dS.toFixed(1)}% above support at ${px(ns.p)} with RSI ${r}. Buyers have defended this level before. A close below it would put the next support in play.`; }
+  else { head = inVA ? 'Inside the busy zone' : d < 0 ? 'Below average cost' : 'Above average cost'; body = `${coin} is ${Math.abs(d).toFixed(1)}% ${d < 0 ? 'below' : 'above'} the average cost of recent buyers${r != null ? ` with RSI ${r}` : ''}. ${inVA ? 'Price is inside the zone where 70% of volume traded, so it tends to chop here until it breaks out.' : 'Price is outside the busiest zone, so moves can run until they meet the next big volume level.'} No extreme to act on right now.`; }
+  const ic = {up: '▲', dn: '▼', warn: '!', be: '•'}[kind], col = {up: '#3fb47a', dn: '#e0554d', warn: '#dba118', be: '#9a978f'}[kind];
+  return `<p style="margin:0 0 6px;font-size:15px"><b style="color:${col}">${ic} ${head}</b></p><p style="margin:0;font-size:14px;line-height:1.5">${body}</p>`;
+}
+async function run(){
+  const coin = ($('pzCoin').value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, ''); if(!coin){ $('pzSt').textContent = 'Type a ticker first.'; return; }
+  $('pzSt').textContent = 'Loading ' + coin + ' candles…'; $('pzBody').innerHTML = '';
+  const res = await candles(coin, tf); if(!res){ $('pzSt').textContent = 'No candles for ' + coin + ' on Bybit or OKX. Check the ticker.'; return; }
+  const A = analyse(res.rows), d = (A.price - A.vwap) / A.vwap * 100, rz = A.rsi == null ? '—' : A.rsi;
+  $('pzSt').textContent = `${coin}/USDT · ${tf.toUpperCase()} · ${A.n} candles · ${res.src} · ${new Date().toLocaleTimeString()}`;
+  const tile = (l, v, s) => `<div><small>${l}</small><strong>${v}</strong>${s ? `<br><span style="font-size:11px;color:var(--mute)">${s}</span>` : ''}</div>`;
+  $('pzBody').innerHTML = `<div class="rr-card"><div class="rr-out c5" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">${tile('Price now', px(A.price))}${tile('Average cost', px(A.vwap), pc(d) + ' vs price now')}${tile('Most traded', px(A.pocP), 'busiest price')}${tile('RSI (14)', rz, A.rsi == null ? '' : A.rsi >= 70 ? 'overbought' : A.rsi <= 30 ? 'oversold' : 'neutral')}${tile('Nearest support', A.sup[0] ? px(A.sup[0].p) : '—', A.sup[0] ? pc((A.sup[0].p - A.price) / A.price * 100) : '')}${tile('Nearest resistance', A.res[0] ? px(A.res[0].p) : '—', A.res[0] ? pc((A.res[0].p - A.price) / A.price * 100) : '')}</div></div>
+    <div class="rr-card"><h3>What it says</h3>${read(A, coin)}</div><div class="rr-card"><h3>${esc(coin)} volume at price</h3>${chart(A)}</div>`;
+}
+$('pzGo').addEventListener('click', run); $('pzCoin').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); run(); } });
+$('pzTf').addEventListener('click', e => { const b = e.target.closest('.filter-chip'); if(!b) return; document.querySelectorAll('#pzTf .filter-chip').forEach(x => x.classList.remove('active')); b.classList.add('active'); tf = b.dataset.t; if($('pzBody').innerHTML) run(); });
+fetch('../rsi_heatmap.json').then(r => r.ok ? r.json() : null).then(d => { if(d && d.coins) $('pzList').innerHTML = d.coins.map(c => `<option value="${esc(c.s)}">`).join('') + '<option value="BIO">'; }).catch(() => {});
+window.addEventListener('hashchange', () => { if(location.hash === '#painzones' && !$('pzBody').innerHTML) run(); });
+if(location.hash === '#painzones') setTimeout(run, 300);
 })();
 </script>
 
