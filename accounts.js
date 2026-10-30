@@ -18,7 +18,7 @@ const CAT = [
   ['indicators', 'TTM indicators on TradingView', []], ['sync', 'Cloud sync of trades', []], ['excel', 'Excel export', []], ['alerts', 'Telegram trade alerts', []]
 ];
 // Free means "everyone who is signed in or not"; paid lists add the plan (Crypto items are also in Pro, etc.)
-const DEF = {}; CAT.forEach(c => { DEF[c[0]] = c[2].slice(); });
+const DEF = {}; CAT.forEach(c => { DEF[c[0]] = c[2].slice(); if(DEF[c[0]].indexOf('pro') < 0) DEF[c[0]].push('pro'); });   // Pro has its own tick boxes; default is everything on
 let CFG = {url: '', key: '', tv: [], plans: {}}, USER = null, PROF = null, SYNC = {state: 'off', at: 0};
 let SET = {charging: false, wall: false, track: true, access: JSON.parse(JSON.stringify(DEF))};
 const ls = (k, d) => { try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } };
@@ -119,7 +119,7 @@ function trkNote(){ const n = document.getElementById('ttmTrkNote'); if(!n) retu
 async function boot(){
   try{ const r = await fetch(BASE + 'ttm_config.json?t=' + Date.now(), {cache: 'no-store'}); if(r.ok){ const c = await r.json(); CFG = {url: c.supabase_url || '', key: c.supabase_anon_key || '', tv: c.tradingview || [], plans: c.plans || {}}; } }catch(err){}
   if(on()){
-    try{ const r = await raw('/rest/v1/ttm_settings?select=key,value'); if(r.ok && Array.isArray(r.json)) r.json.forEach(x => { if(x.key === 'charging') SET.charging = x.value === true || x.value === 'true'; if(x.key === 'wall') SET.wall = x.value === true || x.value === 'true'; if(x.key === 'track') SET.track = !(x.value === false || x.value === 'false'); if(x.key === 'access' && x.value && typeof x.value === 'object') Object.keys(x.value).forEach(k => { const a = (x.value[k] || []).map(normPlan); SET.access[k] = a.filter((v, i) => a.indexOf(v) === i); }); }); }catch(err){}
+    try{ const r = await raw('/rest/v1/ttm_settings?select=key,value'); if(r.ok && Array.isArray(r.json)) r.json.forEach(x => { if(x.key === 'charging') SET.charging = x.value === true || x.value === 'true'; if(x.key === 'wall') SET.wall = x.value === true || x.value === 'true'; if(x.key === 'track') SET.track = !(x.value === false || x.value === 'false'); if(x.key === 'access' && x.value && typeof x.value === 'object'){ const hasPro = x.value._pro === true; Object.keys(x.value).forEach(k => { if(k === '_pro') return; const a = (x.value[k] || []).map(normPlan); if(!hasPro) a.push('pro'); SET.access[k] = a.filter((v, i) => a.indexOf(v) === i); }); } }); }catch(err){}
     const t = await token();
     if(t){ const u = await raw('/auth/v1/user', {}, t); if(u.ok && u.json && u.json.id){ USER = {id: u.json.id, email: u.json.email}; const p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email,plan_until`); PROF = (p.ok && p.json && p.json[0]) || {plan: 'free', is_admin: false}; PROF.plan = normPlan(PROF.plan); if(PROF.plan_until && !PROF.is_admin && new Date(PROF.plan_until) < new Date()){ PROF.expiredPlan = PROF.plan; PROF.plan = 'free'; PROF.plan_until = null; api('/rest/v1/rpc/ttm_expire_me', {method: 'POST', body: '{}'}).catch(() => {}); } } }
   }
@@ -132,7 +132,7 @@ function can(key){
   if(SET.wall && !USER) return false;
   const a = SET.access[key]; if(!a) return true;
   const plan = PROF ? PROF.plan : 'free';
-  return plan === 'pro' || a.indexOf(plan) >= 0 || a.indexOf('free') >= 0;
+  return a.indexOf(plan) >= 0 || a.indexOf('free') >= 0;
 }
 const needText = key => { const a = (SET.access[key] || []).filter(x => x !== 'pro'); const l = a.length ? a.map(pname) : []; return (l.length ? l.join(' or ') + ' or ' : '') + 'Pro'; };
 function upsell(key){
@@ -254,7 +254,7 @@ function planBadge(){ return PROF ? `<span class="rr-pill be">${e(pname(PROF.pla
 function planCards(){
   const inPlan = (k, p) => { const a = SET.access[k] || []; return a.indexOf(p) >= 0; }, free = CAT.filter(c => inPlan(c[0], 'free')), lab = c => c[1].replace(/ \(.*\)$/, '');
   const only = p => CAT.filter(c => inPlan(c[0], p) && !inPlan(c[0], 'free'));
-  const pro = CAT.filter(c => !inPlan(c[0], 'free') && !inPlan(c[0], 'premium'));
+  const pro = CAT.filter(c => inPlan(c[0], 'pro') && !inPlan(c[0], 'free') && !inPlan(c[0], 'premium'));
   const price = p => { const x = (CFG.plans || {})[p]; if(!(x && (x.monthly || x.annual))) return p === 'free' ? 'Free' : 'Price to be confirmed';
     const one = (v, t) => `<b>${e(v)} USDT</b> / ${t}${fxTxt(+v)}`; return [x.monthly ? one(x.monthly, 'month') : '', x.annual ? one(x.annual, 'year') : ''].filter(Boolean).join('<br>'); };
   const card = (p, head, items) => `<div class="plan-card ${PROF && PROF.plan === p ? 'me' : ''}"><h4>${pname(p)}</h4><div class="pr">${price(p)}${PROF && PROF.plan === p ? ' · <b style="color:var(--gold2)">your plan</b>' : ''}</div><div style="font-size:12px;color:var(--mute);margin-bottom:4px">${head}</div><ul>${items.map(c => `<li>${e(lab(c))}</li>`).join('') || '<li>—</li>'}</ul></div>`;
@@ -282,13 +282,13 @@ async function adminUi(){
   if(!PROF || !PROF.is_admin){ a.innerHTML = '<div class="rr-card"><p style="margin:0">Admins only.</p></div>'; return; }
   const r = await api('/rest/v1/ttm_profiles?select=id,email,plan,is_admin,created_at,plan_until,plan_note&order=created_at.desc&limit=500'), users = (r.ok && Array.isArray(r.json)) ? r.json : [];
   const sel = (attr, v) => `<select ${attr} style="background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 9px;font:inherit">${PLANS.map(p => `<option value="${p[0]}" ${p[0] === v ? 'selected' : ''}>${p[1]}</option>`).join('')}</select>`;
-  const cell = (k, p) => p === 'pro' ? '<td style="text-align:center">✓</td>' : `<td style="text-align:center"><input type="checkbox" data-ak="${k}" data-ap="${p}" ${(SET.access[k] || []).indexOf(p) >= 0 ? 'checked' : ''}></td>`;
+  const cell = (k, p) => `<td style="text-align:center"><input type="checkbox" data-ak="${k}" data-ap="${p}" ${(SET.access[k] || []).indexOf(p) >= 0 ? 'checked' : ''}></td>`;
   a.innerHTML = `<div class="rr-card"><h3>Switches</h3>
     <label style="display:flex;gap:10px;align-items:center;font-size:14px;margin-bottom:8px"><input type="checkbox" id="admCharge" ${SET.charging ? 'checked' : ''} style="width:auto"> <span><b>Plans on.</b> When off, every section and feature is open to everyone.</span></label>
     <label style="display:flex;gap:10px;align-items:center;font-size:14px;margin-bottom:8px"><input type="checkbox" id="admTrack" ${SET.track ? 'checked' : ''} style="width:auto"> <span><b>Collect usage data.</b> Untick to pause all tracking instantly (also blocks the database from accepting new events).</span></label>
     <label style="display:flex;gap:10px;align-items:center;font-size:14px"><input type="checkbox" id="admWall" ${SET.wall ? 'checked' : ''} style="width:auto"> <span><b>Require sign-in.</b> Visitors must sign in before anything opens (only applies when plans are on).</span></label></div>
     <div class="rr-card"><h3>What each plan sees</h3><div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Section or feature</th>${PLANS.map(p => `<th style="text-align:center">${p[1]}</th>`).join('')}</tr></thead><tbody>${CAT.map(c => `<tr><td>${e(c[1])}</td>${PLANS.map(p => cell(c[0], p[0])).join('')}</tr>`).join('')}</tbody></table></div>
-    <div class="rr-acts"><button class="rr-btn sm" id="admSaveSet">Save</button><button class="rr-btn ghost sm" id="admReset">Reset to the planned defaults</button></div><p class="calendar-note" id="admNote" style="margin:8px 0 0">Pro always has everything. Free means open to everyone, signed in or not. Locks work in the browser, so they hide and block what the page shows; the site is static and its code and data files are public, so real protection for paid content needs that content moved behind the backend. Prices are set in ttm_config.json.</p></div>
+    <div class="rr-acts"><button class="rr-btn sm" id="admSaveSet">Save</button><button class="rr-btn ghost sm" id="admReset">Reset to the planned defaults</button></div><p class="calendar-note" id="admNote" style="margin:8px 0 0">Tick a box to give that plan the section; untick everywhere to switch it off until it is ready (you, as admin, still see everything). Ticking Free also ticks Premium and Pro, and ticking Premium also ticks Pro; unticking Pro unticks the others. Free means open to everyone, signed in or not. Locks work in the browser, so they hide and block what the page shows; the site is static and its code and data files are public, so real protection for paid content needs that content moved behind the backend. Prices are set in ttm_config.json.</p></div>
     <div class="rr-card"><h3>Give people a plan for a limited time</h3><p class="calendar-note" style="margin:0 0 10px">For giveaways, trials or "paid until" dates. Paste the emails of people who have already created an account (one per line). When the time is up they go back to Free on their own. If they pay, set their plan from the Members table below to remove the end date.</p>
       <textarea id="grEmails" rows="4" placeholder="winner1@example.com&#10;winner2@example.com" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 10px;font:inherit"></textarea>
       <div class="rr-acts" style="margin:10px 0 0;align-items:center">${sel('id="grPlan"', 'pro')}<select id="grDays" style="background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 9px;font:inherit">${[7, 14, 30, 60, 90, 365].map(d => `<option value="${d}" ${d === 30 ? 'selected' : ''}>${d} days</option>`).join('')}</select><input id="grNote" value="giveaway" maxlength="20" style="width:120px;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 9px;font:inherit" title="A label shown next to the end date"><button class="rr-btn sm" id="grGo">Grant access</button><button class="rr-btn ghost sm" id="grExpire">Revert expired now</button></div>
@@ -467,6 +467,12 @@ document.addEventListener('click', async ev => {
 });
 document.addEventListener('change', async ev => { const t = ev.target;
   if(t.dataset && t.dataset.uid){ const r = await api(`/rest/v1/ttm_profiles?id=eq.${t.dataset.uid}`, {method: 'PATCH', body: JSON.stringify({plan: t.value, plan_until: null, plan_note: null})}); t.style.borderColor = r.ok ? '#3fb47a' : '#e0554d'; } });
+document.addEventListener('change', ev => {
+  const t = ev.target; if(!(t.dataset && t.dataset.ak)) return; const row = t.closest('tr'), box = p => row.querySelector(`input[data-ap="${p}"]`);
+  if(t.dataset.ap === 'free' && t.checked){ box('premium').checked = true; box('pro').checked = true; }
+  else if(t.dataset.ap === 'premium'){ if(t.checked) box('pro').checked = true; else box('free').checked = false; }
+  else if(t.dataset.ap === 'pro' && !t.checked){ box('premium').checked = false; box('free').checked = false; }
+});
 document.addEventListener('click', async ev => {
   const gid = ev.target.id, gn = txt => { const n = $('grNote2'); if(n) n.textContent = txt; };
   if(gid === 'grGo'){
@@ -478,7 +484,7 @@ document.addEventListener('click', async ev => {
   if(gid === 'grExpire'){ const r = await api('/rest/v1/rpc/ttm_expire_plans', {method: 'POST', body: '{}'}); const msg2 = r.ok ? `${r.json} expired plan${r.json === 1 ? '' : 's'} moved back to Free.` : 'Could not run. Run supabase/trials.sql first.'; await adminUi(); gn(msg2); return; }
   if(ev.target.id === 'admReset'){ SET.access = JSON.parse(JSON.stringify(DEF)); adminUi(); const n = $('admNote'); if(n) n.textContent = 'Defaults restored. Press Save to apply.'; return; }
   if(ev.target.id !== 'admSaveSet') return;
-  const acc = {}; CAT.forEach(c => { acc[c[0]] = []; }); document.querySelectorAll('#admBody input[data-ak]').forEach(i => { if(i.checked) acc[i.dataset.ak].push(i.dataset.ap); });
+  const acc = {_pro: true}; CAT.forEach(c => { acc[c[0]] = []; }); document.querySelectorAll('#admBody input[data-ak]').forEach(i => { if(i.checked) acc[i.dataset.ak].push(i.dataset.ap); });
   const ch = $('admCharge').checked, wall = $('admWall').checked;
   const r = await api('/rest/v1/ttm_settings', {method: 'POST', headers: {Prefer: 'resolution=merge-duplicates'}, body: JSON.stringify([{key: 'charging', value: ch}, {key: 'wall', value: wall}, {key: 'track', value: $('admTrack').checked}, {key: 'access', value: acc}])});
   if(r.ok){ SET.charging = ch; SET.wall = wall; SET.track = $('admTrack').checked; SET.access = acc; $('admNote').textContent = 'Saved.'; ui(); } else $('admNote').textContent = 'Could not save (are you an admin?).'; });
