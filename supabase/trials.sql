@@ -8,7 +8,8 @@ update public.ttm_profiles set plan = 'premium' where plan in ('crypto','tradfi'
 alter table public.ttm_profiles add constraint ttm_profiles_plan_check check (plan in ('free','premium','pro'));
 
 alter table public.ttm_profiles add column if not exists plan_until timestamptz;
-alter table public.ttm_profiles add column if not exists plan_note text;   -- e.g. 'giveaway', 'paid', 'trial'
+alter table public.ttm_profiles add column if not exists plan_note text;
+alter table public.ttm_profiles add column if not exists beta boolean not null default false;   -- beta testers see sections ticked under Beta in Admin   -- e.g. 'giveaway', 'paid', 'trial'
 
 -- Anyone signed in can tidy up their own expired plan.
 create or replace function public.ttm_expire_me() returns void
