@@ -1,4 +1,6 @@
-social run 2026-10-29T22:58:16.783525+00:00
+social run 2026-10-30T02:27:39.916904+00:00
+  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/elonmusk?showReplies=fals -> HTTPError: HTTP Error 429: Too Many Requests
+  rate limited (429) - waiting 25s then one retry
 truth: 80 posts seen, 15 key (crypto/market) kept
 news Decrypt: 38 items
 news The Block: 20 items
@@ -6,7 +8,10 @@ news Cointelegraph: 30 items
 news CryptoSlate: 10 items
 news CoinDesk: 25 items
 news Bitcoin Magazine: 10 items
+  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/elonmusk?showReplies=fals -> HTTPError: HTTP Error 429: Too Many Requests
 x @elonmusk: via syndication, 100 fetched, 0 key, 0 kept
+  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/saylor?showReplies=false -> HTTPError: HTTP Error 429: Too Many Requests
+  rate limited (429) - waiting 25s then one retry
 x @saylor: via syndication, 99 fetched, 76 key, 8 kept
 x @VitalikButerin: via syndication, 90 fetched, 31 key, 8 kept
 x @cz_binance: via syndication, 99 fetched, 47 key, 8 kept
@@ -15,4 +20,4 @@ x @CryptoHayes: via syndication, 99 fetched, 65 key, 8 kept
 x @RaoulGMI: via syndication, 94 fetched, 59 key, 8 kept
 x @SECGov: via syndication, 17 fetched, 8 key, 8 kept
 x @federalreserve: via syndication, 19 fetched, 7 key, 8 kept
-wrote social_data.json: truth=15, x accounts with posts=9/9; 53s
+wrote social_data.json: truth=15, x accounts with posts=9/9; 106s
