@@ -23,7 +23,9 @@ COINS = ["BTC", "ETH", "XRP", "BNB", "SOL", "DOGE", "TRX", "ADA", "HYPE", "LINK"
          "SUSHI", "1INCH", "DYDX", "GMX", "PENDLE", "RUNE", "CAKE", "ETHFI", "EIGEN", "BAL", "YFI", "SSV", "RPL", "ENS",
          "PYTH", "W", "ZRO", "AXL", "QNT", "IOTA", "ANKR", "BAT", "THETA", "OM", "POLYX", "CFG", "GT", "AXS", "SAND",
          "MANA", "GALA", "ENJ", "APE", "ILV", "PIXEL", "BEAM", "YGG", "MEME", "NEIRO", "TURBO", "POPCAT", "MOODENG",
-         "XTZ", "EOS", "FLOW", "KAVA", "MINA", "ZIL", "CFX", "EGLD", "XDC", "LRC", "METIS", "API3", "IOTX", "NEO", "QTUM"]
+         "XTZ", "EOS", "FLOW", "KAVA", "MINA", "ZIL", "CFX", "EGLD", "XDC", "LRC", "METIS", "API3", "IOTX", "NEO", "QTUM",
+         # smart contract platforms
+         "BERA", "MOVE", "IP", "KAIA", "CORE", "CELO", "ROSE", "ONE", "KSM", "GLMR", "ASTR", "ZETA", "ONT", "ICX", "WAVES", "XEM", "SCRT", "RVN", "AVAIL", "SONIC", "MON", "MEGA", "INIT", "SOON", "TREE", "STO", "BABY", "ZRC", "AERGO", "ELF"]
 CATEGORIES = {
     "Layer 1": "BTC ETH BNB SOL ADA TRX AVAX DOT TON NEAR APT SUI ATOM ICP ALGO HBAR SEI TIA INJ XTZ EOS FLOW KAVA MINA ZIL CFX EGLD KAS S XDC ETC VET NEO QTUM IOTA",
     "Layer 2": "ARB OP POL IMX STRK ZK MNT METIS LRC STX",
@@ -36,6 +38,7 @@ CATEGORIES = {
     "Privacy": "XMR ZEC DASH",
     "RWA": "ONDO OM POLYX CFG",
     "Exchange": "OKB CRO GT",
+    "Smart Contract": "BERA MOVE IP KAIA CORE CELO ROSE ONE KSM GLMR ASTR ZETA ONT ICX WAVES SCRT AVAIL SONIC MON INIT",
 }
 CAT_OF = {sym: cat for cat, syms in CATEGORIES.items() for sym in syms.split()}
 LOG = []
