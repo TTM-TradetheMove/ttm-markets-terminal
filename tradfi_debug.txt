@@ -1,21 +1,21 @@
-TTM tradfi run 2026-10-30T22:55:34+00:00
+TTM tradfi run 2026-10-31T02:15:59+00:00
 nyfed effr: 710 rows
 nyfed effr: 710 rows
 chicagofed NFCI: 121 rows
-ecb DFR: 1034 rows
-  GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=WALCL&cosd=2024-01-01 -> TimeoutError: The read operation timed out
+ecb DFR: 1035 rows
   GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01AUM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
-  GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=RRPONTSYD&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01JPM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
+  GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=WALCL&cosd=2024-01-01 -> TimeoutError: The read operation timed out
+  GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=RRPONTSYD&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01GBM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=WTREGEN&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=STLFSI4&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (1/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2&cosd=2025-01-01 -> TimeoutError: The read operation timed out
-  GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01GBM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
-  GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01AUM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
-  GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=RRPONTSYD&cosd=2024-01-01 -> TimeoutError: The read operation timed out
-  GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01JPM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=WALCL&cosd=2024-01-01 -> TimeoutError: The read operation timed out
+  GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01JPM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
+  GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01AUM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
+  GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=IRSTCB01GBM156N&cosd=2024-01-01 -> TimeoutError: The read operation timed out
+  GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=RRPONTSYD&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=WTREGEN&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=STLFSI4&cosd=2024-01-01 -> TimeoutError: The read operation timed out
   GET fail (2/2) https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2&cosd=2025-01-01 -> TimeoutError: The read operation timed out
@@ -24,25 +24,20 @@ treasury real-yield T10YIE: 458 rows
 treasury real-yield T5YIE: 458 rows
 series prefetch: 8/16 ok (missing: ['IRSTCB01AUM156N', 'IRSTCB01GBM156N', 'IRSTCB01JPM156N', 'WALCL', 'RRPONTSYD', 'WTREGEN', 'STLFSI4', 'BAMLH0A0HYM2'])
 rss Fed: 6 items
-  GET fail (1/2) https://www.rba.gov.au/statistics/tables/csv/f2-data.csv -> HTTPError: HTTP Error 403: Forbidden
-  GET fail (1/2) https://www.rba.gov.au/statistics/tables/csv/f1-data.csv -> HTTPError: HTTP Error 403: Forbidden
 rss ECB: 6 items
 yahoo: 27/27 symbols
 markets: ok
 treasury: ok
+rba f1-data.csv: 17 series, e.g. ['FIRMMCRTD', 'FIRMMCCRT', 'FIRMMCRID', 'FIRMMCRIH', 'FIRMMCRIL', 'FIRMMCRIV']
+rba f2-data.csv: 5 series, e.g. ['FCMYGBAG2D', 'FCMYGBAG3D', 'FCMYGBAG5D', 'FCMYGBAG10D', 'FCMYGBAGID']
+au: ok
 rss BoE: 6 items
-  GET fail (2/2) https://www.rba.gov.au/statistics/tables/csv/f2-data.csv -> HTTPError: HTTP Error 403: Forbidden
-  GET fail (2/2) https://www.rba.gov.au/statistics/tables/csv/f1-data.csv -> HTTPError: HTTP Error 403: Forbidden
-  GET fail (1/2) https://www.rba.gov.au/rss/rss-cb-media-releases.xml -> HTTPError: HTTP Error 403: Forbidden
-  SKIP (host www.rba.gov.au unreachable) https://www.rba.gov.au/rss/rss-cb-media-releases.xml
-rss BoJ: 6 items
-  SKIP (host www.rba.gov.au unreachable) https://www.rba.gov.au/statistics/tables/csv/f1.1-data.csv
-  SKIP (host www.rba.gov.au unreachable) https://www.rba.gov.au/statistics/tables/csv/f2.1-data.csv
-au: EMPTY
+rss RBA: 1 items
 boe IUDBEDR: 717 rows
 policy: ok
 liquidity: EMPTY
 conditions: ok
+rss BoJ: 6 items
 rss google[policy]: 14 items
 rss google[geopolitics]: 14 items
 rss google[companies]: 14 items
@@ -51,4 +46,4 @@ news: ok
 wrote tradfi_markets.json (updated) keys=['breadth', 'correlations', 'indices', 'macro', 'risk', 'vix']
 wrote tradfi_rates.json (updated) keys=['au', 'conditions', 'expectations', 'policy', 'treasury']
 wrote tradfi_news.json (updated) keys=['central_banks', 'companies', 'geopolitics', 'liquidity', 'policy']
-done in 102s
+done in 97s
