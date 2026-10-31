@@ -29,7 +29,7 @@ const on = () => !!(CFG.url && CFG.key);
 const css = document.createElement('style');
 css.textContent = `.acct-btn{background:transparent;border:1px solid var(--gold,#dba118);color:var(--gold2,#f2c14e);padding:7px 12px;border-radius:999px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.acct-btn:hover{background:rgba(219,161,24,.12)}
 section.locked>.wrap>*:not(.lock-panel){display:none !important}.lock-panel{border:1px solid var(--gold,#dba118);background:rgba(219,161,24,.08);border-radius:14px;padding:26px 22px;max-width:640px;margin:30px auto}.lock-panel h3{margin:0 0 8px;color:var(--gold2,#f2c14e);font-size:20px}.lock-panel p{margin:0 0 14px;color:var(--text,#e8e6e1);font-size:14.5px;line-height:1.55}
-a[data-lk]::before{content:'🔒 '}a[data-hid]{display:none !important}.ttm-btn{background:var(--gold,#dba118);color:#111;border:none;border-radius:8px;padding:10px 16px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}.ttm-btn.ghost{background:transparent;color:var(--gold2,#f2c14e);border:1px solid var(--gold,#dba118)}
+a[data-bt]::after{content:'BETA';margin-left:6px;font-size:9px;font-weight:800;letter-spacing:.06em;background:var(--gold,#dba118);color:#111;border-radius:4px;padding:1px 5px;vertical-align:middle}.beta-badge{display:inline-block;margin-left:8px;font-size:10.5px;font-weight:800;letter-spacing:.08em;background:var(--gold,#dba118);color:#111;border-radius:5px;padding:2px 7px;vertical-align:middle}.beta-fb{border:1px dashed var(--gold,#dba118);background:rgba(219,161,24,.05);border-radius:14px;padding:18px;margin:26px 0 0}.beta-fb h3,#fbAdmin h3{margin:0 0 6px}.fb-list{max-height:320px;overflow:auto;margin-bottom:10px}.fb-m{border:1px solid var(--line,#2b2b30);border-radius:10px;padding:10px 12px;margin:0 0 8px;font-size:14px;line-height:1.45;background:rgba(255,255,255,.02)}.fb-h{font-size:12px;color:var(--mute,#9a978f);margin-bottom:4px}.fb-r{border-left:3px solid var(--gold,#dba118);margin-top:8px;padding:2px 0 2px 10px}.fb-in{width:100%;box-sizing:border-box;background:rgba(255,255,255,.04);border:1px solid var(--line,#2b2b30);color:var(--text,#fff);border-radius:8px;padding:9px 10px;font:inherit}a[data-lk]::before{content:'🔒 '}a[data-hid]{display:none !important}.ttm-btn{background:var(--gold,#dba118);color:#111;border:none;border-radius:8px;padding:10px 16px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}.ttm-btn.ghost{background:transparent;color:var(--gold2,#f2c14e);border:1px solid var(--gold,#dba118)}
 #authModal{position:fixed;inset:0;z-index:3000;display:none;background:rgba(0,0,0,.78);overflow:auto;padding:6vh 14px}#authModal.open{display:block}#authBody{max-width:460px;margin:0 auto;background:var(--card,#16161a);border:1px solid var(--gold,#dba118);border-radius:14px;padding:20px 22px;color:var(--text,#e8e6e1)}#authBody h3{margin:0 0 10px;color:var(--gold,#dba118);font-size:14px;letter-spacing:1.2px;text-transform:uppercase}#authBody input{width:100%;box-sizing:border-box;background:rgba(255,255,255,.04);border:1px solid var(--line,#2b2b30);color:inherit;border-radius:8px;padding:10px;font:inherit;margin:4px 0 12px}#authBody .row{display:flex;gap:8px;flex-wrap:wrap}#authBody small{color:var(--mute,#8b8f9a)}
 .plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}@media (max-width:760px){.plan-grid{grid-template-columns:1fr}}@media (max-width:520px){.plan-grid{grid-template-columns:1fr}}.plan-card{border:1px solid var(--line,#2b2b30);border-radius:12px;padding:14px;background:rgba(255,255,255,.02)}.plan-card.me{border-color:var(--gold,#dba118)}.plan-card h4{margin:0;color:var(--gold2,#f2c14e);font-size:17px}.plan-card .pr{font-size:13px;color:var(--mute,#8b8f9a);margin:4px 0 8px}.plan-card ul{margin:0;padding-left:18px;font-size:13px;line-height:1.55}`;
 document.head.appendChild(css);
@@ -133,9 +133,9 @@ async function boot(){
   if(on()){
     try{ const r = await raw('/rest/v1/ttm_settings?select=key,value'); if(r.ok && Array.isArray(r.json)) r.json.forEach(x => { if(x.key === 'charging') SET.charging = x.value === true || x.value === 'true'; if(x.key === 'wall') SET.wall = x.value === true || x.value === 'true'; if(x.key === 'track') SET.track = !(x.value === false || x.value === 'false'); if(x.key === 'access' && x.value && typeof x.value === 'object'){ const hasPro = x.value._pro === true; Object.keys(x.value).forEach(k => { if(k === '_pro') return; const a = (x.value[k] || []).map(normPlan); if(!hasPro) a.push('pro'); SET.access[k] = a.filter((v, i) => a.indexOf(v) === i); }); } }); }catch(err){}
     const t = await token();
-    if(t){ const u = await raw('/auth/v1/user', {}, t); if(u.ok && u.json && u.json.id){ USER = {id: u.json.id, email: u.json.email}; let p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email,plan_until,beta`); if(!p.ok) p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email,plan_until`); if(!p.ok) p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email`); PROF = (p.ok && p.json && p.json[0]) || {plan: 'free', is_admin: false}; PROF.plan = normPlan(PROF.plan); if(PROF.plan_until && !PROF.is_admin && new Date(PROF.plan_until) < new Date()){ PROF.expiredPlan = PROF.plan; PROF.plan = 'free'; PROF.plan_until = null; api('/rest/v1/rpc/ttm_expire_me', {method: 'POST', body: '{}'}).catch(() => {}); } } }
+    if(t){ const u = await raw('/auth/v1/user', {}, t); if(u.ok && u.json && u.json.id){ USER = {id: u.json.id, email: u.json.email}; let p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email,plan_until,beta,tg_handle`); if(!p.ok) p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email,plan_until,beta`); if(!p.ok) p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email,plan_until`); if(!p.ok) p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email`); PROF = (p.ok && p.json && p.json[0]) || {plan: 'free', is_admin: false}; PROF.plan = normPlan(PROF.plan); if(PROF.plan_until && !PROF.is_admin && new Date(PROF.plan_until) < new Date()){ PROF.expiredPlan = PROF.plan; PROF.plan = 'free'; PROF.plan_until = null; api('/rest/v1/rpc/ttm_expire_me', {method: 'POST', body: '{}'}).catch(() => {}); } } }
   }
-  ui(); if(USER) syncInit(); trkStart(); trkNote();
+  ui(); if(USER){ syncInit(); tgInit(); fbLoad(true); } trkStart(); trkNote();
 }
 // access: does the current visitor get this section or feature?
 function can(key){
@@ -158,7 +158,7 @@ function upsell(key){
 window.ttmCan = can; window.ttmUpsell = upsell;
 
 // ---------- sign-in modal
-function signInForm(){ return on() ? `<label for="authEmail"><small>Email</small></label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"><div class="row"><button class="ttm-btn" id="authSend">Email me a sign-in link</button><button class="ttm-btn ghost" id="authClose">Cancel</button></div><p id="authNote" style="margin:12px 0 0"><small>No password. We email a one-time link and a code. Creating an account is free.</small></p>` : '<p>Accounts are coming soon. The terminal stays free and open in the meantime.</p><div class="row"><button class="ttm-btn ghost" id="authClose">Close</button></div>'; }
+function signInForm(){ return on() ? `<label for="authEmail"><small>Email</small></label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"><label for="authTg" style="display:block;margin-top:10px"><small>Telegram name (optional, shown as your name in the terminal)</small></label><input id="authTg" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="@yourname"><div class="row"><button class="ttm-btn" id="authSend">Email me a sign-in link</button><button class="ttm-btn ghost" id="authClose">Cancel</button></div><p id="authNote" style="margin:12px 0 0"><small>No password. We email a one-time link and a code. Creating an account is free.</small></p>` : '<p>Accounts are coming soon. The terminal stays free and open in the meantime.</p><div class="row"><button class="ttm-btn ghost" id="authClose">Close</button></div>'; }
 function openAuth(html){ track('auth_open', TERM); $('authBody').innerHTML = '<h3>TTM account</h3>' + (html || signInForm()); modal.classList.add('open'); }
 const closeAuth = () => modal.classList.remove('open');
 document.addEventListener('click', async ev => {
@@ -167,7 +167,7 @@ document.addEventListener('click', async ev => {
   else if(t.id === 'authClose' || t === modal) closeAuth();
   else if(t.id === 'memSignIn' || t.id === 'lockSignIn' || t.id === 'wallSignIn') openAuth();
   else if(t.id === 'authSend'){ const em = ($('authEmail').value || '').trim(); if(!/^\S+@\S+\.\S+$/.test(em)){ $('authNote').textContent = 'Enter a valid email address.'; return; }
-    t.disabled = true; $('authNote').textContent = 'Sending…';
+    t.disabled = true; $('authNote').textContent = 'Sending…'; { const h = tgClean(($('authTg') || {}).value); if(h) lw('ttm_tg_pending', h); }
     const r = await raw('/auth/v1/otp?redirect_to=' + encodeURIComponent(location.origin + location.pathname), {method: 'POST', body: JSON.stringify({email: em, create_user: true})}); t.disabled = false;
     if(r.ok) track('auth_sent', TERM);
     if(r.ok) $('authBody').innerHTML = `<h3>Check your email</h3><p>We sent a sign-in link to <b>${e(em)}</b>. Open it on this device, or type the code from the email here:</p><input id="authCode" inputmode="numeric" autocomplete="one-time-code" placeholder="6-digit code"><div class="row"><button class="ttm-btn" id="authVerify" data-em="${e(em)}">Sign in with code</button><button class="ttm-btn ghost" id="authClose">Close</button></div><p id="authNote" style="margin:12px 0 0"><small>Nothing arrived? Check spam, or try again in a minute.</small></p>`;
@@ -229,6 +229,7 @@ function applyGates(){
       lp.innerHTML = SET.wall && !USER ? `<h3>Sign in to continue</h3><p>Create a free TTM account, or sign in, to open the terminal.</p><button class="ttm-btn" id="lockSignIn">Sign in / create free account</button>`
         : `<h3>🔒 ${e(title)}</h3><p>This section is included with the <b>${e(needText(key))}</b> plan.${USER ? ` You are on <b>${e(pname(PROF.plan))}</b>. Paid plans are not open for self-sign-up yet; ask TTM on Telegram.` : ' Sign in to see what your plan includes.'}</p>${USER ? '' : '<button class="ttm-btn" id="lockSignIn">Sign in / create free account</button>'}`; }
     else if(lp) lp.remove();
+    betaMark(sec, key, wrap, !lock && betaKey(key));
     const offAll = lock && (SET.access[key] || []).filter(x => x !== 'beta').length === 0; document.querySelectorAll(`a[href="#${sec.id}"]`).forEach(a => { if(lock) a.setAttribute('data-lk', '1'); else a.removeAttribute('data-lk'); if(offAll) a.setAttribute('data-hid', '1'); else a.removeAttribute('data-hid'); });
     if(offAll){ const l2 = wrap.querySelector(':scope > .lock-panel'); if(l2) l2.innerHTML = '<h3>Coming soon</h3><p>This section is not available yet.</p>'; } });
   // the crypto calculator without the tracker: hide the parts that need it
@@ -275,7 +276,7 @@ function planCards(){
   return `<div class="plan-grid">${card('free', 'Includes', free)}${card('premium', 'Everything in Free, plus (Crypto and TradFi together)', only('premium'))}${card('pro', 'Everything in Premium, plus', pro)}</div>`;
 }
 function ui(){
-  const b = $('acctBtn'); if(b){ b.textContent = USER ? 'Account' : 'Sign in'; b.title = USER ? 'Plan: ' + pname(PROF.plan) : 'Sign in or create a free account'; }
+  const b = $('acctBtn'); if(b){ b.textContent = USER ? (PROF && PROF.tg_handle ? '@' + PROF.tg_handle : 'Account') : 'Sign in'; b.title = USER ? (PROF && PROF.tg_handle ? '@' + PROF.tg_handle + ' · ' : '') + 'Plan: ' + pname(PROF.plan) : 'Sign in or create a free account'; }
   const na = $('navAdmin'); if(na) na.style.display = PROF && PROF.is_admin ? '' : 'none';
   applyGates();
   const lw2 = $('landWall'); if(lw2){ const w = on() && SET.wall && !USER && SET.charging; lw2.style.display = w ? '' : 'none'; document.querySelectorAll('.chooser').forEach(c => { c.style.display = w ? 'none' : ''; }); }
@@ -283,7 +284,7 @@ function ui(){
   if(m){
     if(!on()) m.innerHTML = '<h3>Account</h3><p style="margin:0">Free accounts are <b>coming soon</b>: sign in with your email to sync your trades across your phone, iPad and computer, and to unlock your plan. The terminal and every tool stay free and open in the meantime.</p>';
     else if(!USER) m.innerHTML = '<h3>Account</h3><p style="margin:0 0 12px">Create a free account with just your email (no password).</p><div class="rr-acts" style="margin:0"><button class="rr-btn" id="memSignIn">Sign in / create free account</button></div>';
-    else m.innerHTML = `<h3>Account <span style="float:right">${planBadge()}</span></h3><p style="margin:0 0 6px"><b>Signed in</b> · plan <b>${e(pname(PROF.plan))}</b>${PROF.beta ? ' · <span style="color:var(--gold2)">beta tester</span>' : ''}${untilTxt()}</p><p class="calendar-note" style="margin:0 0 12px">Cloud sync: ${can('sync') ? ({ok: 'on' + (SYNC.at ? ', last synced ' + new Date(SYNC.at).toLocaleTimeString() : ''), saving: 'saving…', error: 'could not reach the cloud, will retry', off: 'starting…', locked: 'not included in your plan'})[SYNC.state] || 'on' : 'included with the ' + needText('sync') + ' plan'}. Your Telegram bot token is never uploaded.</p><div class="rr-acts" style="margin:0"><button class="rr-btn ghost sm" id="memSignOut">Sign out</button><button class="rr-btn ghost sm" id="memDelete" style="border-color:#e0554d;color:#e0554d">Delete my account</button>${PROF.is_admin ? `<a class="rr-btn sm" style="text-decoration:none" href="${BASE}crypto/index.html#admin">Admin</a>` : ''}</div>`;
+    else m.innerHTML = `<h3>Account <span style="float:right">${planBadge()}</span></h3><p style="margin:0 0 6px"><b>Signed in</b> · plan <b>${e(pname(PROF.plan))}</b>${PROF.beta ? ' · <span style="color:var(--gold2)">beta tester</span>' : ''}${untilTxt()}</p>${'tg_handle' in PROF ? `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px"><small style="color:var(--mute)">Telegram name</small><input id="memTgIn" value="${e(PROF.tg_handle || '')}" placeholder="@yourname" autocapitalize="off" spellcheck="false" style="background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 10px;font:inherit;width:170px"><button class="rr-btn ghost sm" id="memTgSave">Save</button><span id="memTgNote" class="calendar-note"></span></div>` : ''}<p class="calendar-note" style="margin:0 0 12px">Cloud sync: ${can('sync') ? ({ok: 'on' + (SYNC.at ? ', last synced ' + new Date(SYNC.at).toLocaleTimeString() : ''), saving: 'saving…', error: 'could not reach the cloud, will retry', off: 'starting…', locked: 'not included in your plan'})[SYNC.state] || 'on' : 'included with the ' + needText('sync') + ' plan'}. Your Telegram bot token is never uploaded.</p><div class="rr-acts" style="margin:0"><button class="rr-btn ghost sm" id="memSignOut">Sign out</button><button class="rr-btn ghost sm" id="memDelete" style="border-color:#e0554d;color:#e0554d">Delete my account</button>${PROF.is_admin ? `<a class="rr-btn sm" style="text-decoration:none" href="${BASE}crypto/index.html#admin">Admin</a>` : ''}</div>`;
   }
   const tv = $('memTv');
   if(tv){ const ok = can('indicators'); tv.innerHTML = ok ? (CFG.tv && CFG.tv.length ? CFG.tv : [{name: 'TTM Indicator Suite', desc: 'Trend, momentum and cycle tools built for the TTM method.'}, {name: 'TTM Signals & Alerts', desc: 'Chart overlays that line up with the terminal.'}, {name: 'TTM Risk Tools', desc: 'Position-sizing helpers on the chart.'}]).map(x => `<div class="mem-card"><b>${e(x.name)}</b><p>${e(x.desc || '')}</p>${x.url ? `<a class="rr-btn sm" style="text-decoration:none;display:inline-block" href="${e(x.url)}" target="_blank" rel="noopener noreferrer">Open on TradingView ↗</a>` : '<span class="rr-pill be">Coming soon</span>'}</div>`).join('')
@@ -291,10 +292,120 @@ function ui(){
   const pl = $('memPlans'); if(pl) pl.innerHTML = (!on() || !SET.charging ? '<p style="margin:0 0 12px">Everything in the terminal is <b>free right now</b>. These are the planned plans; they will be announced before anything changes.</p>' : '') + planCards();
   adminUi(); insUi();
 }
-async function adminUi(){
+
+// ---------- Telegram name
+const FBSQL = `-- TTM: Telegram name on accounts + beta tester feedback. Safe to run more than once.
+
+-- 1. Telegram name on each profile (people set it through a function, never directly)
+alter table public.ttm_profiles add column if not exists tg_handle text;
+
+create or replace function public.ttm_set_tg(p_handle text) returns void
+language sql security definer set search_path = public as $$
+  update public.ttm_profiles
+     set tg_handle = nullif(left(regexp_replace(coalesce(p_handle,''), '[^A-Za-z0-9_]', '', 'g'), 32), '')
+   where id = auth.uid();
+$$;
+grant execute on function public.ttm_set_tg(text) to authenticated;
+
+-- 2. Beta testers (profiles with beta = true) and admins
+alter table public.ttm_profiles add column if not exists beta boolean not null default false;
+
+create or replace function public.ttm_is_tester() returns boolean
+language sql stable security definer set search_path = public as $$
+  select coalesce((select beta or is_admin from public.ttm_profiles where id = auth.uid()), false)
+$$;
+grant execute on function public.ttm_is_tester() to authenticated;
+
+-- 3. Feedback from beta sections: message, read tick and reply from you
+create table if not exists public.ttm_feedback (
+  id          bigint generated always as identity primary key,
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  section     text not null,
+  who         text,
+  message     text not null check (char_length(message) between 1 and 4000),
+  created_at  timestamptz not null default now(),
+  read_at     timestamptz,
+  reply       text,
+  replied_at  timestamptz
+);
+create index if not exists ttm_feedback_section_idx on public.ttm_feedback (section, created_at);
+alter table public.ttm_feedback enable row level security;
+
+drop policy if exists p_fb_sel on public.ttm_feedback;
+create policy p_fb_sel on public.ttm_feedback for select
+  using (user_id = auth.uid() or public.ttm_is_tester());
+drop policy if exists p_fb_ins on public.ttm_feedback;
+create policy p_fb_ins on public.ttm_feedback for insert
+  with check (user_id = auth.uid() and public.ttm_is_tester());
+drop policy if exists p_fb_upd on public.ttm_feedback;
+create policy p_fb_upd on public.ttm_feedback for update
+  using (public.ttm_is_admin()) with check (public.ttm_is_admin());
+drop policy if exists p_fb_del on public.ttm_feedback;
+create policy p_fb_del on public.ttm_feedback for delete
+  using (public.ttm_is_admin());
+
+grant select, insert, update, delete on public.ttm_feedback to authenticated;
+`;
+const tgClean = v => String(v || '').trim().replace(/^@+/, '').replace(/[^A-Za-z0-9_]/g, '').slice(0, 32);
+async function tgSave(h){ const r = await api('/rest/v1/rpc/ttm_set_tg', {method: 'POST', body: JSON.stringify({p_handle: h})}); if(r.ok && PROF) PROF.tg_handle = h || null; return r.ok; }
+async function tgInit(){
+  if(!USER || !PROF || !('tg_handle' in PROF) || PROF.tg_handle) return;
+  const pend = ls('ttm_tg_pending', ''); if(pend){ if(await tgSave(pend)){ try{ localStorage.removeItem('ttm_tg_pending'); }catch(err){} ui(); } return; }
+  if(ls('ttm_tg_skip', 0) || PROF.is_admin) return;
+  openAuth(`<p style="margin:0 0 10px">Add your <b>Telegram name</b> so we know who you are. It shows at the top right instead of "Account". Your email stays private.</p><input id="authTgIn" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="@yourname"><div class="row"><button class="ttm-btn" id="tgSaveBtn">Save</button><button class="ttm-btn ghost" id="tgSkipBtn">Not now</button></div><p id="authNote" style="margin:12px 0 0"><small>You can change it any time in your Account card.</small></p>`);
+}
+document.addEventListener('click', async ev => { const t = ev.target; if(!t || !t.id) return;
+  if(t.id === 'tgSkipBtn'){ lw('ttm_tg_skip', Date.now()); closeAuth(); }
+  else if(t.id === 'tgSaveBtn'){ const h = tgClean(($('authTgIn') || {}).value); if(!h){ $('authNote').textContent = 'Type your Telegram name first, or press Not now.'; return; } t.disabled = true; if(await tgSave(h)){ closeAuth(); ui(); } else { t.disabled = false; $('authNote').textContent = 'Could not save it yet. The database step is missing; ask TTM.'; } }
+  else if(t.id === 'memTgSave'){ const h = tgClean(($('memTgIn') || {}).value), n = $('memTgNote'); n.textContent = 'Saving…'; if(await tgSave(h)){ n.textContent = 'Saved.'; ui(); } else n.textContent = 'Could not save.'; }
+});
+
+// ---------- beta sections: badge for testers, feedback thread, admin inbox
+let FB = {rows: [], at: 0, err: false};
+const FBL = k => { const c = CAT.find(x => x[0] === k); return c ? c[1] : k; };
+const isTester = () => !!(USER && PROF && (PROF.beta || PROF.is_admin));
+const betaKey = key => { const a = SET.access[key]; if(!(on() && SET.charging && a && a.indexOf('beta') >= 0)) return false; if(PROF && PROF.is_admin) return true; return !!(PROF && PROF.beta && a.indexOf(PROF.plan) < 0 && a.indexOf('free') < 0); };
+async function fbLoad(force){
+  if(!isTester() || !on()) return; if(!force && Date.now() - FB.at < 20000) return; FB.at = Date.now();
+  const r = await api('/rest/v1/ttm_feedback?select=*&order=created_at.asc&limit=1000');
+  if(r.ok && Array.isArray(r.json)){ FB.rows = r.json; FB.err = false; } else FB.err = PROF && PROF.is_admin;
+  fbPaint();
+}
+const fbDate = d => new Date(d).toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'});
+function fbThread(key){
+  const rows = FB.rows.filter(r => r.section === key);
+  return rows.length ? rows.map(r => `<div class="fb-m"><div class="fb-h"><b>${e(r.who || 'Tester')}</b> · ${fbDate(r.created_at)}${USER && r.user_id === USER.id ? ' · <span style="color:var(--gold2)">you</span>' : ''}${r.read_at ? ' · <span style="color:#3fb47a">✓ read by TTM</span>' : ''}</div><div>${e(r.message)}</div>${r.reply ? `<div class="fb-r"><div class="fb-h"><b style="color:var(--gold2)">TTM replied</b> · ${fbDate(r.replied_at || r.created_at)}</div><div>${e(r.reply)}</div></div>` : ''}</div>`).join('') : '<p class="calendar-note" style="margin:0 0 10px">No feedback yet. Be the first.</p>';
+}
+function fbPaint(){
+  document.querySelectorAll('.beta-fb').forEach(b => { const key = b.dataset.fbk, box = b.querySelector('.fb-list'); if(box){ box.innerHTML = fbThread(key); box.scrollTop = box.scrollHeight; } });
+  const ad = $('fbAdmin'); if(ad && !Array.from(ad.querySelectorAll('[data-fbrt]')).some(i => i.value)) ad.outerHTML = fbAdminHtml();
+}
+function betaMark(sec, key, wrap, show){
+  let bd = sec.querySelector('.beta-badge'), pn = wrap.querySelector(':scope > .beta-fb');
+  document.querySelectorAll(`a[href="#${sec.id}"]`).forEach(a => { if(show) a.setAttribute('data-bt', '1'); else a.removeAttribute('data-bt'); });
+  if(!show){ if(bd) bd.remove(); if(pn) pn.remove(); return; }
+  if(!bd){ const tg = sec.querySelector('.tag'); if(tg){ bd = document.createElement('span'); bd.className = 'beta-badge'; bd.textContent = 'BETA'; tg.insertAdjacentElement('afterend', bd); } }
+  if(!pn){ pn = document.createElement('div'); pn.className = 'beta-fb'; pn.dataset.fbk = key; const title = (sec.querySelector('.tag') || sec.querySelector('h2') || {}).textContent || 'This section';
+    pn.innerHTML = `<h3>Beta feedback</h3><p class="calendar-note" style="margin:0 0 10px">${e(title)} is in beta testing. Tell TTM what works, what breaks and what you would change. Everyone testing this section can see this thread, and TTM's replies show here.</p><div class="fb-list"></div><textarea class="fb-in" rows="3" maxlength="4000" placeholder="Your feedback…"></textarea><div class="rr-acts" style="margin:8px 0 0;align-items:center"><button class="rr-btn sm" data-fbsend="${e(key)}">Send feedback</button><span class="calendar-note fb-note"></span></div>`; wrap.appendChild(pn); fbPaint(); fbLoad(false); }
+}
+function fbAdminHtml(){
+  const rows = FB.rows.slice().reverse(), un = rows.filter(r => !r.read_at).length;
+  return `<div class="rr-card" id="fbAdmin"><h3>Beta feedback ${un ? `<span class="rr-pill open">${un} unread</span>` : ''}</h3>${FB.err ? '<p class="calendar-note" style="margin:0">Feedback is not set up yet; run the database step below.</p>' : !rows.length ? '<p class="calendar-note" style="margin:0">Nothing yet. When a beta tester sends feedback from a beta section it appears here.</p>' : rows.map(r => `<div class="fb-m"><div class="fb-h"><b>${e(r.who || 'Tester')}</b> · ${e(FBL(r.section))} · ${fbDate(r.created_at)} <label style="margin-left:8px;cursor:pointer"><input type="checkbox" data-fbread="${r.id}" ${r.read_at ? 'checked' : ''} style="width:auto"> read</label> <button class="rr-btn ghost sm" data-fbdel="${r.id}" style="padding:2px 8px;border-color:#e0554d;color:#e0554d">Delete</button></div><div>${e(r.message)}</div>${r.reply ? `<div class="fb-r"><div class="fb-h"><b style="color:var(--gold2)">Your reply</b> · ${fbDate(r.replied_at || r.created_at)}</div><div>${e(r.reply)}</div></div>` : ''}<div style="display:flex;gap:8px;margin-top:8px"><input data-fbrt="${r.id}" placeholder="${r.reply ? 'Change your reply…' : 'Reply to this tester…'}" style="flex:1;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 10px;font:inherit"><button class="rr-btn sm" data-fbreply="${r.id}">Reply</button></div></div>`).join('')}</div>`;
+}
+document.addEventListener('click', async ev => { const t = ev.target.closest ? ev.target.closest('button') : null; if(!t || !t.dataset) return;
+  if(t.dataset.fbsend){ const box = t.closest('.beta-fb'), ta = box.querySelector('.fb-in'), n = box.querySelector('.fb-note'), msg = ta.value.trim(); if(!msg){ n.textContent = 'Write something first.'; return; }
+    t.disabled = true; n.textContent = 'Sending…'; const r = await api('/rest/v1/ttm_feedback', {method: 'POST', headers: {Prefer: 'return=minimal'}, body: JSON.stringify({user_id: USER.id, section: t.dataset.fbsend, who: PROF.tg_handle ? '@' + PROF.tg_handle : 'Tester', message: msg.slice(0, 4000)})}); t.disabled = false;
+    if(r.ok){ ta.value = ''; n.textContent = 'Sent, thank you.'; track('feat', 'beta_feedback'); await fbLoad(true); } else n.textContent = 'Could not send. TTM needs to run the beta database step first.'; }
+  else if(t.dataset.fbreply){ const inp = document.querySelector(`[data-fbrt="${t.dataset.fbreply}"]`), v = inp.value.trim(); if(!v) return; t.disabled = true;
+    const r = await api(`/rest/v1/ttm_feedback?id=eq.${t.dataset.fbreply}`, {method: 'PATCH', body: JSON.stringify({reply: v.slice(0, 4000), replied_at: new Date().toISOString(), read_at: new Date().toISOString()})}); if(r.ok) await fbLoad(true); else { t.disabled = false; alert('Could not save the reply.'); } }
+  else if(t.dataset.fbdel){ if(!confirm('Delete this feedback?')) return; const r = await api(`/rest/v1/ttm_feedback?id=eq.${t.dataset.fbdel}`, {method: 'DELETE'}); if(r.ok) await fbLoad(true); }
+});
+document.addEventListener('change', async ev => { const t = ev.target; if(!t.dataset || !t.dataset.fbread) return;
+  const r = await api(`/rest/v1/ttm_feedback?id=eq.${t.dataset.fbread}`, {method: 'PATCH', body: JSON.stringify({read_at: t.checked ? new Date().toISOString() : null})}); if(!r.ok){ t.checked = !t.checked; alert('Could not save.'); } else { const row = FB.rows.find(x => String(x.id) === t.dataset.fbread); if(row) row.read_at = t.checked ? new Date().toISOString() : null; } });
+async function adminUi(){ await fbLoad(true);
   const a = $('admBody'); if(!a || !$('admin').classList.contains('active')) return;
   if(!PROF || !PROF.is_admin){ a.innerHTML = '<div class="rr-card"><p style="margin:0">Admins only.</p></div>'; return; }
-  let r = await api('/rest/v1/ttm_profiles?select=id,email,plan,is_admin,created_at,plan_until,plan_note,beta&order=created_at.desc&limit=500'); let noBeta = false; if(!r.ok){ noBeta = true; r = await api('/rest/v1/ttm_profiles?select=id,email,plan,is_admin,created_at,plan_until,plan_note&order=created_at.desc&limit=500'); } let noTrials = false; if(!r.ok){ noTrials = true; r = await api('/rest/v1/ttm_profiles?select=id,email,plan,is_admin,created_at&order=created_at.desc&limit=500'); } const users = (r.ok && Array.isArray(r.json)) ? r.json : [];
+  let r = await api('/rest/v1/ttm_profiles?select=id,email,plan,is_admin,created_at,plan_until,plan_note,beta,tg_handle&order=created_at.desc&limit=500'); let noTg = false; if(!r.ok){ noTg = true; r = await api('/rest/v1/ttm_profiles?select=id,email,plan,is_admin,created_at,plan_until,plan_note,beta&order=created_at.desc&limit=500'); } let noBeta = false; if(!r.ok){ noBeta = true; r = await api('/rest/v1/ttm_profiles?select=id,email,plan,is_admin,created_at,plan_until,plan_note&order=created_at.desc&limit=500'); } let noTrials = false; if(!r.ok){ noTrials = true; r = await api('/rest/v1/ttm_profiles?select=id,email,plan,is_admin,created_at&order=created_at.desc&limit=500'); } const users = (r.ok && Array.isArray(r.json)) ? r.json : [];
   const sel = (attr, v) => `<select ${attr} style="background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 9px;font:inherit">${PLANS.map(p => `<option value="${p[0]}" ${p[0] === v ? 'selected' : ''}>${p[1]}</option>`).join('')}</select>`;
   const cell = (k, p) => `<td style="text-align:center"><input type="checkbox" data-ak="${k}" data-ap="${p}" ${(SET.access[k] || []).indexOf(p) >= 0 ? 'checked' : ''}></td>`;
   a.innerHTML = `<div class="rr-card"><h3>Switches</h3>
@@ -308,7 +419,9 @@ async function adminUi(){
       <textarea id="grEmails" rows="4" placeholder="winner1@example.com&#10;winner2@example.com" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 10px;font:inherit"></textarea>
       <div class="rr-acts" style="margin:10px 0 0;align-items:center">${sel('id="grPlan"', 'pro')}<select id="grDays" style="background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 9px;font:inherit">${[7, 14, 30, 60, 90, 365].map(d => `<option value="${d}" ${d === 30 ? 'selected' : ''}>${d} days</option>`).join('')}</select><input id="grNote" value="giveaway" maxlength="20" style="width:120px;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 9px;font:inherit" title="A label shown next to the end date"><button class="rr-btn sm" id="grGo">Grant access</button><button class="rr-btn ghost sm" id="grExpire">Revert expired now</button><button class="rr-btn ghost sm" id="grBeta">Make beta testers</button><button class="rr-btn ghost sm" id="grBetaOff">Remove beta</button></div>
       <p class="calendar-note" id="grNote2" style="margin:8px 0 0"></p></div>
-    <div class="rr-card"><h3>Members (${users.length})</h3><div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Email</th><th>Joined</th><th>Plan</th><th>Until</th><th>Beta</th><th></th></tr></thead><tbody>${users.map(u => `<tr><td>${e(u.email)}${u.is_admin ? ' <span class="rr-pill be">admin</span>' : ''}</td><td>${new Date(u.created_at).toLocaleDateString()}</td><td>${sel('data-uid="' + u.id + '"', normPlan(u.plan))}</td><td style="white-space:nowrap">${u.plan_until ? (new Date(u.plan_until) < new Date() ? '<span style="color:#e0554d">ended ' : '<span style="color:var(--gold2)">') + new Date(u.plan_until).toLocaleDateString(undefined, {day: 'numeric', month: 'short'}) + '</span>' + (u.plan_note ? ' <span class="ins-sub">' + e(u.plan_note) + '</span>' : '') : '<span class="ins-sub">no end</span>'}</td><td style="text-align:center"><input type="checkbox" data-beta="${u.id}" ${u.beta ? 'checked' : ''}></td><td>${USER && u.id === USER.id ? '' : `<button class="rr-btn ghost sm" data-delu="${e(u.id)}" data-em="${e(u.email)}" style="border-color:#e0554d;color:#e0554d">Delete</button>`}</td></tr>`).join('') || '<tr><td colspan="6" style="color:var(--mute)">No members yet.</td></tr>'}</tbody></table></div></div>
+    ${noTg || FB.err ? `<div class="rr-warn y"><b>One database step is missing.</b> In Supabase open SQL Editor, New query, paste this and press Run, then refresh. It adds the Telegram name and the beta feedback box.<pre style="white-space:pre-wrap;margin:8px 0 0;user-select:all;max-height:240px;overflow:auto">${e(FBSQL)}</pre></div>` : ''}
+    ${fbAdminHtml()}
+    <div class="rr-card"><h3>Members (${users.length})</h3><div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Email</th><th>Telegram</th><th>Joined</th><th>Plan</th><th>Until</th><th>Beta</th><th></th></tr></thead><tbody>${users.map(u => `<tr><td>${e(u.email)}${u.is_admin ? ' <span class="rr-pill be">admin</span>' : ''}</td><td>${u.tg_handle ? '@' + e(u.tg_handle) : '<span class="ins-sub">—</span>'}</td><td>${new Date(u.created_at).toLocaleDateString()}</td><td>${sel('data-uid="' + u.id + '"', normPlan(u.plan))}</td><td style="white-space:nowrap">${u.plan_until ? (new Date(u.plan_until) < new Date() ? '<span style="color:#e0554d">ended ' : '<span style="color:var(--gold2)">') + new Date(u.plan_until).toLocaleDateString(undefined, {day: 'numeric', month: 'short'}) + '</span>' + (u.plan_note ? ' <span class="ins-sub">' + e(u.plan_note) + '</span>' : '') : '<span class="ins-sub">no end</span>'}</td><td style="text-align:center"><input type="checkbox" data-beta="${u.id}" ${u.beta ? 'checked' : ''}></td><td>${USER && u.id === USER.id ? '' : `<button class="rr-btn ghost sm" data-delu="${e(u.id)}" data-em="${e(u.email)}" style="border-color:#e0554d;color:#e0554d">Delete</button>`}</td></tr>`).join('') || '<tr><td colspan="7" style="color:var(--mute)">No members yet.</td></tr>'}</tbody></table></div></div>
     <div class="rr-card"><h3>Usage insights</h3><p class="calendar-note" style="margin:0 0 10px">An executive summary of what people open and click: trends against the previous period, what is useful and what is not, where visitors are, and charts you can click into.</p><a class="rr-btn" style="text-decoration:none;display:inline-block" href="#insights">Open Insights →</a></div>`;
 }
 

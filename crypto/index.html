@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png"><link rel="icon" type="image/png" href="../favicon.png"><link rel="manifest" href="../manifest.webmanifest"><meta name="apple-mobile-web-app-title" content="TTM"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#0b0b0b">
 <title>TTM Markets Terminal — Trade The Move</title>
 <style>
 :root{
@@ -677,6 +678,7 @@ body.view-section #backFab{display:block}
 #rcCoin{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit}
 #rrMkt{pointer-events:none;opacity:.75}
 #riskreward.no-tracker .trk-only{display:none !important}
+button.tkr{background:none;border:0;padding:0;margin:0;color:var(--gold2);font:inherit;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px;text-align:left}button.tkr:hover{color:#fff}
 </style>
 </head>
 <body data-terminal="crypto">
@@ -1289,10 +1291,10 @@ body.view-section #backFab{display:block}
       <p>Works on any token, with or without options. It builds a volume-at-price map from real candles to find where most coins changed hands (the average holder's cost), then adds support and resistance and RSI. Price far below the average cost means most recent buyers are underwater. That is where bounces fail at resistance, or where capitulation lows form.</p>
     </div>
     <div class="rsi-ctl"><input id="pzCoin" class="rsi-search" type="search" list="pzList" placeholder="Type a ticker, e.g. SOL, BIO" autocomplete="off" spellcheck="false" value="BTC"><datalist id="pzList"></datalist><button class="rr-btn sm" id="pzGo" type="button">Analyse</button></div>
-    <div class="filter-row" id="pzTf" style="margin-bottom:6px"><button class="filter-chip" data-t="1h">1h</button><button class="filter-chip active" data-t="4h">4h</button><button class="filter-chip" data-t="1d">1D</button><button class="filter-chip" data-t="1w">1W</button></div>
+    <div class="filter-row" id="pzTf" style="margin-bottom:6px"><button class="filter-chip" data-t="5m">5m</button><button class="filter-chip" data-t="15m">15m</button><button class="filter-chip" data-t="1h">1h</button><button class="filter-chip" data-t="2h">2h</button><button class="filter-chip active" data-t="4h">4h</button><button class="filter-chip" data-t="6h">6h</button><button class="filter-chip" data-t="8h">8h</button><button class="filter-chip" data-t="12h">12h</button><button class="filter-chip" data-t="1d">1D</button><button class="filter-chip" data-t="1w">1W</button><button class="filter-chip" data-t="1M">1M</button></div>
     <p class="calendar-note" id="pzSt" style="margin:0 0 12px">Pick a token and press Analyse.</p>
     <div id="pzBody"></div>
-    <p class="calendar-note" style="margin-top:12px">Levels come from recent exchange candles (Bybit, then OKX), so they update every time you analyse. Cost levels are an estimate from volume, not real wallet data. Education only, not financial advice.</p>
+    <p class="calendar-note" style="margin-top:12px">Levels come from recent exchange candles (Bybit, then OKX, then Binance), so they update every time you analyse. Cost levels are an estimate from volume, not real wallet data. Education only, not financial advice.</p>
   </div>
 </section>
 
@@ -3398,7 +3400,7 @@ load(); setInterval(() => { if(!document.hidden) load(); }, 300000);
 (function(){
 const $ = id => document.getElementById(id);
 if(!$('rrAsset')) return;
-const EXTRA_COINS = [['BIO','Bio Protocol'],['DEEP','DeepBook'],['CC','Canton'],['FET','Fetch.ai'],['LDO','Lido DAO'],['ONDO','Ondo'],['SKY','Sky'],['MKR','Maker'],['XPL','Plasma'],['HBAR','Hedera'],['IMX','Immutable'],['VIRTUAL','Virtuals Protocol'],['SUPRA','Supra'],['MET','Meteora'],['WLD','Worldcoin'],['TAO','Bittensor'],['RENDER','Render'],['SEI','Sei'],['TIA','Celestia'],['JUP','Jupiter'],['PENDLE','Pendle'],['ENA','Ethena'],['AAVE','Aave'],['UNI','Uniswap'],['ATOM','Cosmos'],['FIL','Filecoin'],['ARKM','Arkham'],['PYTH','Pyth Network']];
+const EXTRA_COINS = [['BIO','Bio Protocol'],['DEEP','DeepBook'],['CC','Canton'],['FET','Fetch.ai'],['LDO','Lido DAO'],['ONDO','Ondo'],['SKY','Sky'],['MKR','Maker'],['XPL','Plasma'],['HBAR','Hedera'],['IMX','Immutable'],['VIRTUAL','Virtuals Protocol'],['SUPRA','Supra'],['MET','Meteora'],['WLD','Worldcoin'],['TAO','Bittensor'],['RENDER','Render'],['SEI','Sei'],['TIA','Celestia'],['JUP','Jupiter'],['PENDLE','Pendle'],['ENA','Ethena'],['AAVE','Aave'],['UNI','Uniswap'],['ATOM','Cosmos'],['FIL','Filecoin'],['ARKM','Arkham'],['PYTH','Pyth Network'],['MEGA','MegaETH']];
 const addExtra = () => EXTRA_COINS.forEach(([s, n]) => { if(!COINS.some(c => c.s === s)) COINS.push({s, n, r: 999, p: null}); });
 let COINS = ['BTC','ETH','SOL','XRP','BNB','DOGE','ADA','AVAX','LINK','SUI','TON','DOT','LTC','NEAR','APT','ARB','OP','INJ','PEPE','HYPE','ICP'].map((s, i) => ({s, n: '', r: i + 1, p: null}));  // replaced by ../top_coins.json when it loads
 addExtra();
@@ -3830,7 +3832,7 @@ function wireJournal(){
         const f = m.f, part = JSON.parse(JSON.stringify(x)); part.id = uid(); part.name = x.name + ' (' + Math.round(f * 1000) / 10 + '% closed)'; part.status = 'closed'; part.snap = Object.assign({}, x.snap);
         ['units', 'notional', 'margin', 'riskUsd'].forEach(k => { part.snap[k] = x.snap[k] * f; x.snap[k] = x.snap[k] * (1 - f); });
         if(x.orders){ part.orders = x.orders.filter(o => o.filled).map(o => Object.assign({}, o, {m: o.m * f})); x.orders.forEach(o => { o.m = o.m * (1 - f); }); }
-        part.res = {pnl: Math.round(m.pnl * 100) / 100, r: m.pnl / part.snap.riskUsd, how: m.how, closed: Date.now()}; delete part.hit; delete part.sent;
+        part.res = {pnl: Math.round(m.pnl * 100) / 100, r: m.pnl / part.snap.riskUsd, how: m.how, closed: Date.now()}; delete part.hit; delete part.sent; x.booked = Math.round(((x.booked || 0) + m.pnl) * 100) / 100;
         list.splice(cur.i + 1, 0, part); saveAll(list); window.ttmTrack && ttmTrack('feat', 'close_part', {pct: Math.round(f * 100)}); $('rrModal').classList.remove('open'); cur = null; render(); renderSaved(); return; }
       x.status = 'closed'; x.res = {pnl: Math.round(m.pnl * 100) / 100, r: m.pnl / x.snap.riskUsd, how: m.how, closed: Date.now()};
       saveAll(list); window.ttmTrack && ttmTrack('feat', 'close_trade', {how: String(m.how || '').slice(0, 20), win: m.pnl > 0, r: Math.round(m.pnl / x.snap.riskUsd)}); $('rrModal').classList.remove('open'); cur = null; render(); renderSaved(); }
@@ -4017,11 +4019,11 @@ function openTbl(items, noteEmpty){
   const list = loadSaved();
   if(!items.length) o += `<tr><td colspan="14" style="color:var(--mute)">${noteEmpty || 'No open trades. Open one from the Risk-to-Reward calculator and it appears here at live prices.'}</td></tr>`;
   const c = v => v > 0.005 ? '#3fb47a' : v < -0.005 ? '#e0554d' : 'var(--text)';
-  items.forEach(x => { const s = openState(x), i = list.findIndex(y => y.id === x.id), anyHit = s.hits && s.hits.some(Boolean), moved = x.snap.SL === x.snap.E;
-    o += `<tr><td><b>${esc(x.name)}</b><br><small style="color:var(--mute)">${x.snap.mkt === 'spot' ? 'Spot' : x.snap.lev + '×'} · ${esc(tfName(tfOf(x)))}</small></td><td>${esc(accName(accOf(x)))}</td><td>${esc(x.snap.asset)}</td><td style="color:${x.snap.long ? '#3fb47a' : '#e0554d'}">${x.snap.long ? 'Long' : 'Short'}</td><td>${pr(x.snap.E)}${x.orders ? `<br><small style="color:var(--mute)">${x.orders.filter(q => q.filled).length} of ${x.orders.length} orders filled</small>` : ''}</td><td><b>${usd(x.snap.margin)}</b><br><small style="color:var(--mute)">${x.snap.mkt === 'spot' ? 'full cost' : 'size ' + usd(x.snap.notional)}</small></td><td>${s.pp ? pr(s.pp.p) + (s.pp.live ? '' : ' <small style="color:var(--mute)">(snapshot)</small>') : '—'}</td>` +
-      `<td style="color:${c(s.move)}">${s.move == null ? '—' : (s.move >= 0 ? '+' : '') + s.move.toFixed(2) + '%'}</td><td style="color:${c(s.real)}">${s.pp && !s.pending ? usd(s.real) : '—'}</td><td style="color:${c(s.open)}">${s.pp && !s.pending ? usd(s.open) : '—'}</td><td style="color:${c(s.pnl)}"><b>${s.pp && !s.pending ? usd(s.pnl) : '—'}</b></td><td>${barHtml(x, s)}</td>` +
+  items.forEach(x => { const s = openState(x), i = list.findIndex(y => y.id === x.id), anyHit = s.hits && s.hits.some(Boolean), moved = x.snap.SL === x.snap.E, bk = x.booked != null ? x.booked : list.filter(y => y.status === 'closed' && y.res && y.name.indexOf(x.name + ' (') === 0 && /% closed\)$/.test(y.name)).reduce((t, y) => t + y.res.pnl, 0);
+    o += `<tr><td><button class="tkr" data-j="chart" data-i="${i}" title="Open chart, orders and average entry"><b>${esc(x.name)}</b></button><br><small style="color:var(--mute)">${x.snap.mkt === 'spot' ? 'Spot' : x.snap.lev + '×'} · ${esc(tfName(tfOf(x)))}</small></td><td>${esc(accName(accOf(x)))}</td><td><button class="tkr" data-j="chart" data-i="${i}" title="Open chart, orders and average entry">${esc(x.snap.asset)} ▸</button></td><td style="color:${x.snap.long ? '#3fb47a' : '#e0554d'}">${x.snap.long ? 'Long' : 'Short'}</td><td>${pr(x.snap.E)}${x.orders ? `<br><small style="color:var(--mute)">${x.orders.filter(q => q.filled).length} of ${x.orders.length} orders filled</small>` : ''}</td><td><b>${usd(x.snap.margin)}</b><br><small style="color:var(--mute)">${x.snap.mkt === 'spot' ? 'full cost' : 'size ' + usd(x.snap.notional)}</small></td><td>${s.pp ? pr(s.pp.p) + (s.pp.live ? '' : ' <small style="color:var(--mute)">(snapshot)</small>') : '—'}</td>` +
+      `<td style="color:${c(s.move)}">${s.move == null ? '—' : (s.move >= 0 ? '+' : '') + s.move.toFixed(2) + '%'}</td><td style="color:${c(s.real + bk)}">${s.pp && !s.pending ? usd(s.real + bk) : (bk ? usd(bk) : '—')}${bk ? `<br><small style="color:var(--mute)">incl. ${usd(bk)} booked</small>` : ''}</td><td style="color:${c(s.open)}">${s.pp && !s.pending ? usd(s.open) : '—'}</td><td style="color:${c(s.pnl + bk)}"><b>${s.pp && !s.pending ? usd(s.pnl + bk) : (bk ? usd(bk) : '—')}</b></td><td>${barHtml(x, s)}</td>` +
       `<td style="color:${s.pending ? 'var(--gold2)' : s.stopped ? '#e0554d' : anyHit ? '#3fb47a' : 'var(--mute)'}">${s.label}${s.pending && s.away != null ? `<br><small style="color:var(--mute)">entry ${pr(x.snap.E)} is ${Math.abs(s.away).toFixed(2)}% ${s.away < 0 ? 'below' : 'above'} live</small>` : ''}${moved ? '<br><small style="color:var(--gold2)">Stop at entry</small>' : ''}</td>` +
-      `<td><div class="rr-acts" style="margin:0"><button class="rr-btn sm" data-j="close" data-i="${i}">Close / update</button><button class="rr-btn ghost sm" data-j="chart" data-i="${i}">Chart / orders</button><button class="rr-btn ghost sm" data-j="edit" data-i="${i}">Edit / add</button>${anyHit && !moved ? `<button class="rr-btn ghost sm" data-j="be" data-i="${i}">Move stop to entry</button>` : ''}${s.pending ? `<button class="rr-btn ghost sm" data-j="filled" data-i="${i}">Mark as filled</button>` : (!anyHit && !s.stopped ? `<button class="rr-btn ghost sm" data-j="pend" data-i="${i}">Not filled yet</button>` : '')}<button class="rr-btn ghost sm" data-j="load" data-i="${i}">Load</button><button class="rr-btn ghost sm" data-j="del" data-i="${i}">Cancel</button></div></td></tr>`; });
+      `<td><div class="rr-acts" style="margin:0"><button class="rr-btn sm" data-j="close" data-i="${i}">Close / update</button><button class="rr-btn ghost sm" data-j="chart" data-i="${i}">Chart / orders</button><button class="rr-btn ghost sm" data-j="edit" data-i="${i}">Edit / add</button>${!moved && !s.pending ? `<button class="rr-btn ghost sm" data-j="be" data-i="${i}">Move SL to entry</button>` : ''}${s.pending ? `<button class="rr-btn ghost sm" data-j="filled" data-i="${i}">Mark as filled</button>` : (!anyHit && !s.stopped ? `<button class="rr-btn ghost sm" data-j="pend" data-i="${i}">Not filled yet</button>` : '')}<button class="rr-btn ghost sm" data-j="load" data-i="${i}">Load</button><button class="rr-btn ghost sm" data-j="del" data-i="${i}">Cancel</button></div></td></tr>`; });
   if(items.length){ const tm = items.reduce((a, x) => a + (x.snap.margin || 0), 0), tn = items.reduce((a, x) => a + (x.snap.notional || 0), 0); o += `<tr><td colspan="5" style="text-align:right;color:var(--mute)"><b>Total margin locked</b> across ${items.length} open trade${items.length > 1 ? 's' : ''}</td><td><b style="color:var(--gold2)">${usd(tm)}</b><br><small style="color:var(--mute)">size ${usd(tn)}</small></td><td colspan="8"></td></tr>`; }
   return o + '</tbody>';
 }
@@ -4698,16 +4700,28 @@ let tf = '4h';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
 const px = v => v == null ? '—' : v >= 1000 ? '$' + Math.round(v).toLocaleString() : v >= 1 ? '$' + v.toFixed(2) : '$' + v.toPrecision(3);
 const pc = v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
-const IV = {'1h': {b: '60', o: '1H', s: 3600e3}, '4h': {b: '240', o: '4H', s: 4 * 3600e3}, '1d': {b: 'D', o: '1D', s: 864e5}, '1w': {b: 'W', o: '1W', s: 7 * 864e5}};
+const IV = {'5m': {b: '5', o: '5m', n: '5m'}, '15m': {b: '15', o: '15m', n: '15m'}, '1h': {b: '60', o: '1H', n: '1h'}, '2h': {b: '120', o: '2H', n: '2h'}, '4h': {b: '240', o: '4H', n: '4h'}, '6h': {b: '360', o: '6H', n: '6h'}, '8h': {b: null, o: null, n: '8h'}, '12h': {b: '720', o: '12H', n: '12h'}, '1d': {b: 'D', o: '1D', n: '1d'}, '1w': {b: 'W', o: '1W', n: '1w'}, '1M': {b: 'M', o: '1M', n: '1M'}};
 async function getJ(u){ const r = await fetch(u, {cache: 'no-store'}); if(!r.ok) throw new Error(r.status); return r.json(); }
 async function candles(a, t){
   const v = IV[t];
-  try{ const d = await getJ(`https://api.bybit.com/v5/market/kline?category=spot&symbol=${a}USDT&interval=${v.b}&limit=500`); const l = d.result.list; if(l && l.length > 40) return {rows: l.map(x => ({t: +x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4], v: +x[5]})).sort((p, q) => p.t - q.t), src: 'Bybit'}; }catch(e){}
-  try{ const d = await getJ(`https://www.okx.com/api/v5/market/candles?instId=${a}-USDT&bar=${v.o}&limit=300`); if(d.data && d.data.length > 40) return {rows: d.data.map(x => ({t: +x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4], v: +x[5]})).sort((p, q) => p.t - q.t), src: 'OKX'}; }catch(e){}
+  if(v.b) try{ const d = await getJ(`https://api.bybit.com/v5/market/kline?category=spot&symbol=${a}USDT&interval=${v.b}&limit=500`); const l = d.result.list; if(l && l.length > 40) return {rows: l.map(x => ({t: +x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4], v: +x[5]})).sort((p, q) => p.t - q.t), src: 'Bybit'}; }catch(e){}
+  if(v.o) try{ const d = await getJ(`https://www.okx.com/api/v5/market/candles?instId=${a}-USDT&bar=${v.o}&limit=300`); if(d.data && d.data.length > 40) return {rows: d.data.map(x => ({t: +x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4], v: +x[5]})).sort((p, q) => p.t - q.t), src: 'OKX'}; }catch(e){}
+  try{ const d = await getJ(`https://api.binance.com/api/v3/klines?symbol=${a}USDT&interval=${v.n}&limit=500`); if(d && d.length > 40) return {rows: d.map(x => ({t: +x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4], v: +x[5]})), src: 'Binance'}; }catch(e){}
   return null;
 }
 function rsi(c, n = 14){ if(c.length < n + 2) return null; let g = 0, l = 0; for(let i = 1; i <= n; i++){ const d = c[i] - c[i - 1]; g += Math.max(d, 0); l += Math.max(-d, 0); } g /= n; l /= n;
   for(let i = n + 1; i < c.length; i++){ const d = c[i] - c[i - 1]; g = (g * (n - 1) + Math.max(d, 0)) / n; l = (l * (n - 1) + Math.max(-d, 0)) / n; } return l === 0 ? 100 : Math.round((100 - 100 / (1 + g / l)) * 10) / 10; }
+function rsiSeries(c, n = 14){ const o = Array(c.length).fill(null); if(c.length < n + 2) return o; let g = 0, l = 0; for(let i = 1; i <= n; i++){ const d = c[i] - c[i - 1]; g += Math.max(d, 0); l += Math.max(-d, 0); } g /= n; l /= n; o[n] = l === 0 ? 100 : 100 - 100 / (1 + g / l);
+  for(let i = n + 1; i < c.length; i++){ const d = c[i] - c[i - 1]; g = (g * (n - 1) + Math.max(d, 0)) / n; l = (l * (n - 1) + Math.max(-d, 0)) / n; o[i] = l === 0 ? 100 : 100 - 100 / (1 + g / l); } return o; }
+// swing structure: pivot highs and lows (3 candles each side), each labelled against the one before it
+function structure(rows){
+  const K = 3, hs = [], ls = [];
+  for(let i = K; i < rows.length - K; i++){ let H = true, L = true; for(let k = 1; k <= K; k++){ if(rows[i].h <= rows[i - k].h || rows[i].h <= rows[i + k].h) H = false; if(rows[i].l >= rows[i - k].l || rows[i].l >= rows[i + k].l) L = false; } if(H) hs.push({i, p: rows[i].h, hi: true}); if(L) ls.push({i, p: rows[i].l, hi: false}); }
+  hs.forEach((q, k) => { if(k) q.lab = q.p > hs[k - 1].p ? 'HH' : 'LH'; }); ls.forEach((q, k) => { if(k) q.lab = q.p > ls[k - 1].p ? 'HL' : 'LL'; });
+  const lh = hs.slice(-2), ll = ls.slice(-2); let trend = 'Mixed';
+  if(lh.length === 2 && ll.length === 2){ const up = lh[1].p > lh[0].p, upl = ll[1].p > ll[0].p; trend = up && upl ? 'Uptrend (HH + HL)' : !up && !upl ? 'Downtrend (LH + LL)' : up ? 'Higher high, lower low (widening)' : 'Lower high, higher low (squeezing)'; }
+  return {pts: hs.concat(ls).sort((a, b) => a.i - b.i), trend, lastHigh: hs[hs.length - 1], lastLow: ls[ls.length - 1]};
+}
 function analyse(rows){
   const price = rows[rows.length - 1].c, lo = Math.min(...rows.map(r => r.l)), hi = Math.max(...rows.map(r => r.h)), NB = 48, st = (hi - lo) / NB || 1, bins = Array(NB).fill(0);
   rows.forEach(r => { const a = Math.max(0, Math.floor((r.l - lo) / st)), b = Math.min(NB - 1, Math.floor((r.h - lo) / st)), n = b - a + 1; for(let i = a; i <= b; i++) bins[i] += r.v / n; });
@@ -4719,7 +4733,7 @@ function analyse(rows){
   const piv = []; for(let i = 4; i < rows.length - 4; i++){ let H = true, L = true; for(let k = 1; k <= 4; k++){ if(rows[i].h <= rows[i - k].h || rows[i].h <= rows[i + k].h) H = false; if(rows[i].l >= rows[i - k].l || rows[i].l >= rows[i + k].l) L = false; } if(H) piv.push(rows[i].h); if(L) piv.push(rows[i].l); }
   piv.sort((x, y) => x - y); const cl = []; piv.forEach(p => { const c = cl[cl.length - 1]; if(c && Math.abs(p - c.p) / c.p < 0.01){ c.p = (c.p * c.n + p) / (c.n + 1); c.n++; } else cl.push({p, n: 1}); });
   const sup = cl.filter(c => c.p < price).sort((x, y) => y.p - x.p).slice(0, 3), res = cl.filter(c => c.p > price).sort((x, y) => x.p - y.p).slice(0, 3);
-  return {price, lo, hi, st, bins, poc, va: [lo + a * st, lo + (b + 1) * st], pocP: lo + (poc + .5) * st, vwap, sup, res, rsi: rsi(rows.map(r => r.c)), n: rows.length};
+  return {price, lo, hi, st, bins, poc, va: [lo + a * st, lo + (b + 1) * st], pocP: lo + (poc + .5) * st, vwap, sup, res, rsi: rsi(rows.map(r => r.c)), n: rows.length, rows, rs: rsiSeries(rows.map(r => r.c)), str: structure(rows)};
 }
 function chart(A){
   const W = 900, H = 420, pl = 70, pr = 14, top = 10, bot = 10, ph = H - top - bot, y = v => top + (1 - (v - A.lo) / (A.hi - A.lo)) * ph, mx = Math.max(...A.bins), bw = W - pl - pr - 150;
@@ -4731,6 +4745,25 @@ function chart(A){
   g += line(A.vwap, '#8ab4ff', 'Avg cost', false, 0) + line(A.pocP, '#dba118', 'Most traded', false, 0) + line(A.price, '#ffffff', 'Now', false, 0);
   for(let i = 0; i <= 4; i++){ const v = A.lo + (A.hi - A.lo) * i / 4; g += `<text x="2" y="${y(v) + 4}" font-size="10.5" fill="#9a978f">${px(v)}</text>`; }
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${g}</svg><p class="calendar-note" style="margin:4px 0 0">Bars = volume traded at each price (bright = busiest, medium = the zone holding 70% of volume). Blue = volume-weighted average cost of recent buyers.</p>`;
+}
+function candleChart(A, tfLab){
+  const N = Math.min(A.rows.length, 120), off = A.rows.length - N, rows = A.rows.slice(off), rs = A.rs.slice(off), W = 900, Hp = 340, Hr = 90, gap = 22, pl = 6, pr = 74, top = 12;
+  const lo0 = Math.min(...rows.map(r => r.l)), hi0 = Math.max(...rows.map(r => r.h)), padv = (hi0 - lo0) * .05 || 1, lo = lo0 - padv, hi = hi0 + padv;
+  const cw = (W - pl - pr) / N, X = i => pl + (i + .5) * cw, Y = v => top + (1 - (v - lo) / (hi - lo)) * (Hp - top), YR = v => Hp + gap + (1 - v / 100) * Hr, bw = Math.max(1.5, cw * .62);
+  const fmt = t => { const d = new Date(t); return ['5m', '15m', '1h', '2h', '4h', '6h', '8h', '12h'].includes(tfLab) ? d.toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}) : d.toLocaleDateString([], {day: 'numeric', month: 'short', year: '2-digit'}); };
+  let g = '';
+  for(let i = 0; i <= 4; i++){ const v = lo + (hi - lo) * i / 4; g += `<line x1="${pl}" x2="${W - pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.07)"/><text x="${W - pr + 6}" y="${Y(v) + 4}" font-size="11" fill="#9a978f">${px(v)}</text>`; }
+  const hl = (v, col, lab) => (v >= lo && v <= hi) ? `<line x1="${pl}" x2="${W - pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="${col}" stroke-dasharray="5 4" stroke-width="1"/><text x="${W - pr + 6}" y="${Y(v) + 4}" font-size="10.5" font-weight="700" fill="${col}">${lab}</text>` : '';
+  A.sup.forEach(q => g += hl(q.p, '#3fb47a', 'S ' + px(q.p))); A.res.forEach(q => g += hl(q.p, '#e0554d', 'R ' + px(q.p))); g += hl(A.vwap, '#8ab4ff', 'Avg');
+  rows.forEach((r, i) => { const up = r.c >= r.o, col = up ? '#3fb47a' : '#e0554d', x = X(i); g += `<line x1="${x}" x2="${x}" y1="${Y(r.h)}" y2="${Y(r.l)}" stroke="${col}"/><rect x="${x - bw / 2}" y="${Math.min(Y(r.o), Y(r.c))}" width="${bw}" height="${Math.max(1, Math.abs(Y(r.o) - Y(r.c)))}" fill="${col}"><title>${fmt(r.t)}  O ${px(r.o)} H ${px(r.h)} L ${px(r.l)} C ${px(r.c)}</title></rect>`; });
+  const pts = A.str.pts.filter(q => q.i >= off && q.lab); let prev = null;
+  A.str.pts.filter(q => q.i >= off).forEach(q => { if(prev) g += `<line x1="${X(prev.i - off)}" y1="${Y(prev.p)}" x2="${X(q.i - off)}" y2="${Y(q.p)}" stroke="rgba(219,161,24,.55)" stroke-width="1.2"/>`; prev = q; });
+  pts.forEach(q => { const good = q.lab === 'HH' || q.lab === 'HL', col = good ? '#3fb47a' : '#e0554d', x = X(q.i - off), y = Y(q.p) + (q.hi ? -9 : 15); g += `<circle cx="${x}" cy="${Y(q.p)}" r="3" fill="${col}"/><text x="${x}" y="${y}" font-size="11" font-weight="800" fill="${col}" text-anchor="middle">${q.lab}</text>`; });
+  g += `<line x1="${pl}" x2="${W - pr}" y1="${Y(A.price)}" y2="${Y(A.price)}" stroke="#fff" stroke-width="1"/><rect x="${W - pr}" y="${Y(A.price) - 9}" width="${pr - 2}" height="18" rx="3" fill="#fff"/><text x="${W - pr + 4}" y="${Y(A.price) + 4}" font-size="11" font-weight="800" fill="#111">${px(A.price)}</text>`;
+  [30, 50, 70].forEach(v => g += `<line x1="${pl}" x2="${W - pr}" y1="${YR(v)}" y2="${YR(v)}" stroke="${v === 50 ? 'rgba(255,255,255,.08)' : 'rgba(219,161,24,.35)'}" stroke-dasharray="${v === 50 ? '' : '4 4'}"/><text x="${W - pr + 6}" y="${YR(v) + 4}" font-size="10.5" fill="#9a978f">${v}</text>`);
+  let d = ''; rs.forEach((v, i) => { if(v != null) d += (d ? 'L' : 'M') + X(i).toFixed(1) + ' ' + YR(v).toFixed(1); }); g += `<path d="${d}" fill="none" stroke="#dba118" stroke-width="1.6"/><text x="${pl + 2}" y="${Hp + gap - 6}" font-size="11" fill="#9a978f">RSI 14</text>`;
+  const tk = 5; for(let k = 0; k < tk; k++){ const i = Math.round((N - 1) * k / (tk - 1)); g += `<text x="${Math.min(Math.max(X(i), 50), W - pr - 50)}" y="${Hp + gap + Hr + 16}" font-size="10.5" fill="#6c707b" text-anchor="middle">${fmt(rows[i].t)}</text>`; }
+  return `<svg viewBox="0 0 ${W} ${Hp + gap + Hr + 24}" style="width:100%;height:auto;display:block">${g}</svg><p class="calendar-note" style="margin:4px 0 0">Gold line joins the swing highs and lows. <b style="color:#3fb47a">HH</b> higher high and <b style="color:#3fb47a">HL</b> higher low = buyers in control; <b style="color:#e0554d">LH</b> lower high and <b style="color:#e0554d">LL</b> lower low = sellers in control. A swing needs 3 candles each side to confirm, so the newest swings appear a few candles late. Last ${N} candles shown.</p>`;
 }
 function read(A, coin){
   const d = (A.price - A.vwap) / A.vwap * 100, r = A.rsi, ns = A.sup[0], nr = A.res[0], dS = ns ? (A.price - ns.p) / A.price * 100 : null, dR = nr ? (nr.p - A.price) / A.price * 100 : null, inVA = A.price >= A.va[0] && A.price <= A.va[1];
@@ -4751,7 +4784,7 @@ async function run(){
   $('pzSt').textContent = `${coin}/USDT · ${tf.toUpperCase()} · ${A.n} candles · ${res.src} · ${new Date().toLocaleTimeString()}`;
   const tile = (l, v, s) => `<div><small>${l}</small><strong>${v}</strong>${s ? `<br><span style="font-size:11px;color:var(--mute)">${s}</span>` : ''}</div>`;
   $('pzBody').innerHTML = `<div class="rr-card"><div class="rr-out c5" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">${tile('Price now', px(A.price))}${tile('Average cost', px(A.vwap), pc(d) + ' vs price now')}${tile('Most traded', px(A.pocP), 'busiest price')}${tile('RSI (14)', rz, A.rsi == null ? '' : A.rsi >= 70 ? 'overbought' : A.rsi <= 30 ? 'oversold' : 'neutral')}${tile('Nearest support', A.sup[0] ? px(A.sup[0].p) : '—', A.sup[0] ? pc((A.sup[0].p - A.price) / A.price * 100) : '')}${tile('Nearest resistance', A.res[0] ? px(A.res[0].p) : '—', A.res[0] ? pc((A.res[0].p - A.price) / A.price * 100) : '')}</div></div>
-    <div class="rr-card"><h3>What it says</h3>${read(A, coin)}</div><div class="rr-card"><h3>${esc(coin)} volume at price</h3>${chart(A)}</div>`;
+    <div class="rr-card"><h3>${esc(coin)} · ${esc(tf.toUpperCase())} structure</h3><p style="margin:0 0 8px;font-size:14px"><b>${esc(A.str.trend)}</b>${A.str.lastHigh ? ` · last swing high ${px(A.str.lastHigh.p)}${A.str.lastHigh.lab ? ' (' + A.str.lastHigh.lab + ')' : ''}` : ''}${A.str.lastLow ? ` · last swing low ${px(A.str.lastLow.p)}${A.str.lastLow.lab ? ' (' + A.str.lastLow.lab + ')' : ''}` : ''}</p>${candleChart(A, tf)}</div><div class="rr-card"><h3>What it says</h3>${read(A, coin)}</div><div class="rr-card"><h3>${esc(coin)} volume at price</h3>${chart(A)}</div>`;
 }
 $('pzGo').addEventListener('click', run); $('pzCoin').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); run(); } });
 $('pzTf').addEventListener('click', e => { const b = e.target.closest('.filter-chip'); if(!b) return; document.querySelectorAll('#pzTf .filter-chip').forEach(x => x.classList.remove('active')); b.classList.add('active'); tf = b.dataset.t; if($('pzBody').innerHTML) run(); });
