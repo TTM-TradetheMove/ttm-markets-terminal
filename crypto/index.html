@@ -3452,7 +3452,7 @@ load(); setInterval(() => { if(!document.hidden) load(); }, 300000);
 (function(){
 const $ = id => document.getElementById(id);
 if(!$('rrAsset')) return;
-const EXTRA_COINS = [['BIO','Bio Protocol'],['DEEP','DeepBook'],['CC','Canton'],['FET','Fetch.ai'],['LDO','Lido DAO'],['ONDO','Ondo'],['SKY','Sky'],['MKR','Maker'],['XPL','Plasma'],['HBAR','Hedera'],['IMX','Immutable'],['VIRTUAL','Virtuals Protocol'],['SUPRA','Supra'],['MET','Meteora'],['WLD','Worldcoin'],['TAO','Bittensor'],['RENDER','Render'],['SEI','Sei'],['TIA','Celestia'],['JUP','Jupiter'],['PENDLE','Pendle'],['ENA','Ethena'],['AAVE','Aave'],['UNI','Uniswap'],['ATOM','Cosmos'],['FIL','Filecoin'],['ARKM','Arkham'],['PYTH','Pyth Network'],['MEGA','MegaETH']];
+const EXTRA_COINS = [['BIO','Bio Protocol'],['DEEP','DeepBook'],['CC','Canton'],['FET','Fetch.ai'],['LDO','Lido DAO'],['ONDO','Ondo'],['SKY','Sky'],['MKR','Maker'],['XPL','Plasma'],['HBAR','Hedera'],['IMX','Immutable'],['VIRTUAL','Virtuals Protocol'],['SUPRA','Supra'],['MET','Meteora'],['WLD','Worldcoin'],['TAO','Bittensor'],['RENDER','Render'],['SEI','Sei'],['TIA','Celestia'],['JUP','Jupiter'],['PENDLE','Pendle'],['ENA','Ethena'],['AAVE','Aave'],['UNI','Uniswap'],['ATOM','Cosmos'],['FIL','Filecoin'],['ARKM','Arkham'],['PYTH','Pyth Network'],['MEGA','MegaETH'],['HYPE','Hyperliquid'],['TSLA','Tesla (tokenised)'],['NVDA','NVIDIA (tokenised)'],['AAPL','Apple (tokenised)'],['MSFT','Microsoft (tokenised)'],['GOOGL','Alphabet (tokenised)'],['AMZN','Amazon (tokenised)'],['META','Meta (tokenised)'],['COIN','Coinbase (tokenised)'],['MSTR','Strategy (tokenised)'],['HOOD','Robinhood (tokenised)'],['CRCL','Circle (tokenised)'],['SPY','S&P 500 ETF (tokenised)'],['QQQ','Nasdaq 100 ETF (tokenised)'],['TSLAX','Tesla xStock'],['NVDAX','NVIDIA xStock'],['AAPLX','Apple xStock'],['MSTRX','Strategy xStock'],['COINX','Coinbase xStock'],['HOODX','Robinhood xStock'],['CRCLX','Circle xStock'],['GOOGLX','Alphabet xStock'],['SPYX','S&P 500 xStock'],['QQQX','Nasdaq 100 xStock']];
 const addExtra = () => EXTRA_COINS.forEach(([s, n]) => { if(!COINS.some(c => c.s === s)) COINS.push({s, n, r: 999, p: null}); });
 let COINS = ['BTC','ETH','SOL','XRP','BNB','DOGE','ADA','AVAX','LINK','SUI','TON','DOT','LTC','NEAR','APT','ARB','OP','INJ','PEPE','HYPE','ICP'].map((s, i) => ({s, n: '', r: i + 1, p: null}));  // replaced by ../top_coins.json when it loads
 addExtra();
@@ -3468,7 +3468,7 @@ const BALS = Object.assign({spot: 5000, lev: num0(S.bal) || 5000, coinm: 5000, s
 function num0(v){ const n = parseFloat(v); return isFinite(n) ? n : null; }
 if(!S.asset || S.asset === 'Other') S.asset = 'BTC';
 $('rrLev').innerHTML = LEVS.map(l => `<option value="${l}">${l}×${l === 1 ? ' (no leverage)' : ''}</option>`).join('');
-$('rrSrc').innerHTML = [['okx', 'OKX'], ['binance', 'Binance'], ['bybit', 'Bybit'], ['bitget', 'Bitget'], ['mexc', 'MEXC']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
+$('rrSrc').innerHTML = [['okx', 'OKX'], ['binance', 'Binance'], ['bybit', 'Bybit'], ['bitget', 'Bitget'], ['mexc', 'MEXC'], ['hyperliquid', 'Hyperliquid']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
 $('rrAcc').innerHTML = [['spot', 'Spot portfolio'], ['lev', 'Leverage / futures'], ['coinm', 'Coin-M futures (coin-margined)'], ['super', 'Super / retirement'], ['tradfi', 'TradFi / investments'], ['tokenised', 'Tokenised stocks']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
 $('rrTf').innerHTML = [['m5', '5 min'], ['m15', '15 min'], ['h1', '1 hour'], ['h2', '2 hour'], ['h4', '4 hour'], ['h8', '8 hour'], ['h12', '12 hour'], ['d1', 'Daily'], ['w1', 'Weekly'], ['mo1', 'Monthly']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
 const IDS = {entry:'rrEntry', stop:'rrStop', tp1:'rrTp1', s1:'rrS1', tp2:'rrTp2', s2:'rrS2', tp3:'rrTp3', s3:'rrS3', risk:'rrRisk', rusd:'rrRusd', inv:'rrInv', fee:'rrFee', daily:'rrDaily', min:'rrMin', mmr:'rrMmr', lo1p:'rrLo1p', lo1w:'rrLo1w', lo2p:'rrLo2p', lo2w:'rrLo2w', lo3p:'rrLo3p', lo3w:'rrLo3w', lo4p:'rrLo4p', lo4w:'rrLo4w', lo5p:'rrLo5p', lo5w:'rrLo5w'};
@@ -3561,7 +3561,7 @@ function render(){
     return `<div class="rr-warn ${w[0] === 'y' ? 'y' : ''}">${w[1]}${fv && +fv > 0 ? ` <button type="button" class="rr-btn sm" data-key="${w[3]}" data-fit="${fv}" style="margin-left:6px">${lab}</button>` : ''}</div>`; }).join('');
   renderAcct();
   { const a = (S.asset || '').toUpperCase(), sp = S.mkt === 'spot', ex = $('rrExch');
-    const L = sp ? [['Binance', `https://www.binance.com/en/trade/${a}_USDT`], ['Bybit', `https://www.bybit.com/en/trade/spot/${a}/USDT`], ['OKX', `https://www.okx.com/trade-spot/${a.toLowerCase()}-usdt`], ['Bitget', `https://www.bitget.com/spot/${a}USDT`], ['MEXC', `https://www.mexc.com/exchange/${a}_USDT`]] : [['Binance', `https://www.binance.com/en/futures/${a}USDT`], ['Bybit', `https://www.bybit.com/trade/usdt/${a}USDT`], ['OKX', `https://www.okx.com/trade-swap/${a.toLowerCase()}-usdt-swap`], ['Bitget', `https://www.bitget.com/futures/usdt/${a}USDT`], ['MEXC', `https://futures.mexc.com/exchange/${a}_USDT`], ['Hyperliquid', `https://app.hyperliquid.xyz/trade/${a}`]];
+    const L = sp ? [['Binance', `https://www.binance.com/en/trade/${a}_USDT`], ['Bybit', `https://www.bybit.com/en/trade/spot/${a}/USDT`], ['OKX', `https://www.okx.com/trade-spot/${a.toLowerCase()}-usdt`], ['Bitget', `https://www.bitget.com/spot/${a}USDT`], ['MEXC', `https://www.mexc.com/exchange/${a}_USDT`], ['Hyperliquid', `https://app.hyperliquid.xyz/trade/${a}`], ['BTCC', 'https://www.btcc.com/']] : [['Binance', `https://www.binance.com/en/futures/${a}USDT`], ['Bybit', `https://www.bybit.com/trade/usdt/${a}USDT`], ['OKX', `https://www.okx.com/trade-swap/${a.toLowerCase()}-usdt-swap`], ['Bitget', `https://www.bitget.com/futures/usdt/${a}USDT`], ['MEXC', `https://futures.mexc.com/exchange/${a}_USDT`], ['Hyperliquid', `https://app.hyperliquid.xyz/trade/${a}`], ['BTCC', 'https://www.btcc.com/']];
     ex.innerHTML = a ? `<div style="font-size:12px;color:var(--mute);margin-bottom:6px">Place this trade on an exchange (opens the ${esc(a)} ${sp ? 'spot' : 'perp'} market in a new tab):</div><div class="rr-acts" style="margin:0">${L.map(x => `<a class="rr-btn ghost sm" style="text-decoration:none" href="${x[1]}" target="_blank" rel="noopener noreferrer">${x[0]} ↗</a>`).join('')}<button type="button" class="rr-btn ghost sm" id="rrTicket">Copy order ticket</button></div><div style="font-size:11px;color:var(--mute);margin-top:6px">The terminal never places orders or asks for API keys. You enter the trade yourself on the exchange. Availability of some exchanges depends on where you live.</div>` : ''; }
   { const n = $('rrSzNote'), z = S.mode || 'pct', base = {pct: 'The position is sized so a stop-out loses this % of the account you picked.', usd: 'The position is sized so a stop-out loses exactly this dollar amount.', inv: 'You decide how much to put in (margin). Position = investment × leverage, and the risk is worked out for you.'}[z];
     n.innerHTML = c.ok ? `<b style="color:var(--gold2)">= ${usd(c.riskUsd)} at risk · ${c.riskPctAcct.toFixed(2)}% of account · ${c.riskPctInv.toFixed(1)}% of the ${usd(c.margin)} invested</b><br>${base}` : base; }
@@ -3929,7 +3929,7 @@ function startTrade(c, setup, name, replaceIdx){
   $('rrName').value = ''; render(); renderSaved(); return true;
 }
 // ---- price source (exchange) + live candles
-const SRCS = {okx: 'OKX', binance: 'Binance', bybit: 'Bybit', bitget: 'Bitget', mexc: 'MEXC'};
+const SRCS = {okx: 'OKX', binance: 'Binance', bybit: 'Bybit', bitget: 'Bitget', mexc: 'MEXC', hyperliquid: 'Hyperliquid'};
 const SRCKEY = 'ttm_rr_src_v1', TGKEY = 'ttm_rr_tg_v1';
 let SRC = lsGet(SRCKEY, 'okx'); if(!SRCS[SRC]) SRC = 'okx';
 const TFMS = {m5: 3e5, m15: 9e5, h1: 36e5, h2: 72e5, h4: 144e5, h8: 288e5, h12: 432e5, d1: 864e5, w1: 6048e5, mo1: 2592e6};
@@ -3938,8 +3938,21 @@ const TFBASE = {
   binance: {m5: '5m', m15: '15m', h1: '1h', h2: '2h', h4: '4h', h8: '8h', h12: '12h', d1: '1d', w1: '1w', mo1: '1M'},
   bybit: {m5: '5', m15: '15', h1: '60', h2: '120', h4: '240', h8: ['240', 144e5], h12: '720', d1: 'D', w1: 'W', mo1: 'M'},
   bitget: {m5: '5min', m15: '15min', h1: '1h', h2: ['1h', 36e5], h4: '4h', h8: ['4h', 144e5], h12: '12h', d1: '1day', w1: '1week', mo1: '1M'},
-  mexc: {m5: '5m', m15: '15m', h1: '60m', h2: ['60m', 36e5], h4: '4h', h8: ['4h', 144e5], h12: ['4h', 432e5], d1: '1d', w1: '1W', mo1: '1M'}
+  mexc: {m5: '5m', m15: '15m', h1: '60m', h2: ['60m', 36e5], h4: '4h', h8: ['4h', 144e5], h12: ['4h', 432e5], d1: '1d', w1: '1W', mo1: '1M'},
+  hyperliquid: {m5: '5m', m15: '15m', h1: '1h', h2: '2h', h4: '4h', h8: '8h', h12: '12h', d1: '1d', w1: '1w', mo1: '1M'}
 };
+// Hyperliquid: one POST endpoint. Stock markets live on builder-deployed dexs (names like xyz:TSLA); every market is keyed here by its plain ticker.
+const HLMS = {'5m': 3e5, '15m': 9e5, '1h': 36e5, '2h': 72e5, '4h': 144e5, '8h': 288e5, '12h': 432e5, '1d': 864e5, '1w': 6048e5, '1M': 2592e6};
+let HLC = {map: {}, dexs: null};
+const postHL = async b => { const r = await fetch('https://api.hyperliquid.xyz/info', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(b)}); if(!r.ok) throw new Error('http'); return r.json(); };
+async function hlMids(){
+  if(!HLC.dexs){ try{ const d = await postHL({type: 'perpDexs'}); HLC.dexs = (d || []).filter(x => x && x.name).map(x => x.name).slice(0, 8); }catch(e){ HLC.dexs = []; } }
+  const m = {}, map = {};
+  const add = (all, dex) => Object.keys(all).forEach(k => { const v = +all[k]; if(!(v > 0) || k.charAt(0) === '@') return; let sym = k.indexOf(':') >= 0 ? k.split(':')[1] : k, val = v; if(/^k[A-Z]/.test(sym)){ sym = sym.slice(1); val = v / 1000; } if(!(sym in m) || dex === ''){ m[sym] = val; map[sym] = k; } });
+  add(await postHL({type: 'allMids'}), '');
+  for(const dx of HLC.dexs){ try{ add(await postHL({type: 'allMids', dex: dx}), dx); }catch(e){} }
+  HLC.map = map; return m;
+}
 const getJ = async u => { const r = await fetch(u, {cache: 'no-store'}); if(!r.ok) throw new Error('http'); return r.json(); };
 const kl = d => d.map(r => ({t: +r[0], o: +r[1], h: +r[2], l: +r[3], c: +r[4]}));
 const FETCH = {
@@ -3947,18 +3960,20 @@ const FETCH = {
   binance: async (a, iv, n) => kl(await getJ(`https://api.binance.com/api/v3/klines?symbol=${a}USDT&interval=${iv}&limit=${Math.min(n, 1000)}`)),
   mexc: async (a, iv, n) => kl(await getJ(`https://api.mexc.com/api/v3/klines?symbol=${a}USDT&interval=${iv}&limit=${Math.min(n, 500)}`)),
   bybit: async (a, iv, n) => { const d = await getJ(`https://api.bybit.com/v5/market/kline?category=spot&symbol=${a}USDT&interval=${iv}&limit=${Math.min(n, 1000)}`); return kl(d.result.list).reverse(); },
-  bitget: async (a, iv, n) => { const d = await getJ(`https://api.bitget.com/api/v2/spot/market/candles?symbol=${a}USDT&granularity=${iv}&limit=${Math.min(n, 1000)}`); return kl(d.data).sort((x, y) => x.t - y.t); }
+  bitget: async (a, iv, n) => { const d = await getJ(`https://api.bitget.com/api/v2/spot/market/candles?symbol=${a}USDT&granularity=${iv}&limit=${Math.min(n, 1000)}`); return kl(d.data).sort((x, y) => x.t - y.t); },
+  hyperliquid: async (a, iv, n) => { if(!HLC.map[a]) await hlMids(); const coin = HLC.map[a]; if(!coin) throw new Error('none'); const end = Date.now(), d = await postHL({type: 'candleSnapshot', req: {coin, interval: iv, startTime: end - Math.min(n, 500) * HLMS[iv], endTime: end}}); return d.map(r => ({t: +r.t, o: +r.o, h: +r.h, l: +r.l, c: +r.c})).sort((x, y) => x.t - y.t); }
 };
 const TICK = {
   okx: async () => { const d = await getJ('https://www.okx.com/api/v5/market/tickers?instType=SPOT'), m = {}; d.data.forEach(t => { if(t.instId.endsWith('-USDT')) m[t.instId.slice(0, -5)] = +t.last; }); return m; },
   binance: async () => { const d = await getJ('https://api.binance.com/api/v3/ticker/price'), m = {}; d.forEach(t => { if(t.symbol.endsWith('USDT')) m[t.symbol.slice(0, -4)] = +t.price; }); return m; },
   mexc: async () => { const d = await getJ('https://api.mexc.com/api/v3/ticker/price'), m = {}; d.forEach(t => { if(t.symbol.endsWith('USDT')) m[t.symbol.slice(0, -4)] = +t.price; }); return m; },
   bybit: async () => { const d = await getJ('https://api.bybit.com/v5/market/tickers?category=spot'), m = {}; d.result.list.forEach(t => { if(t.symbol.endsWith('USDT')) m[t.symbol.slice(0, -4)] = +t.lastPrice; }); return m; },
-  bitget: async () => { const d = await getJ('https://api.bitget.com/api/v2/spot/market/tickers'), m = {}; d.data.forEach(t => { if(t.symbol.endsWith('USDT')) m[t.symbol.slice(0, -4)] = +t.lastPr; }); return m; }
+  bitget: async () => { const d = await getJ('https://api.bitget.com/api/v2/spot/market/tickers'), m = {}; d.data.forEach(t => { if(t.symbol.endsWith('USDT')) m[t.symbol.slice(0, -4)] = +t.lastPr; }); return m; },
+  hyperliquid: hlMids
 };
 function aggC(rows, ms){ const g = {}; rows.forEach(x => { const k = Math.floor(x.t / ms), b = g[k]; if(!b) g[k] = {t: k * ms, o: x.o, h: x.h, l: x.l, c: x.c}; else { b.h = Math.max(b.h, x.h); b.l = Math.min(b.l, x.l); b.c = x.c; } }); return Object.keys(g).sort((p, q) => p - q).map(k => g[k]); }
 async function getCandles(a, tf){
-  const order = [SRC, 'bybit', 'okx', 'binance', 'mexc', 'bitget'].filter((x, i, ar) => ar.indexOf(x) === i);
+  const order = [SRC, 'bybit', 'okx', 'binance', 'mexc', 'bitget', 'hyperliquid'].filter((x, i, ar) => ar.indexOf(x) === i);
   for(const src of order){
     try{ const spec = TFBASE[src][tf], iv = Array.isArray(spec) ? spec[0] : spec, nat = Array.isArray(spec) ? spec[1] : 0;
       let rows = await FETCH[src](a, iv, nat ? Math.ceil(110 * TFMS[tf] / nat) : 110);
@@ -3979,7 +3994,7 @@ async function getTickers(){
 let GAP = {t: 0, maps: {}}, GAPSRC = {};
 async function fillGaps(m, used){
   if(Date.now() - GAP.t > 20000){ GAP.maps = {}; GAP.t = Date.now(); }
-  for(const src of ['bybit', 'okx', 'binance', 'mexc', 'bitget']){
+  for(const src of ['bybit', 'okx', 'binance', 'mexc', 'bitget', 'hyperliquid']){
     if(src === used) continue;
     try{ const g = GAP.maps[src] || (GAP.maps[src] = await TICK[src]()); Object.keys(g).forEach(k => { if(!(m[k] > 0) && g[k] > 0){ m[k] = g[k]; GAPSRC[k] = src; } }); }catch(e){ GAP.maps[src] = {}; }
   }
