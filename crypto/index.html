@@ -1186,7 +1186,7 @@ body.view-section #backFab{display:block}
       <h2>Trade Tracker &amp; Win Ratio</h2>
       <p>Every trade you open in the Risk-to-Reward calculator lands here, split by account type (spot, leverage, super / retirement) and by the time frame you traded. Open trades lock their margin; when a trade plays out, close it as fully played out (all targets), stopped out, or partly played out (some targets hit, then stopped, break-even or closed by hand). The result is added to or taken from your account, and your win ratio, average R, profit factor, drawdown and equity curve update. Everything stays in your own browser.</p>
     </div>
-    <div class="rr-card"><h3>All accounts <button type="button" class="rr-btn sm" id="jXlsx" style="float:right">Download Excel (TTM view)</button></h3><div class="rr-out c4" id="jAcct"></div><div class="rr-wrap"><table class="rr-tbl" id="jPort"></table></div></div>
+    <div class="rr-card"><div class="filter-row" id="jAccF" style="margin-bottom:12px"></div><h3>Accounts <button type="button" class="rr-btn sm" id="jXlsx" style="float:right">Download Excel (TTM view)</button></h3><div class="rr-out c4" id="jAcct"></div><div class="rr-wrap"><table class="rr-tbl" id="jPort"></table></div></div>
     <div class="rr-card"><h3>Performance</h3><div class="rr-stats" id="jStats"></div><svg id="jCurve" viewBox="0 0 700 220" style="width:100%;height:auto;display:block"></svg></div>
     <div class="rr-card"><h3>Open positions <span style="float:right;color:var(--mute);text-transform:none;letter-spacing:0;font-size:12px">live prices, refreshed every 30s</span></h3><div class="rr-wrap"><table class="rr-tbl" id="jOpen"></table></div></div>
     <div class="rr-card"><h3>Best results by time frame</h3><div id="jTfBest" style="margin-bottom:10px"></div><div class="rr-wrap"><table class="rr-tbl" id="jTf"></table></div></div>
@@ -3406,18 +3406,18 @@ function lsGet(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.pa
 function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); if(window.ttmSync && (k === 'ttm_rr_saved_v1' || k === 'ttm_rr_bals_v1')) window.ttmSync.dirty(); return true; }catch(e){ return false; } }
 S = Object.assign(S, lsGet(KEY, {}));
 const BKEY = 'ttm_rr_bals_v1';
-const BALS = Object.assign({spot: 5000, lev: num0(S.bal) || 5000, super: 5000}, lsGet(BKEY, {}));
+const BALS = Object.assign({spot: 5000, lev: num0(S.bal) || 5000, coinm: 5000, super: 5000}, lsGet(BKEY, {}));
 function num0(v){ const n = parseFloat(v); return isFinite(n) ? n : null; }
 if(!S.asset || S.asset === 'Other') S.asset = 'BTC';
 $('rrLev').innerHTML = LEVS.map(l => `<option value="${l}">${l}×${l === 1 ? ' (no leverage)' : ''}</option>`).join('');
 $('rrSrc').innerHTML = [['okx', 'OKX'], ['binance', 'Binance'], ['bybit', 'Bybit'], ['bitget', 'Bitget'], ['mexc', 'MEXC']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
-$('rrAcc').innerHTML = [['spot', 'Spot portfolio'], ['lev', 'Leverage / futures'], ['super', 'Super / retirement']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
+$('rrAcc').innerHTML = [['spot', 'Spot portfolio'], ['lev', 'Leverage / futures'], ['coinm', 'Coin-M futures (coin-margined)'], ['super', 'Super / retirement']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
 $('rrTf').innerHTML = [['m5', '5 min'], ['m15', '15 min'], ['h1', '1 hour'], ['h2', '2 hour'], ['h4', '4 hour'], ['h8', '8 hour'], ['h12', '12 hour'], ['d1', 'Daily'], ['w1', 'Weekly'], ['mo1', 'Monthly']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
 const IDS = {entry:'rrEntry', stop:'rrStop', tp1:'rrTp1', s1:'rrS1', tp2:'rrTp2', s2:'rrS2', tp3:'rrTp3', s3:'rrS3', risk:'rrRisk', rusd:'rrRusd', inv:'rrInv', fee:'rrFee', daily:'rrDaily', min:'rrMin', mmr:'rrMmr'};
 function pushInputs(){
   Object.keys(IDS).forEach(k => { $(IDS[k]).value = S[k] === '' || S[k] == null ? '' : S[k]; });
-  $('rrBal').value = BALS[S.acc] == null ? '' : BALS[S.acc]; $('rrAccHint').textContent = S.acc === 'lev' ? 'Futures / perps, starting at 3x. Change the leverage below if you need to.' : (S.acc === 'super' ? 'Retirement: spot only, no leverage, long only.' : 'Spot: no leverage, long only.');
-  $('rrBalL').textContent = 'Starting balance — ' + ({spot: 'Spot portfolio', lev: 'Leverage / futures', super: 'Super / retirement'}[S.acc] || '') + ' (USD)';
+  $('rrBal').value = BALS[S.acc] == null ? '' : BALS[S.acc]; $('rrAccHint').textContent = S.acc === 'lev' ? 'Futures / perps, starting at 3x. Change the leverage below if you need to.' : S.acc === 'coinm' ? 'Coin-M: contracts margined and settled in the coin itself, starting at 3x. Results here are shown in USD at the exit price; liquidation uses the inverse-contract formula.' : (S.acc === 'super' ? 'Retirement: spot only, no leverage, long only.' : 'Spot: no leverage, long only.');
+  $('rrBalL').textContent = 'Starting balance — ' + (accName(S.acc) || '') + ' (USD)';
   $('rrAsset').value = S.asset; $('rrAcc').value = S.acc; $('rrTf').value = S.tf; $('rrSrc').value = SRC;
   if(S.mkt === 'spot'){ $('rrLev').innerHTML = '<option value="1">None (spot)</option>'; $('rrLev').value = '1'; }
   else { $('rrLev').innerHTML = LEVS.map(l => `<option value="${l}">${l}×${l === 1 ? ' (no leverage)' : ''}</option>`).join(''); $('rrLev').value = String(S.lev); }
@@ -3438,7 +3438,7 @@ function calc(){
   const long = S.dir === 'long', lev = S.mkt === 'spot' ? 1 : (num(S.lev) || 1);
   const A = acct(), E = num(S.entry), SL = num(S.stop), bal = A.equity, mode = S.mode || 'pct', rk = num(S.risk), ru = num(S.rusd), inv = num(S.inv), fee = (num(S.fee) || 0) / 100, mmr = (num(S.mmr) || 0) / 100;
   const out = {long, lev, E, SL, bal, rk, mode, fee, mmr, avail: A.avail, warns: [], ok: false};
-  if(bal != null && bal <= 0) out.warns.push(['y', 'The ' + ({spot: 'Spot portfolio', lev: 'Leverage / futures', super: 'Super / retirement'}[S.acc] || 'selected') + ' account has no balance. Enter a starting balance for it.']);
+  if(bal != null && bal <= 0) out.warns.push(['y', 'The ' + (accName(S.acc) || 'selected') + ' account has no balance. Enter a starting balance for it.']);
   const sizeIn = mode === 'usd' ? ru : mode === 'inv' ? inv : rk;
   if(E == null || SL == null || bal == null || sizeIn == null || E <= 0 || SL <= 0 || bal <= 0 || sizeIn <= 0) return out;
   if(long ? SL >= E : SL <= E){ out.warns.push(['bad', long ? 'For a long trade the stop-loss must be below the entry.' : 'For a short trade the stop-loss must be above the entry.']); return out; }
@@ -3466,7 +3466,7 @@ function calc(){
   out.be = out.rr != null && out.rr > 0 ? 100 / (1 + out.rr) : null;
   // liquidation estimate (isolated, linear contract): liq = entry * (1 -/+ 1/lev +/- mmr)
   if(S.mkt === 'fut' && lev > 1){
-    out.liq = long ? E * (1 - 1 / lev + mmr) : E * (1 + 1 / lev - mmr);
+    out.liq = S.acc === 'coinm' ? (long ? E * lev / (lev + 1 - lev * mmr) : E * lev / Math.max(0.0001, lev - 1 + lev * mmr)) : (long ? E * (1 - 1 / lev + mmr) : E * (1 + 1 / lev - mmr));
     out.liqDist = Math.abs(E - out.liq) / E * 100;
     const stopBeyond = long ? SL <= out.liq : SL >= out.liq;
     if(stopBeyond) out.warns.push(['bad', `Your stop is at or beyond the estimated liquidation price (${pr(out.liq)}). You would be liquidated before the stop triggers. Lower the leverage or tighten the stop.`]);
@@ -3475,7 +3475,7 @@ function calc(){
   const av = A.avail;
   if(out.margin > av + 0.005){
     const f = av > 0 ? av / out.margin : 0; out.fitKey = mode === 'pct' ? 'risk' : mode === 'usd' ? 'rusd' : 'inv'; out.fit = mode === 'pct' ? rk * f : mode === 'usd' ? ru * f : av;
-    out.warns.push(['bad', `The margin needed (${usd(out.margin)}) is more than the ${usd(av)} you have available in ${({spot: 'your spot portfolio', lev: 'your leverage account', super: 'your super / retirement account'})[S.acc] || 'this account'}` + (A.locked > 0 ? ` (${usd(A.locked)} is locked in ${A.open} open trade${A.open > 1 ? 's' : ''})` : '') + '. ' + (av > 0 ? 'Reduce the size, use more leverage, or tighten the stop.' : 'Close a trade or add capital first.'), av > 0 ? out.fit : 0, out.fitKey]); }
+    out.warns.push(['bad', `The margin needed (${usd(out.margin)}) is more than the ${usd(av)} you have available in ${({spot: 'your spot portfolio', lev: 'your leverage account', coinm: 'your Coin-M account', super: 'your super / retirement account'})[S.acc] || 'this account'}` + (A.locked > 0 ? ` (${usd(A.locked)} is locked in ${A.open} open trade${A.open > 1 ? 's' : ''})` : '') + '. ' + (av > 0 ? 'Reduce the size, use more leverage, or tighten the stop.' : 'Close a trade or add capital first.'), av > 0 ? out.fit : 0, out.fitKey]); }
   else if(out.margin > av * 0.5) out.warns.push(['y', `This position locks up ${(out.margin / av * 100).toFixed(0)}% of your available balance as margin (${usd(av - out.margin)} would be left).`]);
   const mn = num(S.min);
   if(out.rr != null && mn != null && out.rr < mn) out.warns.push(['y', `Reward-to-risk 1:${out.rr.toFixed(2)} is below your minimum of 1:${mn}.`]);
@@ -3542,7 +3542,7 @@ function drawChart(c){
   svg.innerHTML = g + `<text x="44" y="${T + 10}" fill="#8b8f9a" font-size="10.5">${S.asset} · ${c.long ? 'Long' : 'Short'} · ${c.lev}×</text>`;
 }
 // ---- account, trades (saved plans / open / closed), tracker
-const ACCS = [['spot', 'Spot portfolio'], ['lev', 'Leverage / futures'], ['super', 'Super / retirement']];
+const ACCS = [['spot', 'Spot portfolio'], ['lev', 'Leverage / futures'], ['coinm', 'Coin-M futures'], ['super', 'Super / retirement']];
 const TFS = [['m5', '5 min'], ['m15', '15 min'], ['h1', '1 hour'], ['h2', '2 hour'], ['h4', '4 hour'], ['h8', '8 hour'], ['h12', '12 hour'], ['d1', 'Daily'], ['w1', 'Weekly'], ['mo1', 'Monthly']];
 const accName = id => (ACCS.find(a => a[0] === id) || ACCS[1])[1];
 const tfName = id => (TFS.find(a => a[0] === id) || [0, 'Not set'])[1];
@@ -3576,7 +3576,7 @@ function portHtml(){
 function renderAcct(){
   if(!$('rrAcct')) return;
   $('rrAcct').innerHTML = tiles(acct()); $('rrAcctName').textContent = accName(S.acc);
-  if($('jAcct')) $('jAcct').innerHTML = tiles(acctAll());
+  if($('jAcct')) $('jAcct').innerHTML = tiles(jA());
   [$('rrPort'), $('jPort')].forEach(el => { if(el) el.innerHTML = portHtml(); });
 }
 function snapOf(c, st){ st = st || S; return {asset: st.asset, acc: st.acc || 'lev', tf: st.tf || 'h1', long: c.long, mkt: st.mkt, lev: c.lev, E: c.E, SL: c.SL, units: c.units, notional: c.notional, margin: c.margin, riskUsd: c.riskUsd, fee: c.fee, tps: c.tps.map(t => ({P: t.P, share: t.share}))}; }
@@ -3600,7 +3600,7 @@ function renderSaved(){
   $('rrSaved').innerHTML = h + '</tbody>';
   renderAcct(); renderJournal();
 }
-let jf = 'all';
+let jf = 'all', jAccF = lsGet('ttm_jacc_v1', 'all'); const jA = () => jAccF === 'all' ? acctAll() : acct(jAccF);
 function curve(pts){
   const svg = $('jCurve'); if(!svg) return;
   if(pts.length < 2){ svg.setAttribute('viewBox', '0 0 700 56'); svg.innerHTML = '<text x="350" y="34" fill="#8b8f9a" font-size="14" text-anchor="middle">Your equity curve appears after your first closed trade</text>'; return; }
@@ -3634,10 +3634,11 @@ function tfTbl(cl){
 }
 function renderJournal(){
   if(!$('jStats')) return;
-  const list = loadSaved(), A = acctAll(), closed = closedOf('all');
-  const opens = list.filter(x => x.status === 'open' && x.snap);
+  if($('jAccF')) $('jAccF').innerHTML = [['all', 'All accounts']].concat(ACCS).map(a => `<button class="filter-chip ${jAccF === a[0] ? 'active' : ''}" data-a="${a[0]}">${a[1]}</button>`).join('');
+  const list = loadSaved(), A = jA(), closed = closedOf(jAccF);
+  const opens = list.filter(x => x.status === 'open' && x.snap && (jAccF === 'all' || accOf(x) === jAccF));
   const st = tstats(closed), wins = closed.filter(x => kind(x.res.pnl, x.snap.riskUsd) === 'win'), losses = closed.filter(x => kind(x.res.pnl, x.snap.riskUsd) === 'loss');
-  let eq = A.start, peak = eq, dd = 0; const pts = [{v: eq, d: 0, label: 'Start (all accounts)'}];
+  let eq = A.start, peak = eq, dd = 0; const pts = [{v: eq, d: 0, label: 'Start (' + (jAccF === 'all' ? 'all accounts' : accName(jAccF)) + ')'}];
   closed.forEach(x => { eq += x.res.pnl; peak = Math.max(peak, eq); dd = Math.max(dd, peak - eq); pts.push({v: eq, d: x.res.pnl, label: x.name}); });
   let sn = 0, stk = ''; for(let i = closed.length - 1; i >= 0; i--){ const k = kind(closed[i].res.pnl, closed[i].snap.riskUsd); if(k === 'be') continue; if(!stk) stk = k; if(k === stk) sn++; else break; }
   const g = (k, v, c) => `<div><small>${k}</small><strong class="${c || ''}">${v}</strong></div>`;
@@ -3651,7 +3652,7 @@ function renderJournal(){
   { const b = bestTf(tfRows(closed));
     $('jTfBest').innerHTML = b ? `<div class="rr-warn y" style="border-color:var(--gold);background:rgba(219,161,24,.08);color:var(--text)">Best time frame so far: <b style="color:var(--gold2)">${b.nm}</b> &mdash; net ${usd(b.t.net)} from ${b.t.n} trade${b.t.n > 1 ? 's' : ''}, ${b.t.wr == null ? 'no decided trades' : (b.t.wr * 100).toFixed(0) + '% win rate'}, average ${b.t.avgR.toFixed(2)}R.${closed.length < 10 ? ' This rests on only ' + closed.length + ' closed trade' + (closed.length > 1 ? 's' : '') + ', so treat it as an early read, not a pattern.' : ''}</div>` : '<p class="calendar-note" style="margin:0">Pick the time frame you trade on each setup. Once trades are closed, your best and worst time frames show up here.</p>'; }
   $('jOpen').innerHTML = openTbl(opens);
-  let rows = list.filter(x => x.snap && (x.status === 'open' || x.status === 'closed'));
+  let rows = list.filter(x => x.snap && (x.status === 'open' || x.status === 'closed') && (jAccF === 'all' || accOf(x) === jAccF));
   rows = rows.filter(x => jf === 'all' || (jf === 'open' ? x.status === 'open' : x.status === 'closed' && kind(x.res.pnl, x.snap.riskUsd) === jf));
   rows.sort((a, b) => ((b.res && b.res.closed) || b.opened || b.t) - ((a.res && a.res.closed) || a.opened || a.t));
   let t = '<thead><tr><th>Date</th><th>Trade</th><th>Account</th><th>Asset</th><th>Dir</th><th>Lev</th><th>Time frame</th><th>Entry</th><th>Result</th><th>P&amp;L</th><th>R</th><th>How it ended</th><th></th></tr></thead><tbody>';
@@ -3819,6 +3820,7 @@ function wireJournal(){
     else if(a === 'del'){ if(x.status === 'closed' || x.status === 'open'){ if(!confirm(x.status === 'open' ? 'Cancel this open trade and release its margin?' : 'Delete this closed trade from your history? Your balance will change back.')) return; } list.splice(i, 1); saveAll(list); renderSaved(); render(); } }
   $('rrSaved').addEventListener('click', e => { const b = e.target.closest('button[data-a]'); if(b) act(b); });
   ['jOpen', 'jHist', 'pfOpen'].forEach(id => $(id).addEventListener('click', e => { const b = e.target.closest('button[data-j]'); if(b) act(b); }));
+  $('jAccF').addEventListener('click', e => { const b = e.target.closest('button[data-a]'); if(!b) return; jAccF = b.dataset.a; lsSet('ttm_jacc_v1', jAccF); renderAcct(); renderJournal(); });
   $('jFilter').addEventListener('click', e => { const c = e.target.closest('.filter-chip'); if(!c) return; document.querySelectorAll('#jFilter .filter-chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); jf = c.dataset.f; renderJournal(); });
   const exp = () => { const blob = new Blob([JSON.stringify({ttm_rr: 3, bals: BALS, setups: loadSaved()}, null, 2)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ttm-risk-reward-backup.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
   $('rrExport').addEventListener('click', exp); $('jExport').addEventListener('click', exp);
@@ -4278,7 +4280,7 @@ function wire(){
   $('tgSave').addEventListener('click', () => { if(window.ttmCan && !ttmCan('alerts')){ ttmUpsell('alerts'); return; } lsSet(TGKEY, {tok: $('tgTok').value.trim(), chat: $('tgChat').value.trim(), on: $('tgOn').checked}); tgNote($('tgOn').checked ? 'Saved. Alerts are on while this page is open.' : 'Saved. Alerts are off.'); });
   $('tgTest').addEventListener('click', async () => { window.ttmTrack && ttmTrack('feat', 'telegram_test'); if(window.ttmCan && !ttmCan('alerts')){ ttmUpsell('alerts'); return; } lsSet(TGKEY, {tok: $('tgTok').value.trim(), chat: $('tgChat').value.trim(), on: $('tgOn').checked}); tgNote('Sending…'); const ok = await tgSend('✅ <b>TTM Trade Tracker</b> is connected. You will get a message here when a take-profit is hit on one of your open trades.'); tgNote(ok ? 'Test sent. Check your Telegram.' : 'Could not send. ' + (TGERR || 'Check the token and chat ID, and that you have sent your bot a message first.')); });
   $('rrBal').addEventListener('input', e => { BALS[S.acc] = e.target.value; lsSet(BKEY, BALS); render(); renderSaved(); });
-  $('rrAcc').addEventListener('change', e => { S.acc = e.target.value; if(S.acc === 'lev'){ S.mkt = 'fut'; S.lev = 3; } else { S.mkt = 'spot'; S.dir = 'long'; } persist(); pushInputs(); render(); });
+  $('rrAcc').addEventListener('change', e => { S.acc = e.target.value; if(S.acc === 'lev' || S.acc === 'coinm'){ S.mkt = 'fut'; S.lev = 3; } else { S.mkt = 'spot'; S.dir = 'long'; } persist(); pushInputs(); render(); });
   $('rrTf').addEventListener('change', e => { S.tf = e.target.value; persist(); pushInputs(); render(); loadCandles(); });
   $('rrTfChips').addEventListener('click', e => { const au = e.target.closest('button[data-auto]'); if(au){ autoFit(); return; } const b = e.target.closest('button[data-t]'); if(!b) return; S.tf = b.dataset.t; persist(); pushInputs(); render(); loadCandles(); });
   $('rrSz').addEventListener('click', e => { const b = e.target.closest('button[data-z]'); if(!b) return; S.mode = b.dataset.z; persist(); pushInputs(); render(); });
