@@ -1196,7 +1196,7 @@ button.tkr{background:none;border:0;padding:0;margin:0;color:var(--gold2);font:i
     <div class="rr-card"><div class="filter-row" id="jAccF" style="margin-bottom:12px"></div><h3>Accounts <button type="button" class="rr-btn sm" id="jXlsx" style="float:right">Download Excel (TTM view)</button></h3><div class="rr-out c4" id="jAcct"></div><div class="rr-wrap"><table class="rr-tbl" id="jPort"></table></div></div>
     <div class="rr-card"><h3>Performance</h3><div class="rr-stats" id="jStats"></div><svg id="jCurve" viewBox="0 0 700 220" style="width:100%;height:auto;display:block"></svg></div>
     <div class="rr-card"><h3>Add a holding you already own</h3><p class="calendar-note" style="margin:0 0 10px">For spot or retirement assets bought before you started using the tracker. It counts in the account balance, the portfolio and TTM Holdings. No stop or targets needed.</p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end"><label><small>Asset</small><br><input id="ehAsset" placeholder="BIO" autocomplete="off" style="width:100px"></label><label><small>Account</small><br><select id="ehAcc"><option value="spot">Spot portfolio (crypto)</option><option value="super">TradFi / investments (super)</option></select></label><label><small>Amount paid ($)</small><br><input id="ehAmt" inputmode="decimal" placeholder="1000" style="width:110px"></label><label><small>Average buy price ($)</small><br><input id="ehPx" inputmode="decimal" placeholder="0.05" style="width:130px"></label><label><small>Current price (only if no live feed)</small><br><input id="ehNow" inputmode="decimal" placeholder="e.g. 95.40" style="width:150px"></label><label><small>Bought on (optional)</small><br><input id="ehDate" type="date"></label><button class="rr-btn sm" id="ehAdd" type="button">Add holding</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end"><label><small>Asset</small><br><input id="ehAsset" placeholder="BIO" autocomplete="off" style="width:100px"></label><label><small>Account</small><br><select id="ehAcc"><option value="spot">Spot portfolio (crypto)</option><option value="tradfi">TradFi / investments</option><option value="super">Super / retirement (not shown publicly)</option></select></label><label><small>Amount paid ($)</small><br><input id="ehAmt" inputmode="decimal" placeholder="1000" style="width:110px"></label><label><small>Average buy price ($)</small><br><input id="ehPx" inputmode="decimal" placeholder="0.05" style="width:130px"></label><label><small>Current price (only if no live feed)</small><br><input id="ehNow" inputmode="decimal" placeholder="e.g. 95.40" style="width:150px"></label><label><small>Bought on (optional)</small><br><input id="ehDate" type="date"></label><button class="rr-btn sm" id="ehAdd" type="button">Add holding</button></div>
       <p class="calendar-note" id="ehNote" style="margin:8px 0 0"></p></div>
     <div class="rr-card"><h3>Open positions <span style="float:right;color:var(--mute);text-transform:none;letter-spacing:0;font-size:12px">live prices, refreshed every 30s</span></h3><div class="rr-wrap"><table class="rr-tbl" id="jOpen"></table></div></div>
     <div class="rr-card"><h3>Best results by time frame</h3><div id="jTfBest" style="margin-bottom:10px"></div><div class="rr-wrap"><table class="rr-tbl" id="jTf"></table></div></div>
@@ -3459,18 +3459,18 @@ function lsGet(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.pa
 function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); if(window.ttmSync && (k === 'ttm_rr_saved_v1' || k === 'ttm_rr_bals_v1')) window.ttmSync.dirty(); return true; }catch(e){ return false; } }
 S = Object.assign(S, lsGet(KEY, {}));
 const BKEY = 'ttm_rr_bals_v1';
-const BALS = Object.assign({spot: 5000, lev: num0(S.bal) || 5000, coinm: 5000, super: 5000}, lsGet(BKEY, {}));
+const BALS = Object.assign({spot: 5000, lev: num0(S.bal) || 5000, coinm: 5000, super: 5000, tradfi: 5000}, lsGet(BKEY, {}));
 function num0(v){ const n = parseFloat(v); return isFinite(n) ? n : null; }
 if(!S.asset || S.asset === 'Other') S.asset = 'BTC';
 $('rrLev').innerHTML = LEVS.map(l => `<option value="${l}">${l}×${l === 1 ? ' (no leverage)' : ''}</option>`).join('');
 $('rrSrc').innerHTML = [['okx', 'OKX'], ['binance', 'Binance'], ['bybit', 'Bybit'], ['bitget', 'Bitget'], ['mexc', 'MEXC']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
-$('rrAcc').innerHTML = [['spot', 'Spot portfolio'], ['lev', 'Leverage / futures'], ['coinm', 'Coin-M futures (coin-margined)'], ['super', 'Super / retirement']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
+$('rrAcc').innerHTML = [['spot', 'Spot portfolio'], ['lev', 'Leverage / futures'], ['coinm', 'Coin-M futures (coin-margined)'], ['super', 'Super / retirement'], ['tradfi', 'TradFi / investments']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
 $('rrTf').innerHTML = [['m5', '5 min'], ['m15', '15 min'], ['h1', '1 hour'], ['h2', '2 hour'], ['h4', '4 hour'], ['h8', '8 hour'], ['h12', '12 hour'], ['d1', 'Daily'], ['w1', 'Weekly'], ['mo1', 'Monthly']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
 const IDS = {entry:'rrEntry', stop:'rrStop', tp1:'rrTp1', s1:'rrS1', tp2:'rrTp2', s2:'rrS2', tp3:'rrTp3', s3:'rrS3', risk:'rrRisk', rusd:'rrRusd', inv:'rrInv', fee:'rrFee', daily:'rrDaily', min:'rrMin', mmr:'rrMmr', lo1p:'rrLo1p', lo1w:'rrLo1w', lo2p:'rrLo2p', lo2w:'rrLo2w', lo3p:'rrLo3p', lo3w:'rrLo3w', lo4p:'rrLo4p', lo4w:'rrLo4w', lo5p:'rrLo5p', lo5w:'rrLo5w'};
 function pushInputs(){
   if($('rrSplit')){ $('rrSplit').checked = !!S.split; $('rrSplitBox').style.display = S.split ? 'block' : 'none'; }
   Object.keys(IDS).forEach(k => { $(IDS[k]).value = S[k] === '' || S[k] == null ? '' : S[k]; });
-  $('rrBal').value = BALS[S.acc] == null ? '' : BALS[S.acc]; $('rrAccHint').textContent = S.acc === 'lev' ? 'Futures / perps, starting at 3x. Change the leverage below if you need to.' : S.acc === 'coinm' ? 'Coin-M: contracts margined and settled in the coin itself, starting at 3x. Results here are shown in USD at the exit price; liquidation uses the inverse-contract formula.' : (S.acc === 'super' ? 'Retirement: spot only, no leverage, long only.' : 'Spot: no leverage, long only.');
+  $('rrBal').value = BALS[S.acc] == null ? '' : BALS[S.acc]; $('rrAccHint').textContent = S.acc === 'lev' ? 'Futures / perps, starting at 3x. Change the leverage below if you need to.' : S.acc === 'coinm' ? 'Coin-M: contracts margined and settled in the coin itself, starting at 3x. Results here are shown in USD at the exit price; liquidation uses the inverse-contract formula.' : (S.acc === 'tradfi' ? 'TradFi investments (shares, ETFs): spot only, no leverage, long only. Shown on the TradFi TTM Holdings page.' : S.acc === 'super' ? 'Retirement: spot only, no leverage, long only.' : 'Spot: no leverage, long only.');
   $('rrBalL').textContent = 'Starting balance — ' + (accName(S.acc) || '') + ' (USD)';
   $('rrAsset').value = S.asset; $('rrAcc').value = S.acc; $('rrTf').value = S.tf; $('rrSrc').value = SRC;
   if(S.mkt === 'spot'){ $('rrLev').innerHTML = '<option value="1">None (spot)</option>'; $('rrLev').value = '1'; }
@@ -3537,7 +3537,7 @@ function calc(){
   const av = A.avail;
   if(out.margin > av + 0.005){
     const f = av > 0 ? av / out.margin : 0; out.fitKey = mode === 'pct' ? 'risk' : mode === 'usd' ? 'rusd' : 'inv'; out.fit = mode === 'pct' ? rk * f : mode === 'usd' ? ru * f : av;
-    out.warns.push(['bad', `The margin needed (${usd(out.margin)}) is more than the ${usd(av)} you have available in ${({spot: 'your spot portfolio', lev: 'your leverage account', coinm: 'your Coin-M account', super: 'your super / retirement account'})[S.acc] || 'this account'}` + (A.locked > 0 ? ` (${usd(A.locked)} is locked in ${A.open} open trade${A.open > 1 ? 's' : ''})` : '') + '. ' + (av > 0 ? 'Reduce the size, use more leverage, or tighten the stop.' : 'Close a trade or add capital first.'), av > 0 ? out.fit : 0, out.fitKey]); }
+    out.warns.push(['bad', `The margin needed (${usd(out.margin)}) is more than the ${usd(av)} you have available in ${({spot: 'your spot portfolio', lev: 'your leverage account', coinm: 'your Coin-M account', super: 'your super / retirement account', tradfi: 'your TradFi investment account'})[S.acc] || 'this account'}` + (A.locked > 0 ? ` (${usd(A.locked)} is locked in ${A.open} open trade${A.open > 1 ? 's' : ''})` : '') + '. ' + (av > 0 ? 'Reduce the size, use more leverage, or tighten the stop.' : 'Close a trade or add capital first.'), av > 0 ? out.fit : 0, out.fitKey]); }
   else if(out.margin > av * 0.5) out.warns.push(['y', `This position locks up ${(out.margin / av * 100).toFixed(0)}% of your available balance as margin (${usd(av - out.margin)} would be left).`]);
   const mn = num(S.min);
   if(out.rr != null && mn != null && out.rr < mn) out.warns.push(['y', `Reward-to-risk 1:${out.rr.toFixed(2)} is below your minimum of 1:${mn}.`]);
@@ -3605,7 +3605,7 @@ function drawChart(c){
   svg.innerHTML = g + `<text x="44" y="${T + 10}" fill="#8b8f9a" font-size="10.5">${S.asset} · ${c.long ? 'Long' : 'Short'} · ${c.lev}×</text>`;
 }
 // ---- account, trades (saved plans / open / closed), tracker
-const ACCS = [['spot', 'Spot portfolio'], ['lev', 'Leverage / futures'], ['coinm', 'Coin-M futures'], ['super', 'Super / retirement']];
+const ACCS = [['spot', 'Spot portfolio'], ['lev', 'Leverage / futures'], ['coinm', 'Coin-M futures'], ['super', 'Super / retirement'], ['tradfi', 'TradFi / investments']];
 const TFS = [['m5', '5 min'], ['m15', '15 min'], ['h1', '1 hour'], ['h2', '2 hour'], ['h4', '4 hour'], ['h8', '8 hour'], ['h12', '12 hour'], ['d1', 'Daily'], ['w1', 'Weekly'], ['mo1', 'Monthly']];
 const accName = id => (ACCS.find(a => a[0] === id) || ACCS[1])[1];
 const tfName = id => (TFS.find(a => a[0] === id) || [0, 'Not set'])[1];
@@ -4187,7 +4187,7 @@ let HDT = 0;
 async function publishHoldings(){
   if(!(window.ttmIsAdmin && ttmIsAdmin() && window.ttmPublishHoldings) || Date.now() - HDT < 50000) return; HDT = Date.now();
   try{ const t = await getTickers(); if(t){ PRICES = t.map; PSTAMP = t.t; } }catch(e){}
-  await ttmPublishHoldings({t: Date.now(), crypto: holdingsSnap('spot'), tradfi: holdingsSnap('super')});
+  await ttmPublishHoldings({t: Date.now(), crypto: holdingsSnap('spot'), tradfi: holdingsSnap('tradfi')});
 }
 setTimeout(publishHoldings, 9000); setInterval(publishHoldings, 60000);
 document.addEventListener('click', e => { if(e.target.closest && e.target.closest('[data-j="close"],#rrOpen,#rrConfirm,[data-tc]')) setTimeout(() => { HDT = 0; publishHoldings(); }, 1500); });
