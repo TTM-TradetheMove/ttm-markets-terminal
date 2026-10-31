@@ -1195,6 +1195,9 @@ button.tkr{background:none;border:0;padding:0;margin:0;color:var(--gold2);font:i
     </div>
     <div class="rr-card"><div class="filter-row" id="jAccF" style="margin-bottom:12px"></div><h3>Accounts <button type="button" class="rr-btn sm" id="jXlsx" style="float:right">Download Excel (TTM view)</button></h3><div class="rr-out c4" id="jAcct"></div><div class="rr-wrap"><table class="rr-tbl" id="jPort"></table></div></div>
     <div class="rr-card"><h3>Performance</h3><div class="rr-stats" id="jStats"></div><svg id="jCurve" viewBox="0 0 700 220" style="width:100%;height:auto;display:block"></svg></div>
+    <div class="rr-card"><h3>Add a holding you already own</h3><p class="calendar-note" style="margin:0 0 10px">For spot or retirement assets bought before you started using the tracker. It counts in the account balance, the portfolio and TTM Holdings. No stop or targets needed.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end"><label><small>Asset</small><br><input id="ehAsset" placeholder="BIO" autocomplete="off" style="width:100px"></label><label><small>Account</small><br><select id="ehAcc"><option value="spot">Spot portfolio</option><option value="super">Super / retirement</option></select></label><label><small>Amount paid ($)</small><br><input id="ehAmt" inputmode="decimal" placeholder="1000" style="width:110px"></label><label><small>Average buy price ($)</small><br><input id="ehPx" inputmode="decimal" placeholder="0.05" style="width:130px"></label><label><small>Bought on (optional)</small><br><input id="ehDate" type="date"></label><button class="rr-btn sm" id="ehAdd" type="button">Add holding</button></div>
+      <p class="calendar-note" id="ehNote" style="margin:8px 0 0"></p></div>
     <div class="rr-card"><h3>Open positions <span style="float:right;color:var(--mute);text-transform:none;letter-spacing:0;font-size:12px">live prices, refreshed every 30s</span></h3><div class="rr-wrap"><table class="rr-tbl" id="jOpen"></table></div></div>
     <div class="rr-card"><h3>Best results by time frame</h3><div id="jTfBest" style="margin-bottom:10px"></div><div class="rr-wrap"><table class="rr-tbl" id="jTf"></table></div></div>
         <div class="rr-grid" style="align-items:stretch"><div class="rr-card"><h3>By asset</h3><div class="rr-wrap"><table class="rr-tbl" id="jAsset"></table></div></div><div class="rr-card"><h3>By direction &amp; leverage</h3><div class="rr-wrap"><table class="rr-tbl" id="jDir"></table></div></div></div>
@@ -3727,7 +3730,7 @@ function renderJournal(){
 // ---- close / update modal
 let cur = null;
 function openClose(i){
-  const list = loadSaved(), x = list[i]; if(!x || !x.snap) return; cur = {i, mode: 'partial', hits: x.snap.tps.map(() => false), rest: 'stop', custom: '', actual: '', price: '', pct: 100, pctTxt: '100'};
+  const list = loadSaved(), x = list[i]; if(!x || !x.snap) return; cur = {i, mode: x.snap.noSL ? 'price' : 'partial', hits: x.snap.tps.map(() => false), rest: 'stop', custom: '', actual: '', price: '', pct: 100, pctTxt: '100'};
   drawModal();
   $('rrModal').classList.add('open');
 }
@@ -4034,13 +4037,13 @@ function openState(x){
     label: stopped ? (nh ? 'Stopped after TP' + hits.map((h, k) => h ? k + 1 : 0).filter(Boolean).join('+') : 'Stop level reached') : nh === nt && nt ? 'All targets hit' : nh ? `TP${hits.map((h, k) => h ? k + 1 : 0).filter(Boolean).join('+')} hit` : 'In play'};
 }
 function barHtml(x, s){
-  const sn = x.snap, lv = [sn.SL, sn.E].concat(sn.tps.map(t => t.P)); if(s.pp) lv.push(s.pp.p);
+  const sn = x.snap, lv = (sn.noSL ? [sn.E] : [sn.SL, sn.E]).concat(sn.tps.map(t => t.P)); if(s.pp) lv.push(s.pp.p);
   let lo = Math.min(...lv), hi = Math.max(...lv); const pad = (hi - lo) * .06 || 1; lo -= pad; hi += pad;
   const pos = v => { const q = (v - lo) / (hi - lo) * 100; return sn.long ? q : 100 - q; };
   const pe = pos(sn.E), pp = s.pp ? pos(s.pp.p) : pe, good = s.pp ? (sn.long ? s.pp.p >= sn.E : s.pp.p <= sn.E) : true;
   let h = `<div title="Stop ${pr(sn.SL)} · Entry ${pr(sn.E)} · ${sn.tps.map((t, i) => 'TP' + (i + 1) + ' ' + pr(t.P)).join(' · ')}${s.pp ? ' · Live ' + pr(s.pp.p) : ''}" style="position:relative;height:16px;min-width:170px;background:var(--line);border-radius:8px;margin:2px 0">`;
   h += `<i style="position:absolute;top:0;bottom:0;left:${Math.min(pe, pp)}%;width:${Math.abs(pp - pe)}%;background:${good ? '#3fb47a' : '#e0554d'};opacity:.85"></i>`;
-  h += `<i style="position:absolute;top:-2px;bottom:-2px;left:${pos(sn.SL)}%;width:3px;background:#e0554d;border-radius:2px"></i>`;
+  if(!sn.noSL) h += `<i style="position:absolute;top:-2px;bottom:-2px;left:${pos(sn.SL)}%;width:3px;background:#e0554d;border-radius:2px"></i>`;
   h += `<i style="position:absolute;top:-3px;bottom:-3px;left:${pe}%;width:2px;background:#fff;opacity:.9"></i>`;
   sn.tps.forEach((t, i) => { const hit = s.hits && s.hits[i]; h += `<b style="position:absolute;top:50%;left:${pos(t.P)}%;transform:translate(-50%,-50%);width:11px;height:11px;border-radius:50%;box-sizing:border-box;border:2px solid #3fb47a;background:${hit ? '#3fb47a' : '#16161a'}" title="TP${i + 1} ${pr(t.P)}${hit ? ' hit' : ''}"></b>`; });
   if(s.pp) h += `<i style="position:absolute;top:-4px;bottom:-4px;left:${pp}%;width:4px;transform:translateX(-50%);background:#f2c14e;border-radius:2px;box-shadow:0 0 0 1px #000"></i>`;
@@ -4055,10 +4058,17 @@ function openTbl(items, noteEmpty){
     o += `<tr><td><button class="tkr" data-j="chart" data-i="${i}" title="Open chart, orders and average entry"><b>${esc(x.name)}</b></button><br><small style="color:var(--mute)">${x.snap.mkt === 'spot' ? 'Spot' : x.snap.lev + '×'} · ${esc(tfName(tfOf(x)))}</small></td><td>${esc(accName(accOf(x)))}</td><td><button class="tkr" data-j="chart" data-i="${i}" title="Open chart, orders and average entry">${esc(x.snap.asset)} ▸</button></td><td style="color:${x.snap.long ? '#3fb47a' : '#e0554d'}">${x.snap.long ? 'Long' : 'Short'}</td><td>${pr(x.snap.E)}${x.orders ? `<br><small style="color:var(--mute)">${x.orders.filter(q => q.filled).length} of ${x.orders.length} orders filled</small>` : ''}</td><td><b>${usd(x.snap.margin)}</b><br><small style="color:var(--mute)">${x.snap.mkt === 'spot' ? 'full cost' : 'size ' + usd(x.snap.notional)}</small></td><td>${s.pp ? pr(s.pp.p) + (s.pp.live ? '' : ' <small style="color:var(--mute)">(snapshot)</small>') : '—'}</td>` +
       `<td style="color:${c(s.move)}">${s.move == null ? '—' : (s.move >= 0 ? '+' : '') + s.move.toFixed(2) + '%'}</td><td style="color:${c(s.real + bk)}">${s.pp && !s.pending ? usd(s.real + bk) : (bk ? usd(bk) : '—')}${bk ? `<br><small style="color:var(--mute)">incl. ${usd(bk)} booked</small>` : ''}</td><td style="color:${c(s.open)}">${s.pp && !s.pending ? usd(s.open) : '—'}</td><td style="color:${c(s.pnl + bk)}"><b>${s.pp && !s.pending ? usd(s.pnl + bk) : (bk ? usd(bk) : '—')}</b></td><td>${barHtml(x, s)}</td>` +
       `<td style="color:${s.pending ? 'var(--gold2)' : s.stopped ? '#e0554d' : anyHit ? '#3fb47a' : 'var(--mute)'}">${s.label}${s.pending && s.away != null ? `<br><small style="color:var(--mute)">entry ${pr(x.snap.E)} is ${Math.abs(s.away).toFixed(2)}% ${s.away < 0 ? 'below' : 'above'} live</small>` : ''}${moved ? '<br><small style="color:var(--gold2)">Stop at entry</small>' : ''}</td>` +
-      `<td><div class="rr-acts" style="margin:0"><button class="rr-btn sm" data-j="close" data-i="${i}">Close / update</button><button class="rr-btn ghost sm" data-j="chart" data-i="${i}">Chart / orders</button><button class="rr-btn ghost sm" data-j="edit" data-i="${i}">Edit / add</button>${!moved && !s.pending ? `<button class="rr-btn ghost sm" data-j="be" data-i="${i}">Move SL to entry</button>` : ''}${s.pending ? `<button class="rr-btn ghost sm" data-j="filled" data-i="${i}">Mark as filled</button>` : (!anyHit && !s.stopped ? `<button class="rr-btn ghost sm" data-j="pend" data-i="${i}">Not filled yet</button>` : '')}<button class="rr-btn ghost sm" data-j="load" data-i="${i}">Load</button><button class="rr-btn ghost sm" data-j="del" data-i="${i}">Cancel</button></div></td></tr>`; });
+      `<td><div class="rr-acts" style="margin:0"><button class="rr-btn sm" data-j="close" data-i="${i}">Close / update</button><button class="rr-btn ghost sm" data-j="chart" data-i="${i}">Chart / orders</button><button class="rr-btn ghost sm" data-j="edit" data-i="${i}">Edit / add</button>${!moved && !s.pending && !x.snap.noSL ? `<button class="rr-btn ghost sm" data-j="be" data-i="${i}">Move SL to entry</button>` : ''}${s.pending ? `<button class="rr-btn ghost sm" data-j="filled" data-i="${i}">Mark as filled</button>` : (!anyHit && !s.stopped && !x.snap.noSL ? `<button class="rr-btn ghost sm" data-j="pend" data-i="${i}">Not filled yet</button>` : '')}<button class="rr-btn ghost sm" data-j="load" data-i="${i}">Load</button><button class="rr-btn ghost sm" data-j="del" data-i="${i}">Cancel</button></div></td></tr>`; });
   if(items.length){ const tm = items.reduce((a, x) => a + (x.snap.margin || 0), 0), tn = items.reduce((a, x) => a + (x.snap.notional || 0), 0); o += `<tr><td colspan="5" style="text-align:right;color:var(--mute)"><b>Total margin locked</b> across ${items.length} open trade${items.length > 1 ? 's' : ''}</td><td><b style="color:var(--gold2)">${usd(tm)}</b><br><small style="color:var(--mute)">size ${usd(tn)}</small></td><td colspan="8"></td></tr>`; }
   return o + '</tbody>';
 }
+// ---- add a holding bought before the tracker
+document.addEventListener('click', e => { if(e.target.id !== 'ehAdd') return;
+  const a = ($('ehAsset').value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, ''), amt = num($('ehAmt').value), px = num($('ehPx').value), n = $('ehNote');
+  if(!a || !(amt > 0) || !(px > 0)){ n.style.color = '#e0554d'; n.textContent = 'Fill in the asset, the amount paid and the average buy price.'; return; }
+  const dt = $('ehDate').value ? new Date($('ehDate').value + 'T12:00:00').getTime() : Date.now(), acc = $('ehAcc').value, list = loadSaved();
+  list.unshift({id: uid(), name: a + ' holding', t: dt, opened: dt, s: {asset: a, acc, mkt: 'spot', dir: 'long'}, status: 'open', fill: 'filled', snap: {asset: a, acc, tf: 'd1', long: true, mkt: 'spot', lev: 1, E: px, SL: 0, noSL: true, units: amt / px, notional: amt, margin: amt, riskUsd: amt, fee: 0, tps: []}});
+  saveAll(list); $('ehAsset').value = $('ehAmt').value = $('ehPx').value = $('ehDate').value = ''; n.style.color = ''; n.textContent = a + ' added to ' + accName(acc) + '. Add more of the same coin any time.'; renderSaved(); render(); renderJournal(); });
 // ---- trade chart: candles, every limit order, the average entry, stop and targets; add or manage orders
 let tc = null;
 function openTC(i){ const x = loadSaved()[i]; if(!x || !x.snap) return; tc = {i, tf: tfOf(x) || 'h1', rows: null, err: '', src: '', busy: false}; drawTC(); $('rrModal').classList.add('open'); loadTC(); }
@@ -4067,7 +4077,7 @@ function tcLevels(x){
   const sn = x.snap, L = [], ord = x.orders || [{p: sn.E, filled: x.fill !== 'pending', ft: x.opened || null, only: true}];
   ord.forEach((o, k) => L.push({k: ord.length > 1 || x.orders ? 'LO' + (k + 1) + (o.filled ? '' : ' (waiting)') : 'Entry' + (o.filled ? '' : ' (waiting)'), p: o.p, col: '#f2c14e', dash: !o.filled, w: 1.2, ord: o}));
   if(ord.filter(o => o.filled).length > 1 || (x.orders && x.orders.length > 1 && ord.some(o => o.filled))) L.push({k: 'Avg entry', p: sn.E, col: '#ffffff', w: 2.6});
-  L.push({k: 'Stop', p: sn.SL, col: '#e0554d', w: 1.6, dash: true}); sn.tps.forEach((t, i) => L.push({k: 'TP' + (i + 1), p: t.P, col: '#3fb47a', w: 1.4, dash: true}));
+  if(!sn.noSL) L.push({k: 'Stop', p: sn.SL, col: '#e0554d', w: 1.6, dash: true}); sn.tps.forEach((t, i) => L.push({k: 'TP' + (i + 1), p: t.P, col: '#3fb47a', w: 1.4, dash: true}));
   const pp = priceOf(sn.asset); if(pp) L.push({k: 'Live', p: pp.p, col: '#8ab4ff', w: 1.4});
   return L;
 }
