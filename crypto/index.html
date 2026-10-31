@@ -1114,6 +1114,10 @@ body.view-section #backFab{display:block}
             <div class="rr-f"><label for="rrEntry">Entry price (USD)</label><input id="rrEntry" type="number" inputmode="decimal" step="any"></div>
             <div class="rr-f"><label for="rrStop">Stop loss (USD)</label><input id="rrStop" type="number" inputmode="decimal" step="any"></div>
           </div>
+          <div class="rr-f" style="margin:2px 0 10px"><label style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="rrSplit" style="width:auto"> Split the entry into up to 5 limit orders</label>
+            <div id="rrSplitBox" style="display:none;margin-top:8px"><div class="calendar-note" style="margin:0 0 8px">Price and share of the position for each order. The average entry is worked out for you and used for the risk, stop and targets. When an order fills, your tracker updates the average entry and draws it on the trade chart.</div>
+              <div class="rr-tp" style="margin-bottom:6px"><input id="rrLo1p" type="number" inputmode="decimal" step="any" placeholder="Order 1 price"><input id="rrLo1w" type="number" inputmode="decimal" step="any" placeholder="% of position"></div><div class="rr-tp" style="margin-bottom:6px"><input id="rrLo2p" type="number" inputmode="decimal" step="any" placeholder="Order 2 price"><input id="rrLo2w" type="number" inputmode="decimal" step="any" placeholder="% of position"></div><div class="rr-tp" style="margin-bottom:6px"><input id="rrLo3p" type="number" inputmode="decimal" step="any" placeholder="Order 3 price"><input id="rrLo3w" type="number" inputmode="decimal" step="any" placeholder="% of position"></div><div class="rr-tp" style="margin-bottom:6px"><input id="rrLo4p" type="number" inputmode="decimal" step="any" placeholder="Order 4 price"><input id="rrLo4w" type="number" inputmode="decimal" step="any" placeholder="% of position"></div><div class="rr-tp" style="margin-bottom:6px"><input id="rrLo5p" type="number" inputmode="decimal" step="any" placeholder="Order 5 price"><input id="rrLo5w" type="number" inputmode="decimal" step="any" placeholder="% of position"></div>
+              <div id="rrSplitInfo" class="calendar-note" style="margin:6px 0 0"></div></div></div>
           <div class="rr-row">
             <div class="rr-f"><label for="rrTp1">Take profit 1 (USD)</label><div class="rr-tp"><input id="rrTp1" type="number" inputmode="decimal" step="any"><input id="rrS1" type="number" inputmode="decimal" step="any" placeholder="% of position"></div></div>
             <div class="rr-f"><label for="rrTp2">Take profit 2 (USD)</label><div class="rr-tp"><input id="rrTp2" type="number" inputmode="decimal" step="any"><input id="rrS2" type="number" inputmode="decimal" step="any" placeholder="% of position"></div></div>
@@ -3400,7 +3404,7 @@ let COINS = ['BTC','ETH','SOL','XRP','BNB','DOGE','ADA','AVAX','LINK','SUI','TON
 addExtra();
 const LEVS = [1,2,3,5,10,15,20,25,50,75,100];
 const KEY = 'ttm_rr_state_v1', SKEY = 'ttm_rr_saved_v1';
-const DEF = {asset:'BTC', dir:'long', mkt:'fut', lev:10, entry:'', stop:'', tp1:'', s1:50, tp2:'', s2:50, tp3:'', s3:0, bal:5000, risk:1, fee:0.06, daily:250, min:2, mmr:0.5, acc:'lev', tf:'h1', mode:'pct', rusd:50, inv:1000};
+const DEF = {asset:'BTC', dir:'long', mkt:'fut', lev:10, entry:'', stop:'', tp1:'', s1:50, tp2:'', s2:50, tp3:'', s3:0, bal:5000, risk:1, fee:0.06, daily:250, min:2, mmr:0.5, acc:'lev', tf:'h1', mode:'pct', rusd:50, inv:1000, split:false, lo1p:'', lo1w:'', lo2p:'', lo2w:'', lo3p:'', lo3w:'', lo4p:'', lo4w:'', lo5p:'', lo5w:''};
 let S = Object.assign({}, DEF);
 function lsGet(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); if(window.ttmSync && (k === 'ttm_rr_saved_v1' || k === 'ttm_rr_bals_v1')) window.ttmSync.dirty(); return true; }catch(e){ return false; } }
@@ -3413,8 +3417,9 @@ $('rrLev').innerHTML = LEVS.map(l => `<option value="${l}">${l}×${l === 1 ? ' (
 $('rrSrc').innerHTML = [['okx', 'OKX'], ['binance', 'Binance'], ['bybit', 'Bybit'], ['bitget', 'Bitget'], ['mexc', 'MEXC']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
 $('rrAcc').innerHTML = [['spot', 'Spot portfolio'], ['lev', 'Leverage / futures'], ['coinm', 'Coin-M futures (coin-margined)'], ['super', 'Super / retirement']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
 $('rrTf').innerHTML = [['m5', '5 min'], ['m15', '15 min'], ['h1', '1 hour'], ['h2', '2 hour'], ['h4', '4 hour'], ['h8', '8 hour'], ['h12', '12 hour'], ['d1', 'Daily'], ['w1', 'Weekly'], ['mo1', 'Monthly']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
-const IDS = {entry:'rrEntry', stop:'rrStop', tp1:'rrTp1', s1:'rrS1', tp2:'rrTp2', s2:'rrS2', tp3:'rrTp3', s3:'rrS3', risk:'rrRisk', rusd:'rrRusd', inv:'rrInv', fee:'rrFee', daily:'rrDaily', min:'rrMin', mmr:'rrMmr'};
+const IDS = {entry:'rrEntry', stop:'rrStop', tp1:'rrTp1', s1:'rrS1', tp2:'rrTp2', s2:'rrS2', tp3:'rrTp3', s3:'rrS3', risk:'rrRisk', rusd:'rrRusd', inv:'rrInv', fee:'rrFee', daily:'rrDaily', min:'rrMin', mmr:'rrMmr', lo1p:'rrLo1p', lo1w:'rrLo1w', lo2p:'rrLo2p', lo2w:'rrLo2w', lo3p:'rrLo3p', lo3w:'rrLo3w', lo4p:'rrLo4p', lo4w:'rrLo4w', lo5p:'rrLo5p', lo5w:'rrLo5w'};
 function pushInputs(){
+  if($('rrSplit')){ $('rrSplit').checked = !!S.split; $('rrSplitBox').style.display = S.split ? 'block' : 'none'; }
   Object.keys(IDS).forEach(k => { $(IDS[k]).value = S[k] === '' || S[k] == null ? '' : S[k]; });
   $('rrBal').value = BALS[S.acc] == null ? '' : BALS[S.acc]; $('rrAccHint').textContent = S.acc === 'lev' ? 'Futures / perps, starting at 3x. Change the leverage below if you need to.' : S.acc === 'coinm' ? 'Coin-M: contracts margined and settled in the coin itself, starting at 3x. Results here are shown in USD at the exit price; liquidation uses the inverse-contract formula.' : (S.acc === 'super' ? 'Retirement: spot only, no leverage, long only.' : 'Spot: no leverage, long only.');
   $('rrBalL').textContent = 'Starting balance — ' + (accName(S.acc) || '') + ' (USD)';
@@ -3434,10 +3439,18 @@ const num = v => { const n = parseFloat(v); return isFinite(n) ? n : null; };
 const usd = v => v == null || !isFinite(v) ? '—' : (v < 0 ? '-' : '') + '$' + Math.abs(v).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 const pr = v => v == null || !isFinite(v) ? '—' : v >= 1000 ? v.toLocaleString(undefined, {maximumFractionDigits: 2}) : v >= 1 ? v.toFixed(3) : v >= 0.01 ? v.toFixed(5) : v.toPrecision(4);
 const qty = v => v == null || !isFinite(v) ? '—' : v >= 100 ? v.toFixed(2) : v >= 1 ? v.toFixed(4) : v.toPrecision(4);
+// split entry: up to 5 limit orders; returns the valid rows with their share of the position (scaled to 100%)
+function splitRows(){
+  if(!S.split) return null; const r = [];
+  for(let k = 1; k <= 5; k++){ const p = num(S['lo' + k + 'p']), w = num(S['lo' + k + 'w']); if(p > 0 && w > 0) r.push({p, w, k}); }
+  if(r.length < 2) return null; const t = r.reduce((a, x) => a + x.w, 0); r.forEach(x => { x.share = x.w / t * 100; }); return r;
+}
 function calc(){
   const long = S.dir === 'long', lev = S.mkt === 'spot' ? 1 : (num(S.lev) || 1);
-  const A = acct(), E = num(S.entry), SL = num(S.stop), bal = A.equity, mode = S.mode || 'pct', rk = num(S.risk), ru = num(S.rusd), inv = num(S.inv), fee = (num(S.fee) || 0) / 100, mmr = (num(S.mmr) || 0) / 100;
-  const out = {long, lev, E, SL, bal, rk, mode, fee, mmr, avail: A.avail, warns: [], ok: false};
+  const SPL = splitRows(), A = acct(), E = SPL ? SPL.reduce((a, x) => a + x.p * x.share / 100, 0) : num(S.entry), SL = num(S.stop), bal = A.equity, mode = S.mode || 'pct', rk = num(S.risk), ru = num(S.rusd), inv = num(S.inv), fee = (num(S.fee) || 0) / 100, mmr = (num(S.mmr) || 0) / 100;
+  const out = {long, lev, E, SL, bal, rk, mode, fee, mmr, avail: A.avail, warns: [], ok: false, splits: SPL};
+  if(S.split && !SPL) out.warns.push(['y', 'Split entry is on: enter a price and a share for at least two limit orders, or untick it.']);
+  if(SPL && SPL.some(x => long ? x.p <= SL : x.p >= SL)) out.warns.push(['bad', 'One of your limit orders is on the wrong side of the stop-loss.']);
   if(bal != null && bal <= 0) out.warns.push(['y', 'The ' + (accName(S.acc) || 'selected') + ' account has no balance. Enter a starting balance for it.']);
   const sizeIn = mode === 'usd' ? ru : mode === 'inv' ? inv : rk;
   if(E == null || SL == null || bal == null || sizeIn == null || E <= 0 || SL <= 0 || bal <= 0 || sizeIn <= 0) return out;
@@ -3487,6 +3500,7 @@ function calc(){
 function row(k, v, cls){ return `<div><small>${k}</small><strong class="${cls || ''}">${v}</strong></div>`; }
 function render(){
   const c = calc();
+  if($('rrSplitInfo')){ $('rrSplitBox').style.display = S.split ? 'block' : 'none'; const sp = c.splits; $('rrSplitInfo').innerHTML = sp ? `Average entry <b style="color:var(--gold2)">${pr(c.E)}</b> across ${sp.length} orders` + (Math.abs(sp.reduce((a, x) => a + x.w, 0) - 100) > .01 ? ` (your shares add to ${Math.round(sp.reduce((a, x) => a + x.w, 0) * 100) / 100}%, scaled to 100%)` : '') + '.' : ''; $('rrEntry').disabled = !!sp; $('rrEntry').style.opacity = sp ? .45 : 1; if(sp) $('rrEntry').value = +c.E.toPrecision(8); }
   { const t = (num(S.s1) || 0) + (num(S.s2) || 0) + (num(S.s3) || 0), r = Math.round((100 - t) * 100) / 100;
     $('rrAlloc').innerHTML = `Position split across targets: <b style="color:${t > 100.0001 ? '#e0554d' : 'var(--gold2)'}">${Math.round(t * 100) / 100}%</b> allocated` + (r > 0.0001 ? `, ${r}% left with no target` : r < -0.0001 ? ` — over by ${-r}%` : ' — fully allocated') + '. Change TP1 and TP2 gets the rest; change TP2 and TP3 gets the rest.'; }
   $('rrWarns').innerHTML = c.warns.map(w => { const fv = w[2] ? (Math.floor(w[2] * 100) / 100).toFixed(2) : null, lab = w[3] === 'risk' ? `Set risk to ${fv}%` : w[3] === 'rusd' ? `Set risk to $${fv}` : `Invest $${fv}`;
@@ -3580,6 +3594,18 @@ function renderAcct(){
   [$('rrPort'), $('jPort')].forEach(el => { if(el) el.innerHTML = portHtml(); });
 }
 function snapOf(c, st){ st = st || S; return {asset: st.asset, acc: st.acc || 'lev', tf: st.tf || 'h1', long: c.long, mkt: st.mkt, lev: c.lev, E: c.E, SL: c.SL, units: c.units, notional: c.notional, margin: c.margin, riskUsd: c.riskUsd, fee: c.fee, tps: c.tps.map(t => ({P: t.P, share: t.share}))}; }
+// ---- limit orders: a trade can be built from up to 5 orders (x.orders). The position shown everywhere (snap) is always worked out from the orders that have filled.
+const MAXLO = 5;
+function syncOrders(x){
+  if(!x.orders || !x.orders.length || !x.snap) return; const sn = x.snap, lev = sn.mkt === 'spot' ? 1 : sn.lev, f = x.orders.filter(o => o.filled), base = f.length ? f : x.orders;
+  let m = 0, u = 0, pu = 0; base.forEach(o => { const uo = o.m * lev / o.p; m += o.m; u += uo; pu += uo * o.p; });
+  if(u > 0){ sn.units = u; sn.E = pu / u; sn.margin = m; sn.notional = m * lev; const lossSide = sn.long ? sn.SL < sn.E : sn.SL > sn.E; if(lossSide) sn.riskUsd = u * (Math.abs(sn.E - sn.SL) + sn.fee * (sn.E + sn.SL)); }
+  x.fill = f.length ? 'filled' : 'pending';
+}
+function ensureOrders(x){   // turn a single-entry trade into an order list (the current position becomes order 1)
+  if(x.orders) return; const sn = x.snap, pp = priceOf(sn.asset);
+  x.orders = [{id: uid() + 'o', p: sn.E, m: sn.margin, side: x.side || (pp && pp.live ? (pp.p > sn.E ? 1 : -1) : null), filled: x.fill !== 'pending', ft: x.fill !== 'pending' ? (x.opened || x.t) : null}];
+}
 function settle(sn, hits, rest){
   let pnl = 0, usedU = 0;
   sn.tps.forEach((t, i) => { if(hits[i]){ const u = sn.units * t.share / 100; pnl += u * Math.abs(t.P - sn.E) - u * sn.fee * (sn.E + t.P); usedU += u; } });
@@ -3724,6 +3750,7 @@ function editCalc(){
   let units = sn.units, E = sn.E, margin = sn.margin, notional = sn.notional;
   if(addM > 0){
     if(hitAny) errs.push('You can only add to a trade before a target is hit. After that, close this trade and open a new one.');
+    else if((x.orders || []).length >= MAXLO) errs.push('A trade can have at most 5 orders.');
     else if(!(addP > 0)) errs.push('Enter the price you are adding at.');
     else { const addN = addM * lev, addU = addN / addP; units = sn.units + addU; E = (sn.units * sn.E + addU * addP) / units; margin += addM; notional += addN;
       if(addM > A.avail + 0.005) errs.push(`Adding ${usd(addM)} is more than the ${usd(A.avail)} available in this account.`); }
@@ -3775,7 +3802,8 @@ function wireEdit(){
     if(e.target.id === 'edCancel'){ $('rrModal').classList.remove('open'); ed = null; }
     else if(e.target.id === 'edLive'){ const x = loadSaved()[ed.i]; let pp = priceOf(x.snap.asset); if(!pp || !pp.live){ const t = await getTickers(); if(t){ PRICES = t.map; PSTAMP = t.t; PUSED = t.used; pp = priceOf(x.snap.asset); } } if(pp){ ed.addp = pp.p >= 1 ? +pp.p.toFixed(4) : +pp.p.toPrecision(5); $('edAddP').value = ed.addp; edPrev(); } else e.target.textContent = 'No live price for ' + x.snap.asset; }
     else if(e.target.id === 'edSave'){ const c = editCalc(); if(c.errs.length) return; window.ttmTrack && ttmTrack('feat', 'edit_trade'); const list = loadSaved(), x = list[ed.i], old = x.snap;
-      x.snap = c.snap; x.snap.slMoved = c.SL === c.E;
+      if(c.addM > 0){ ensureOrders(x); x.orders.push({id: uid() + 'a', p: num(ed.addp), m: c.addM, side: 1, filled: true, ft: Date.now()}); }
+      x.snap = c.snap; x.snap.slMoved = c.SL === c.E; if(x.orders) syncOrders(x);
       const hit = x.hit || [], sent = x.sent || {tp: [], sl: false};
       x.hit = c.tps.map((t, k) => !!hit[k]); x.sent = {tp: c.tps.map((t, k) => !!(sent.tp && sent.tp[k]) && old.tps[k] && old.tps[k].P === t.P), sl: false};
       x.s = Object.assign({}, x.s, {stop: String(c.SL), entry: String(+c.E.toPrecision(8))}); c.tps.forEach((t, k) => { x.s['tp' + (k + 1)] = String(t.P); x.s['s' + (k + 1)] = t.share; }); for(let k = c.tps.length; k < 3; k++){ x.s['tp' + (k + 1)] = ''; x.s['s' + (k + 1)] = 0; }
@@ -3801,6 +3829,7 @@ function wireJournal(){
       if(cur.mode === 'price' && m.f < 1){ // part close: book the closed share as its own trade, shrink the open one
         const f = m.f, part = JSON.parse(JSON.stringify(x)); part.id = uid(); part.name = x.name + ' (' + Math.round(f * 1000) / 10 + '% closed)'; part.status = 'closed'; part.snap = Object.assign({}, x.snap);
         ['units', 'notional', 'margin', 'riskUsd'].forEach(k => { part.snap[k] = x.snap[k] * f; x.snap[k] = x.snap[k] * (1 - f); });
+        if(x.orders){ part.orders = x.orders.filter(o => o.filled).map(o => Object.assign({}, o, {m: o.m * f})); x.orders.forEach(o => { o.m = o.m * (1 - f); }); }
         part.res = {pnl: Math.round(m.pnl * 100) / 100, r: m.pnl / part.snap.riskUsd, how: m.how, closed: Date.now()}; delete part.hit; delete part.sent;
         list.splice(cur.i + 1, 0, part); saveAll(list); window.ttmTrack && ttmTrack('feat', 'close_part', {pct: Math.round(f * 100)}); $('rrModal').classList.remove('open'); cur = null; render(); renderSaved(); return; }
       x.status = 'closed'; x.res = {pnl: Math.round(m.pnl * 100) / 100, r: m.pnl / x.snap.riskUsd, how: m.how, closed: Date.now()};
@@ -3813,8 +3842,9 @@ function wireJournal(){
     else if(a === 'open'){ const save = S; S = Object.assign({}, DEF, x.s); const c = calc(); S = save; startTrade(c, x.s, x.name, i); }
     else if(a === 'close'){ openClose(i); }
     else if(a === 'edit'){ openEdit(i); }
-    else if(a === 'filled'){ x.fill = 'filled'; saveAll(list); renderSaved(); render(); }
-    else if(a === 'pend'){ x.fill = 'pending'; { const pq = priceOf(x.snap.asset); if(pq) x.side = pq.p > x.snap.E ? 1 : -1; } x.hit = (x.snap.tps || []).map(() => false); saveAll(list); renderSaved(); render(); }
+    else if(a === 'filled'){ if(x.orders){ x.orders.forEach(o => { if(!o.filled){ o.filled = true; o.ft = Date.now(); } }); syncOrders(x); } else x.fill = 'filled'; saveAll(list); renderSaved(); render(); }
+    else if(a === 'chart'){ openTC(i); }
+    else if(a === 'pend'){ if(x.orders){ x.orders.forEach(o => { o.filled = false; o.ft = null; }); syncOrders(x); } x.fill = 'pending'; { const pq = priceOf(x.snap.asset); if(pq) x.side = pq.p > x.snap.E ? 1 : -1; } x.hit = (x.snap.tps || []).map(() => false); saveAll(list); renderSaved(); render(); }
     else if(a === 'be'){ x.snap.SL = x.snap.E; x.snap.slMoved = true; saveAll(list); renderSaved(); render(); }
     else if(a === 'reopen'){ x.status = 'open'; delete x.res; saveAll(list); renderSaved(); render(); }
     else if(a === 'del'){ if(x.status === 'closed' || x.status === 'open'){ if(!confirm(x.status === 'open' ? 'Cancel this open trade and release its margin?' : 'Delete this closed trade from your history? Your balance will change back.')) return; } list.splice(i, 1); saveAll(list); renderSaved(); render(); } }
@@ -3834,6 +3864,7 @@ function startTrade(c, setup, name, replaceIdx){
   if(!c.tps.length){ note.textContent = 'Add at least one take-profit target before opening the trade.'; note.style.color = '#e0554d'; return false; }
   const list = loadSaved(), item = {id: uid(), name: (name || '').trim() || `${setup.asset} ${setup.mkt === 'spot' ? 'spot' : setup.lev + '×'} ${setup.dir}`, t: Date.now(), opened: Date.now(), s: Object.assign({}, setup), status: 'open', snap: snapOf(c, setup)};
   const pp0 = priceOf(setup.asset), E0 = item.snap.E; item.fill = pp0 && Math.abs(pp0.p / E0 - 1) > 0.001 ? 'pending' : 'filled'; if(item.fill === 'pending') item.side = pp0.p > E0 ? 1 : -1;   // entry not reached yet = a limit order waiting to fill
+  if(c.splits && c.splits.length > 1){ const lv0 = priceOf(setup.asset), lv = lv0 && lv0.live ? lv0 : null; item.orders = c.splits.map((r, k) => { const near = lv && Math.abs(lv.p / r.p - 1) <= 0.001; return {id: uid() + 'o' + k, p: r.p, m: c.margin * r.share / 100, side: lv ? (lv.p > r.p ? 1 : -1) : null, filled: !!near, ft: near ? Date.now() : null}; }); syncOrders(item); item.side = undefined; }
   if(replaceIdx != null && list[replaceIdx]) list[replaceIdx] = Object.assign(list[replaceIdx], item, {id: list[replaceIdx].id || item.id}); else list.unshift(item);
   saveAll(list); window.ttmTrack && ttmTrack('feat', 'open_trade', {asset: String(item.snap.asset).slice(0, 12), acc: setup.acc, mkt: item.snap.mkt, dir: item.snap.long ? 'long' : 'short', lev: item.snap.mkt === 'spot' ? 0 : item.snap.lev, tf: setup.tf, waiting: item.fill === 'pending'}); note.style.color = ''; note.innerHTML = `Opened “${esc(item.name)}”: ${usd(c.margin)} margin locked, ${usd(c.avail - c.margin)} left to trade with. ${item.fill === 'pending' ? ` Entry ${pr(E0)} is not at the market yet (live ${pr(pp0.p)}), so it shows as waiting for entry and its P&amp;L starts when price reaches it.` : ''} When it plays out, close it in the <a href="#tradejournal" style="color:var(--gold2)">trade tracker</a> to update your balance.`;
   $('rrName').value = ''; render(); renderSaved(); return true;
@@ -3960,7 +3991,7 @@ function openState(x){
   const sn = x.snap, pp = priceOf(sn.asset), long = sn.long, nt = sn.tps.length;
   const best = settle(sn, sn.tps.map(() => true), sn.E), stH = hitsOf(x, null), worst = settle(sn, stH, sn.SL);
   const far = nt ? sn.tps.reduce((a, b) => (long ? b.P > a.P : b.P < a.P) ? b : a).P : sn.E;
-  if(x.fill === 'pending' && !(pp && entryReached(x, pp.p))) return {pp, pending: true, real: 0, open: 0, pnl: 0, best, worst, hits: stH.map(() => false), far, move: null, away: pp ? (sn.E - pp.p) / pp.p * 100 : null, label: 'Waiting for entry'};
+  if(x.fill === 'pending' && (x.orders || !(pp && entryReached(x, pp.p)))) return {pp, pending: true, real: 0, open: 0, pnl: 0, best, worst, hits: stH.map(() => false), far, move: null, away: pp ? (sn.E - pp.p) / pp.p * 100 : null, label: 'Waiting for entry'};
   if(!pp) return {pp: null, real: 0, open: 0, pnl: 0, best, worst, hits: stH, label: 'No price', move: null, far};
   const p = pp.p, stopped = long ? p <= sn.SL : p >= sn.SL, hits = hitsOf(x, p), nh = hits.filter(Boolean).length;
   const total = stopped ? worst : settle(sn, hits, p); let real = 0; sn.tps.forEach((t, i) => { if(hits[i]){ const u = sn.units * t.share / 100; real += u * Math.abs(t.P - sn.E) - u * sn.fee * (sn.E + t.P); } });
@@ -3987,13 +4018,84 @@ function openTbl(items, noteEmpty){
   if(!items.length) o += `<tr><td colspan="14" style="color:var(--mute)">${noteEmpty || 'No open trades. Open one from the Risk-to-Reward calculator and it appears here at live prices.'}</td></tr>`;
   const c = v => v > 0.005 ? '#3fb47a' : v < -0.005 ? '#e0554d' : 'var(--text)';
   items.forEach(x => { const s = openState(x), i = list.findIndex(y => y.id === x.id), anyHit = s.hits && s.hits.some(Boolean), moved = x.snap.SL === x.snap.E;
-    o += `<tr><td><b>${esc(x.name)}</b><br><small style="color:var(--mute)">${x.snap.mkt === 'spot' ? 'Spot' : x.snap.lev + '×'} · ${esc(tfName(tfOf(x)))}</small></td><td>${esc(accName(accOf(x)))}</td><td>${esc(x.snap.asset)}</td><td style="color:${x.snap.long ? '#3fb47a' : '#e0554d'}">${x.snap.long ? 'Long' : 'Short'}</td><td>${pr(x.snap.E)}</td><td><b>${usd(x.snap.margin)}</b><br><small style="color:var(--mute)">${x.snap.mkt === 'spot' ? 'full cost' : 'size ' + usd(x.snap.notional)}</small></td><td>${s.pp ? pr(s.pp.p) + (s.pp.live ? '' : ' <small style="color:var(--mute)">(snapshot)</small>') : '—'}</td>` +
+    o += `<tr><td><b>${esc(x.name)}</b><br><small style="color:var(--mute)">${x.snap.mkt === 'spot' ? 'Spot' : x.snap.lev + '×'} · ${esc(tfName(tfOf(x)))}</small></td><td>${esc(accName(accOf(x)))}</td><td>${esc(x.snap.asset)}</td><td style="color:${x.snap.long ? '#3fb47a' : '#e0554d'}">${x.snap.long ? 'Long' : 'Short'}</td><td>${pr(x.snap.E)}${x.orders ? `<br><small style="color:var(--mute)">${x.orders.filter(q => q.filled).length} of ${x.orders.length} orders filled</small>` : ''}</td><td><b>${usd(x.snap.margin)}</b><br><small style="color:var(--mute)">${x.snap.mkt === 'spot' ? 'full cost' : 'size ' + usd(x.snap.notional)}</small></td><td>${s.pp ? pr(s.pp.p) + (s.pp.live ? '' : ' <small style="color:var(--mute)">(snapshot)</small>') : '—'}</td>` +
       `<td style="color:${c(s.move)}">${s.move == null ? '—' : (s.move >= 0 ? '+' : '') + s.move.toFixed(2) + '%'}</td><td style="color:${c(s.real)}">${s.pp && !s.pending ? usd(s.real) : '—'}</td><td style="color:${c(s.open)}">${s.pp && !s.pending ? usd(s.open) : '—'}</td><td style="color:${c(s.pnl)}"><b>${s.pp && !s.pending ? usd(s.pnl) : '—'}</b></td><td>${barHtml(x, s)}</td>` +
       `<td style="color:${s.pending ? 'var(--gold2)' : s.stopped ? '#e0554d' : anyHit ? '#3fb47a' : 'var(--mute)'}">${s.label}${s.pending && s.away != null ? `<br><small style="color:var(--mute)">entry ${pr(x.snap.E)} is ${Math.abs(s.away).toFixed(2)}% ${s.away < 0 ? 'below' : 'above'} live</small>` : ''}${moved ? '<br><small style="color:var(--gold2)">Stop at entry</small>' : ''}</td>` +
-      `<td><div class="rr-acts" style="margin:0"><button class="rr-btn sm" data-j="close" data-i="${i}">Close / update</button><button class="rr-btn ghost sm" data-j="edit" data-i="${i}">Edit / add</button>${anyHit && !moved ? `<button class="rr-btn ghost sm" data-j="be" data-i="${i}">Move stop to entry</button>` : ''}${s.pending ? `<button class="rr-btn ghost sm" data-j="filled" data-i="${i}">Mark as filled</button>` : (!anyHit && !s.stopped ? `<button class="rr-btn ghost sm" data-j="pend" data-i="${i}">Not filled yet</button>` : '')}<button class="rr-btn ghost sm" data-j="load" data-i="${i}">Load</button><button class="rr-btn ghost sm" data-j="del" data-i="${i}">Cancel</button></div></td></tr>`; });
+      `<td><div class="rr-acts" style="margin:0"><button class="rr-btn sm" data-j="close" data-i="${i}">Close / update</button><button class="rr-btn ghost sm" data-j="chart" data-i="${i}">Chart / orders</button><button class="rr-btn ghost sm" data-j="edit" data-i="${i}">Edit / add</button>${anyHit && !moved ? `<button class="rr-btn ghost sm" data-j="be" data-i="${i}">Move stop to entry</button>` : ''}${s.pending ? `<button class="rr-btn ghost sm" data-j="filled" data-i="${i}">Mark as filled</button>` : (!anyHit && !s.stopped ? `<button class="rr-btn ghost sm" data-j="pend" data-i="${i}">Not filled yet</button>` : '')}<button class="rr-btn ghost sm" data-j="load" data-i="${i}">Load</button><button class="rr-btn ghost sm" data-j="del" data-i="${i}">Cancel</button></div></td></tr>`; });
   if(items.length){ const tm = items.reduce((a, x) => a + (x.snap.margin || 0), 0), tn = items.reduce((a, x) => a + (x.snap.notional || 0), 0); o += `<tr><td colspan="5" style="text-align:right;color:var(--mute)"><b>Total margin locked</b> across ${items.length} open trade${items.length > 1 ? 's' : ''}</td><td><b style="color:var(--gold2)">${usd(tm)}</b><br><small style="color:var(--mute)">size ${usd(tn)}</small></td><td colspan="8"></td></tr>`; }
   return o + '</tbody>';
 }
+// ---- trade chart: candles, every limit order, the average entry, stop and targets; add or manage orders
+let tc = null;
+function openTC(i){ const x = loadSaved()[i]; if(!x || !x.snap) return; tc = {i, tf: tfOf(x) || 'h1', rows: null, err: '', src: '', busy: false}; drawTC(); $('rrModal').classList.add('open'); loadTC(); }
+async function loadTC(){ if(!tc) return; const x = loadSaved()[tc.i]; if(!x) return; const t = tc; t.busy = true; t.err = ''; paintTC(); const res = await getCandles(x.snap.asset, t.tf); if(tc !== t) return; t.busy = false; if(res){ t.rows = res.rows; t.src = res.src; } else { t.rows = null; t.err = 'No candles for ' + x.snap.asset + ' on your exchange or the fallbacks.'; } paintTC(); }
+function tcLevels(x){
+  const sn = x.snap, L = [], ord = x.orders || [{p: sn.E, filled: x.fill !== 'pending', ft: x.opened || null, only: true}];
+  ord.forEach((o, k) => L.push({k: ord.length > 1 || x.orders ? 'LO' + (k + 1) + (o.filled ? '' : ' (waiting)') : 'Entry' + (o.filled ? '' : ' (waiting)'), p: o.p, col: '#f2c14e', dash: !o.filled, w: 1.2, ord: o}));
+  if(ord.filter(o => o.filled).length > 1 || (x.orders && x.orders.length > 1 && ord.some(o => o.filled))) L.push({k: 'Avg entry', p: sn.E, col: '#ffffff', w: 2.6});
+  L.push({k: 'Stop', p: sn.SL, col: '#e0554d', w: 1.6, dash: true}); sn.tps.forEach((t, i) => L.push({k: 'TP' + (i + 1), p: t.P, col: '#3fb47a', w: 1.4, dash: true}));
+  const pp = priceOf(sn.asset); if(pp) L.push({k: 'Live', p: pp.p, col: '#8ab4ff', w: 1.4});
+  return L;
+}
+function tcSvg(x, rows){
+  const W = 620, H = 400, Lm = 6, Rm = 112, T = 14, B = 28, n = rows.length, lv = tcLevels(x);
+  let lo = Math.min(...rows.map(r => r.l)), hi = Math.max(...rows.map(r => r.h)); lv.forEach(l => { lo = Math.min(lo, l.p); hi = Math.max(hi, l.p); }); const pad = (hi - lo) * .05 || hi * .01; lo -= pad; hi += pad;
+  const Y = v => T + (H - T - B) * (1 - (v - lo) / (hi - lo)), xw = (W - Lm - Rm) / n, X = i => Lm + xw * (i + .5), bw = Math.max(2, xw * .62), ms = TFMS[tc.tf] || 36e5; let g = '';
+  [0, .25, .5, .75, 1].forEach(f => { const v = lo + (hi - lo) * f; g += `<line x1="${Lm}" x2="${W - Rm}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.06)"/><text x="${W - Rm + 4}" y="${Y(v) + 3}" font-size="10" fill="#6c707b">${pr(v)}</text>`; });
+  rows.forEach((r, i) => { const up = r.c >= r.o, col = up ? '#3fb47a' : '#e0554d'; g += `<line x1="${X(i)}" x2="${X(i)}" y1="${Y(r.h)}" y2="${Y(r.l)}" stroke="${col}" stroke-width="1"/><rect x="${X(i) - bw / 2}" y="${Y(Math.max(r.o, r.c))}" width="${bw}" height="${Math.max(1, Math.abs(Y(r.o) - Y(r.c)))}" fill="${col}"/>`; });
+  for(let k = 0; k < 4; k++){ const i = Math.round((n - 1) * k / 3), d = new Date(rows[i].t); g += `<text x="${X(i)}" y="${H - 8}" font-size="10" fill="#6c707b" text-anchor="middle">${ms >= 864e5 ? d.toLocaleDateString(undefined, {day: 'numeric', month: 'short'}) : d.toLocaleString(undefined, {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'})}</text>`; }
+  lv.forEach(l => { g += `<line x1="${Lm}" x2="${W - Rm}" y1="${Y(l.p)}" y2="${Y(l.p)}" stroke="${l.col}" stroke-width="${l.w}" ${l.dash ? 'stroke-dasharray="6 4"' : ''}/>`; });
+  lv.forEach(l => { if(l.ord && l.ord.filled && l.ord.ft){ const i = rows.findIndex(r => r.t <= l.ord.ft && l.ord.ft < r.t + ms); if(i >= 0) g += `<path d="M${X(i)} ${Y(l.p) - 7} l6 11 h-12 z" fill="#f2c14e" stroke="#000" stroke-width=".8"><title>${l.k} filled ${new Date(l.ord.ft).toLocaleString()}</title></path>`; } });
+  let last = -99; lv.slice().sort((a, b) => Y(a.p) - Y(b.p)).forEach(l => { let ty = Y(l.p); if(ty - last < 16) ty = last + 16; last = ty; g += `<rect x="${W - Rm + 40}" y="${ty - 9}" width="${Rm - 42}" height="16" rx="3" fill="${l.col}" opacity=".95"/><text x="${W - Rm + 44}" y="${ty + 3}" font-size="10.5" font-weight="700" fill="#111">${esc(l.k)}</text>`; });
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;background:#0e0e11;border-radius:10px">${g}</svg>`;
+}
+function tcOrdersHtml(x){
+  const sn = x.snap, lev = sn.mkt === 'spot' ? 1 : sn.lev, ord = x.orders || [{id: 'single', p: sn.E, m: sn.margin, filled: x.fill !== 'pending', ft: x.opened || null}], pp = priceOf(sn.asset), cnt = ord.filter(o => o.filled).length;
+  const rows = ord.map((o, k) => `<tr><td><b>${ord.length > 1 || x.orders ? 'LO' + (k + 1) : 'Entry'}</b></td><td>${pr(o.p)}</td><td>${usd(o.m)}</td><td>${qty(o.m * lev / o.p)} ${esc(sn.asset)}</td><td style="color:${o.filled ? '#3fb47a' : 'var(--gold2)'}">${o.filled ? 'Filled' + (o.ft ? ' · ' + new Date(o.ft).toLocaleDateString() : '') : 'Waiting' + (pp ? ` · ${Math.abs(o.p / pp.p - 1) * 100 < 100 ? (Math.abs(o.p / pp.p - 1) * 100).toFixed(2) + '% away' : ''}` : '')}</td><td>${x.orders && !o.filled ? `<div style="display:flex;flex-direction:column;gap:4px"><button class="rr-btn ghost sm" data-tc="fill" data-o="${k}">Mark filled</button>${ord.length > 1 ? `<button class="rr-btn ghost sm" data-tc="rm" data-o="${k}">Remove</button>` : ''}</div>` : ''}</td></tr>`).join('');
+  return `<div class="rr-out" style="grid-template-columns:repeat(4,1fr);margin:0 0 10px"><div><small>Average entry</small><strong>${pr(sn.E)}</strong></div><div><small>Orders filled</small><strong>${cnt} of ${ord.length}</strong></div><div><small>Position</small><strong>${qty(sn.units)} ${esc(sn.asset)}</strong></div><div><small>Margin locked</small><strong>${usd(sn.margin)}</strong></div></div>
+    <div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Order</th><th>Price</th><th>Margin</th><th>Size</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function paintTC(){
+  if(!tc || !$('tcChart')) return; const x = loadSaved()[tc.i]; if(!x || !x.snap) return;
+  $('tcChart').innerHTML = tc.busy ? '<p class="calendar-note">Loading candles…</p>' : tc.rows ? tcSvg(x, tc.rows.slice(-90)) + `<p class="calendar-note" style="margin:6px 0 0">${esc(x.snap.asset)}/USDT · ${esc(tfName(tc.tf))} · ${esc(SRCS[tc.src] || tc.src)}. Gold = limit orders (dashed while waiting, triangle where one filled), white = average entry, red = stop, green = targets, blue = live price.</p>` : `<div class="rr-warn y">${esc(tc.err || 'No candles.')}</div>`;
+  $('tcOrders').innerHTML = tcOrdersHtml(x);
+  const full = (x.orders || []).length >= MAXLO; $('tcAdd').disabled = full; $('tcAddNote').textContent = full ? 'This trade already has the maximum of 5 orders.' : '';
+}
+function drawTC(){
+  const x = loadSaved()[tc.i], sn = x.snap, pp = priceOf(sn.asset);
+  const inp = (id, ph) => `<input id="${id}" type="number" step="any" inputmode="decimal" placeholder="${ph}" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 10px;font:inherit">`;
+  $('rrModalBody').innerHTML = `<h3>${esc(x.name)} <span style="font-weight:400;color:var(--mute);font-size:13px">· ${esc(accName(accOf(x)))} · ${sn.long ? 'long' : 'short'} ${sn.mkt === 'spot' ? 'spot' : sn.lev + '×'}</span></h3>
+    <div class="filter-row" id="tcTf" style="margin:0 0 10px">${TFS.map(t => `<button class="filter-chip ${t[0] === tc.tf ? 'active' : ''}" data-tf="${t[0]}">${t[1]}</button>`).join('')}</div>
+    <div id="tcChart" style="margin-bottom:12px"></div><div id="tcOrders"></div>
+    <div style="font-size:12px;color:var(--mute);margin:14px 0 6px">Add another limit order (up to 5 in total)</div>
+    <div class="rr-tp" style="margin-bottom:6px">${inp('tcAddP', 'Order price')}${inp('tcAddM', 'Margin ($)')}</div>
+    <div class="rr-acts" style="margin:0 0 6px"><button type="button" class="rr-btn ghost sm" id="tcLive" ${pp ? '' : 'disabled'}>Use live price${pp ? ' (' + pr(pp.p) + ')' : ''}</button><button type="button" class="rr-btn sm" id="tcAdd">Add order</button></div>
+    <p class="calendar-note" id="tcAddNote" style="margin:0 0 10px"></p>
+    <p class="calendar-note" style="margin:0 0 12px">An order at (or within 0.1% of) the live price counts as filled straight away. Otherwise it waits and the tracker marks it filled when price reaches it. This only updates the tracker; place the real order on your exchange yourself.</p>
+    <div class="rr-acts" style="margin:0"><button type="button" class="rr-btn ghost" id="tcClose">Close</button></div>`;
+  paintTC();
+}
+function tcAddOrder(){
+  const x0 = loadSaved()[tc.i], note = t => { $('tcAddNote').textContent = t; $('tcAddNote').style.color = '#e0554d'; };
+  const p = num($('tcAddP').value), m = num($('tcAddM').value), sn = x0.snap;
+  if(!(p > 0)) return note('Enter the order price.'); if(!(m > 0)) return note('Enter how much margin to put in this order.');
+  if(sn.long ? p <= sn.SL : p >= sn.SL) return note('That price is on the wrong side of your stop-loss.');
+  if((x0.orders || []).length >= MAXLO) return note('This trade already has 5 orders.');
+  const list = loadSaved(), x = list[tc.i], lv0 = priceOf(sn.asset), lv = lv0 && lv0.live ? lv0 : null, near = lv && Math.abs(lv.p / p - 1) <= 0.001, A = acct(accOf(x));
+  if(near && m > A.avail + 0.005) return note(`That is more than the ${usd(A.avail)} available in this account.`);
+  ensureOrders(x); x.orders.push({id: uid() + 'l', p, m, side: lv ? (lv.p > p ? 1 : -1) : null, filled: !!near, ft: near ? Date.now() : null}); syncOrders(x);
+  window.ttmTrack && ttmTrack('feat', 'add_limit_order', {n: x.orders.length, filled: !!near}); saveAll(list); $('tcAddP').value = ''; $('tcAddM').value = ''; $('tcAddNote').style.color = ''; render(); renderSaved(); paintTC();
+}
+$('rrModalBody').addEventListener('click', e => {
+  if(!tc || !$('rrModal').classList.contains('open') || !$('tcChart')) return; const t = e.target;
+  if(t.id === 'tcClose'){ $('rrModal').classList.remove('open'); tc = null; }
+  else if(t.dataset && t.dataset.tf){ tc.tf = t.dataset.tf; document.querySelectorAll('#tcTf .filter-chip').forEach(b => b.classList.toggle('active', b.dataset.tf === tc.tf)); loadTC(); }
+  else if(t.id === 'tcLive'){ const pp = priceOf(loadSaved()[tc.i].snap.asset); if(pp) $('tcAddP').value = String(pp.p); }
+  else if(t.id === 'tcAdd') tcAddOrder();
+  else if(t.dataset && t.dataset.tc){ const list = loadSaved(), x = list[tc.i], k = +t.dataset.o; if(!x.orders || !x.orders[k]) return;
+    if(t.dataset.tc === 'fill'){ x.orders[k].filled = true; x.orders[k].ft = Date.now(); } else if(t.dataset.tc === 'rm' && x.orders.length > 1){ x.orders.splice(k, 1); }
+    syncOrders(x); saveAll(list); render(); renderSaved(); paintTC(); }
+});
 let TGERR = '';
 async function tgSend(text){
   TGERR = ''; const c = lsGet(TGKEY, {}); if(!c.tok || !c.chat){ TGERR = 'Enter both the bot token and the chat ID first.'; return false; }
@@ -4006,7 +4108,10 @@ function trackHits(){
   const list = loadSaved(); let changed = false; const cfg = lsGet(TGKEY, {});
   list.forEach(x => { if(x.status !== 'open' || !x.snap) return; const pp = priceOf(x.snap.asset); if(!pp || !pp.live) return;
     const sn = x.snap, p = pp.p;
-    if(x.fill === 'pending'){ if(entryReached(x, p)){ x.fill = 'filled'; x.filledAt = Date.now(); changed = true; if(cfg.on) tgSend(`✅ <b>Entry reached</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nPrice ${pr(p)} reached your entry ${pr(sn.E)}. The trade is now live in your tracker.\n<i>${esc(x.name)} · TTM Trade Tracker</i>`); } else return; }
+    if(x.orders){ const got = []; x.orders.forEach(o => { if(!o.filled && o.side == null){ o.side = p > o.p ? 1 : -1; if(Math.abs(p / o.p - 1) <= 0.001){ o.filled = true; o.ft = Date.now(); got.push(o); } changed = true; } else if(!o.filled && (o.side > 0 ? p <= o.p : p >= o.p)){ o.filled = true; o.ft = Date.now(); got.push(o); } });
+      if(got.length){ syncOrders(x); changed = true; if(cfg.on) got.forEach(o => tgSend(`✅ <b>Limit order filled</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nOrder at ${pr(o.p)} filled (live ${pr(p)}). ${x.orders.filter(q => q.filled).length} of ${x.orders.length} orders in. Average entry ${pr(sn.E)}.\n<i>${esc(x.name)} · TTM Trade Tracker</i>`)); }
+      if(x.fill === 'pending') return; }
+    else if(x.fill === 'pending'){ if(entryReached(x, p)){ x.fill = 'filled'; x.filledAt = Date.now(); changed = true; if(cfg.on) tgSend(`✅ <b>Entry reached</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nPrice ${pr(p)} reached your entry ${pr(sn.E)}. The trade is now live in your tracker.\n<i>${esc(x.name)} · TTM Trade Tracker</i>`); } else return; }
     x.hit = x.hit || sn.tps.map(() => false); x.sent = x.sent || {tp: sn.tps.map(() => false), sl: false};
     sn.tps.forEach((t, i) => { const crossed = sn.long ? p >= t.P : p <= t.P;
       if(crossed && !x.hit[i]){ x.hit[i] = true; changed = true; }
@@ -4216,6 +4321,7 @@ setTimeout(() => { if(needLive()) liveLoad(); if(rrActive()) loadCandles(); }, 6
 function persist(){ lsSet(KEY, S); }
 function wire(){
   const clampPct = v => Math.max(0, Math.min(100, Math.round((parseFloat(v) || 0) * 100) / 100));
+  $('rrSplit').addEventListener('change', e => { S.split = e.target.checked; if(S.split && !S.lo1p && num(S.entry) > 0){ S.lo1p = S.entry; S.lo1w = 100; $('rrLo1p').value = S.lo1p; $('rrLo1w').value = 100; } persist(); render(); });
   Object.keys(IDS).forEach(k => $(IDS[k]).addEventListener('input', e => {
     S[k] = e.target.value;
     // take-profit shares balance themselves: TP1 -> TP2 gets the rest, TP3 0; TP2 -> TP3 gets the rest
