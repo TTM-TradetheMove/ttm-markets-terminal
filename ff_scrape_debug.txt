@@ -1,13 +1,13 @@
-Run at 2026-10-31T13:51:46.167149+00:00
+Run at 2026-10-31T18:05:58.545794+00:00
 
 page title: 'Calendar | Forex Factory'
 page url after load: 'https://www.forexfactory.com/calendar'
 row selector used: 'tr.calendar__row', rows found: 106
 sample row: date_el=False currency_el=False event_el=False actual_el=False raw_text='Sun Oct 25'
 sample row: date_el=True currency_el=True event_el=True actual_el=True raw_text='Sun\nOct 25\n\t\nAll Day\n\tNZD\t\t\nBank Holiday\n\t\t\n\t\t\t\t'
-sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='4:10pm\n\tAUD\t\t\nRBA Assist Gov Jones Speaks\n\t\n\t\n\t\t\t\t'
+sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='5:10pm\n\tAUD\t\t\nRBA Assist Gov Jones Speaks\n\t\n\t\n\t\t\t\t'
 sample row: date_el=False currency_el=False event_el=False actual_el=False raw_text='Mon Oct 26'
-sample row: date_el=True currency_el=True event_el=True actual_el=True raw_text='Mon\nOct 26\n\t\n4:00am\n\tEUR\t\t\nGerman ifo Business Climate\n\t\n\t\n\t90.2\t90.0\t89.9\t'
+sample row: date_el=True currency_el=True event_el=True actual_el=True raw_text='Mon\nOct 26\n\t\n5:00am\n\tEUR\t\t\nGerman ifo Business Climate\n\t\n\t\n\t90.2\t90.0\t89.9\t'
 TARGET ROW: date='Tue Oct 27' currency='EUR' title='Spanish Unemployment Rate' actual='10.2%'
 TARGET ROW: date='Thu Oct 29' currency='EUR' title='Italian Monthly Unemployment Rate' actual='6.3%'
 TARGET ROW: date='Thu Oct 29' currency='USD' title='Unemployment Claims' actual='194K'
@@ -20,10 +20,10 @@ Past events without actual (21): 2026-10-27 USD API Weekly Statistical Bulletin;
 Scraped GBP keys: [('2026-10-01', 'GBP', 'nationwidehpimm'), ('2026-10-01', 'GBP', 'finalmanufacturingpmi'), ('2026-10-05', 'GBP', 'finalservicespmi'), ('2026-10-06', 'GBP', 'constructionpmi'), ('2026-10-06', 'GBP', 'housingequitywithdrawalqq'), ('2026-10-07', 'GBP', 'lloydshpimm'), ('2026-10-07', 'GBP', 'ricshousepricebalance'), ('2026-10-12', 'GBP', 'brcretailsalesmonitoryy'), ('2026-10-14', 'GBP', 'cbleadingindexmm'), ('2026-10-15', 'GBP', 'gdpmm'), ('2026-10-15', 'GBP', 'constructionoutputmm'), ('2026-10-15', 'GBP', 'goodstradebalance'), ('2026-10-15', 'GBP', 'indexofservices3m3m'), ('2026-10-15', 'GBP', 'industrialproductionmm'), ('2026-10-15', 'GBP', 'manufacturingproductionmm'), ('2026-10-18', 'GBP', 'rightmovehpimm'), ('2026-10-20', 'GBP', 'averageearningsindex3my'), ('2026-10-20', 'GBP', 'claimantcountchange'), ('2026-10-20', 'GBP', 'unemploymentrate'), ('2026-10-20', 'GBP', '10ybondauction'), ('2026-10-22', 'GBP', 'cbiindustrialorderexpectations'), ('2026-10-22', 'GBP', 'gfkconsumerconfidence'), ('2026-10-23', 'GBP', 'retailsalesmm'), ('2026-10-23', 'GBP', 'flashmanufacturingpmi'), ('2026-10-23', 'GBP', 'flashservicespmi'), ('2026-10-26', 'GBP', 'cbirealizedsales'), ('2026-10-26', 'GBP', 'brcshoppriceindexyy'), ('2026-10-29', 'GBP', 'm4moneysupplymm'), ('2026-10-29', 'GBP', 'mortgageapprovals'), ('2026-10-29', 'GBP', 'netlendingtoindividualsmm')]
 
 -- month scrape --
-month oct.2026: title='Calendar | Forex Factory' url='https://www.forexfactory.com/calendar?month=oct.2026' rows=465 tracked=292
-month oct.2026: 292 rows for tracked currencies; sample: [{'date': 'Thu Oct 1', 'time': '1:00am', 'cur': 'GBP', 'impact': 'icon icon--ff-impact-yel', 'title': 'Nationwide HPI m/m', 'actual': '-0.2%', 'forecast': '0.0%', 'previous': '0.2%'}, {'date': 'Thu Oct 1', 'time': '2:15am', 'cur': 'EUR', 'impact': 'icon icon--ff-impact-yel', 'title': 'Spanish Manufacturing PMI', 'actual': '51.0', 'forecast': '50.2', 'previous': '49.5'}]
-month oct.2026: page timezone calibrated to America/Chicago (67 matching rows)
-month oct.2026: added 222 events not already in the weekly feeds
+month oct.2026: title='Calendar | Forex Factory' url='https://www.forexfactory.com/calendar?month=oct.2026' rows=465 tracked=291
+month oct.2026: 291 rows for tracked currencies; sample: [{'date': 'Thu Oct 1', 'time': '2:00am', 'cur': 'GBP', 'impact': 'icon icon--ff-impact-yel', 'title': 'Nationwide HPI m/m', 'actual': '-0.2%', 'forecast': '0.0%', 'previous': '0.2%'}, {'date': 'Thu Oct 1', 'time': '3:15am', 'cur': 'EUR', 'impact': 'icon icon--ff-impact-yel', 'title': 'Spanish Manufacturing PMI', 'actual': '51.0', 'forecast': '50.2', 'previous': '49.5'}]
+month oct.2026: page timezone calibrated to America/New_York (67 matching rows)
+month oct.2026: added 221 events not already in the weekly feeds
 month nov.2026: title='Just a moment...' url='https://www.forexfactory.com/calendar?month=nov.2026' rows=0 tracked=0
 month nov.2026: first rows: []
 month nov.2026: 0 rows for tracked currencies; sample: []
