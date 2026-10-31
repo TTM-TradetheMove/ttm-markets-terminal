@@ -45,12 +45,23 @@ async function raw(path, opt, token){
   const r = await fetch(CFG.url.replace(/\/$/, '') + path, Object.assign({}, opt, {headers: h}));
   let j = null; try{ j = await r.json(); }catch(err){} return {ok: r.ok, status: r.status, json: j};
 }
+let REFRESHING = null;
 async function token(){
   const s = ls(AK, null); if(!s) return null;
   if(s.exp - 60000 > Date.now()) return s.access; if(!s.refresh) return null;
-  const r = await raw('/auth/v1/token?grant_type=refresh_token', {method: 'POST', body: JSON.stringify({refresh_token: s.refresh})});
-  if(r.ok && r.json && r.json.access_token){ lw(AK, {access: r.json.access_token, refresh: r.json.refresh_token, exp: Date.now() + (r.json.expires_in || 3600) * 1000}); return r.json.access_token; }
-  try{ localStorage.removeItem(AK); }catch(err){} return null;
+  if(REFRESHING) return REFRESHING;   // one refresh at a time on this page (a used refresh token cannot be reused)
+  REFRESHING = (async () => {
+    const doIt = async () => {
+      const cur = ls(AK, null); if(cur && cur.exp - 60000 > Date.now()) return cur.access;   // another tab already refreshed
+      const r = await raw('/auth/v1/token?grant_type=refresh_token', {method: 'POST', body: JSON.stringify({refresh_token: (cur || s).refresh})});
+      if(r.ok && r.json && r.json.access_token){ lw(AK, {access: r.json.access_token, refresh: r.json.refresh_token, exp: Date.now() + (r.json.expires_in || 3600) * 1000}); return r.json.access_token; }
+      // only a definite "this session is no longer valid" signs you out; a dropped connection or a server hiccup keeps you signed in
+      if(r.status === 400 || r.status === 401 || r.status === 403){ const again = ls(AK, null); if(again && again.refresh !== (cur || s).refresh && again.exp - 60000 > Date.now()) return again.access; try{ localStorage.removeItem(AK); }catch(err){} }
+      return null;
+    };
+    try{ return navigator.locks && navigator.locks.request ? await navigator.locks.request('ttm_refresh', doIt) : await doIt(); }catch(err){ return null; }
+  })();
+  try{ return await REFRESHING; } finally { REFRESHING = null; }
 }
 async function api(path, opt){ return raw(path, opt, await token()); }
 
@@ -283,7 +294,7 @@ function ui(){
 async function adminUi(){
   const a = $('admBody'); if(!a || !$('admin').classList.contains('active')) return;
   if(!PROF || !PROF.is_admin){ a.innerHTML = '<div class="rr-card"><p style="margin:0">Admins only.</p></div>'; return; }
-  let r = await api('/rest/v1/ttm_profiles?select=id,email,plan,is_admin,created_at,plan_until,plan_note,beta&order=created_at.desc&limit=500'); if(!r.ok) r = await api('/rest/v1/ttm_profiles?select=id,email,plan,is_admin,created_at&order=created_at.desc&limit=500'); const users = (r.ok && Array.isArray(r.json)) ? r.json : [];
+  let r = await api('/rest/v1/ttm_profiles?select=id,email,plan,is_admin,created_at,plan_until,plan_note,beta&order=created_at.desc&limit=500'); let noBeta = false; if(!r.ok){ noBeta = true; r = await api('/rest/v1/ttm_profiles?select=id,email,plan,is_admin,created_at,plan_until,plan_note&order=created_at.desc&limit=500'); } let noTrials = false; if(!r.ok){ noTrials = true; r = await api('/rest/v1/ttm_profiles?select=id,email,plan,is_admin,created_at&order=created_at.desc&limit=500'); } const users = (r.ok && Array.isArray(r.json)) ? r.json : [];
   const sel = (attr, v) => `<select ${attr} style="background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 9px;font:inherit">${PLANS.map(p => `<option value="${p[0]}" ${p[0] === v ? 'selected' : ''}>${p[1]}</option>`).join('')}</select>`;
   const cell = (k, p) => `<td style="text-align:center"><input type="checkbox" data-ak="${k}" data-ap="${p}" ${(SET.access[k] || []).indexOf(p) >= 0 ? 'checked' : ''}></td>`;
   a.innerHTML = `<div class="rr-card"><h3>Switches</h3>
@@ -292,6 +303,7 @@ async function adminUi(){
     <label style="display:flex;gap:10px;align-items:center;font-size:14px"><input type="checkbox" id="admWall" ${SET.wall ? 'checked' : ''} style="width:auto"> <span><b>Require sign-in.</b> Visitors must sign in before anything opens (only applies when plans are on).</span></label></div>
     <div class="rr-card"><h3>What each plan sees</h3><div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Section or feature</th>${GRID.map(p => `<th style="text-align:center">${p[1]}</th>`).join('')}</tr></thead><tbody>${CAT.map(c => `<tr><td>${e(c[1])}</td>${GRID.map(p => cell(c[0], p[0])).join('')}</tr>`).join('')}</tbody></table></div>
     <div class="rr-acts"><button class="rr-btn sm" id="admSaveSet">Save</button><button class="rr-btn ghost sm" id="admReset">Reset to the planned defaults</button></div><p class="calendar-note" id="admNote" style="margin:8px 0 0">Tick a box to give that plan the section; untick everywhere to switch it off until it is ready (you, as admin, still see everything). Ticking Free also ticks Premium and Pro, and ticking Premium also ticks Pro; unticking Pro unticks the others. Beta testers: tick a section under Beta to open it only for members you mark as beta testers (below), whatever their plan. Free means open to everyone, signed in or not. Locks work in the browser, so they hide and block what the page shows; the site is static and its code and data files are public, so real protection for paid content needs that content moved behind the backend. Prices are set in ttm_config.json.</p></div>
+    ${noTrials || noBeta ? `<div class="rr-warn y"><b>One database step is missing.</b> In Supabase open SQL Editor, New query, paste the line below and press Run, then refresh this page. ${noTrials ? 'It adds the plan end date and the beta switch.' : 'It adds the beta switch.'}<pre style="white-space:pre-wrap;margin:8px 0 0;user-select:all">alter table public.ttm_profiles add column if not exists plan_until timestamptz, add column if not exists plan_note text, add column if not exists beta boolean not null default false;</pre></div>` : ''}
     <div class="rr-card"><h3>Give people a plan for a limited time</h3><p class="calendar-note" style="margin:0 0 10px">For giveaways, trials or "paid until" dates. Paste the emails of people who have already created an account (one per line). When the time is up they go back to Free on their own. If they pay, set their plan from the Members table below to remove the end date.</p>
       <textarea id="grEmails" rows="4" placeholder="winner1@example.com&#10;winner2@example.com" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 10px;font:inherit"></textarea>
       <div class="rr-acts" style="margin:10px 0 0;align-items:center">${sel('id="grPlan"', 'pro')}<select id="grDays" style="background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 9px;font:inherit">${[7, 14, 30, 60, 90, 365].map(d => `<option value="${d}" ${d === 30 ? 'selected' : ''}>${d} days</option>`).join('')}</select><input id="grNote" value="giveaway" maxlength="20" style="width:120px;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 9px;font:inherit" title="A label shown next to the end date"><button class="rr-btn sm" id="grGo">Grant access</button><button class="rr-btn ghost sm" id="grExpire">Revert expired now</button><button class="rr-btn ghost sm" id="grBeta">Make beta testers</button><button class="rr-btn ghost sm" id="grBetaOff">Remove beta</button></div>
@@ -469,7 +481,7 @@ document.addEventListener('click', async ev => {
   }
 });
 document.addEventListener('change', async ev => { const t = ev.target;
-  if(t.dataset && t.dataset.beta){ const r = await api(`/rest/v1/ttm_profiles?id=eq.${t.dataset.beta}`, {method: 'PATCH', body: JSON.stringify({beta: t.checked})}); t.style.outline = r.ok ? '' : '2px solid #e0554d'; return; }
+  if(t.dataset && t.dataset.beta){ const r = await api(`/rest/v1/ttm_profiles?id=eq.${t.dataset.beta}`, {method: 'PATCH', body: JSON.stringify({beta: t.checked})}); t.style.outline = r.ok ? '' : '2px solid #e0554d'; if(!r.ok){ t.checked = !t.checked; alert('Could not save the beta switch. Run the database step shown in the yellow box at the top of Admin, then try again.'); } return; }
   if(t.dataset && t.dataset.uid){ const r = await api(`/rest/v1/ttm_profiles?id=eq.${t.dataset.uid}`, {method: 'PATCH', body: JSON.stringify({plan: t.value, plan_until: null, plan_note: null})}); t.style.borderColor = r.ok ? '#3fb47a' : '#e0554d'; } });
 document.addEventListener('change', ev => {
   const t = ev.target; if(!(t.dataset && t.dataset.ak)) return; const row = t.closest('tr'), box = p => row.querySelector(`input[data-ap="${p}"]`);
