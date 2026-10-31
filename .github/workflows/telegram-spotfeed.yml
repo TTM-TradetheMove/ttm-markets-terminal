@@ -1,0 +1,48 @@
+name: Telegram spot moves (14 day delay)
+
+on:
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (print only, do not send)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: telegram-spotfeed
+  cancel-in-progress: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Post moves that are 14 days old
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
+          DRY_RUN: ${{ inputs.dry_run && '1' || '0' }}
+        run: python3 scripts/telegram_spotfeed.py
+      - name: Save state
+        if: always()
+        run: |
+          git config user.name "ttm-calendar-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add telegram_spotfeed_state.json 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Telegram spot feed state"
+            git pull --rebase -X theirs origin main || true
+            git push origin HEAD:main || true
+          fi
