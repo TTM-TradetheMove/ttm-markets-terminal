@@ -701,6 +701,7 @@ button.tkr{background:none;border:0;padding:0;margin:0;color:var(--gold2);font:i
       <a href="#rsimap">RSI Heatmap</a>
       <a href="#maxpain">Max Pain</a>
       <a href="#painzones">Pain Zones</a>
+      <a href="#holdings">TTM Holdings</a>
       <a href="#volume">Volume Heatmap</a>
       <a href="#riskreward">Risk / Reward</a>
       <a href="#tradejournal">Trade Tracker</a>
@@ -754,7 +755,7 @@ button.tkr{background:none;border:0;padding:0;margin:0;color:var(--gold2);font:i
   </div>
 </div>
 
-<div id="menuHome"><div class="wrap"><h2>Trading tools</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#riskreward"><b>Risk / Reward Tooling</b><span>Size a trade by risk % , risk $ or investment, with live candles, leverage and liquidation</span></a><a class="menu-tile" href="#tradejournal"><b>Trade Tracker &amp; Win Ratio</b><span>Open and closed trades by account and time frame, win rate, equity curve, Excel export</span></a><a class="menu-tile" href="#portfolio"><b>Portfolio Forecast</b><span>Spot, leverage and super / retirement: forecast vs actual at live prices</span></a><a class="menu-tile" href="#members"><b>TradingView Indicators</b><span>TTM indicators for TradingView (coming soon)</span></a></div><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#marketpulse"><b>Market Pulse</b><span>Fear & Greed, funding, liquidations</span></a><a class="menu-tile" href="#btcmonthly"><b>BTC Monthly</b><span>Bitcoin returns month by month</span></a><a class="menu-tile" href="#fomo"><b>FOMO Finder &amp; RSI Chart</b><span>Sentiment gauge plus price and RSI</span></a><a class="menu-tile" href="#rsimap"><b>RSI Heatmap</b><span>Overbought / oversold across ~125 coins</span></a><a class="menu-tile" href="#painzones"><b>Pain Zones</b><span>Average holder cost, support / resistance and RSI for any coin</span></a><a class="menu-tile" href="#maxpain"><b>Max Pain</b><span>Options max pain by token, with RSI confluence</span></a><a class="menu-tile" href="#volume"><b>Volume Heatmap</b><span>Surging and drying-up volume by coin</span></a><a class="menu-tile" href="#socialpulse"><b>Social Pulse</b><span>Truth Social and crypto news feed</span></a><a class="menu-tile" href="#tokenevents"><b>Token Events</b><span>Unlocks, listings and airdrops</span></a><a class="menu-tile" href="#library"><b>Reports</b><span>Asset reviews and deep dives</span></a><a class="menu-tile" href="#transparency"><b>Transparency Watch</b><span>Congress and insider trading watch</span></a></div></div></div>
+<div id="menuHome"><div class="wrap"><h2>Trading tools</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#holdings"><b>TTM Holdings</b><span>What TTM holds on spot, as % of the portfolio, plus cash</span></a><a class="menu-tile" href="#riskreward"><b>Risk / Reward Tooling</b><span>Size a trade by risk % , risk $ or investment, with live candles, leverage and liquidation</span></a><a class="menu-tile" href="#tradejournal"><b>Trade Tracker &amp; Win Ratio</b><span>Open and closed trades by account and time frame, win rate, equity curve, Excel export</span></a><a class="menu-tile" href="#portfolio"><b>Portfolio Forecast</b><span>Spot, leverage and super / retirement: forecast vs actual at live prices</span></a><a class="menu-tile" href="#members"><b>TradingView Indicators</b><span>TTM indicators for TradingView (coming soon)</span></a></div><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#marketpulse"><b>Market Pulse</b><span>Fear & Greed, funding, liquidations</span></a><a class="menu-tile" href="#btcmonthly"><b>BTC Monthly</b><span>Bitcoin returns month by month</span></a><a class="menu-tile" href="#fomo"><b>FOMO Finder &amp; RSI Chart</b><span>Sentiment gauge plus price and RSI</span></a><a class="menu-tile" href="#rsimap"><b>RSI Heatmap</b><span>Overbought / oversold across ~125 coins</span></a><a class="menu-tile" href="#painzones"><b>Pain Zones</b><span>Average holder cost, support / resistance and RSI for any coin</span></a><a class="menu-tile" href="#maxpain"><b>Max Pain</b><span>Options max pain by token, with RSI confluence</span></a><a class="menu-tile" href="#volume"><b>Volume Heatmap</b><span>Surging and drying-up volume by coin</span></a><a class="menu-tile" href="#socialpulse"><b>Social Pulse</b><span>Truth Social and crypto news feed</span></a><a class="menu-tile" href="#tokenevents"><b>Token Events</b><span>Unlocks, listings and airdrops</span></a><a class="menu-tile" href="#library"><b>Reports</b><span>Asset reviews and deep dives</span></a><a class="menu-tile" href="#transparency"><b>Transparency Watch</b><span>Congress and insider trading watch</span></a></div></div></div>
 <button id="backFab" type="button">&larr; Menu</button>
 <div id="backBar"><div class="wrap"><button id="backBtn" type="button">&larr; Back to menu</button><span id="backTitle"></span></div></div>
 <section id="calendar">
@@ -1297,6 +1298,37 @@ button.tkr{background:none;border:0;padding:0;margin:0;color:var(--gold2);font:i
     <p class="calendar-note" style="margin-top:12px">Levels come from recent exchange candles (Bybit, then OKX, then Binance), so they update every time you analyse. Cost levels are an estimate from volume, not real wallet data. Education only, not financial advice.</p>
   </div>
 </section>
+
+<section id="holdings">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">TTM Holdings</span>
+      <h2>Crypto portfolio (spot)</h2>
+      <p>What TTM holds right now, shown as a share of the whole portfolio, with the cash still on the sidelines. Percentages only: no dollar values and no amounts held. They move with live prices, so a winner grows as a share. A record of TTM's own positions, not advice to copy them.</p>
+      <p id="hdUpdated" class="calendar-note" style="margin-top:8px">Loading…</p>
+    </div>
+    <div id="hdBody"></div>
+  </div>
+</section>
+
+<script>
+(function(){
+const $ = id => document.getElementById(id); if(!$('hdBody')) return;
+const KEY = document.body.dataset.terminal === 'tradfi' ? 'tradfi' : 'crypto';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const COL = ['#dba118', '#3fb47a', '#8ab4ff', '#e0554d', '#b18cff', '#f2c14e', '#4fd1c5', '#ff9f68', '#9bd16b', '#ff7aa8'];
+function draw(D){
+  const H = D && D[KEY]; if(!H || !H.items){ $('hdUpdated').textContent = 'TTM has not published its holdings yet.'; $('hdBody').innerHTML = ''; return; }
+  const ago = Math.round((Date.now() - D.t) / 60000); $('hdUpdated').textContent = 'Updated ' + (ago < 90 ? ago + ' min' : Math.round(ago / 60) + ' h') + ' ago';
+  const seg = H.items.map((o, i) => ({l: o.a, p: o.pct, c: COL[i % COL.length]})).concat([{l: 'Cash', p: H.cash, c: '#4a4d57'}]);
+  const bar = '<div style="display:flex;height:34px;border-radius:9px;overflow:hidden;margin:4px 0 14px">' + seg.map(x => '<div title="' + esc(x.l) + ' ' + x.p + '%" style="width:' + x.p + '%;background:' + x.c + ';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#111;overflow:hidden">' + (x.p >= 6 ? esc(x.l) : '') + '</div>').join('') + '</div>';
+  const rows = H.items.map((o, i) => '<tr><td><b style="color:' + COL[i % COL.length] + '">' + esc(o.a) + '</b></td><td><b>' + o.pct.toFixed(1) + '%</b></td><td style="min-width:120px"><div style="height:8px;background:var(--line);border-radius:4px"><i style="display:block;height:8px;width:' + Math.min(100, o.pct) + '%;background:' + COL[i % COL.length] + ';border-radius:4px"></i></div></td><td style="color:' + (o.chg >= 0 ? '#3fb47a' : '#e0554d') + '">' + (o.chg >= 0 ? '+' : '') + o.chg.toFixed(1) + '%</td><td>' + new Date(o.since).toLocaleDateString(undefined, {day: 'numeric', month: 'short', year: '2-digit'}) + '</td></tr>').join('');
+  $('hdBody').innerHTML = '<div class="rr-card">' + bar + '<div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Asset</th><th>% of portfolio</th><th></th><th>Change since bought</th><th>Bought</th></tr></thead><tbody>' + (rows || '<tr><td colspan="5" style="color:var(--mute)">No open positions.</td></tr>') + '<tr><td><b style="color:#9a978f">Cash</b></td><td><b>' + H.cash.toFixed(1) + '%</b></td><td><div style="height:8px;background:var(--line);border-radius:4px"><i style="display:block;height:8px;width:' + Math.min(100, H.cash) + '%;background:#4a4d57;border-radius:4px"></i></div></td><td colspan="2" style="color:var(--mute)">remaining, not invested</td></tr></tbody></table></div></div>';
+}
+async function load(){ if(!window.ttmHoldings) return; draw(await ttmHoldings()); }
+window.addEventListener('hashchange', () => { if(location.hash === '#holdings') load(); }); if(location.hash === '#holdings') setTimeout(load, 700); setInterval(() => { if(location.hash === '#holdings') load(); }, 120000);
+})();
+</script>
 
 <section id="maxpain">
   <div class="wrap">
@@ -4098,6 +4130,24 @@ $('rrModalBody').addEventListener('click', e => {
     if(t.dataset.tc === 'fill'){ x.orders[k].filled = true; x.orders[k].ft = Date.now(); } else if(t.dataset.tc === 'rm' && x.orders.length > 1){ x.orders.splice(k, 1); }
     syncOrders(x); saveAll(list); render(); renderSaved(); paintTC(); }
 });
+// ---- TTM holdings: share the portfolio as percentages only (no dollar values, no units) with Pro members. Published while you (admin) have the terminal open.
+function holdingsSnap(accId, spotOnly){
+  const A = acct(accId), pos = {};
+  loadSaved().forEach(x => { if(x.status !== 'open' || !x.snap || accOf(x) !== accId || x.fill === 'pending') return; if(spotOnly && x.snap.mkt !== 'spot') return;
+    const sn = x.snap, pp = priceOf(sn.asset), px = pp ? pp.p : sn.E, val = sn.units * px, cost = sn.units * sn.E, o = pos[sn.asset] || (pos[sn.asset] = {a: sn.asset, val: 0, cost: 0, since: x.opened || x.t});
+    o.val += val; o.cost += cost; o.since = Math.min(o.since, x.opened || x.t); });
+  const list = Object.keys(pos).map(k => pos[k]), cash = A.avail, tot = list.reduce((t, o) => t + o.val, 0) + cash;
+  if(!(tot > 0)) return {items: [], cash: 100};
+  return {cash: Math.round(cash / tot * 1000) / 10, items: list.sort((a, b) => b.val - a.val).map(o => ({a: o.a, pct: Math.round(o.val / tot * 1000) / 10, chg: o.cost ? Math.round((o.val / o.cost - 1) * 1000) / 10 : 0, since: o.since}))};
+}
+let HDT = 0;
+async function publishHoldings(){
+  if(!(window.ttmIsAdmin && ttmIsAdmin() && window.ttmPublishHoldings) || Date.now() - HDT < 50000) return; HDT = Date.now();
+  try{ const t = await getTickers(); if(t){ PRICES = t.map; PSTAMP = t.t; } }catch(e){}
+  await ttmPublishHoldings({t: Date.now(), crypto: holdingsSnap('spot', false), tradfi: holdingsSnap('super', false)});
+}
+setTimeout(publishHoldings, 9000); setInterval(publishHoldings, 60000);
+document.addEventListener('click', e => { if(e.target.closest && e.target.closest('[data-j="close"],#rrOpen,#rrConfirm,[data-tc]')) setTimeout(() => { HDT = 0; publishHoldings(); }, 1500); });
 let TGERR = '';
 async function tgSend(text){
   TGERR = ''; const c = lsGet(TGKEY, {}); if(!c.tok || !c.chat){ TGERR = 'Enter both the bot token and the chat ID first.'; return false; }

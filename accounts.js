@@ -10,6 +10,7 @@ const normPlan = p => (p === 'crypto' || p === 'tradfi') ? 'premium' : p;   // o
 const pname = id => (PLANS.find(p => p[0] === id) || [0, id])[1];
 // what can be locked: key, label, plans that get it by default (Pro always gets everything)
 const CAT = [
+  ['c:holdings', 'Crypto · TTM Holdings (spot portfolio, % only)', []], ['t:holdings', 'TradFi · TTM Holdings (invested, % only)', []],
   ['c:calendar', 'Crypto · Macro Watch', ['free']], ['c:tradinghours', 'Crypto · Trading Hours', ['free']], ['c:fomo', 'Crypto · FOMO Finder & RSI Chart', ['free']],
   ['c:btcmonthly', 'Crypto · BTC Monthly (with cycle tops)', ['free']], ['c:tokenevents', 'Crypto · Token Events', []], ['c:library', 'Crypto · Reports library', []], ['c:transparency', 'Crypto · Transparency Watch', ['free']],
   ['c:marketpulse', 'Crypto · Market Pulse (liquidations, funding, open interest)', ['premium']], ['c:rsimap', 'Crypto · RSI Heatmap', ['premium']], ['c:painzones', 'Crypto · Pain Zones (any coin: average cost, support / resistance, RSI)', [], 'off'], ['c:maxpain', 'Crypto · Max Pain (options, with RSI confluence)', ['premium']], ['c:volume', 'Crypto · Volume Heatmap', ['premium']], ['c:socialpulse', 'Crypto · Social Pulse', ['premium']],
@@ -155,7 +156,9 @@ function upsell(key){
   openAuth(USER ? `<p><b>${e(label)}</b> is included with the <b>${e(needText(key))}</b> plan. You are on <b>${e(pname(PROF.plan))}</b>. Paid plans are not open for self-sign-up yet; ask TTM on Telegram.</p><div class="row"><button class="ttm-btn ghost" id="authClose">Close</button></div>`
     : `<p><b>${e(label)}</b> is included with the <b>${e(needText(key))}</b> plan. Sign in to continue.</p>` + signInForm());
 }
-window.ttmCan = can; window.ttmUpsell = upsell;
+window.ttmCan = can; window.ttmUpsell = upsell; window.ttmIsAdmin = () => !!(PROF && PROF.is_admin);
+window.ttmHoldings = async () => { const r = await api('/rest/v1/ttm_settings?key=eq.holdings&select=value'); return r.ok && r.json && r.json[0] ? r.json[0].value : null; };
+window.ttmPublishHoldings = async v => { if(!(PROF && PROF.is_admin)) return false; const r = await api('/rest/v1/ttm_settings', {method: 'POST', headers: {Prefer: 'resolution=merge-duplicates'}, body: JSON.stringify([{key: 'holdings', value: v}])}); return r.ok; };
 
 // ---------- sign-in modal
 function signInForm(){ return on() ? `<label for="authEmail"><small>Email</small></label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"><label for="authTg" style="display:block;margin-top:10px"><small>Telegram name (optional, shown as your name in the terminal)</small></label><input id="authTg" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="@yourname"><div class="row"><button class="ttm-btn" id="authSend">Email me a sign-in link</button><button class="ttm-btn ghost" id="authClose">Cancel</button></div><p id="authNote" style="margin:12px 0 0"><small>No password. We email a one-time link and a code. Creating an account is free.</small></p>` : '<p>Accounts are coming soon. The terminal stays free and open in the meantime.</p><div class="row"><button class="ttm-btn ghost" id="authClose">Close</button></div>'; }

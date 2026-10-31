@@ -627,6 +627,7 @@ select,select option{color-scheme:dark}select option{background:#16161a;color:#e
       <a href="#macrointel">Macro Intel</a>
       <a href="#newsrisk">News &amp; Risk</a>
       <a href="#tfcalc">Risk / Reward</a>
+      <a href="#holdings">TTM Holdings</a>
     </nav>
     <button type="button" class="acct-btn" id="acctBtn">Sign in</button>
     <a class="tg-btn" href="https://t.me/+fxWM17n8TxE3ODc1" target="_blank" rel="noopener">Join Telegram</a>
@@ -637,7 +638,7 @@ select,select option{color-scheme:dark}select option{background:#16161a;color:#e
   <h1>Traditional markets, <em>the TTM way.</em></h1>
   <p>Same macro calendar and session clock as the Crypto terminal, built out here for forex, indices, commodities and stocks. Global market coverage below is actively being built — calendar and trading hours are live now.</p>
 </div>
-<div id="menuHome"><div class="wrap"><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tfcalc"><b>Risk / Reward Tooling</b><span>Position size, risk and targets for forex, indices, commodities and stocks</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#congress"><b>Congress Watch</b><span>Congress trading disclosures</span></a><a class="menu-tile" href="#globalmarkets"><b>Global Markets</b><span>Indices, FX, metals and energy</span></a><a class="menu-tile" href="#bonds"><b>Bonds &amp; Rates</b><span>Yields, curves and policy rates</span></a><a class="menu-tile" href="#macrointel"><b>Macro Intel</b><span>Central banks and financial conditions</span></a><a class="menu-tile" href="#newsrisk"><b>News &amp; Risk</b><span>Headlines and risk watch</span></a></div></div></div>
+<div id="menuHome"><div class="wrap"><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#holdings"><b>TTM Holdings</b><span>What TTM holds in TradFi, as % of the portfolio, plus cash</span></a><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tfcalc"><b>Risk / Reward Tooling</b><span>Position size, risk and targets for forex, indices, commodities and stocks</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#congress"><b>Congress Watch</b><span>Congress trading disclosures</span></a><a class="menu-tile" href="#globalmarkets"><b>Global Markets</b><span>Indices, FX, metals and energy</span></a><a class="menu-tile" href="#bonds"><b>Bonds &amp; Rates</b><span>Yields, curves and policy rates</span></a><a class="menu-tile" href="#macrointel"><b>Macro Intel</b><span>Central banks and financial conditions</span></a><a class="menu-tile" href="#newsrisk"><b>News &amp; Risk</b><span>Headlines and risk watch</span></a></div></div></div>
 <button id="backFab" type="button">&larr; Menu</button>
 <div id="backBar"><div class="wrap"><button id="backBtn" type="button">&larr; Back to menu</button><span id="backTitle"></span></div></div>
 <section id="calendar">
@@ -786,6 +787,37 @@ select,select option{color-scheme:dark}select option{background:#16161a;color:#e
     </div>
   </div>
 </section>
+
+<section id="holdings">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">TTM Holdings</span>
+      <h2>Invested portfolio (TradFi)</h2>
+      <p>What TTM holds right now, shown as a share of the whole portfolio, with the cash still on the sidelines. Percentages only: no dollar values and no amounts held. They move with live prices, so a winner grows as a share. A record of TTM's own positions, not advice to copy them.</p>
+      <p id="hdUpdated" class="calendar-note" style="margin-top:8px">Loading…</p>
+    </div>
+    <div id="hdBody"></div>
+  </div>
+</section>
+
+<script>
+(function(){
+const $ = id => document.getElementById(id); if(!$('hdBody')) return;
+const KEY = document.body.dataset.terminal === 'tradfi' ? 'tradfi' : 'crypto';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const COL = ['#dba118', '#3fb47a', '#8ab4ff', '#e0554d', '#b18cff', '#f2c14e', '#4fd1c5', '#ff9f68', '#9bd16b', '#ff7aa8'];
+function draw(D){
+  const H = D && D[KEY]; if(!H || !H.items){ $('hdUpdated').textContent = 'TTM has not published its holdings yet.'; $('hdBody').innerHTML = ''; return; }
+  const ago = Math.round((Date.now() - D.t) / 60000); $('hdUpdated').textContent = 'Updated ' + (ago < 90 ? ago + ' min' : Math.round(ago / 60) + ' h') + ' ago';
+  const seg = H.items.map((o, i) => ({l: o.a, p: o.pct, c: COL[i % COL.length]})).concat([{l: 'Cash', p: H.cash, c: '#4a4d57'}]);
+  const bar = '<div style="display:flex;height:34px;border-radius:9px;overflow:hidden;margin:4px 0 14px">' + seg.map(x => '<div title="' + esc(x.l) + ' ' + x.p + '%" style="width:' + x.p + '%;background:' + x.c + ';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#111;overflow:hidden">' + (x.p >= 6 ? esc(x.l) : '') + '</div>').join('') + '</div>';
+  const rows = H.items.map((o, i) => '<tr><td><b style="color:' + COL[i % COL.length] + '">' + esc(o.a) + '</b></td><td><b>' + o.pct.toFixed(1) + '%</b></td><td style="min-width:120px"><div style="height:8px;background:var(--line);border-radius:4px"><i style="display:block;height:8px;width:' + Math.min(100, o.pct) + '%;background:' + COL[i % COL.length] + ';border-radius:4px"></i></div></td><td style="color:' + (o.chg >= 0 ? '#3fb47a' : '#e0554d') + '">' + (o.chg >= 0 ? '+' : '') + o.chg.toFixed(1) + '%</td><td>' + new Date(o.since).toLocaleDateString(undefined, {day: 'numeric', month: 'short', year: '2-digit'}) + '</td></tr>').join('');
+  $('hdBody').innerHTML = '<div class="rr-card">' + bar + '<div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Asset</th><th>% of portfolio</th><th></th><th>Change since bought</th><th>Bought</th></tr></thead><tbody>' + (rows || '<tr><td colspan="5" style="color:var(--mute)">No open positions.</td></tr>') + '<tr><td><b style="color:#9a978f">Cash</b></td><td><b>' + H.cash.toFixed(1) + '%</b></td><td><div style="height:8px;background:var(--line);border-radius:4px"><i style="display:block;height:8px;width:' + Math.min(100, H.cash) + '%;background:#4a4d57;border-radius:4px"></i></div></td><td colspan="2" style="color:var(--mute)">remaining, not invested</td></tr></tbody></table></div></div>';
+}
+async function load(){ if(!window.ttmHoldings) return; draw(await ttmHoldings()); }
+window.addEventListener('hashchange', () => { if(location.hash === '#holdings') load(); }); if(location.hash === '#holdings') setTimeout(load, 700); setInterval(() => { if(location.hash === '#holdings') load(); }, 120000);
+})();
+</script>
 
 <section id="congress">
   <div class="wrap">
