@@ -1,4 +1,4 @@
-Run at 2026-10-30T22:17:10.493303+00:00
+Run at 2026-10-31T01:41:16.850229+00:00
 
 page title: 'Calendar | Forex Factory'
 page url after load: 'https://www.forexfactory.com/calendar'
@@ -14,8 +14,8 @@ TARGET ROW: date='Thu Oct 29' currency='USD' title='Unemployment Claims' actual=
 TARGET ROW: date='Thu Oct 29' currency='JPY' title='Unemployment Rate' actual='2.4%'
 TARGET ROW: date='Fri Oct 30' currency='EUR' title='German Unemployment Change' actual='4K'
 TARGET ROW: date='Fri Oct 30' currency='EUR' title='Unemployment Rate' actual='6.5%'
-matched-actuals by date: {'2026-10-26': 5, '2026-10-27': 15, '2026-10-28': 12, '2026-10-29': 23, '2026-10-30': 17}
-Scraped 72 live actual values from forexfactory.com
+matched-actuals by date: {'2026-10-26': 5, '2026-10-27': 15, '2026-10-28': 12, '2026-10-29': 23, '2026-10-30': 19}
+Scraped 74 live actual values from forexfactory.com
 Past events without actual (21): 2026-10-27 USD API Weekly Statistical Bulletin; 2026-10-28 GBP Annual Budget Release; 2026-10-28 GBP Autumn Forecast Statement; 2026-10-28 USD FOMC Statement; 2026-10-28 USD FOMC Press Conference; 2026-10-29 EUR Monetary Policy Statement; 2026-10-29 EUR ECB Press Conference; 2026-10-29 JPY BOJ Outlook Report; 2026-10-29 JPY Monetary Policy Statement; 2026-10-30 JPY BOJ Press Conference; 2026-10-06 USD API Weekly Statistical Bulletin; 2026-10-07 USD FOMC Meeting Minutes; 2026-10-08 GBP BOE Credit Conditions Survey; 2026-10-08 EUR Eurogroup Meetings; 2026-10-08 EUR ECB Monetary Policy Meeting Accounts; 2026-10-09 EUR ECOFIN Meetings; 2026-10-14 EUR EU Economic Summit; 2026-10-14 USD Beige Book; 2026-10-14 USD API Weekly Statistical Bulletin; 2026-10-15 EUR EU Economic Summit; 2026-10-20 USD API Weekly Statistical Bulletin
 Scraped GBP keys: [('2026-10-01', 'GBP', 'finalmanufacturingpmi'), ('2026-10-05', 'GBP', 'finalservicespmi'), ('2026-10-06', 'GBP', 'constructionpmi'), ('2026-10-06', 'GBP', 'housingequitywithdrawalqq'), ('2026-10-07', 'GBP', 'lloydshpimm'), ('2026-10-07', 'GBP', 'ricshousepricebalance'), ('2026-10-14', 'GBP', 'cbleadingindexmm'), ('2026-10-15', 'GBP', 'gdpmm'), ('2026-10-15', 'GBP', 'constructionoutputmm'), ('2026-10-15', 'GBP', 'goodstradebalance'), ('2026-10-15', 'GBP', 'indexofservices3m3m'), ('2026-10-15', 'GBP', 'industrialproductionmm'), ('2026-10-15', 'GBP', 'manufacturingproductionmm'), ('2026-10-18', 'GBP', 'rightmovehpimm'), ('2026-10-20', 'GBP', 'averageearningsindex3my'), ('2026-10-20', 'GBP', 'claimantcountchange'), ('2026-10-20', 'GBP', 'unemploymentrate'), ('2026-10-20', 'GBP', '10ybondauction'), ('2026-10-21', 'GBP', 'cpiyy'), ('2026-10-21', 'GBP', 'corecpiyy'), ('2026-10-21', 'GBP', 'ppiinputmm'), ('2026-10-21', 'GBP', 'ppioutputmm'), ('2026-10-21', 'GBP', 'publicsectornetborrowing'), ('2026-10-21', 'GBP', 'rpiyy'), ('2026-10-22', 'GBP', 'cbiindustrialorderexpectations'), ('2026-10-22', 'GBP', 'gfkconsumerconfidence'), ('2026-10-23', 'GBP', 'retailsalesmm'), ('2026-10-23', 'GBP', 'flashmanufacturingpmi'), ('2026-10-23', 'GBP', 'flashservicespmi'), ('2026-10-26', 'GBP', 'cbirealizedsales')]
 
@@ -27,4 +27,4 @@ month oct.2026: added 219 events not already in the weekly feeds
 month nov.2026: title='Just a moment...' url='https://www.forexfactory.com/calendar?month=nov.2026' rows=0 tracked=0
 month nov.2026: first rows: []
 month nov.2026: 0 rows for tracked currencies; sample: []
-month-ahead fallback (financecalendar.com): 268 rows read, 218 events after 2026-10-30 added
+month-ahead fallback (financecalendar.com): 259 rows read, 219 events after 2026-10-30 added
