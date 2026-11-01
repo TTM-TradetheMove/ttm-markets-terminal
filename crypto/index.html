@@ -703,6 +703,7 @@ button.tkr{background:none;border:0;padding:0;margin:0;color:var(--gold2);font:i
       <a href="#rsimap">RSI Heatmap</a>
       <a href="#maxpain">Max Pain</a>
       <a href="#painzones">Pain Zones</a>
+      <a href="#lunacycles">Luna Cycles</a>
       <a href="#volume">Volume Heatmap</a>
       <a href="#riskreward">Risk / Reward</a>
       <a href="#tradejournal">Trade Tracker</a>
@@ -757,7 +758,7 @@ button.tkr{background:none;border:0;padding:0;margin:0;color:var(--gold2);font:i
   </div>
 </div>
 
-<div id="menuHome"><div class="wrap"><h2>TTM Investments</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#holdings"><b>TTM Holdings</b><span>What TTM holds on spot, as % of the portfolio, plus cash</span></a></div><h2>Trading tools</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#riskreward"><b>Risk / Reward Tooling</b><span>Size a trade by risk % , risk $ or investment, with live candles, leverage and liquidation</span></a><a class="menu-tile" href="#tradejournal"><b>Trade Tracker &amp; Win Ratio</b><span>Open and closed trades by account and time frame, win rate, equity curve, Excel export</span></a><a class="menu-tile" href="#portfolio"><b>Portfolio Forecast</b><span>Spot, leverage and super / retirement: forecast vs actual at live prices</span></a><a class="menu-tile" href="#members"><b>TradingView Indicators</b><span>TTM indicators for TradingView (coming soon)</span></a></div><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#marketpulse"><b>Market Pulse</b><span>Fear & Greed, funding, liquidations</span></a><a class="menu-tile" href="#btcmonthly"><b>BTC Monthly</b><span>Bitcoin returns month by month</span></a><a class="menu-tile" href="#fomo"><b>FOMO Finder &amp; RSI Chart</b><span>Sentiment gauge plus price and RSI</span></a><a class="menu-tile" href="#rsimap"><b>RSI Heatmap</b><span>Overbought / oversold across ~125 coins</span></a><a class="menu-tile" href="#painzones"><b>Pain Zones</b><span>Average holder cost, support / resistance and RSI for any coin</span></a><a class="menu-tile" href="#maxpain"><b>Max Pain</b><span>Options max pain by token, with RSI confluence</span></a><a class="menu-tile" href="#volume"><b>Volume Heatmap</b><span>Surging and drying-up volume by coin</span></a><a class="menu-tile" href="#socialpulse"><b>Social Pulse</b><span>Truth Social and crypto news feed</span></a><a class="menu-tile" href="#tokenevents"><b>Token Events</b><span>Unlocks, listings and airdrops</span></a><a class="menu-tile" href="#library"><b>Reports</b><span>Asset reviews and deep dives</span></a><a class="menu-tile" href="#transparency"><b>Transparency Watch</b><span>Congress and insider trading watch</span></a></div></div></div>
+<div id="menuHome"><div class="wrap"><h2>TTM Investments</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#holdings"><b>TTM Holdings</b><span>What TTM holds on spot, as % of the portfolio, plus cash</span></a></div><h2>Trading tools</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#riskreward"><b>Risk / Reward Tooling</b><span>Size a trade by risk % , risk $ or investment, with live candles, leverage and liquidation</span></a><a class="menu-tile" href="#tradejournal"><b>Trade Tracker &amp; Win Ratio</b><span>Open and closed trades by account and time frame, win rate, equity curve, Excel export</span></a><a class="menu-tile" href="#portfolio"><b>Portfolio Forecast</b><span>Spot, leverage and super / retirement: forecast vs actual at live prices</span></a><a class="menu-tile" href="#members"><b>TradingView Indicators</b><span>TTM indicators for TradingView (coming soon)</span></a></div><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#marketpulse"><b>Market Pulse</b><span>Fear & Greed, funding, liquidations</span></a><a class="menu-tile" href="#btcmonthly"><b>BTC Monthly</b><span>Bitcoin returns month by month</span></a><a class="menu-tile" href="#fomo"><b>FOMO Finder &amp; RSI Chart</b><span>Sentiment gauge plus price and RSI</span></a><a class="menu-tile" href="#rsimap"><b>RSI Heatmap</b><span>Overbought / oversold across ~125 coins</span></a><a class="menu-tile" href="#painzones"><b>Pain Zones</b><span>Average holder cost, support / resistance and RSI for any coin</span></a><a class="menu-tile" href="#lunacycles"><b>Luna Cycles</b><span>Bitcoin against the eclipse cycles, with the phase we are in now</span></a><a class="menu-tile" href="#maxpain"><b>Max Pain</b><span>Options max pain by token, with RSI confluence</span></a><a class="menu-tile" href="#volume"><b>Volume Heatmap</b><span>Surging and drying-up volume by coin</span></a><a class="menu-tile" href="#socialpulse"><b>Social Pulse</b><span>Truth Social and crypto news feed</span></a><a class="menu-tile" href="#tokenevents"><b>Token Events</b><span>Unlocks, listings and airdrops</span></a><a class="menu-tile" href="#library"><b>Reports</b><span>Asset reviews and deep dives</span></a><a class="menu-tile" href="#transparency"><b>Transparency Watch</b><span>Congress and insider trading watch</span></a></div></div></div>
 <button id="backFab" type="button">&larr; Menu</button>
 <div id="backBar"><div class="wrap"><button id="backBtn" type="button">&larr; Back to menu</button><span id="backTitle"></span></div></div>
 <section id="calendar">
@@ -1303,6 +1304,25 @@ button.tkr{background:none;border:0;padding:0;margin:0;color:var(--gold2);font:i
     <p class="calendar-note" style="margin-top:12px">Levels come from recent exchange candles (Bybit, then OKX, then Binance), so they update every time you analyse. Cost levels are an estimate from volume, not real wallet data. Education only, not financial advice.</p>
   </div>
 </section>
+
+<section id="lunacycles">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">Luna Cycles</span>
+      <h2>Bitcoin and the eclipse cycles</h2>
+      <p>Bitcoin's market cycles have lined up with a repeating run of eclipses. Four lunar eclipses make a red <b>Lunar cycle</b>. The last one starts the green <b>Solar cycle</b>, which runs through three solar eclipses until the next total lunar eclipse starts a new red band. The dates come from NASA's eclipse tables.</p>
+    </div>
+    <div id="lcNow"></div>
+    <div class="filter-row" id="lcTf" style="margin:14px 0 6px"><button class="filter-chip" data-t="4h">4h</button><button class="filter-chip" data-t="8h">8h</button><button class="filter-chip" data-t="12h">12h</button><button class="filter-chip" data-t="1d">1D</button><button class="filter-chip active" data-t="1w">1W</button><button class="filter-chip" data-t="1M">1M</button></div>
+    <div class="filter-row" id="lcRange" style="margin-bottom:6px"><button class="filter-chip" data-r="1">1Y</button><button class="filter-chip" data-r="2">2Y</button><button class="filter-chip" data-r="4">4Y</button><button class="filter-chip" data-r="8">8Y</button><button class="filter-chip active" data-r="0">All</button><button class="filter-chip active" id="lcLog" data-l="1">Log scale</button></div>
+    <p class="calendar-note" id="lcSt" style="margin:0 0 10px">Loading Bitcoin candles…</p>
+    <div class="rr-card" style="padding:8px"><div id="lcWrap" style="position:relative"><canvas id="lcCv" style="width:100%;display:block;touch-action:pan-y"></canvas><div id="lcTip" style="position:absolute;display:none;pointer-events:none;background:rgba(17,17,19,.94);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:12px;line-height:1.45;white-space:nowrap;z-index:2"></div></div></div>
+    <p class="calendar-note" style="margin:6px 0 14px"><span style="color:#e0554d">&#9632;</span> Lunar cycle (red) &nbsp; <span style="color:#3fb47a">&#9632;</span> Solar cycle (green). Lines mark the numbered eclipses. The shaded area on the right is the projected schedule.</p>
+    <div id="lcTable"></div>
+    <p class="calendar-note" style="margin-top:12px">Eclipse dates: NASA Goddard (eclipse.gsfc.nasa.gov). Candles: Binance for 4h, 8h and 12h, Bitstamp for daily and longer. The numbering rule is matched to the bands on the public Luna chart for 2014 to 2026, and the schedule beyond that follows the same rule. A pattern in the past is not a promise about the future. Education only, not financial advice.</p>
+  </div>
+</section>
+
 
 <section id="holdings">
   <div class="wrap">
@@ -4913,6 +4933,146 @@ $('pzTf').addEventListener('click', e => { const b = e.target.closest('.filter-c
 fetch('../rsi_heatmap.json').then(r => r.ok ? r.json() : null).then(d => { if(d && d.coins) $('pzList').innerHTML = d.coins.map(c => `<option value="${esc(c.s)}">`).join('') + '<option value="BIO">'; }).catch(() => {});
 window.addEventListener('hashchange', () => { if(location.hash === '#painzones' && !$('pzBody').innerHTML) run(); });
 if(location.hash === '#painzones') setTimeout(run, 300);
+})();
+</script>
+
+<script>
+(function(){
+const $ = id => document.getElementById(id);
+const LD = '2011-06-15T,2011-12-10T,2012-06-04P,2012-11-28N,2013-04-25P,2013-05-25N,2013-10-18N,2014-04-15T,2014-10-08T,2015-04-04T,2015-09-28T,2016-03-23N,2016-09-16N,2017-02-11N,2017-08-07P,2018-01-31T,2018-07-27T,2019-01-21T,2019-07-16P,2020-01-10N,2020-06-05N,2020-07-05N,2020-11-30N,2021-05-26T,2021-11-19P,2022-05-16T,2022-11-08T,2023-05-05N,2023-10-28P,2024-03-25N,2024-09-18P,2025-03-14T,2025-09-07T,2026-03-03T,2026-08-28P,2027-02-20N,2027-07-18N,2027-08-17N,2028-01-12P,2028-07-06P,2028-12-31T,2029-06-26T,2029-12-20T,2030-06-15P,2030-12-09N,2031-05-07N,2031-06-05N,2031-10-30N,2032-04-25T,2032-10-18T,2033-04-14T,2033-10-08T,2034-04-03N,2034-09-28P,2035-02-22N,2035-08-19P,2036-02-11T,2036-08-07T,2037-01-31T,2037-07-27P,2038-01-21N,2038-06-17N,2038-07-16N,2038-12-11N,2039-06-06P,2039-11-30P,2040-05-26T,2040-11-18T'.split(',');
+const SD = '2011-01-04P,2011-06-01P,2011-07-01P,2011-11-25P,2012-05-20A,2012-11-13T,2013-05-10A,2013-11-03H,2014-04-29A,2014-10-23P,2015-03-20T,2015-09-13P,2016-03-09T,2016-09-01A,2017-02-26A,2017-08-21T,2018-02-15P,2018-07-13P,2018-08-11P,2019-01-06P,2019-07-02T,2019-12-26A,2020-06-21A,2020-12-14T,2021-06-10A,2021-12-04T,2022-04-30P,2022-10-25P,2023-04-20H,2023-10-14A,2024-04-08T,2024-10-02A,2025-03-29P,2025-09-21P,2026-02-17A,2026-08-12T,2027-02-06A,2027-08-02T,2028-01-26A,2028-07-22T,2029-01-14P,2029-06-12P,2029-07-11P,2029-12-05P,2030-06-01A,2030-11-25T,2031-05-21A,2031-11-14H,2032-05-09A,2032-11-03P,2033-03-30T,2033-09-23P,2034-03-20T,2034-09-12A,2035-03-09A,2035-09-02T,2036-02-27P,2036-07-23P,2036-08-21P,2037-01-16P,2037-07-13T,2038-01-05A,2038-07-02A,2038-12-26T,2039-06-21A,2039-12-15T,2040-05-11P,2040-11-04P'.split(',');
+const TN = {T: 'Total', P: 'Partial', N: 'Penumbral', A: 'Annular', H: 'Hybrid'}, DAY = 864e5;
+const PA = a => a.map(s => ({t: Date.parse(s.slice(0, 10) + 'T12:00:00Z'), k: s[10]}));
+// Rule: 4 lunar eclipses (penumbral ones skipped) from a total one; the 4th starts the solar cycle, which runs through the next 3 total / annular / hybrid solar eclipses; the next total lunar eclipse starts a new cycle.
+function cycles(){
+  const L = PA(LD), S = PA(SD), cy = []; let i = L.findIndex(e => e.k === 'T' && e.t >= Date.UTC(2014, 0, 1));
+  while(i >= 0){
+    const lun = [L[i]]; for(let j = i + 1; j < L.length && lun.length < 4; j++) if(L[j].k !== 'N') lun.push(L[j]);
+    const sol = []; if(lun.length === 4) for(const s of S) if(s.t > lun[3].t && s.k !== 'P' && sol.length < 3) sol.push(s);
+    const nx = sol.length === 3 ? L.findIndex(e => e.k === 'T' && e.t > sol[2].t) : -1;
+    cy.push({lun, sol, end: nx >= 0 ? L[nx].t : null}); i = nx;
+  }
+  return cy;
+}
+const CY = cycles().filter(c => c.lun.length === 4 && c.sol.length === 3), FAR = Date.UTC(2041, 0, 1);
+// bands + numbered lines
+const BANDS = [{a: Date.UTC(2012, 0, 1), b: CY[0].lun[0].t, c: 'g'}], EV = [{t: PA(['2013-05-10A'])[0].t, k: 'A', lab: 'Solar 3', c: 'g'}, {t: PA(['2013-11-03H'])[0].t, k: 'H', lab: 'Solar 4', c: 'g'}];
+CY.forEach(c => { BANDS.push({a: c.lun[0].t, b: c.lun[3].t, c: 'r'}); BANDS.push({a: c.lun[3].t, b: c.end || (c.sol.length ? FAR : FAR), c: 'g'});
+  c.lun.forEach((e, n) => EV.push({t: e.t, k: e.k, lab: 'Lunar ' + (n + 1) + (n === 3 ? ' · Solar 1' : ''), c: n === 3 ? 'g' : 'r'}));
+  c.sol.forEach((e, n) => EV.push({t: e.t, k: e.k, lab: 'Solar ' + (n + 2), c: 'g'})); });
+const fd = t => new Date(t).toLocaleDateString('en-AU', {day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC'});
+function phaseNow(now){
+  const c = CY.find(x => x.lun[0].t <= now && now < (x.end || FAR)); if(!c) return null;
+  const lunar = now < c.lun[3].t, list = lunar ? c.lun : [c.lun[3]].concat(c.sol), passed = list.filter(e => e.t <= now).length;
+  const next = list.find(e => e.t > now), nxt = next ? {e: next, n: passed + 1} : (c.end ? {e: {t: c.end, k: 'T'}, n: 0} : null);
+  const a = lunar ? c.lun[0].t : c.lun[3].t, b = lunar ? c.lun[3].t : (c.end || now + 365 * DAY);
+  return {c, lunar, list, passed, nxt, a, b, pct: Math.max(0, Math.min(100, (now - a) / (b - a) * 100))};
+}
+// ---- candles ----
+const cache = {}; let TF = '1w', RG = 0, LOG = true, DATA = null;
+const getJ = async u => { const r = await fetch(u); if(!r.ok) throw new Error('http'); return r.json(); };
+async function binance(iv, pages){
+  let end = Date.now(), out = [];
+  for(let p = 0; p < pages; p++){ const d = await getJ(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${iv}&limit=1000&endTime=${end}`); if(!d.length) break; out = d.map(x => ({t: +x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4]})).concat(out); end = +d[0][0] - 1; if(d.length < 1000) break; }
+  return out;
+}
+async function daily(){
+  if(cache.d) return cache.d;
+  let rows = [];
+  try{ let st = Date.UTC(2013, 0, 1) / 1000; for(let p = 0; p < 8; p++){ const d = await getJ(`https://www.bitstamp.net/api/v2/ohlc/btcusd/?step=86400&limit=1000&start=${st}`); const o = (d.data && d.data.ohlc) || []; if(!o.length) break; rows = rows.concat(o.map(x => ({t: +x.timestamp * 1000, o: +x.open, h: +x.high, l: +x.low, c: +x.close}))); st = +o[o.length - 1].timestamp + 86400; if(st * 1000 > Date.now()) break; } }catch(e){ rows = []; }
+  if(rows.length < 500){ try{ rows = await binance('1d', 4); }catch(e){ rows = []; } }
+  if(rows.length) cache.d = rows; return rows;
+}
+function agg(rows, keyf){ const g = new Map(); rows.forEach(r => { const k = keyf(r.t), b = g.get(k); if(!b) g.set(k, {t: k, o: r.o, h: r.h, l: r.l, c: r.c}); else { b.h = Math.max(b.h, r.h); b.l = Math.min(b.l, r.l); b.c = r.c; } }); return [...g.values()]; }
+const wk = t => (Math.floor((t / DAY + 3) / 7) * 7 - 3) * DAY, mo = t => { const d = new Date(t); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1); };
+async function load(tf){
+  if(cache[tf]) return cache[tf];
+  let rows;
+  if(tf === '4h') rows = await binance('4h', 6); else if(tf === '8h') rows = await binance('8h', 6); else if(tf === '12h') rows = await binance('12h', 7);
+  else { const d = await daily(); rows = tf === '1d' ? d : tf === '1w' ? agg(d, wk) : agg(d, mo); }
+  rows = rows.filter(r => r.c > 0 && r.h >= r.l); if(rows.length) cache[tf] = rows; return rows;
+}
+// ---- chart ----
+const px = v => v >= 1000 ? Math.round(v).toLocaleString('en-AU') : v >= 10 ? v.toFixed(0) : v.toFixed(2);
+let VIEW = null;
+function draw(){
+  const cv = $('lcCv'), rows = DATA; if(!cv || !rows || !rows.length) return;
+  const W = cv.parentNode.clientWidth || 800, narrow = W < 560, H = narrow ? 380 : 480, dpr = window.devicePixelRatio || 1;
+  cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px'; const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const last = rows[rows.length - 1].t, first = RG ? Math.max(rows[0].t, last - RG * 365 * DAY) : rows[0].t, pad = (last - first) * .16, t0 = first, t1 = last + pad;
+  const vis = rows.filter(r => r.t >= first), pl = 6, pr = narrow ? 52 : 62, top = 12, bot = 26, pw = W - pl - pr, ph = H - top - bot;
+  let lo = Math.min(...vis.map(r => r.l)), hi = Math.max(...vis.map(r => r.h)); const f = LOG ? Math.log : (v => v), fi = LOG ? Math.exp : (v => v);
+  let a = f(lo), b = f(hi); const pd = (b - a) * .06; a -= pd; b += pd; lo = fi(a); hi = fi(b);
+  const X = t => pl + (t - t0) / (t1 - t0) * pw, Y = v => top + (1 - (f(v) - a) / (b - a)) * ph;
+  const cs = getComputedStyle(document.documentElement), mute = '#9a978f';
+  g.clearRect(0, 0, W, H); g.font = '11px system-ui,sans-serif';
+  BANDS.forEach(z => { const x0 = Math.max(pl, X(z.a)), x1 = Math.min(pl + pw, X(z.b)); if(x1 <= x0) return; g.fillStyle = z.c === 'r' ? 'rgba(224,85,77,.14)' : 'rgba(63,180,122,.12)'; g.fillRect(x0, top, x1 - x0, ph); });
+  // y grid
+  const ticks = []; if(LOG){ for(let e = -1; e <= 7; e++) [1, 2, 5].forEach(m => { const v = m * Math.pow(10, e); if(v >= lo && v <= hi) ticks.push(v); }); } else { for(let i = 0; i <= 5; i++) ticks.push(lo + (hi - lo) * i / 5); }
+  g.strokeStyle = 'rgba(255,255,255,.07)'; g.fillStyle = mute; g.textAlign = 'left';
+  ticks.forEach(v => { const y = Y(v); g.beginPath(); g.moveTo(pl, y); g.lineTo(pl + pw, y); g.stroke(); g.fillText(px(v), pl + pw + 5, y + 4); });
+  // x labels
+  const yrs = (t1 - t0) / (365 * DAY), stepY = yrs > 9 ? 2 : 1; g.textAlign = 'center';
+  if(yrs > 1.6){ for(let y = new Date(t0).getUTCFullYear() + 1; y <= new Date(t1).getUTCFullYear(); y += stepY){ const x = X(Date.UTC(y, 0, 1)); if(x > pl + 20 && x < pl + pw - 10){ g.strokeStyle = 'rgba(255,255,255,.06)'; g.beginPath(); g.moveTo(x, top); g.lineTo(x, top + ph); g.stroke(); g.fillText(String(y), x, H - 8); } } }
+  else { for(let k = 0; k <= 5; k++){ const t = t0 + (t1 - t0) * k / 5, x = X(t); g.fillText(new Date(t).toLocaleDateString('en-AU', {day: 'numeric', month: 'short', timeZone: 'UTC'}), Math.min(Math.max(x, 30), pl + pw - 30), H - 8); } }
+  // candles
+  const span = rows.length > 1 ? (last - rows[0].t) / (rows.length - 1) : DAY, cw = Math.max(1, X(t0 + span) - X(t0));
+  vis.forEach(r => { const up = r.c >= r.o; g.strokeStyle = g.fillStyle = up ? '#3fb47a' : '#e0554d'; const x = X(r.t) + cw / 2; g.lineWidth = 1; g.beginPath(); g.moveTo(x, Y(r.h)); g.lineTo(x, Y(r.l)); g.stroke(); if(cw > 3){ const yo = Y(r.o), yc = Y(r.c); g.fillRect(x - cw * .35, Math.min(yo, yc), cw * .7, Math.max(1, Math.abs(yo - yc))); } });
+  // eclipse lines
+  EV.forEach(e => { const x = X(e.t); if(x < pl || x > pl + pw) return; g.strokeStyle = e.c === 'r' ? 'rgba(224,85,77,.75)' : 'rgba(63,180,122,.75)'; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(x, top); g.lineTo(x, top + ph); g.stroke(); g.setLineDash([]);
+    g.save(); g.translate(x - 4, top + ph - 6); g.rotate(-Math.PI / 2); g.fillStyle = e.c === 'r' ? '#ff8a82' : '#6fd8a0'; g.textAlign = 'left'; g.font = '600 ' + (narrow ? 10 : 11) + 'px system-ui,sans-serif'; g.fillText(e.lab, 0, 0); g.restore(); });
+  // now line + last price
+  const xn = X(Date.now()); if(xn > pl && xn < pl + pw){ g.strokeStyle = 'rgba(255,255,255,.5)'; g.setLineDash([2, 3]); g.beginPath(); g.moveTo(xn, top); g.lineTo(xn, top + ph); g.stroke(); g.setLineDash([]); g.fillStyle = '#fff'; g.font = '600 11px system-ui,sans-serif'; g.textAlign = 'center'; g.fillText('Now', xn, top + 10); }
+  const lp = rows[rows.length - 1].c, yl = Y(lp); g.fillStyle = '#fff'; g.fillRect(pl + pw, yl - 9, pr, 18); g.fillStyle = '#111'; g.font = '700 11px system-ui,sans-serif'; g.textAlign = 'left'; g.fillText(px(lp), pl + pw + 4, yl + 4);
+  VIEW = {t0, t1, pl, pw, X, rows: vis, W, H};
+}
+function tip(ev){
+  const tp = $('lcTip'); if(!VIEW){ return; } const r0 = $('lcCv').getBoundingClientRect(), cx = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r0.left;
+  const t = VIEW.t0 + (cx - VIEW.pl) / VIEW.pw * (VIEW.t1 - VIEW.t0); if(cx < VIEW.pl || cx > VIEW.pl + VIEW.pw){ tp.style.display = 'none'; return; }
+  let best = null, bd = 1e18; VIEW.rows.forEach(r => { const d = Math.abs(r.t - t); if(d < bd){ bd = d; best = r; } });
+  const z = BANDS.find(z => z.a <= t && t < z.b), ph = phaseNow(t);
+  const lab = ph ? `${ph.lunar ? '<b style="color:#ff8a82">Lunar cycle</b>' : '<b style="color:#6fd8a0">Solar cycle</b>'}${ph.passed ? ' · eclipse ' + ph.passed + ' of 4' : ''}` : (z ? '<b style="color:#6fd8a0">Solar cycle</b>' : '');
+  tp.innerHTML = (best && bd < (VIEW.t1 - VIEW.t0) / 40 ? `${fd(best.t)}<br>O ${px(best.o)} · H ${px(best.h)}<br>L ${px(best.l)} · C ${px(best.c)}<br>` : `${fd(t)}<br>`) + lab; tp.style.display = 'block';
+  const w = tp.offsetWidth; tp.style.left = Math.min(Math.max(cx + 12, 4), VIEW.W - w - 4) + 'px'; tp.style.top = '8px';
+}
+// ---- cards ----
+function cards(){
+  const now = Date.now(), P = phaseNow(now); if(!P){ $('lcNow').innerHTML = ''; return; }
+  const col = P.lunar ? '#ff8a82' : '#6fd8a0', d = P.nxt ? Math.ceil((P.nxt.e.t - now) / DAY) : null, c = P.c;
+  const tile = (l, v, s) => `<div><small>${l}</small><strong>${v}</strong>${s ? `<br><span style="font-size:11px;color:var(--mute)">${s}</span>` : ''}</div>`;
+  const evs = P.list.map((e, n) => `<tr style="${e.t <= now ? 'opacity:.55' : ''}"><td>${P.lunar ? 'Lunar' : (n === 0 ? 'Lunar' : 'Solar')} ${n + 1}${!P.lunar && n === 0 ? ' · Solar 1' : ''}</td><td>${fd(e.t)}</td><td>${TN[e.k]} ${P.lunar || (!P.lunar && n === 0) ? 'lunar' : 'solar'}</td><td>${e.t <= now ? 'Done' : 'In ' + Math.ceil((e.t - now) / DAY) + ' days'}</td></tr>`).join('');
+  const nextC = CY.find(x => x.lun[0].t > now);
+  const nxRows = (c.end ? `<tr><td>Next Lunar cycle starts</td><td>${fd(c.end)}</td><td>Total lunar</td><td>In ${Math.ceil((c.end - now) / DAY)} days</td></tr>` : '');
+  $('lcNow').innerHTML = `<div class="rr-card"><h3 style="margin:0 0 4px;color:${col}">${P.lunar ? 'Lunar cycle (red)' : 'Solar cycle (green)'} · eclipse ${P.passed} of 4</h3>
+    <p style="margin:0 0 10px;font-size:14px">We are in the <b>${P.lunar ? 'Lunar' : 'Solar'} cycle</b> that started on <b>${fd(P.a)}</b>.${P.nxt ? ` The next marker is ${P.nxt.n ? (P.lunar ? 'lunar' : 'solar') + ' eclipse ' + P.nxt.n : 'the next Lunar cycle'} on <b>${fd(P.nxt.e.t)}</b>, in ${d} days.` : ''}</p>
+    <div style="height:8px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden;margin-bottom:6px"><div style="height:100%;width:${P.pct.toFixed(1)}%;background:${P.lunar ? '#e0554d' : '#3fb47a'}"></div></div>
+    <p class="calendar-note" style="margin:0 0 10px">${P.pct.toFixed(0)}% through this phase (${fd(P.a)} to ${fd(P.b)}).</p>
+    <div class="rr-out c5" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">${tile('Phase', P.lunar ? 'Lunar (red)' : 'Solar (green)')}${tile('Eclipse', P.passed + ' of 4')}${tile('Started', fd(P.a))}${tile('Next marker', P.nxt ? fd(P.nxt.e.t) : '—', d != null ? d + ' days' : '')}${tile('Cycle ends', c.end ? fd(c.end) : '—', c.end ? Math.ceil((c.end - now) / DAY) + ' days' : '')}</div>
+    <div style="overflow-x:auto;margin-top:12px"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="text-align:left;color:var(--mute)"><th>Marker</th><th>Date</th><th>Type</th><th>When</th></tr></thead><tbody>${evs}${nxRows}</tbody></table></div></div>`;
+}
+function history(){
+  const d = cache.d; if(!d || !d.length) { $('lcTable').innerHTML = ''; return; }
+  const near = t => { let b = null; for(const r of d){ if(r.t >= t){ b = r; break; } } return b ? b.c : d[d.length - 1].c; }, now = Date.now(), pc = (a, b) => { const v = (b / a - 1) * 100; return `<span style="color:${v >= 0 ? '#3fb47a' : '#e0554d'}">${v >= 0 ? '+' : ''}${v.toFixed(0)}%</span>`; };
+  const rows = CY.filter(c => c.lun[0].t < now).map((c, i) => { const e = c.end && c.end < now ? c.end : now, m = c.lun[3].t < now ? c.lun[3].t : now;
+    return `<tr><td>${fd(c.lun[0].t)}</td><td>${pc(near(c.lun[0].t), near(m))}</td><td>${fd(Math.min(c.lun[3].t, now))}</td><td>${c.lun[3].t < now ? pc(near(c.lun[3].t), near(e)) : '—'}</td><td>${c.end && c.end < now ? fd(c.end) : 'Now'}</td></tr>`; }).join('');
+  $('lcTable').innerHTML = `<div class="rr-card"><h3 style="margin:0 0 6px">Bitcoin through each phase</h3><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="text-align:left;color:var(--mute)"><th>Lunar cycle starts</th><th>Bitcoin in red</th><th>Solar cycle starts</th><th>Bitcoin in green</th><th>Ends</th></tr></thead><tbody>${rows}</tbody></table></div><p class="calendar-note" style="margin:6px 0 0">Daily closing price change from the start of each phase to its end.</p></div>`;
+}
+async function run(){
+  $('lcSt').textContent = 'Loading Bitcoin ' + TF.toUpperCase() + ' candles…';
+  let rows = []; try{ rows = await load(TF); }catch(e){ rows = []; }
+  if(!rows.length){ $('lcSt').textContent = 'Could not load Bitcoin candles for this time frame. Try another, or refresh in a moment.'; DATA = null; cards(); return; }
+  DATA = rows; const l = rows[rows.length - 1];
+  $('lcSt').textContent = `BTC/USD · ${TF.toUpperCase()} · ${rows.length} candles from ${fd(rows[0].t)} · last ${px(l.c)}${['4h', '8h', '12h'].includes(TF) ? ' · intraday history is shorter than daily' : ''}`;
+  cards(); draw(); daily().then(history).catch(() => {});
+}
+const chips = (id, fn) => $(id).addEventListener('click', e => { const b = e.target.closest('.filter-chip'); if(b) fn(b); });
+chips('lcTf', b => { document.querySelectorAll('#lcTf .filter-chip').forEach(x => x.classList.remove('active')); b.classList.add('active'); TF = b.dataset.t; const d = {'4h': 1, '8h': 2, '12h': 4, '1d': 4, '1w': 0, '1M': 0}[TF]; RG = d; document.querySelectorAll('#lcRange [data-r]').forEach(x => x.classList.toggle('active', +x.dataset.r === RG)); run(); });
+chips('lcRange', b => { if(b.dataset.l){ LOG = !LOG; b.classList.toggle('active', LOG); } else { document.querySelectorAll('#lcRange [data-r]').forEach(x => x.classList.remove('active')); b.classList.add('active'); RG = +b.dataset.r; } draw(); });
+const cv = $('lcCv'); ['mousemove', 'touchmove', 'touchstart'].forEach(n => cv.addEventListener(n, tip, {passive: true})); ['mouseleave', 'touchend'].forEach(n => cv.addEventListener(n, () => { $('lcTip').style.display = 'none'; }));
+let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(draw, 150); });
+let started = false; const go = () => { if(location.hash === '#lunacycles'){ if(!started){ started = true; run(); } else setTimeout(draw, 50); } };
+window.addEventListener('hashchange', go); setTimeout(go, 300); cards();
+window.ttmLuna = {cycles: CY, phaseNow};
 })();
 </script>
 
