@@ -3899,7 +3899,7 @@ function wireJournal(){
     else if(a === 'open'){ const save = S; S = Object.assign({}, DEF, x.s); const c = calc(); S = save; startTrade(c, x.s, x.name, i); }
     else if(a === 'close'){ openClose(i); }
     else if(a === 'edit'){ openEdit(i); }
-    else if(a === 'filled'){ if(x.orders){ x.orders.forEach(o => { if(!o.filled){ o.filled = true; o.ft = Date.now(); } }); syncOrders(x); } else x.fill = 'filled'; saveAll(list); renderSaved(); render(); }
+    else if(a === 'filled'){ if(x.orders){ x.orders.forEach(o => { if(!o.filled){ o.filled = true; o.ft = Date.now(); if(x.snap.mkt === 'spot') feedEv('fill:' + o.id, 'fill', x.snap.asset, 'Limit buy filled: ' + x.snap.asset, `Order ${pr(o.p)} filled`, null); } }); syncOrders(x); } else { x.fill = 'filled'; if(x.snap.mkt === 'spot') feedEv('fill:' + x.id, 'fill', x.snap.asset, 'Limit buy filled: ' + x.snap.asset, `Entry ${pr(x.snap.E)} filled`, null); } saveAll(list); renderSaved(); render(); }
     else if(a === 'chart'){ openTC(i); }
     else if(a === 'mpx'){ const v = num(prompt('Current price of ' + x.snap.asset + ' (for assets without a live feed):', x.snap.manualPx || x.snap.E)); if(v > 0){ x.snap.manualPx = v; saveAll(list); renderSaved(); render(); renderJournal(); window.setTimeout(() => { HDT = 0; publishHoldings(); }, 500); } }
     else if(a === 'pend'){ if(x.orders){ x.orders.forEach(o => { o.filled = false; o.ft = null; }); syncOrders(x); } x.fill = 'pending'; { const pq = priceOf(x.snap.asset); if(pq) x.side = pq.p > x.snap.E ? 1 : -1; } x.hit = (x.snap.tps || []).map(() => false); saveAll(list); renderSaved(); render(); }
@@ -3926,8 +3926,8 @@ function startTrade(c, setup, name, replaceIdx){
   if(replaceIdx != null && list[replaceIdx]) list[replaceIdx] = Object.assign(list[replaceIdx], item, {id: list[replaceIdx].id || item.id}); else list.unshift(item);
   saveAll(list); window.ttmTrack && ttmTrack('feat', 'open_trade', {asset: String(item.snap.asset).slice(0, 12), acc: setup.acc, mkt: item.snap.mkt, dir: item.snap.long ? 'long' : 'short', lev: item.snap.mkt === 'spot' ? 0 : item.snap.lev, tf: setup.tf, waiting: item.fill === 'pending'}); note.style.color = ''; note.innerHTML = `Opened “${esc(item.name)}”: ${usd(c.margin)} margin locked, ${usd(c.avail - c.margin)} left to trade with. ${item.fill === 'pending' ? ` Entry ${pr(E0)} is not at the market yet (live ${pr(pp0.p)}), so it shows as waiting for entry and its P&amp;L starts when price reaches it.` : ''} When it plays out, close it in the <a href="#tradejournal" style="color:var(--gold2)">trade tracker</a> to update your balance.`;
   if(item.snap.mkt === 'spot' && replaceIdx == null){ const tp = item.snap.tps.map((t, i) => 'TP' + (i + 1) + ' ' + pr(t.P) + ' (sell ' + Math.round(t.share) + '%)').join(', '), A = item.snap.asset;
-    if(item.orders) item.orders.forEach((o, k) => { const pc = acct(accOf(item)).equity > 0 ? Math.round(o.m / acct(accOf(item)).equity * 1000) / 10 : null; feedEv('lo:' + o.id, o.filled ? 'buy' : 'lo', A, (o.filled ? 'Bought ' : 'Limit buy placed: ') + A, `${o.filled ? 'Entry' : 'Order'} ${pr(o.p)}${pc != null ? ' · ' + pc + '% of the portfolio' : ''}${item.orders.length > 1 ? ` · order ${k + 1} of ${item.orders.length}` : ''}${tp ? ' · ' + tp : ''} · stop ${pr(item.snap.SL)}`, pc); });
-    else feedEv('open:' + item.id, item.fill === 'pending' ? 'lo' : 'buy', A, (item.fill === 'pending' ? 'Limit buy placed: ' : 'Bought ') + A, `${item.fill === 'pending' ? 'Order' : 'Entry'} ${pr(item.snap.E)}${feedPct(item) != null ? ' · ' + feedPct(item) + '% of the portfolio' : ''}${tp ? ' · ' + tp : ''} · stop ${pr(item.snap.SL)}`, feedPct(item)); }
+    if(item.orders) item.orders.filter(o => o.filled).forEach((o, k) => { const pc = acct(accOf(item)).equity > 0 ? Math.round(o.m / acct(accOf(item)).equity * 1000) / 10 : null; feedEv('fill:' + o.id, 'buy', A, 'Bought ' + A, `Entry ${pr(o.p)}${pc != null ? ' · ' + pc + '% of the portfolio' : ''}${item.orders.length > 1 ? ` · order ${k + 1} of ${item.orders.length}` : ''}${tp ? ' · ' + tp : ''} · stop ${pr(item.snap.SL)}`, pc); });
+    else if(item.fill !== 'pending') feedEv('open:' + item.id, 'buy', A, 'Bought ' + A, `Entry ${pr(item.snap.E)}${feedPct(item) != null ? ' · ' + feedPct(item) + '% of the portfolio' : ''}${tp ? ' · ' + tp : ''} · stop ${pr(item.snap.SL)}`, feedPct(item)); }
   $('rrName').value = ''; render(); renderSaved(); return true;
 }
 // ---- price source (exchange) + live candles
@@ -4167,7 +4167,7 @@ function tcAddOrder(){
   const list = loadSaved(), x = list[tc.i], lv0 = priceOf(sn.asset), lv = lv0 && lv0.live ? lv0 : null, near = lv && Math.abs(lv.p / p - 1) <= 0.001, A = acct(accOf(x));
   if(near && m > A.avail + 0.005) return note(`That is more than the ${usd(A.avail)} available in this account.`);
   ensureOrders(x); x.orders.push({id: uid() + 'l', p, m, side: lv ? (lv.p > p ? 1 : -1) : null, filled: !!near, ft: near ? Date.now() : null}); syncOrders(x);
-  if(sn.mkt === 'spot'){ const no = x.orders[x.orders.length - 1], pc = A.equity > 0 ? Math.round(m / A.equity * 1000) / 10 : null; feedEv('lo:' + no.id, near ? 'buy' : 'lo', sn.asset, (near ? 'Added to ' : 'Extra limit buy: ') + sn.asset, `Order ${pr(p)}${pc != null ? ' · ' + pc + '% of the portfolio' : ''} · now ${x.orders.length} orders`, pc); }
+  if(sn.mkt === 'spot' && near){ const no = x.orders[x.orders.length - 1], pc = A.equity > 0 ? Math.round(m / A.equity * 1000) / 10 : null; feedEv('fill:' + no.id, 'buy', sn.asset, 'Added to ' + sn.asset, `Order ${pr(p)}${pc != null ? ' · ' + pc + '% of the portfolio' : ''} · now ${x.orders.length} orders`, pc); }
   window.ttmTrack && ttmTrack('feat', 'add_limit_order', {n: x.orders.length, filled: !!near}); saveAll(list); $('tcAddP').value = ''; $('tcAddM').value = ''; $('tcAddNote').style.color = ''; render(); renderSaved(); paintTC();
 }
 $('rrModalBody').addEventListener('click', e => {
@@ -4177,7 +4177,7 @@ $('rrModalBody').addEventListener('click', e => {
   else if(t.id === 'tcLive'){ const pp = priceOf(loadSaved()[tc.i].snap.asset); if(pp) $('tcAddP').value = String(pp.p); }
   else if(t.id === 'tcAdd') tcAddOrder();
   else if(t.dataset && t.dataset.tc){ const list = loadSaved(), x = list[tc.i], k = +t.dataset.o; if(!x.orders || !x.orders[k]) return;
-    if(t.dataset.tc === 'fill'){ x.orders[k].filled = true; x.orders[k].ft = Date.now(); } else if(t.dataset.tc === 'rm' && x.orders.length > 1){ x.orders.splice(k, 1); }
+    if(t.dataset.tc === 'fill'){ x.orders[k].filled = true; x.orders[k].ft = Date.now(); if(x.snap.mkt === 'spot') feedEv('fill:' + x.orders[k].id, 'fill', x.snap.asset, 'Limit buy filled: ' + x.snap.asset, `Order ${pr(x.orders[k].p)} filled`, null); } else if(t.dataset.tc === 'rm' && x.orders.length > 1){ x.orders.splice(k, 1); }
     syncOrders(x); saveAll(list); render(); renderSaved(); paintTC(); }
 });
 // ---- TTM holdings: share the portfolio as percentages only (no dollar values, no units) with Pro members. Published while you (admin) have the terminal open.
