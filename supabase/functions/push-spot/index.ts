@@ -80,5 +80,12 @@ Deno.serve(async (req) => {
     await telegram(`LIVE SESSION\n\n${s.title}\n${when(s.starts_at)}\n${s.note ? "\n" + s.note + "\n" : ""}\n${s.zoom_url}`, s.zoom_url);
     await send(await subsFor(null), {title: "New live session", body: s.title + " · " + when(s.starts_at), tag: "live-new-" + s.id, url: "./crypto/index.html"});
   }
+  const luna = await get(`ttm_luna_alerts?select=*&notified=eq.false&starts_at=gt.${new Date(now).toISOString()}&starts_at=lte.${new Date(now + 7 * 864e5).toISOString()}`);
+  for (const s of luna) {
+    const c = await claim("ttm_luna_alerts", s.id, "notified"); if (!c) continue;
+    const people = await get("ttm_profiles?select=id&or=(is_admin.eq.true,beta.eq.true)");
+    const day = new Intl.DateTimeFormat("en-AU", {timeZone: "Australia/Melbourne", weekday: "short", day: "numeric", month: "short", year: "numeric"}).format(new Date(s.starts_at));
+    await send(await subsFor(idsOf(people)), {title: (s.color === "green" ? "🟢 " : "🔴 ") + s.name, body: "Starts in 7 days · " + day, tag: "luna-" + s.id, url: "./crypto/index.html#lunacycles"});
+  }
   return new Response("tick");
 });
