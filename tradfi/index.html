@@ -25,6 +25,8 @@
 html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",Helvetica,Arial,sans-serif;line-height:1.6}
 .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+@media (min-width:1300px){.wrap{max-width:1480px}}
+.rr-wrap>.rr-tbl td:first-child,.rr-wrap>.rr-tbl th:first-child{position:sticky;left:0;z-index:2;background:var(--card,#16161a);box-shadow:2px 0 0 var(--line,#2b2b30)}
 a{color:var(--gold2)}
 
 /* ---------- Header ---------- */
@@ -797,8 +799,77 @@ select,select option{color-scheme:dark}select option{background:#16161a;color:#e
       <p id="hdUpdated" class="calendar-note" style="margin-top:8px">Loading…</p>
     </div>
     <div id="hdBody"></div>
+    <div id="hdAdmin" style="display:none"></div>
   </div>
 </section>
+
+<script>
+// ---- TradFi investments: lodge what TTM buys and sells (admin only). Percentages are published for everyone; amounts stay private.
+(function(){
+const $ = id => document.getElementById(id); if(!$('hdAdmin')) return;
+const SK = 'ttm_rr_saved_v1', BK = 'ttm_rr_bals_v1', ACC = 'tradfi';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const num = v => { const n = parseFloat(String(v).replace(/,/g, '')); return isFinite(n) ? n : null; };
+const usd = v => (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const px = v => v >= 1000 ? Math.round(v).toLocaleString() : v >= 1 ? v.toFixed(2) : v.toPrecision(3);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const rd = (k, d) => { try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } };
+const wr = (k, v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} if(window.ttmSync) ttmSync.dirty(); };
+const acc = x => (x.snap && x.snap.acc) || (x.s && x.s.acc) || 'lev';
+const mine = () => rd(SK, []).filter(x => x.snap && acc(x) === ACC);
+const start = () => { const b = rd(BK, {}); return num(b[ACC]) != null ? num(b[ACC]) : 5000; };
+const curPx = x => x.snap.manualPx > 0 ? x.snap.manualPx : x.snap.E;
+const r1 = v => Math.round(v * 10) / 10;
+function snapshot(){
+  const L = mine(), open = L.filter(x => x.status === 'open'), closed = L.filter(x => x.status === 'closed' && x.res);
+  const real = closed.reduce((t, x) => t + x.res.pnl, 0), equity = start() + real, locked = open.reduce((t, x) => t + x.snap.margin, 0), cash = Math.max(0, equity - locked);
+  const pos = {}, pend = {}; let unreal = 0, pt = 0;
+  open.forEach(x => { const sn = x.snap;
+    if(x.fill === 'pending'){ const o = pend[sn.asset] || (pend[sn.asset] = {a: sn.asset, m: 0, p: []}); o.m += sn.margin; o.p.push(sn.E); pt += sn.margin; return; }
+    const dir0 = sn.long === false ? -1 : 1, val = sn.mkt === 'spot' ? sn.units * curPx(x) : sn.margin + sn.units * (curPx(x) - sn.E) * dir0, cost = sn.mkt === 'spot' ? sn.units * sn.E : sn.margin, parts = closed.filter(y => y.name.indexOf(x.name + ' (') === 0 && /% closed\)$/.test(y.name)), pc = parts.reduce((t, y) => t + y.snap.margin, 0), bk = parts.reduce((t, y) => t + y.res.pnl, 0);
+    const o = pos[sn.asset] || (pos[sn.asset] = {a: sn.asset, val: 0, cost: 0, all: 0, bk: 0, since: x.opened || x.t}); o.val += val; o.cost += cost; o.all += cost + pc; o.bk += bk; o.since = Math.min(o.since, x.opened || x.t); unreal += val - cost; });
+  const list = Object.keys(pos).map(k => pos[k]), pl = Object.keys(pend).map(k => pend[k]), tot = list.reduce((t, o) => t + o.val, 0) + cash + pt;
+  if(!(tot > 0)) return {items: [], pending: [], sold: [], cash: 100, result: 0};
+  return {cash: r1(cash / tot * 100), result: start() > 0 ? r1((real + unreal) / start() * 100) : 0,
+    items: list.sort((a, b) => b.val - a.val).map(o => ({a: o.a, lev: 0, pct: r1(o.val / tot * 100), chg: o.cost ? r1((o.val / o.cost - 1) * 100) : 0, tot: o.all ? r1((o.val - o.cost + o.bk) / o.all * 100) : 0, since: o.since})),
+    pending: pl.sort((a, b) => b.m - a.m).map(o => ({a: o.a, pct: r1(o.m / tot * 100), p: o.p.slice(0, 5)})),
+    sold: closed.map(x => ({a: x.snap.asset, bought: x.opened || x.t, sold: x.res.closed || x.t, pct: x.snap.margin ? r1(x.res.pnl / x.snap.margin * 100) : 0, part: /% closed\)$/.test(x.name)})).sort((a, b) => b.sold - a.sold).slice(0, 15)};
+}
+let T = 0;
+async function publish(){ if(!(window.ttmPublishHoldings)) return; await ttmPublishHoldings({tradfi: snapshot()}); }
+function draw(){
+  const L = mine().filter(x => x.status === 'open'), s0 = start();
+  const rows = L.map((x, i) => { const sn = x.snap, pend = x.fill === 'pending', pnl = pend ? null : (curPx(x) / sn.E - 1) * 100 * (sn.long === false ? -1 : 1) * (sn.mkt === 'spot' ? 1 : sn.lev || 1);
+    return `<tr><td><b>${esc(sn.asset)}</b>${sn.mkt === 'spot' ? '' : ` <small style="color:var(--mute)">${sn.lev}× ${sn.long === false ? 'short' : 'long'}</small>`}</td><td>${pend ? '<span style="color:var(--gold2)">Limit order</span>' : 'Held'}</td><td>${usd(sn.margin)}</td><td>${px(sn.E)}</td><td>${pend ? '—' : px(curPx(x)) + (sn.manualPx > 0 ? '' : ' <small style="color:var(--mute)">(buy price)</small>')}</td><td style="color:${pnl == null ? 'var(--mute)' : pnl >= 0 ? '#3fb47a' : '#e0554d'}">${pnl == null ? '—' : (pnl >= 0 ? '+' : '') + pnl.toFixed(1) + '%'}</td><td><div class="rr-acts" style="margin:0">${pend ? `<button class="rr-btn sm" data-h="fill" data-id="${x.id}">Mark bought</button>` : `<button class="rr-btn ghost sm" data-h="px" data-id="${x.id}">Update price</button><button class="rr-btn sm" data-h="sell" data-id="${x.id}">Sell</button>`}<button class="rr-btn ghost sm" data-h="del" data-id="${x.id}">Cancel</button></div></td></tr>`; }).join('');
+  $('hdAdmin').innerHTML = `<div class="rr-card" style="margin-top:18px"><h3>Lodge a TradFi investment <span style="float:right;color:var(--gold2);font-size:11px">admin only</span></h3><p class="calendar-note" style="margin:0 0 10px">Amounts stay private. Members only ever see percentages. Prices are typed by you (use Update price as they move).</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end"><label><small>Ticker</small><br><input id="hdA" placeholder="VAS" style="width:90px" autocomplete="off"></label><label><small>Type</small><br><select id="hdT"><option value="buy">Bought</option><option value="lo">Limit order (waiting)</option></select></label><label><small>Amount ($)</small><br><input id="hdAmt" inputmode="decimal" placeholder="5000" style="width:100px"></label><label><small>Buy / order price</small><br><input id="hdP" inputmode="decimal" placeholder="95.20" style="width:110px"></label><label><small>Current price (optional)</small><br><input id="hdN" inputmode="decimal" style="width:110px"></label><label><small>Date (optional)</small><br><input id="hdD" type="date"></label><button class="rr-btn sm" id="hdAdd">Lodge</button></div>
+    <p class="calendar-note" id="hdNote" style="margin:8px 0 0"></p>
+    <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><small style="color:var(--mute)">Starting balance for this account ($)</small><input id="hdS" value="${s0}" inputmode="decimal" style="width:110px"><button class="rr-btn ghost sm" id="hdSS">Save</button></div></div>
+    <div class="rr-card"><h3>Your open TradFi investments</h3><div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Ticker</th><th>Status</th><th>Amount</th><th>Price</th><th>Now</th><th>Gain / loss</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="7" style="color:var(--mute)">Nothing lodged yet.</td></tr>'}</tbody></table></div></div>`;
+}
+document.addEventListener('click', async e => { const t = e.target.closest('button'); if(!t || !$('hdAdmin').contains(t)) return;
+  const all = rd(SK, []), n = $('hdNote');
+  if(t.id === 'hdAdd'){ const a = ($('hdA').value || '').toUpperCase().replace(/[^A-Z0-9.]/g, ''), amt = num($('hdAmt').value), p = num($('hdP').value), now = num($('hdN').value);
+    if(!a || !(amt > 0) || !(p > 0)){ n.style.color = '#e0554d'; n.textContent = 'Enter the ticker, the amount and the price.'; return; }
+    const dt = $('hdD').value ? new Date($('hdD').value + 'T12:00:00').getTime() : Date.now(), lo = $('hdT').value === 'lo';
+    all.unshift({id: uid(), name: a + ' investment', t: dt, opened: dt, s: {asset: a, acc: ACC, mkt: 'spot', dir: 'long'}, status: 'open', fill: lo ? 'pending' : 'filled', side: lo ? 1 : undefined, snap: {asset: a, acc: ACC, tf: 'd1', long: true, mkt: 'spot', lev: 1, E: p, SL: 0, noSL: true, units: amt / p, notional: amt, margin: amt, riskUsd: amt, fee: 0, tps: [], manualPx: now > 0 ? now : null}});
+    wr(SK, all); n.style.color = ''; n.textContent = a + (lo ? ' limit order lodged.' : ' lodged.'); }
+  else if(t.id === 'hdSS'){ const b = rd(BK, {}); b[ACC] = num($('hdS').value) || 0; wr(BK, b); }
+  else if(t.dataset.h){ const i = all.findIndex(x => x.id === t.dataset.id), x = all[i]; if(!x) return;
+    if(t.dataset.h === 'px'){ const v = num(prompt('Current price of ' + x.snap.asset + ':', curPx(x))); if(!(v > 0)) return; x.snap.manualPx = v; }
+    else if(t.dataset.h === 'fill'){ x.fill = 'filled'; x.opened = Date.now(); }
+    else if(t.dataset.h === 'del'){ if(!confirm('Remove this entry? Your balance changes back.')) return; all.splice(i, 1); }
+    else if(t.dataset.h === 'sell'){ const v = num(prompt('Sell price for ' + x.snap.asset + ':', curPx(x))); if(!(v > 0)) return; const pct = num(prompt('How much of the position is sold, in %?', '100')); if(!(pct > 0) || pct > 100) return; const f = pct / 100, sn = x.snap, pnl = sn.units * f * (v - sn.E) * (sn.long === false ? -1 : 1);
+      if(f >= 1){ x.status = 'closed'; x.res = {pnl: Math.round(pnl * 100) / 100, r: pnl / sn.margin, how: 'Sold at ' + px(v), closed: Date.now()}; }
+      else { const part = JSON.parse(JSON.stringify(x)); part.id = uid(); part.name = x.name + ' (' + Math.round(f * 1000) / 10 + '% closed)'; part.status = 'closed'; ['units', 'notional', 'margin', 'riskUsd'].forEach(k => { part.snap[k] = sn[k] * f; sn[k] = sn[k] * (1 - f); }); part.res = {pnl: Math.round(pnl * 100) / 100, r: pnl / part.snap.margin, how: 'Part sold at ' + px(v), closed: Date.now()}; all.splice(i + 1, 0, part); x.booked = Math.round(((x.booked || 0) + pnl) * 100) / 100; } }
+    wr(SK, all); }
+  else return;
+  draw(); T = 0; await publish(); const hb = $('hdBody'); if(window.dispatchEvent) window.dispatchEvent(new HashChangeEvent('hashchange')); });
+window.tfPanelRefresh = async () => { draw(); T = 0; await publish(); };
+function init(){ if(window.ttmIsAdmin && ttmIsAdmin()){ $('hdAdmin').style.display = ''; draw(); setTimeout(publish, 3000); } else if(!init.n || init.n < 12){ init.n = (init.n || 0) + 1; setTimeout(init, 1000); } }
+setTimeout(init, 800);
+})();
+</script>
 
 <script>
 (function(){
@@ -1030,6 +1101,9 @@ window.addEventListener('hashchange', () => { if(location.hash === '#holdings') 
         <div class="rr-tp"><div class="rr-f"><label for="txT3">TP3 price</label><input id="txT3" type="number" inputmode="decimal" step="any"></div><div class="rr-f"><label for="txS3">Close at TP3 (%)</label><input id="txS3" type="number" inputmode="decimal" value="20"></div></div>
       </div>
       <div>
+        <div class="rr-card"><h3>Save and open</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="txPName" placeholder="Plan name, e.g. CRCL swing" style="flex:1;min-width:160px"><button class="rr-btn sm" id="txPSave" type="button">Save plan</button></div>
+          <div id="txOpenBox" style="display:none;margin-top:10px"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="txOpenType"><option value="buy">Bought now</option><option value="lo">Limit order (waiting)</option></select><button class="rr-btn" id="txOpen" type="button">Open trade</button></div><p class="calendar-note" style="margin:6px 0 0">Lodges it in your TradFi investments (TTM Holdings page). Admin only.</p></div>
+          <p class="calendar-note" id="txPNote" style="margin:8px 0 0"></p><div id="txPlans" style="margin-top:8px"></div></div>
         <div class="rr-card"><h3>Position</h3><div id="txWarn"></div><div class="rr-out" id="txOut"></div></div>
         <div class="rr-card"><h3>Take-profit breakdown</h3><div class="rr-wrap"><table class="rr-tbl" id="txTbl"></table></div><p class="calendar-note" id="txSum" style="margin:10px 0 0"></p></div>
       </div>
@@ -2091,7 +2165,14 @@ setInterval(() => {
   const n = id => { const v = parseFloat($(id).value); return isFinite(v) ? v : NaN; };
   const f = (v, d) => isFinite(v) ? v.toLocaleString('en-US', {maximumFractionDigits: d == null ? 2 : d}) : '—';
   const usd = v => isFinite(v) ? (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('en-US', {maximumFractionDigits: 2, minimumFractionDigits: 2}) : '—';
-  const CS = {fx: 100000, idx: 1, com: 1, stk: 1};
+  const CS = {fx: 100000, idx: 1, com: 1, stk: 1}; let LAST = null;
+  const PK = 'ttm_tf_plans_v1', rdP = () => { try{ return JSON.parse(localStorage.getItem(PK) || '[]'); }catch(e){ return []; } }, wrP = l => { try{ localStorage.setItem(PK, JSON.stringify(l.slice(0, 60))); }catch(e){} };
+  const IDS = ['txType', 'txSym', 'txBal', 'txLev', 'txRiskMode', 'txRisk', 'txE', 'txSL', 'txCS', 'txFee', 'txT1', 'txS1', 'txT2', 'txS2', 'txT3', 'txS3'];
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+  function plans(){ const b = $('txPlans'), l = rdP(), adm = window.ttmIsAdmin && ttmIsAdmin(); b.innerHTML = l.length ? l.map((p, i) => '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--line)"><b style="flex:1;min-width:120px">' + esc(p.name) + '</b><button class="rr-btn ghost sm" data-pl="load" data-i="' + i + '">Load</button>' + (adm ? '<button class="rr-btn sm" data-pl="open" data-i="' + i + '">Open trade</button>' : '') + '<button class="rr-btn ghost sm" data-pl="del" data-i="' + i + '">Delete</button></div>').join('') : '<p class="calendar-note" style="margin:0">No saved plans yet. Fill in the calculator, name it and press Save plan.</p>'; $('txOpenBox').style.display = adm ? '' : 'none'; }
+  function openTrade(P, lo){ const T = window.tfPanelRefresh; if(!P || !P.sym){ return 'Add a symbol first (the box next to Market).'; } const lev = P.lev > 1 ? P.lev : 1, all = (() => { try{ return JSON.parse(localStorage.getItem('ttm_rr_saved_v1') || '[]'); }catch(e){ return []; } })(), id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    all.unshift({id, name: P.sym + ' ' + (P.long ? 'long' : 'short'), t: Date.now(), opened: Date.now(), s: {asset: P.sym, acc: 'tradfi', mkt: lev > 1 ? 'fut' : 'spot', dir: P.long ? 'long' : 'short'}, status: 'open', fill: lo ? 'pending' : 'filled', side: lo ? 1 : undefined, snap: {asset: P.sym, acc: 'tradfi', tf: 'd1', long: P.long, mkt: lev > 1 ? 'fut' : 'spot', lev, E: P.E, SL: P.SL, units: P.units, notional: P.notional, margin: P.margin, riskUsd: P.risk, fee: 0, tps: P.tps}});
+    try{ localStorage.setItem('ttm_rr_saved_v1', JSON.stringify(all)); }catch(e){} if(window.ttmSync) ttmSync.dirty(); if(T) T(); return ''; }
   function calc(){
     const bal = n('txBal'), lev = Math.max(1, n('txLev') || 1), E = n('txE'), SL = n('txSL'), fee = n('txFee') || 0, cs = n('txCS') || 1;
     const rk = n('txRisk'), risk = $('txRiskMode').value === 'pct' ? bal * rk / 100 : rk;
@@ -2105,6 +2186,7 @@ setInterval(() => {
     const tot = tps.reduce((a, x) => a + x.s, 0); if(tps.length && Math.abs(tot - 100) > 0.01) W.push('Your take-profit shares add up to ' + f(tot, 1) + '%, not 100%.');
     tps.forEach(x => { if(long ? x.P <= E : x.P >= E) W.push('A target at ' + f(x.P, 5) + ' is on the wrong side of your entry.'); });
     $('txWarn').innerHTML = W.map(w => '<div class="rr-warn y">' + w + '</div>').join('');
+    LAST = (isFinite(units) && !(long ? SL >= E : SL <= E)) ? {sym: ($('txSym').value || '').trim().toUpperCase().replace(/[^A-Z0-9.]/g, ''), long, lev, E, SL, units, notional, margin, risk, fee, tps: tps.map(x => ({P: x.P, share: x.s}))} : null;
     out.innerHTML = [['Risk if stopped', usd(risk), 'r'], ['Position (units)', f(units, 2), ''], ['Lots (' + f(cs, 0) + ' / lot)', f(lots, 3), 'y'], ['Notional value', usd(notional), ''], ['Margin at ' + f(lev, 0) + 'x', usd(margin), ''], ['Stop distance', f(dist, 5), '']].map(a => '<div><small>' + a[0] + '</small><strong class="' + a[2] + '">' + a[1] + '</strong></div>').join('');
     let exp = 0, rows = '';
     tps.forEach((x, i) => { const u = units * x.s / 100, mv = long ? x.P - E : E - x.P, gain = (mv - fee) * u, R = mv / dist; exp += gain; rows += '<tr><td>TP' + (i + 1) + '</td><td>' + f(x.P, 5) + '</td><td>' + f(x.s, 1) + '%</td><td>' + f(u, 2) + '</td><td>' + f(R, 2) + 'R</td><td style="color:' + (gain >= 0 ? '#3fb47a' : '#e0554d') + '">' + usd(gain) + '</td></tr>'; });
@@ -2115,7 +2197,15 @@ setInterval(() => {
   $('txShort').addEventListener('click', () => { long = false; $('txShort').className = 'on short'; $('txLong').className = ''; calc(); });
   $('txType').addEventListener('change', () => { $('txCS').value = CS[$('txType').value]; calc(); });
   $('txRiskMode').addEventListener('change', () => { const p = $('txRiskMode').value === 'pct'; $('txRiskL').textContent = p ? 'Risk per trade (%)' : 'Risk per trade ($)'; $('txRisk').value = p ? 1 : 100; calc(); });
-  document.querySelectorAll('#tfcalc input').forEach(i => i.addEventListener('input', calc)); calc();
+  document.querySelectorAll('#tfcalc input').forEach(i => i.addEventListener('input', calc));
+  document.addEventListener('click', e => { const t = e.target.closest('button'); if(!t || !$('tfcalc').contains(t)) return; const note = $('txPNote');
+    if(t.id === 'txPSave'){ const name = ($('txPName').value || '').trim() || (($('txSym').value || 'Plan') + ' ' + new Date().toLocaleDateString()); const v = {}; IDS.forEach(k => { v[k] = $(k).value; }); v.long = long; const l = rdP(); l.unshift({name, v, t: Date.now()}); wrP(l); $('txPName').value = ''; note.textContent = 'Saved. Load it below any time.'; plans(); }
+    else if(t.dataset.pl){ const l = rdP(), p = l[+t.dataset.i]; if(!p) return;
+      if(t.dataset.pl === 'del'){ l.splice(+t.dataset.i, 1); wrP(l); plans(); }
+      else if(t.dataset.pl === 'load'){ IDS.forEach(k => { if(p.v[k] != null) $(k).value = p.v[k]; }); long = p.v.long !== false; $('txLong').className = long ? 'on' : ''; $('txShort').className = long ? '' : 'on short'; $('txRiskL').textContent = $('txRiskMode').value === 'pct' ? 'Risk per trade (%)' : 'Risk per trade ($)'; calc(); note.textContent = 'Loaded "' + p.name + '". Check the entry, then press Open trade.'; window.scrollTo({top: $('tfcalc').offsetTop, behavior: 'smooth'}); }
+      else if(t.dataset.pl === 'open'){ if(!confirm('Load "' + p.name + '" and open it?')) return; IDS.forEach(k => { if(p.v[k] != null) $(k).value = p.v[k]; }); long = p.v.long !== false; $('txLong').className = long ? 'on' : ''; $('txShort').className = long ? '' : 'on short'; calc(); const m = openTrade(LAST, p.v.txOpenType === 'lo'); note.textContent = m || 'Opened ' + p.name + ' in TradFi investments.'; } }
+    else if(t.id === 'txOpen'){ const m = openTrade(LAST, $('txOpenType').value === 'lo'); note.textContent = m || (LAST ? 'Opened ' + LAST.sym + ' in TradFi investments. See TTM Holdings.' : 'Fix the warnings first.'); if(!LAST) note.textContent = 'Fill in the entry, stop and symbol first.'; } });
+  setTimeout(plans, 900); setTimeout(plans, 3000); calc();
 })();
 </script>
 <script src="../accounts.js"></script>

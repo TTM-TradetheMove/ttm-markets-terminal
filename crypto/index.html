@@ -25,6 +25,8 @@
 html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",Helvetica,Arial,sans-serif;line-height:1.6}
 .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+@media (min-width:1300px){.wrap{max-width:1480px}}
+.rr-wrap>.rr-tbl td:first-child,.rr-wrap>.rr-tbl th:first-child{position:sticky;left:0;z-index:2;background:var(--card,#16161a);box-shadow:2px 0 0 var(--line,#2b2b30)}
 a{color:var(--gold2)}
 
 /* ---------- Header ---------- */
@@ -1196,7 +1198,7 @@ button.tkr{background:none;border:0;padding:0;margin:0;color:var(--gold2);font:i
     <div class="rr-card"><div class="filter-row" id="jAccF" style="margin-bottom:12px"></div><h3>Accounts <button type="button" class="rr-btn sm" id="jXlsx" style="float:right">Download Excel (TTM view)</button></h3><div class="rr-out c4" id="jAcct"></div><div class="rr-wrap"><table class="rr-tbl" id="jPort"></table></div></div>
     <div class="rr-card"><h3>Performance</h3><div class="rr-stats" id="jStats"></div><svg id="jCurve" viewBox="0 0 700 220" style="width:100%;height:auto;display:block"></svg></div>
     <div class="rr-card"><h3>Add a holding you already own</h3><p class="calendar-note" style="margin:0 0 10px">For spot or retirement assets bought before you started using the tracker. It counts in the account balance, the portfolio and TTM Holdings. No stop or targets needed.</p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end"><label><small>Asset</small><br><input id="ehAsset" placeholder="BIO" autocomplete="off" style="width:100px"></label><label><small>Account</small><br><select id="ehAcc"><option value="spot">Spot portfolio (crypto)</option><option value="tradfi">TradFi / investments</option><option value="tokenised">Tokenised stocks (USDT / USDC)</option><option value="super">Super / retirement (not shown publicly)</option></select></label><label><small>Amount paid ($)</small><br><input id="ehAmt" inputmode="decimal" placeholder="1000" style="width:110px"></label><label><small>Average buy price ($)</small><br><input id="ehPx" inputmode="decimal" placeholder="0.05" style="width:130px"></label><label><small>Leverage</small><br><input id="ehLev" inputmode="decimal" placeholder="1" style="width:60px"></label><label><small>Direction</small><br><select id="ehDir"><option value="long">Long</option><option value="short">Short (leverage only)</option></select></label><label><small>Current price (only if no live feed)</small><br><input id="ehNow" inputmode="decimal" placeholder="e.g. 95.40" style="width:150px"></label><label><small>Bought on (optional)</small><br><input id="ehDate" type="date"></label><button class="rr-btn sm" id="ehAdd" type="button">Add holding</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end"><label><small>Asset</small><br><input id="ehAsset" placeholder="BIO" autocomplete="off" style="width:100px"></label><label><small>Account</small><br><select id="ehAcc"><option value="spot">Spot portfolio (crypto)</option><option value="tokenised">Tokenised stocks (USDT / USDC)</option><option value="super">Super / retirement (not shown publicly)</option></select></label><label><small>Amount paid ($)</small><br><input id="ehAmt" inputmode="decimal" placeholder="1000" style="width:110px"></label><label><small>Average buy price ($)</small><br><input id="ehPx" inputmode="decimal" placeholder="0.05" style="width:130px"></label><label><small>Leverage</small><br><input id="ehLev" inputmode="decimal" placeholder="1" style="width:60px"></label><label><small>Direction</small><br><select id="ehDir"><option value="long">Long</option><option value="short">Short (leverage only)</option></select></label><label><small>Current price (only if no live feed)</small><br><input id="ehNow" inputmode="decimal" placeholder="e.g. 95.40" style="width:150px"></label><label><small>Bought on (optional)</small><br><input id="ehDate" type="date"></label><button class="rr-btn sm" id="ehAdd" type="button">Add holding</button></div>
       <p class="calendar-note" id="ehNote" style="margin:8px 0 0"></p></div>
     <div class="rr-card"><h3>Open positions <span style="float:right;color:var(--mute);text-transform:none;letter-spacing:0;font-size:12px">live prices, refreshed every 30s</span></h3><div class="rr-wrap"><table class="rr-tbl" id="jOpen"></table></div></div>
     <div class="rr-card"><h3>Best results by time frame</h3><div id="jTfBest" style="margin-bottom:10px"></div><div class="rr-wrap"><table class="rr-tbl" id="jTf"></table></div></div>
@@ -3469,7 +3471,7 @@ function num0(v){ const n = parseFloat(v); return isFinite(n) ? n : null; }
 if(!S.asset || S.asset === 'Other') S.asset = 'BTC';
 $('rrLev').innerHTML = LEVS.map(l => `<option value="${l}">${l}×${l === 1 ? ' (no leverage)' : ''}</option>`).join('');
 $('rrSrc').innerHTML = [['okx', 'OKX'], ['binance', 'Binance'], ['bybit', 'Bybit'], ['bitget', 'Bitget'], ['mexc', 'MEXC'], ['hyperliquid', 'Hyperliquid']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
-$('rrAcc').innerHTML = [['spot', 'Spot portfolio'], ['lev', 'Leverage / futures'], ['coinm', 'Coin-M futures (coin-margined)'], ['super', 'Super / retirement'], ['tradfi', 'TradFi / investments'], ['tokenised', 'Tokenised stocks']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
+$('rrAcc').innerHTML = [['spot', 'Spot portfolio'], ['lev', 'Leverage / futures'], ['coinm', 'Coin-M futures (coin-margined)'], ['super', 'Super / retirement'], ['tokenised', 'Tokenised stocks']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
 $('rrTf').innerHTML = [['m5', '5 min'], ['m15', '15 min'], ['h1', '1 hour'], ['h2', '2 hour'], ['h4', '4 hour'], ['h8', '8 hour'], ['h12', '12 hour'], ['d1', 'Daily'], ['w1', 'Weekly'], ['mo1', 'Monthly']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
 const IDS = {entry:'rrEntry', stop:'rrStop', tp1:'rrTp1', s1:'rrS1', tp2:'rrTp2', s2:'rrS2', tp3:'rrTp3', s3:'rrS3', risk:'rrRisk', rusd:'rrRusd', inv:'rrInv', fee:'rrFee', daily:'rrDaily', min:'rrMin', mmr:'rrMmr', lo1p:'rrLo1p', lo1w:'rrLo1w', lo2p:'rrLo2p', lo2w:'rrLo2w', lo3p:'rrLo3p', lo3w:'rrLo3w', lo4p:'rrLo4p', lo4w:'rrLo4w', lo5p:'rrLo5p', lo5w:'rrLo5w'};
 function pushInputs(){
@@ -4207,7 +4209,7 @@ let HDT = 0;
 async function publishHoldings(){
   if(!(window.ttmIsAdmin && ttmIsAdmin() && window.ttmPublishHoldings) || Date.now() - HDT < 50000) return; HDT = Date.now();
   try{ const t = await getTickers(); if(t){ PRICES = t.map; PSTAMP = t.t; } }catch(e){}
-  await ttmPublishHoldings({t: Date.now(), crypto: holdingsSnap('spot'), tradfi: holdingsSnap('tradfi'), tokenised: holdingsSnap('tokenised')});
+  await ttmPublishHoldings({crypto: holdingsSnap('spot'), tokenised: holdingsSnap('tokenised')});
 }
 setTimeout(publishHoldings, 9000); setInterval(publishHoldings, 60000);
 document.addEventListener('click', e => { if(e.target.closest && e.target.closest('[data-j="close"],#rrOpen,#rrConfirm,[data-tc]')) setTimeout(() => { HDT = 0; publishHoldings(); }, 1500); });

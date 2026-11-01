@@ -156,7 +156,7 @@ function upsell(key){
   openAuth(USER ? `<p><b>${e(label)}</b> is included with the <b>${e(needText(key))}</b> plan. You are on <b>${e(pname(PROF.plan))}</b>. Paid plans are not open for self-sign-up yet; ask TTM on Telegram.</p><div class="row"><button class="ttm-btn ghost" id="authClose">Close</button></div>`
     : `<p><b>${e(label)}</b> is included with the <b>${e(needText(key))}</b> plan. Sign in to continue.</p>` + signInForm());
 }
-window.ttmFeedPost = async row => { if(!(PROF && PROF.is_admin)) return false; const r = await api('/rest/v1/ttm_spot_feed?on_conflict=ukey', {method: 'POST', headers: {Prefer: 'resolution=ignore-duplicates,return=minimal'}, body: JSON.stringify(row)}); return r.ok; };
+window.ttmFeedPost = async row => { if(!(PROF && PROF.is_admin)) return false; const r = await api('/rest/v1/ttm_spot_feed?on_conflict=ukey', {method: 'POST', headers: {Prefer: 'resolution=ignore-duplicates,return=minimal'}, body: JSON.stringify(row)}); if(r.ok){ try{ toast(Object.assign({ts: new Date().toISOString()}, row)); }catch(err){} } return r.ok; };
 window.ttmFeedList = async n => { const r = await api('/rest/v1/ttm_spot_feed?select=*&order=ts.desc&limit=' + (n || 30)); return r.ok && Array.isArray(r.json) ? r.json : []; };
 // Pro members: live pop-ups for TTM's spot moves (buys, sells, limit orders, part take-profits)
 let FEEDT = null;
@@ -177,7 +177,7 @@ function toast(ev){
 setInterval(() => feedPoll(false), 45000); setTimeout(() => feedPoll(true), 4000);
 window.ttmCan = can; window.ttmUpsell = upsell; window.ttmIsAdmin = () => !!(PROF && PROF.is_admin);
 window.ttmHoldings = async () => { const r = await raw('/rest/v1/ttm_settings?key=eq.holdings&select=value'); return r.ok && r.json && r.json[0] ? r.json[0].value : null; };
-window.ttmPublishHoldings = async v => { if(!(PROF && PROF.is_admin)) return false; const r = await api('/rest/v1/ttm_settings', {method: 'POST', headers: {Prefer: 'resolution=merge-duplicates'}, body: JSON.stringify([{key: 'holdings', value: v}])}); return r.ok; };
+window.ttmPublishHoldings = async part => { if(!(PROF && PROF.is_admin)) return false; let cur = {}; try{ const g = await api('/rest/v1/ttm_settings?key=eq.holdings&select=value'); if(g.ok && g.json && g.json[0] && g.json[0].value) cur = g.json[0].value; }catch(err){} const v = Object.assign({}, cur, part, {t: Date.now()}); const r = await api('/rest/v1/ttm_settings', {method: 'POST', headers: {Prefer: 'resolution=merge-duplicates'}, body: JSON.stringify([{key: 'holdings', value: v}])}); return r.ok; };
 
 // ---------- sign-in modal
 function signInForm(){ return on() ? `<label for="authEmail"><small>Email</small></label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"><label for="authTg" style="display:block;margin-top:10px"><small>Telegram name (optional, shown as your name in the terminal)</small></label><input id="authTg" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="@yourname"><div class="row"><button class="ttm-btn" id="authSend">Email me a sign-in link</button><button class="ttm-btn ghost" id="authClose">Cancel</button></div><p id="authNote" style="margin:12px 0 0"><small>No password. We email a one-time link and a code. Creating an account is free.</small></p>` : '<p>Accounts are coming soon. The terminal stays free and open in the meantime.</p><div class="row"><button class="ttm-btn ghost" id="authClose">Close</button></div>'; }
