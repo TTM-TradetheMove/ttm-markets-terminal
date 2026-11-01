@@ -18,9 +18,9 @@ Deno.serve(async (req) => {
   const ids = pros.map((p: any) => p.id).join(",");
   const subs = await get(`ttm_push_subs?select=*&user_id=in.(${ids})`);
   const dir = /Short/.test(record.title) ? "Short" : "Long";
-  const short: Record<string, string> = {buy: "Spot " + dir + " opened", fill: "Spot " + dir + " order collected", tp: "Spot " + dir + " TP hit", part: "Partial profit taken", sell: "Spot " + dir + " closed", add: "Spot " + dir + " added to"};
-  const title = record.asset && short[record.kind] ? record.asset + " · " + short[record.kind] : record.title;
-  const body = [record.title, record.body].filter(Boolean).join(". ");
+  const short: Record<string, string> = {buy: dir + " position opened", fill: dir + " limit order collected", tp: dir + " TP hit", part: "partial profit taken", sell: dir + " position closed", add: dir + " position added to"};
+  const title = record.asset && short[record.kind] ? record.asset + " " + short[record.kind] : record.title;
+  const body = record.body || "TTM Spot portfolio";
   const payload = JSON.stringify({title, body, tag: "ttm-" + record.id, url: "./crypto/index.html"});
   let sent = 0;
   await Promise.all(subs.map(async (s: any) => {
