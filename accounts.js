@@ -208,6 +208,14 @@ document.addEventListener('click', async ev => {
   if(t.id === 'acctBtn'){ if(!USER) openAuth(); else if(TERM === 'home'){ const a = $('account'); if(a) a.scrollIntoView({behavior: 'smooth'}); } else location.href = BASE + 'index.html#account'; }
   else if(t.id === 'authClose' || t === modal) closeAuth();
   else if(t.id === 'memSignIn' || t.id === 'lockSignIn' || t.id === 'wallSignIn') openAuth();
+  else if(t.id === 'ttmChatBtn' || t.closest && t.closest('#ttmChatBtn')){ chatToggle(!CH.open); }
+  else if(t.id === 'chX'){ chatToggle(false); }
+  else if(t.id === 'chBack'){ CH.sel = null; chatPaint(); }
+  else if(t.dataset && t.dataset.chc){ CH.sel = t.dataset.chc; chatPaint(); chatSeen(); }
+  else if(t.id === 'chSend'){ chatSend(); }
+  else if(t.dataset && t.dataset.chdel){ if(!confirm('Delete this message?')) return; await api('/rest/v1/ttm_chat?id=eq.' + t.dataset.chdel, {method: 'DELETE'}); chatLoad(); }
+  else if(t.id === 'lvAdd'){ lvAdd(); }
+  else if(t.dataset && t.dataset.lvdel){ if(!confirm('Delete this live session?')) return; await api('/rest/v1/ttm_live?id=eq.' + t.dataset.lvdel, {method: 'DELETE'}); lvLoad(); LIVE.rows = LIVE.rows.filter(x => String(x.id) !== t.dataset.lvdel); liveBanner(); }
   else if(t.id === 'authPwIn' || t.id === 'authPwUp'){ const em = ($('authEmail').value || '').trim(), pw = ($('authPw').value || ''), up = t.id === 'authPwUp';
     if(!/^\S+@\S+\.\S+$/.test(em)){ $('authNote').textContent = 'Enter a valid email address.'; return; }
     if(pw.length < 8){ $('authNote').textContent = 'Password needs 8 or more characters.'; return; }
@@ -330,7 +338,7 @@ function planCards(){
   const card = (p, head, items) => `<div class="plan-card ${PROF && PROF.plan === p ? 'me' : ''}"><h4>${pname(p)}</h4><div class="pr">${price(p)}${PROF && PROF.plan === p ? ' · <b style="color:var(--gold2)">your plan</b>' : ''}</div><div style="font-size:12px;color:var(--mute);margin-bottom:4px">${head}</div><ul>${items.map(c => `<li>${e(lab(c))}</li>`).join('') || '<li>—</li>'}</ul></div>`;
   return `<div class="plan-grid">${card('free', 'Includes', free)}${card('premium', 'Everything in Free, plus (Crypto and TradFi together)', only('premium'))}${card('pro', 'Everything in Premium, plus', pro)}</div>`;
 }
-function ui(){
+function ui(){ try{ chatUi(); liveBanner(); }catch(err){}
   const b = $('acctBtn'); if(b){ b.textContent = USER ? (PROF && PROF.tg_handle ? '@' + PROF.tg_handle : 'Account') : 'Sign in'; b.title = USER ? (PROF && PROF.tg_handle ? '@' + PROF.tg_handle + ' · ' : '') + 'Plan: ' + pname(PROF.plan) : 'Sign in or create a free account'; }
   const na = $('navAdmin'); if(na) na.style.display = PROF && PROF.is_admin ? '' : 'none';
   applyGates();
@@ -339,9 +347,9 @@ function ui(){
   if(m){
     if(!on()) m.innerHTML = '<h3>Account</h3><p style="margin:0">Free accounts are <b>coming soon</b>: sign in with your email to sync your trades across your phone, iPad and computer, and to unlock your plan. The terminal and every tool stay free and open in the meantime.</p>';
     else if(!USER) m.innerHTML = '<h3>Account</h3><p style="margin:0 0 12px">Create a free account with just your email (no password).</p><div class="rr-acts" style="margin:0"><button class="rr-btn" id="memSignIn">Sign in / create free account</button></div>';
-    else m.innerHTML = `<h3>Account <span style="float:right">${planBadge()}</span></h3><p style="margin:0 0 6px"><b>Signed in</b> · plan <b>${e(pname(PROF.plan))}</b>${PROF.beta ? ' · <span style="color:var(--gold2)">beta tester</span>' : ''}${untilTxt()}</p>${'tg_handle' in PROF ? `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px"><small style="color:var(--mute)">Telegram name</small><input id="memTgIn" value="${e(PROF.tg_handle || '')}" placeholder="@yourname" autocapitalize="off" spellcheck="false" style="background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 10px;font:inherit;width:170px"><button class="rr-btn ghost sm" id="memTgSave">Save</button><span id="memTgNote" class="calendar-note"></span></div>` : ''}<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px"><small style="color:var(--mute)">Password</small><input id="memPwIn" type="password" autocomplete="new-password" placeholder="Set or change" style="background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 10px;font:inherit;width:170px"><button class="rr-btn ghost sm" id="memPwSave">Save</button><span id="memPwNote" class="calendar-note"></span></div>${isPro() ? `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px"><small style="color:var(--mute)">Phone alerts</small><button class="rr-btn ghost sm" id="memPush">Checking…</button><span id="memPushNote" class="calendar-note"></span></div>` : ''}<p class="calendar-note" style="margin:0 0 12px">Cloud sync: ${can('sync') ? ({ok: 'on' + (SYNC.at ? ', last synced ' + new Date(SYNC.at).toLocaleTimeString() : ''), saving: 'saving…', error: 'could not reach the cloud, will retry', off: 'starting…', locked: 'not included in your plan'})[SYNC.state] || 'on' : 'included with the ' + needText('sync') + ' plan'}. Your Telegram bot token is never uploaded.</p><div class="rr-acts" style="margin:0"><button class="rr-btn ghost sm" id="memSignOut">Sign out</button><button class="rr-btn ghost sm" id="memDelete" style="border-color:#e0554d;color:#e0554d">Delete my account</button>${PROF.is_admin ? `<a class="rr-btn sm" style="text-decoration:none" href="${BASE}crypto/index.html#admin">Admin</a>` : ''}</div>`;
+    else m.innerHTML = `<h3>Account <span style="float:right">${planBadge()}</span></h3><p style="margin:0 0 6px"><b>Signed in</b> · plan <b>${e(pname(PROF.plan))}</b>${PROF.beta ? ' · <span style="color:var(--gold2)">beta tester</span>' : ''}${untilTxt()}</p>${'tg_handle' in PROF ? `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px"><small style="color:var(--mute)">Telegram name</small><input id="memTgIn" value="${e(PROF.tg_handle || '')}" placeholder="@yourname" autocapitalize="off" spellcheck="false" style="background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 10px;font:inherit;width:170px"><button class="rr-btn ghost sm" id="memTgSave">Save</button><span id="memTgNote" class="calendar-note"></span></div>` : ''}<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px"><small style="color:var(--mute)">Password</small><input id="memPwIn" type="password" autocomplete="new-password" placeholder="Set or change" style="background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 10px;font:inherit;width:170px"><button class="rr-btn ghost sm" id="memPwSave">Save</button><span id="memPwNote" class="calendar-note"></span></div>${USER ? `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px"><small style="color:var(--mute)">Phone alerts</small><button class="rr-btn ghost sm" id="memPush">Checking…</button><span id="memPushNote" class="calendar-note"></span></div>` : ''}<p class="calendar-note" style="margin:0 0 12px">Cloud sync: ${can('sync') ? ({ok: 'on' + (SYNC.at ? ', last synced ' + new Date(SYNC.at).toLocaleTimeString() : ''), saving: 'saving…', error: 'could not reach the cloud, will retry', off: 'starting…', locked: 'not included in your plan'})[SYNC.state] || 'on' : 'included with the ' + needText('sync') + ' plan'}. Your Telegram bot token is never uploaded.</p><div class="rr-acts" style="margin:0"><button class="rr-btn ghost sm" id="memSignOut">Sign out</button><button class="rr-btn ghost sm" id="memDelete" style="border-color:#e0554d;color:#e0554d">Delete my account</button>${PROF.is_admin ? `<a class="rr-btn sm" style="text-decoration:none" href="${BASE}crypto/index.html#admin">Admin</a>` : ''}</div>`;
   }
-  const pb = $('memPush'); if(pb){ pushState().then(v => { pb.textContent = v === 'on' ? 'Turn off' : v === 'off' ? 'Turn on' : 'Not available'; pb.disabled = v === 'unsupported' || v === 'denied'; const n = $('memPushNote'); if(n) n.textContent = v === 'on' ? 'On for this phone.' : v === 'unsupported' ? 'On iPhone, open TTM from your Home Screen.' : v === 'denied' ? 'Blocked in phone settings.' : 'Get TTM spot moves on your lock screen.'; }); }
+  const pb = $('memPush'); if(pb){ pushState().then(v => { pb.textContent = v === 'on' ? 'Turn off' : v === 'off' ? 'Turn on' : 'Not available'; pb.disabled = v === 'unsupported' || v === 'denied'; const n = $('memPushNote'); if(n) n.textContent = v === 'on' ? 'On for this phone.' : v === 'unsupported' ? 'On iPhone, open TTM from your Home Screen.' : v === 'denied' ? 'Blocked in phone settings.' : 'Get live session reminders and TTM updates on your lock screen.'; }); }
   const tv = $('memTv');
   if(tv){ const ok = can('indicators'); tv.innerHTML = ok ? (CFG.tv && CFG.tv.length ? CFG.tv : [{name: 'TTM Indicator Suite', desc: 'Trend, momentum and cycle tools built for the TTM method.'}, {name: 'TTM Signals & Alerts', desc: 'Chart overlays that line up with the terminal.'}, {name: 'TTM Risk Tools', desc: 'Position-sizing helpers on the chart.'}]).map(x => `<div class="mem-card"><b>${e(x.name)}</b><p>${e(x.desc || '')}</p>${x.url ? `<a class="rr-btn sm" style="text-decoration:none;display:inline-block" href="${e(x.url)}" target="_blank" rel="noopener noreferrer">Open on TradingView ↗</a>` : '<span class="rr-pill be">Coming soon</span>'}</div>`).join('')
     : `<div class="mem-card" style="grid-column:1/-1"><b>🔒 TTM indicators on TradingView</b><p>The TTM TradingView indicators are included with the <b>${e(needText('indicators'))}</b> plan. They are coming soon.</p></div>`; }
@@ -477,9 +485,11 @@ async function adminUi(){ await fbLoad(true);
       <div class="rr-acts" style="margin:10px 0 0;align-items:center">${sel('id="grPlan"', 'pro')}<select id="grDays" style="background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 9px;font:inherit">${[7, 14, 30, 60, 90, 365].map(d => `<option value="${d}" ${d === 30 ? 'selected' : ''}>${d} days</option>`).join('')}</select><input id="grNote" value="giveaway" maxlength="20" style="width:120px;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 9px;font:inherit" title="A label shown next to the end date"><button class="rr-btn sm" id="grGo">Grant access</button><button class="rr-btn ghost sm" id="grExpire">Revert expired now</button><button class="rr-btn ghost sm" id="grBeta">Make beta testers</button><button class="rr-btn ghost sm" id="grBetaOff">Remove beta</button></div>
       <p class="calendar-note" id="grNote2" style="margin:8px 0 0"></p></div>
     ${noTg || FB.err ? `<div class="rr-warn y"><b>One database step is missing.</b> In Supabase open SQL Editor, New query, paste this and press Run, then refresh. It adds the Telegram name and the beta feedback box.<pre style="white-space:pre-wrap;margin:8px 0 0;user-select:all;max-height:240px;overflow:auto">${e(FBSQL)}</pre></div>` : ''}
+    ${lvAdminHtml()}
     ${fbAdminHtml()}
     <div class="rr-card"><h3>Members (${users.length})</h3><div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Email</th><th>Telegram</th><th>Joined</th><th>Plan</th><th>Until</th><th>Beta</th><th></th></tr></thead><tbody>${users.map(u => `<tr><td>${e(u.email)}${u.is_admin ? ' <span class="rr-pill be">admin</span>' : ''}</td><td>${u.tg_handle ? '@' + e(u.tg_handle) : '<span class="ins-sub">—</span>'}</td><td>${new Date(u.created_at).toLocaleDateString()}</td><td>${sel('data-uid="' + u.id + '"', normPlan(u.plan))}</td><td style="white-space:nowrap">${u.plan_until ? (new Date(u.plan_until) < new Date() ? '<span style="color:#e0554d">ended ' : '<span style="color:var(--gold2)">') + new Date(u.plan_until).toLocaleDateString(undefined, {day: 'numeric', month: 'short'}) + '</span>' + (u.plan_note ? ' <span class="ins-sub">' + e(u.plan_note) + '</span>' : '') : '<span class="ins-sub">no end</span>'}</td><td style="text-align:center"><input type="checkbox" data-beta="${u.id}" ${u.beta ? 'checked' : ''}></td><td>${USER && u.id === USER.id ? '' : `<button class="rr-btn ghost sm" data-delu="${e(u.id)}" data-em="${e(u.email)}" style="border-color:#e0554d;color:#e0554d">Delete</button>`}</td></tr>`).join('') || '<tr><td colspan="7" style="color:var(--mute)">No members yet.</td></tr>'}</tbody></table></div></div>
     <div class="rr-card"><h3>Usage insights</h3><p class="calendar-note" style="margin:0 0 10px">An executive summary of what people open and click: trends against the previous period, what is useful and what is not, where visitors are, and charts you can click into.</p><a class="rr-btn" style="text-decoration:none;display:inline-block" href="#insights">Open Insights →</a></div>`;
+  lvLoad();
 }
 
 // ---------- Insights page (admin only): #insights
@@ -680,6 +690,90 @@ document.addEventListener('click', async ev => {
   const r = await api('/rest/v1/ttm_settings', {method: 'POST', headers: {Prefer: 'resolution=merge-duplicates'}, body: JSON.stringify([{key: 'charging', value: ch}, {key: 'wall', value: wall}, {key: 'track', value: $('admTrack').checked}, {key: 'access', value: acc}])});
   if(r.ok){ SET.charging = ch; SET.wall = wall; SET.track = $('admTrack').checked; SET.access = acc; $('admNote').textContent = 'Saved.'; ui(); } else $('admNote').textContent = 'Could not save (are you an admin?).'; });
 window.addEventListener('hashchange', () => { setTimeout(() => { adminUi(); insUi(); ui(); }, 80); });
+
+// ---------- Message TTM (Pro, private) and live sessions ----------
+const css2 = document.createElement('style');
+css2.textContent = `#ttmChatBtn{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:2600;background:var(--gold,#dba118);color:#111;border:0;border-radius:999px;padding:11px 16px;font:inherit;font-weight:800;font-size:13.5px;cursor:pointer;box-shadow:0 6px 22px rgba(0,0,0,.5)}#ttmChatBtn i{font-style:normal;background:#e0554d;color:#fff;border-radius:999px;padding:1px 7px;margin-left:8px;font-size:12px}
+#ttmChat{position:fixed;right:16px;bottom:calc(70px + env(safe-area-inset-bottom,0px));z-index:2700;width:360px;max-width:calc(100vw - 24px);height:480px;max-height:calc(100vh - 110px);background:var(--card,#16161a);border:1px solid var(--gold,#dba118);border-radius:14px;display:none;flex-direction:column;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.65);color:var(--text,#e8e6e1)}#ttmChat.open{display:flex}
+#ttmChat .ch-h{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--line,#2a2a2e);font-weight:800;color:var(--gold2,#f2c14e)}#ttmChat .ch-h b{flex:1;font-size:14px;letter-spacing:.04em;text-transform:uppercase}#ttmChat .ch-h button{background:none;border:0;color:var(--text,#e8e6e1);font-size:20px;cursor:pointer;line-height:1}
+#ttmChat .ch-b{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px}#ttmChat .ch-m{max-width:84%;padding:8px 11px;border-radius:12px;font-size:14px;line-height:1.45;white-space:pre-wrap;word-break:break-word;background:rgba(255,255,255,.07);align-self:flex-start}#ttmChat .ch-m.me{align-self:flex-end;background:rgba(219,161,24,.22)}#ttmChat .ch-m small{display:block;margin-top:3px;font-size:10.5px;color:var(--mute,#9a978f)}#ttmChat .ch-m u{float:right;margin-left:8px;cursor:pointer;color:var(--mute,#9a978f);font-size:11px;text-decoration:none}
+#ttmChat .ch-f{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line,#2a2a2e)}#ttmChat .ch-f textarea{flex:1;resize:none;background:rgba(255,255,255,.05);border:1px solid var(--line,#2a2a2e);color:var(--text,#e8e6e1);border-radius:10px;padding:9px 10px;font:inherit;font-size:14px;height:40px}#ttmChat .ch-f button{background:var(--gold,#dba118);color:#111;border:0;border-radius:10px;padding:0 16px;font:inherit;font-weight:800;cursor:pointer}
+#ttmChat .ch-c{display:flex;justify-content:space-between;gap:8px;padding:10px 12px;border:1px solid var(--line,#2a2a2e);border-radius:10px;cursor:pointer;background:rgba(255,255,255,.03)}#ttmChat .ch-c i{font-style:normal;background:#e0554d;color:#fff;border-radius:999px;padding:0 7px;font-size:12px;height:18px}
+#ttmLive{background:linear-gradient(90deg,rgba(219,161,24,.22),rgba(219,161,24,.1));border-bottom:1px solid var(--gold,#dba118);padding:9px 16px;display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;font-size:14px;color:var(--text,#e8e6e1);position:relative;z-index:50}#ttmLive b{color:var(--gold2,#f2c14e);letter-spacing:.06em;font-size:12px}#ttmLive a{background:var(--gold,#dba118);color:#111;border-radius:999px;padding:5px 14px;font-weight:800;text-decoration:none}`;
+document.head.appendChild(css2);
+const CH = {open: false, msgs: [], sel: null, who: {}, t: null, ready: false};
+const isAdm = () => !!(PROF && PROF.is_admin), chatOK = () => on() && !!USER && (isAdm() || isPro());
+const chUnread = () => CH.msgs.filter(m => !m.seen && (isAdm() ? !m.from_admin : m.from_admin)).length;
+function chatUi(){
+  let b = $('ttmChatBtn');
+  if(!chatOK()){ if(b) b.remove(); const p = $('ttmChat'); if(p) p.remove(); clearInterval(CH.t); CH.t = null; return; }
+  if(!b){ b = document.createElement('button'); b.id = 'ttmChatBtn'; document.body.appendChild(b);
+    const p = document.createElement('div'); p.id = 'ttmChat'; p.innerHTML = '<div class="ch-h"><button id="chBack" style="display:none" aria-label="Back">‹</button><b id="chTitle">Message TTM</b><button id="chX" aria-label="Close">×</button></div><div class="ch-b" id="chBody"></div><div class="ch-f" id="chFoot"><textarea id="chIn" maxlength="2000" placeholder="Write a message"></textarea><button id="chSend">Send</button></div>'; document.body.appendChild(p);
+    $('chIn').addEventListener('keydown', ev => { if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); chatSend(); } }); }
+  const n = chUnread(); b.innerHTML = (isAdm() ? 'Inbox' : 'Message TTM') + (n ? `<i>${n}</i>` : '');
+  if(!CH.t){ CH.t = setInterval(() => { if(!document.hidden) chatLoad(); }, 8000); chatLoad(); }
+  if(location.hash === '#chat'){ try{ history.replaceState(null, '', location.pathname + location.search); }catch(err){} chatToggle(true); }
+}
+function chatToggle(v){ const p = $('ttmChat'); if(!p) return; CH.open = v; p.classList.toggle('open', v); if(v){ chatPaint(); chatSeen(); } }
+async function chatLoad(){
+  if(!chatOK()) return;
+  const r = await api(isAdm() ? '/rest/v1/ttm_chat?select=*&order=ts.desc&limit=400' : `/rest/v1/ttm_chat?select=*&member_id=eq.${USER.id}&order=ts.desc&limit=200`);
+  if(!r.ok || !Array.isArray(r.json)) return;
+  const old = JSON.stringify(CH.msgs.map(m => [m.id, m.seen])); CH.msgs = r.json.slice().reverse();
+  if(isAdm()){ const need = [...new Set(CH.msgs.map(m => m.member_id))].filter(id => !CH.who[id]); if(need.length){ const p = await api('/rest/v1/ttm_profiles?select=id,email,tg_handle&id=in.(' + need.join(',') + ')'); if(p.ok && Array.isArray(p.json)) p.json.forEach(x => { CH.who[x.id] = x.tg_handle ? '@' + String(x.tg_handle).replace(/^@/, '') : x.email; }); } }
+  if(JSON.stringify(CH.msgs.map(m => [m.id, m.seen])) !== old){ const b = $('ttmChatBtn'); const n = chUnread(); if(b) b.innerHTML = (isAdm() ? 'Inbox' : 'Message TTM') + (n ? `<i>${n}</i>` : ''); if(CH.open){ chatPaint(); chatSeen(); } }
+}
+function chatPaint(){
+  const body = $('ttmChat') && $('chBody'); if(!body) return; const adm = isAdm(), list = adm && !CH.sel;
+  $('chBack').style.display = adm && CH.sel ? '' : 'none'; $('chFoot').style.display = list ? 'none' : ''; $('chTitle').textContent = adm ? (CH.sel ? (CH.who[CH.sel] || 'Member') : 'Inbox') : 'Message TTM';
+  const tm = t => new Date(t).toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}); const atBottom = body.scrollHeight - body.scrollTop - body.clientHeight < 60;
+  if(list){
+    const g = {}; CH.msgs.forEach(m => { (g[m.member_id] = g[m.member_id] || []).push(m); });
+    const ids = Object.keys(g).sort((a, b) => new Date(g[b][g[b].length - 1].ts) - new Date(g[a][g[a].length - 1].ts));
+    body.innerHTML = ids.length ? ids.map(id => { const l = g[id], last = l[l.length - 1], un = l.filter(m => !m.from_admin && !m.seen).length; return `<div class="ch-c" data-chc="${e(id)}"><span style="pointer-events:none"><b>${e(CH.who[id] || 'Member')}</b><br><small style="color:var(--mute)">${e((last.from_admin ? 'You: ' : '') + last.body.slice(0, 60))}</small></span>${un ? `<i style="pointer-events:none">${un}</i>` : ''}</div>`; }).join('') : '<p style="color:var(--mute);font-size:13px;margin:6px 2px">No messages yet. Pro members can write to you from the Message TTM button.</p>';
+  } else {
+    const l = CH.msgs.filter(m => adm ? m.member_id === CH.sel : true);
+    body.innerHTML = l.length ? l.map(m => { const me = adm ? m.from_admin : !m.from_admin; return `<div class="ch-m ${me ? 'me' : ''}">${adm ? `<u data-chdel="${m.id}" title="Delete">delete</u>` : ''}${e(m.body)}<small>${me ? 'You' : (adm ? e(CH.who[CH.sel] || 'Member') : 'TTM')} · ${tm(m.ts)}${me && adm ? (m.seen ? ' · read' : '') : (me && m.seen ? ' · read' : '')}</small></div>`; }).join('') : '<p style="color:var(--mute);font-size:13px;margin:6px 2px">Write a private message to TTM. You get a notification on your phone when TTM replies (turn on Phone alerts in your Account card).</p>';
+    if(atBottom || CH.force){ body.scrollTop = body.scrollHeight; CH.force = false; }
+  }
+}
+async function chatSeen(){
+  if(!CH.open) return; const adm = isAdm(); let q = null;
+  if(adm){ if(CH.sel) q = `member_id=eq.${CH.sel}&from_admin=eq.false&seen=eq.false`; } else q = `member_id=eq.${USER.id}&from_admin=eq.true&seen=eq.false`;
+  if(!q || !CH.msgs.some(m => !m.seen && (adm ? !m.from_admin && m.member_id === CH.sel : m.from_admin))) return;
+  await api('/rest/v1/ttm_chat?' + q, {method: 'PATCH', body: JSON.stringify({seen: true}), headers: {Prefer: 'return=minimal'}});
+  CH.msgs.forEach(m => { if(adm ? (!m.from_admin && m.member_id === CH.sel) : m.from_admin) m.seen = true; }); chatUi();
+}
+async function chatSend(){
+  const i = $('chIn'), txt = (i.value || '').trim(); if(!txt) return; const adm = isAdm(); if(adm && !CH.sel) return;
+  i.value = ''; CH.force = true;
+  const r = await api('/rest/v1/ttm_chat', {method: 'POST', headers: {Prefer: 'return=minimal'}, body: JSON.stringify({member_id: adm ? CH.sel : USER.id, from_admin: adm, body: txt})});
+  if(!r.ok){ i.value = txt; const b = $('chBody'); if(b) b.insertAdjacentHTML('beforeend', '<p style="color:#e0554d;font-size:12.5px">Could not send. Messaging is for Pro members, and the database step may still be missing.</p>'); return; }
+  await chatLoad(); chatPaint();
+}
+// live sessions
+const LIVE = {rows: [], t: 0};
+async function liveLoad(){ if(!on() || !USER) return; const r = await api('/rest/v1/ttm_live?select=*&starts_at=gt.' + encodeURIComponent(new Date(Date.now() - 2 * 3600e3).toISOString()) + '&order=starts_at.asc&limit=20'); if(r.ok && Array.isArray(r.json)){ LIVE.rows = r.json; liveBanner(); } }
+function liveBanner(){
+  let b = $('ttmLive'); const now = Date.now(), s = LIVE.rows.find(x => new Date(x.starts_at).getTime() > now - 2 * 3600e3 && new Date(x.starts_at).getTime() < now + 7 * 864e5);
+  if(!USER || !s){ if(b) b.remove(); return; }
+  if(!b){ b = document.createElement('div'); b.id = 'ttmLive'; document.body.insertBefore(b, document.body.firstChild); }
+  const t = new Date(s.starts_at).getTime(), mins = Math.round((t - now) / 60000), when = new Date(t).toLocaleString([], {weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit'});
+  const st = mins <= 0 ? 'LIVE NOW' : mins <= 60 ? 'LIVE IN ' + mins + ' MIN' : 'LIVE SESSION';
+  b.innerHTML = `<b>${st}</b><span>${e(s.title)} · ${e(when)}</span><a href="${e(s.zoom_url)}" target="_blank" rel="noopener">Join on Zoom</a>`;
+}
+setInterval(liveLoad, 60000); setInterval(liveBanner, 30000); setTimeout(liveLoad, 2500);
+function lvAdminHtml(){ return `<div class="rr-card"><h3>Live sessions (Zoom)</h3><p class="calendar-note" style="margin:0 0 10px">Add a session and it posts to Telegram within a minute, then again 15 minutes before it starts. Every member with Phone alerts on gets a notification both times. Times use your own clock.</p>
+  <div style="display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))"><input id="lvTitle" placeholder="Title, e.g. Weekly market live" style="background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 10px;font:inherit"><input id="lvWhen" type="datetime-local" style="background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 10px;font:inherit"><input id="lvUrl" placeholder="Zoom link" style="background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 10px;font:inherit"><input id="lvNote" placeholder="Short note (optional)" style="background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 10px;font:inherit"></div>
+  <div class="rr-acts" style="margin:10px 0 0"><button class="rr-btn sm" id="lvAdd">Add session</button></div><p class="calendar-note" id="lvNoteMsg" style="margin:8px 0 0"></p><div id="lvList"></div></div>`; }
+async function lvLoad(){ const l = $('lvList'); if(!l) return; const r = await api('/rest/v1/ttm_live?select=*&order=starts_at.asc&limit=30&starts_at=gt.' + encodeURIComponent(new Date(Date.now() - 864e5).toISOString()));
+  if(!r.ok){ l.innerHTML = '<div class="rr-warn y" style="margin-top:10px"><b>One database step is missing.</b> Run supabase/messaging.sql in the Supabase SQL editor, then refresh.</div>'; return; }
+  LIVE.rows = r.json || []; l.innerHTML = LIVE.rows.length ? `<div class="rr-wrap" style="margin-top:10px"><table class="rr-tbl"><thead><tr><th>Session</th><th>When</th><th>Posted</th><th>Reminded</th><th></th></tr></thead><tbody>${LIVE.rows.map(x => `<tr><td>${e(x.title)}</td><td>${e(new Date(x.starts_at).toLocaleString([], {weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit'}))}</td><td>${x.announced ? 'Yes' : 'Waiting'}</td><td>${x.reminded ? 'Yes' : 'Waiting'}</td><td><button class="rr-btn ghost sm" data-lvdel="${x.id}">Delete</button></td></tr>`).join('')}</tbody></table></div>` : '<p class="calendar-note" style="margin:10px 0 0">No upcoming sessions.</p>'; liveBanner(); }
+async function lvAdd(){ const n = $('lvNoteMsg'), title = ($('lvTitle').value || '').trim(), w = $('lvWhen').value, url = ($('lvUrl').value || '').trim();
+  if(!title || !w || !/^https?:\/\//i.test(url)){ n.textContent = 'Add a title, a date and time, and a Zoom link starting with https://'; return; }
+  const t = new Date(w); if(!(t.getTime() > Date.now())){ n.textContent = 'Pick a time in the future.'; return; }
+  n.textContent = 'Saving…'; const r = await api('/rest/v1/ttm_live', {method: 'POST', headers: {Prefer: 'return=minimal'}, body: JSON.stringify({title, starts_at: t.toISOString(), zoom_url: url, note: ($('lvNote').value || '').trim() || null})});
+  if(r.ok){ n.textContent = 'Added. It posts to Telegram within a minute.'; ['lvTitle', 'lvWhen', 'lvUrl', 'lvNote'].forEach(i => { $(i).value = ''; }); lvLoad(); } else n.textContent = 'Could not save. Run supabase/messaging.sql first.'; }
 fxLoad().then(() => { if(FX) ui(); });
 boot();
 })();

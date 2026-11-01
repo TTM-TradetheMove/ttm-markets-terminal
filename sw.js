@@ -10,6 +10,7 @@ self.addEventListener('push', e => {
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   const u = new URL((e.notification.data && e.notification.data.url) || './', self.registration.scope).href;
+  if (new URL(u).origin !== new URL(self.registration.scope).origin) { e.waitUntil(clients.openWindow(u)); return; }
   e.waitUntil(clients.matchAll({type: 'window', includeUncontrolled: true}).then(l => {
     for (const c of l) if ('focus' in c) return c.focus();
     return clients.openWindow(u);
