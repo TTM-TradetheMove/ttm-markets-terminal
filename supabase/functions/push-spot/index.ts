@@ -17,7 +17,11 @@ Deno.serve(async (req) => {
   if (!pros.length) return new Response("no pro");
   const ids = pros.map((p: any) => p.id).join(",");
   const subs = await get(`ttm_push_subs?select=*&user_id=in.(${ids})`);
-  const payload = JSON.stringify({title: record.title, body: record.body || "", tag: "ttm-" + record.id, url: "./crypto/index.html"});
+  const dir = /Short/.test(record.title) ? "Short" : "Long";
+  const short: Record<string, string> = {buy: "Spot " + dir + " opened", fill: "Spot " + dir + " order collected", tp: "Spot " + dir + " TP hit", part: "Partial profit taken", sell: "Spot " + dir + " closed", add: "Spot " + dir + " added to"};
+  const title = record.asset && short[record.kind] ? record.asset + " · " + short[record.kind] : record.title;
+  const body = [record.title, record.body].filter(Boolean).join(". ");
+  const payload = JSON.stringify({title, body, tag: "ttm-" + record.id, url: "./crypto/index.html"});
   let sent = 0;
   await Promise.all(subs.map(async (s: any) => {
     try {
