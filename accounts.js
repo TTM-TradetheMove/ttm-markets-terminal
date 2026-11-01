@@ -159,13 +159,16 @@ function upsell(key){
 window.ttmFeedPost = async row => { if(!(PROF && PROF.is_admin)) return false; const r = await api('/rest/v1/ttm_spot_feed?on_conflict=ukey', {method: 'POST', headers: {Prefer: 'resolution=ignore-duplicates,return=minimal'}, body: JSON.stringify(row)}); if(r.ok){ try{ toast(Object.assign({ts: new Date().toISOString()}, row)); }catch(err){} } return r.ok; };
 window.ttmFeedList = async n => { const r = await api('/rest/v1/ttm_spot_feed?select=*&order=ts.desc&limit=' + (n || 30)); return r.ok && Array.isArray(r.json) ? r.json : []; };
 // Pro members: live pop-ups for TTM's spot moves (buys, sells, limit orders, part take-profits)
-let FEEDT = null;
+let FEEDT = null, FEEDBUSY = false; const FEEDSHOWN = new Set();
 async function feedPoll(first){
+  if(FEEDBUSY) return; FEEDBUSY = true; try{ await feedPoll2(first); }finally{ FEEDBUSY = false; }
+}
+async function feedPoll2(first){
   if(!USER || !PROF || PROF.plan !== 'pro' || PROF.is_admin || !on()) return;
   let last = ls('ttm_feed_seen', 0); if(!last) last = Date.now() - 3 * 3600e3;
   const r = await api('/rest/v1/ttm_spot_feed?select=*&order=ts.asc&limit=20&ts=gt.' + encodeURIComponent(new Date(last).toISOString()));
   if(!r.ok || !Array.isArray(r.json) || !r.json.length){ if(first && !ls('ttm_feed_seen', 0)) lw('ttm_feed_seen', Date.now()); return; }
-  r.json.forEach(ev => toast(ev)); lw('ttm_feed_seen', new Date(r.json[r.json.length - 1].ts).getTime());
+  r.json.forEach(ev => { if(ev.id != null && FEEDSHOWN.has(ev.id)) return; FEEDSHOWN.add(ev.id); toast(ev); }); lw('ttm_feed_seen', new Date(r.json[r.json.length - 1].ts).getTime());
 }
 function toast(ev){
   let box = $('ttmToasts'); if(!box){ box = document.createElement('div'); box.id = 'ttmToasts'; document.body.appendChild(box); }
