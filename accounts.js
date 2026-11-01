@@ -165,10 +165,10 @@ async function feedPoll(first){
 }
 async function feedPoll2(first){
   if(!USER || !PROF || PROF.plan !== 'pro' || PROF.is_admin || !on()) return;
-  let last = ls('ttm_feed_seen', 0); if(!last) last = Date.now() - 3 * 3600e3;
+  let last = ls('ttm_feed_seen', 0); if(!last) last = Date.now() - 3 * 3600e3; const done = ls('ttm_feed_ids', []);
   const r = await api('/rest/v1/ttm_spot_feed?select=*&order=ts.asc&limit=20&ts=gt.' + encodeURIComponent(new Date(last).toISOString()));
   if(!r.ok || !Array.isArray(r.json) || !r.json.length){ if(first && !ls('ttm_feed_seen', 0)) lw('ttm_feed_seen', Date.now()); return; }
-  r.json.forEach(ev => { if(ev.id != null && FEEDSHOWN.has(ev.id)) return; FEEDSHOWN.add(ev.id); toast(ev); }); lw('ttm_feed_seen', new Date(r.json[r.json.length - 1].ts).getTime());
+  r.json.forEach(ev => { if(ev.id != null && (FEEDSHOWN.has(ev.id) || done.indexOf(ev.id) >= 0)) return; FEEDSHOWN.add(ev.id); done.push(ev.id); toast(ev); }); lw('ttm_feed_ids', done.slice(-60)); lw('ttm_feed_seen', Math.max(last, new Date(r.json[r.json.length - 1].ts).getTime() + 2));
 }
 function toast(ev){
   let box = $('ttmToasts'); if(!box){ box = document.createElement('div'); box.id = 'ttmToasts'; document.body.appendChild(box); }
