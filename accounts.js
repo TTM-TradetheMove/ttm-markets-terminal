@@ -156,6 +156,7 @@ function upsell(key){
   openAuth(USER ? `<p><b>${e(label)}</b> is included with the <b>${e(needText(key))}</b> plan. You are on <b>${e(pname(PROF.plan))}</b>. Paid plans are not open for self-sign-up yet; ask TTM on Telegram.</p><div class="row"><button class="ttm-btn ghost" id="authClose">Close</button></div>`
     : `<p><b>${e(label)}</b> is included with the <b>${e(needText(key))}</b> plan. Sign in to continue.</p>` + signInForm());
 }
+window.ttmMyPush = async (key, title, body) => { if(!USER) return false; const r = await api('/rest/v1/ttm_my_alerts?on_conflict=user_id,ukey', {method: 'POST', headers: {Prefer: 'resolution=ignore-duplicates,return=minimal'}, body: JSON.stringify({user_id: USER.id, ukey: key, title, body})}); return r.ok; };
 window.ttmFeedPost = async row => { if(!(PROF && PROF.is_admin)) return false; const r = await api('/rest/v1/ttm_spot_feed?on_conflict=ukey', {method: 'POST', headers: {Prefer: 'resolution=ignore-duplicates,return=minimal'}, body: JSON.stringify(row)}); if(r.ok){ try{ toast(Object.assign({ts: new Date().toISOString()}, row)); }catch(err){} } return r.ok; };
 window.ttmFeedList = async n => { const r = await api('/rest/v1/ttm_spot_feed?select=*&order=ts.desc&limit=' + (n || 30)); return r.ok && Array.isArray(r.json) ? r.json : []; };
 // Phone lock-screen alerts (web push) for Pro members

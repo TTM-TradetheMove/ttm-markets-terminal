@@ -51,6 +51,12 @@ Deno.serve(async (req) => {
     return new Response("spot " + n);
   }
 
+  if (table === "ttm_my_alerts") {
+    const row = rec.id && await claim("ttm_my_alerts", rec.id, "pushed"); if (!row) return new Response("skip");
+    const n = await send(await subsFor(row.user_id), {title: row.title, body: row.body || "", tag: "my-" + row.id, url: "./crypto/index.html#riskreward"});
+    return new Response("mine " + n);
+  }
+
   if (table === "ttm_chat") {
     const row = rec.id && await claim("ttm_chat", rec.id, "pushed"); if (!row) return new Response("skip");
     const text = String(row.body).slice(0, 140);

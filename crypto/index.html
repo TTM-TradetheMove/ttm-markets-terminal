@@ -3910,9 +3910,9 @@ function wireJournal(){
         ['units', 'notional', 'margin', 'riskUsd'].forEach(k => { part.snap[k] = x.snap[k] * f; x.snap[k] = x.snap[k] * (1 - f); });
         if(x.orders){ part.orders = x.orders.filter(o => o.filled).map(o => Object.assign({}, o, {m: o.m * f})); x.orders.forEach(o => { o.m = o.m * (1 - f); }); }
         part.res = {pnl: Math.round(m.pnl * 100) / 100, r: m.pnl / part.snap.riskUsd, how: m.how, closed: Date.now()}; delete part.hit; delete part.sent; x.booked = Math.round(((x.booked || 0) + m.pnl) * 100) / 100;
-        spotEv(x, 'part', 'part:' + part.id, Math.round(f * 1000) / 10);
+        spotEv(x, 'part', 'part:' + part.id, Math.round(f * 1000) / 10); myPush(x, 'part:' + part.id, 'Part TP booked', Math.round(f * 1000) / 10 + '% of the trade closed');
         list.splice(cur.i + 1, 0, part); saveAll(list); window.ttmTrack && ttmTrack('feat', 'close_part', {pct: Math.round(f * 100)}); $('rrModal').classList.remove('open'); cur = null; render(); renderSaved(); return; }
-      x.status = 'closed'; x.res = {pnl: Math.round(m.pnl * 100) / 100, r: m.pnl / x.snap.riskUsd, how: m.how, closed: Date.now()}; spotEv(x, 'sell', 'sell:' + x.id + ':' + x.res.closed);
+      x.status = 'closed'; x.res = {pnl: Math.round(m.pnl * 100) / 100, r: m.pnl / x.snap.riskUsd, how: m.how, closed: Date.now()}; spotEv(x, 'sell', 'sell:' + x.id + ':' + x.res.closed); myPush(x, 'sell:' + x.id, m.pnl > 0 ? 'Full TP hit' : m.pnl < 0 ? 'SL hit' : 'Trade closed', (m.pnl >= 0 ? '+' : '') + (m.pnl / x.snap.riskUsd).toFixed(1) + 'R · closed in your tracker');
       saveAll(list); window.ttmTrack && ttmTrack('feat', 'close_trade', {how: String(m.how || '').slice(0, 20), win: m.pnl > 0, r: Math.round(m.pnl / x.snap.riskUsd)}); $('rrModal').classList.remove('open'); cur = null; render(); renderSaved(); }
   });
   $('rrModal').addEventListener('mousedown', e => { if(e.target === $('rrModal')){ $('rrModal').classList.remove('open'); cur = null; ed = null; } });
@@ -3927,7 +3927,7 @@ function wireJournal(){
     else if(a === 'mv'){ const opts = ACCS.map((q, k) => (k + 1) + ' = ' + q[1]).join('\n'), v = prompt('Move ' + x.name + ' to which account?\n' + opts, '1'), q = ACCS[(parseInt(v, 10) || 0) - 1]; if(!q) return; if(q[0] === accOf(x)) return; x.snap.acc = q[0]; if(x.s) x.s.acc = q[0]; saveAll(list); renderSaved(); render(); renderJournal(); window.setTimeout(() => { HDT = 0; publishHoldings(); }, 500); }
     else if(a === 'mpx'){ const v = num(prompt('Current price of ' + x.snap.asset + ' (for assets without a live feed):', x.snap.manualPx || x.snap.E)); if(v > 0){ x.snap.manualPx = v; saveAll(list); renderSaved(); render(); renderJournal(); window.setTimeout(() => { HDT = 0; publishHoldings(); }, 500); } }
     else if(a === 'pend'){ if(x.orders){ x.orders.forEach(o => { o.filled = false; o.ft = null; }); syncOrders(x); } x.fill = 'pending'; { const pq = priceOf(x.snap.asset); if(pq) x.side = pq.p > x.snap.E ? 1 : -1; } x.hit = (x.snap.tps || []).map(() => false); saveAll(list); renderSaved(); render(); }
-    else if(a === 'be'){ x.snap.SL = x.snap.E; x.snap.slMoved = true; saveAll(list); renderSaved(); render(); }
+    else if(a === 'be'){ x.snap.SL = x.snap.E; x.snap.slMoved = true; myPush(x, 'be:' + x.id, 'SL moved to entry', 'Stop is now at ' + pr(x.snap.E)); saveAll(list); renderSaved(); render(); }
     else if(a === 'reopen'){ x.status = 'open'; delete x.res; saveAll(list); renderSaved(); render(); }
     else if(a === 'del'){ if(x.status === 'closed' || x.status === 'open'){ if(!confirm(x.status === 'open' ? 'Cancel this open trade and release its margin?' : 'Delete this closed trade from your history? Your balance will change back.')) return; } list.splice(i, 1); saveAll(list); renderSaved(); render(); } }
   $('rrSaved').addEventListener('click', e => { const b = e.target.closest('button[data-a]'); if(b) act(b); });
@@ -4206,6 +4206,7 @@ $('rrModalBody').addEventListener('click', e => {
 // ---- spot moves feed: Pro members get a live pop-up, everyone else sees it 14 days later (and Telegram posts it then)
 function feedEv(ukey, kind, asset, title, body, pct){ if(!(window.ttmIsAdmin && ttmIsAdmin() && window.ttmFeedPost)) return; ttmFeedPost({ukey, kind, asset, title, body, pct: pct == null ? null : pct}); }
 // Spot portfolio moves only, in plain words: no stop, no targets, no size.
+function myPush(x, key, head, body){ try{ if(!window.ttmMyPush || !x || !x.snap) return; if(window.ttmIsAdmin && ttmIsAdmin() && x.snap.mkt === 'spot' && accOf(x) === 'spot') return; ttmMyPush(key, x.snap.asset + ' · ' + head, body || ''); }catch(e){} }
 function spotEv(x, kind, ukey, pct){ if(!x || !x.snap || x.snap.mkt !== 'spot' || accOf(x) !== 'spot') return; const A = x.snap.asset, dir = x.snap.long === false ? 'Short' : 'Long';
   const T = {buy: [`TTM opened a Spot ${dir} position on ${A}`, ''], fill: [`TTM Spot ${dir} limit order on ${A} has been collected`, ''], tp: [`TTM Spot ${dir} TP hit on ${A}`, pct != null ? `TP hit at ${pct}% of the trade, ${Math.round((100 - pct) * 10) / 10}% remaining${pct < 99.99 ? ', SL to entry' : ''}` : ''], part: [`TTM took partial profit on ${A}`, pct != null ? `${pct}% of the position sold` : ''], sell: [`TTM closed its Spot ${dir} position on ${A}`, ''], add: [`TTM added to its Spot ${dir} position on ${A}`, '']}[kind];
   feedEv(ukey, kind, A, T[0], T[1], null); }
@@ -4260,9 +4261,10 @@ function trackHits(){
     sn.tps.forEach((t, i) => { const crossed = sn.long ? p >= t.P : p <= t.P;
       if(crossed && !x.hit[i]){ x.hit[i] = true; changed = true; }
       if(x.hit[i] && !x.sent.tp[i]){ x.sent.tp[i] = true; changed = true; spotEv(x, 'tp', 'tp:' + x.id + ':' + i, Math.round(sn.tps.reduce((a, q, k) => a + (x.hit[k] ? q.share : 0), 0) * 10) / 10);
+        myPush(x, 'tp:' + x.id + ':' + i, i === sn.tps.length - 1 ? 'Full TP hit' : 'Part TP hit', i === sn.tps.length - 1 ? 'All targets are in at ' + pr(t.P) : 'TP' + (i + 1) + ' at ' + pr(t.P) + (i === 0 && sn.SL !== sn.E ? ' · move SL to entry' : ' · trail your stop'));
         if(cfg.on) tgSend(`🎯 <b>TP${i + 1} hit</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nTarget ${pr(t.P)} reached (live ${pr(p)}).\n` + (i === 0 && sn.SL !== sn.E ? `👉 <b>Move your stop-loss to entry (${pr(sn.E)})</b> to protect the trade.\n` : i === sn.tps.length - 1 ? 'All targets are in. Consider closing the trade in your tracker.\n' : 'Consider trailing your stop up.\n') + `<i>${esc(x.name)} · TTM Trade Tracker</i>`); } });
     const stopped = sn.long ? p <= sn.SL : p >= sn.SL;
-    if(stopped && !x.sent.sl){ x.sent.sl = true; changed = true; if(cfg.on) tgSend(`🛑 <b>Stop level reached</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nPrice ${pr(p)} touched your stop ${pr(sn.SL)}. Check your exchange and close the trade in your tracker.\n<i>${esc(x.name)} · TTM Trade Tracker</i>`); }
+    if(stopped && !x.sent.sl){ x.sent.sl = true; changed = true; myPush(x, 'sl:' + x.id, 'SL hit', 'Price touched your stop at ' + pr(sn.SL)); if(cfg.on) tgSend(`🛑 <b>Stop level reached</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nPrice ${pr(p)} touched your stop ${pr(sn.SL)}. Check your exchange and close the trade in your tracker.\n<i>${esc(x.name)} · TTM Trade Tracker</i>`); }
     if(!stopped && x.sent.sl){ x.sent.sl = false; changed = true; } });
   if(changed) saveAll(list);
 }
