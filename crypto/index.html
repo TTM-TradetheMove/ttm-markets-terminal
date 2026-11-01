@@ -4185,7 +4185,7 @@ $('rrModalBody').addEventListener('click', e => {
 function feedEv(ukey, kind, asset, title, body, pct){ if(!(window.ttmIsAdmin && ttmIsAdmin() && window.ttmFeedPost)) return; ttmFeedPost({ukey, kind, asset, title, body, pct: pct == null ? null : pct}); }
 // Spot portfolio moves only, in plain words: no stop, no targets, no size.
 function spotEv(x, kind, ukey, pct){ if(!x || !x.snap || x.snap.mkt !== 'spot' || accOf(x) !== 'spot') return; const A = x.snap.asset, dir = x.snap.long === false ? 'Short' : 'Long';
-  const T = {buy: [`TTM opened a Spot ${dir} position on ${A}`, ''], fill: [`TTM Spot ${dir} limit order on ${A} has been collected`, ''], tp: [`TTM took partial profit on ${A}`, pct != null ? `${pct}% of the position sold` : ''], part: [`TTM took partial profit on ${A}`, pct != null ? `${pct}% of the position sold` : ''], sell: [`TTM closed its Spot ${dir} position on ${A}`, ''], add: [`TTM added to its Spot ${dir} position on ${A}`, '']}[kind];
+  const T = {buy: [`TTM opened a Spot ${dir} position on ${A}`, ''], fill: [`TTM Spot ${dir} limit order on ${A} has been collected`, ''], tp: [`TTM Spot ${dir} TP hit on ${A}`, pct != null ? `TP hit at ${pct}% of the trade, ${Math.round((100 - pct) * 10) / 10}% remaining${pct < 99.99 ? ', SL to entry' : ''}` : ''], part: [`TTM took partial profit on ${A}`, pct != null ? `${pct}% of the position sold` : ''], sell: [`TTM closed its Spot ${dir} position on ${A}`, ''], add: [`TTM added to its Spot ${dir} position on ${A}`, '']}[kind];
   feedEv(ukey, kind, A, T[0], T[1], null); }
 const feedPct = x => { const A = acct(accOf(x)); return A.equity > 0 ? Math.round(x.snap.margin / A.equity * 1000) / 10 : null; };
 function holdingsSnap(accId){
@@ -4237,7 +4237,7 @@ function trackHits(){
     x.hit = x.hit || sn.tps.map(() => false); x.sent = x.sent || {tp: sn.tps.map(() => false), sl: false};
     sn.tps.forEach((t, i) => { const crossed = sn.long ? p >= t.P : p <= t.P;
       if(crossed && !x.hit[i]){ x.hit[i] = true; changed = true; }
-      if(x.hit[i] && !x.sent.tp[i]){ x.sent.tp[i] = true; changed = true; spotEv(x, 'tp', 'tp:' + x.id + ':' + i, Math.round(t.share));
+      if(x.hit[i] && !x.sent.tp[i]){ x.sent.tp[i] = true; changed = true; spotEv(x, 'tp', 'tp:' + x.id + ':' + i, Math.round(sn.tps.reduce((a, q, k) => a + (x.hit[k] ? q.share : 0), 0) * 10) / 10);
         if(cfg.on) tgSend(`🎯 <b>TP${i + 1} hit</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nTarget ${pr(t.P)} reached (live ${pr(p)}).\n` + (i === 0 && sn.SL !== sn.E ? `👉 <b>Move your stop-loss to entry (${pr(sn.E)})</b> to protect the trade.\n` : i === sn.tps.length - 1 ? 'All targets are in. Consider closing the trade in your tracker.\n' : 'Consider trailing your stop up.\n') + `<i>${esc(x.name)} · TTM Trade Tracker</i>`); } });
     const stopped = sn.long ? p <= sn.SL : p >= sn.SL;
     if(stopped && !x.sent.sl){ x.sent.sl = true; changed = true; if(cfg.on) tgSend(`🛑 <b>Stop level reached</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nPrice ${pr(p)} touched your stop ${pr(sn.SL)}. Check your exchange and close the trade in your tracker.\n<i>${esc(x.name)} · TTM Trade Tracker</i>`); }
