@@ -754,9 +754,9 @@ async function chatSend(){
 }
 // live sessions
 const LIVE = {rows: [], t: 0};
-async function liveLoad(){ if(!on() || !USER) return; const r = await api('/rest/v1/ttm_live?select=*&starts_at=gt.' + encodeURIComponent(new Date(Date.now() - 2 * 3600e3).toISOString()) + '&order=starts_at.asc&limit=20'); if(r.ok && Array.isArray(r.json)){ LIVE.rows = r.json; liveBanner(); } }
+async function liveLoad(){ if(!on() || !USER) return; const r = await api('/rest/v1/ttm_live?select=*&starts_at=gt.' + encodeURIComponent(new Date(Date.now() - 3600e3).toISOString()) + '&order=starts_at.asc&limit=20'); if(r.ok && Array.isArray(r.json)){ LIVE.rows = r.json; liveBanner(); } }
 function liveBanner(){
-  let b = $('ttmLive'); const now = Date.now(), s = LIVE.rows.find(x => new Date(x.starts_at).getTime() > now - 2 * 3600e3 && new Date(x.starts_at).getTime() < now + 7 * 864e5);
+  let b = $('ttmLive'); const now = Date.now(), s = LIVE.rows.find(x => new Date(x.starts_at).getTime() > now - 3600e3 && new Date(x.starts_at).getTime() < now + 7 * 864e5);
   if(!USER || !s){ if(b) b.remove(); return; }
   if(!b){ b = document.createElement('div'); b.id = 'ttmLive'; document.body.insertBefore(b, document.body.firstChild); }
   const t = new Date(s.starts_at).getTime(), mins = Math.round((t - now) / 60000), when = new Date(t).toLocaleString([], {weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit'});
