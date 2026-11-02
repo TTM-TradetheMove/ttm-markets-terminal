@@ -824,6 +824,7 @@ function rmBuild(){
   if(RM.built && root.querySelector('#rmList')) return true;
   const tabs = ROOMS.map(r => `<button class="filter-chip" data-rmtab="${r[0]}" ${rmCan(r[0]) ? '' : 'style="opacity:.45"'}>${r[1]}${rmCan(r[0]) ? '' : ' 🔒'}</button>`).join('');
   root.innerHTML = `<div class="filter-row" id="rmTabs" style="margin-bottom:8px">${tabs}</div>
+    <p class="calendar-note" id="rmOnline" style="margin:0 0 8px"></p>
     <div class="rr-card" style="padding:0;overflow:hidden"><div id="rmList" style="height:min(60vh,520px);overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px"></div>
       <div id="rmPrev" style="display:none;padding:8px 12px;border-top:1px solid var(--line)"></div>
       <div style="display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);align-items:flex-end"><button class="rr-btn ghost sm" id="rmImgBtn" title="Add a screenshot">Image</button><input type="file" id="rmFile" accept="image/*" style="display:none"><textarea id="rmIn" rows="1" maxlength="1000" placeholder="Write a message. Paste a TradingView snapshot link or an image." style="flex:1;resize:none;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 10px;font:inherit;font-size:14px;max-height:120px"></textarea><button class="rr-btn sm" id="rmSend">Send</button></div></div>
@@ -831,7 +832,7 @@ function rmBuild(){
   $('rmIn').addEventListener('keydown', ev => { if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); rmSend(); } });
   $('rmIn').addEventListener('paste', ev => { const it = Array.from((ev.clipboardData || {}).items || []).find(x => x.type && x.type.indexOf('image/') === 0); if(it){ ev.preventDefault(); rmPick1(it.getAsFile()); } });
   $('rmFile').addEventListener('change', ev => { const f = ev.target.files && ev.target.files[0]; ev.target.value = ''; if(f) rmPick1(f); });
-  RM.built = true; return true;
+  RM.built = true; presBeat().then(presLoad); return true;
 }
 function rmTabs(){ document.querySelectorAll('#rmTabs [data-rmtab]').forEach(b => b.classList.toggle('active', b.dataset.rmtab === RM.room)); }
 function rmPick(r){ if(!rmCan(r)){ const n = $('rmNote'); if(n) n.textContent = 'The ' + (ROOMS.find(x => x[0] === r) || [0, r])[1] + ' room is for ' + needText('room:' + r) + ' members.'; return; } RM.room = r; RM.sig = ''; rmTabs(); const l = $('rmList'); if(l) l.innerHTML = ''; rmLoad(true); }
@@ -897,9 +898,20 @@ document.head.appendChild(css3);
 window.addEventListener('hashchange', () => { if(location.hash === '#community'){ RM.built = false; setTimeout(() => { rmLoad(true); }, 120); } });
 setTimeout(() => { rmStart(); if(location.hash === '#community') rmLoad(true); }, 1500);
 
+// ---------- Who is online ----------
+const PRES = {t: null, list: []};
+async function presBeat(){ if(!on() || !USER || document.hidden) return; await api('/rest/v1/ttm_presence?on_conflict=user_id', {method: 'POST', headers: {Prefer: 'resolution=merge-duplicates,return=minimal'}, body: JSON.stringify({user_id: USER.id, hidden: PREFS.online === false})}); }
+async function presLoad(){ const box = $('rmOnline'); if(!box || !USER) return; const since = new Date(Date.now() - 3 * 60000).toISOString();
+  const r = await api('/rest/v1/ttm_presence?select=user_id,name&hidden=eq.false&seen=gt.' + encodeURIComponent(since) + '&order=name.asc&limit=100');
+  if(!r.ok || !Array.isArray(r.json)){ box.textContent = ''; return; } const l = r.json; PRES.list = l;
+  box.innerHTML = l.length ? `<span style="color:#3fb47a">●</span> <b>${l.length} online now</b> <span style="color:var(--mute)">· ${l.slice(0, 12).map(x => e(x.name)).join(', ')}${l.length > 12 ? ' and ' + (l.length - 12) + ' more' : ''}</span>` : '<span style="color:var(--mute)">Nobody else is online right now.</span>'; }
+setInterval(() => { presBeat(); if(location.hash === '#community') presLoad(); }, 60000);
+document.addEventListener('visibilitychange', () => { if(!document.hidden){ presBeat(); if(location.hash === '#community') presLoad(); } });
+setTimeout(presBeat, 3500);
+
 // ---------- Member alert settings ----------
 let PREFS = {};
-const PREFDEF = [['live', 'Live sessions (new session and 15-minute reminder)', () => true], ['mytrade', 'My trade alerts (TP, SL and stop moves on my own trades)', () => true], ['spot', 'TTM Spot moves (Pro)', () => isPro()], ['chat', 'Replies from TTM in my private chat (Pro)', () => isPro()], ['inbox', 'Private messages from members (admin)', () => !!(PROF && PROF.is_admin)], ['luna', 'Luna Cycle 7-day alerts (beta)', () => !!(PROF && (PROF.is_admin || PROF.beta))]];
+const PREFDEF = [['live', 'Live sessions (new session and 15-minute reminder)', () => true], ['mytrade', 'My trade alerts (TP, SL and stop moves on my own trades)', () => true], ['spot', 'TTM Spot moves (Pro)', () => isPro()], ['chat', 'Replies from TTM in my private chat (Pro)', () => isPro()], ['inbox', 'Private messages from members (admin)', () => !!(PROF && PROF.is_admin)], ['online', 'Show me as online in the community chat', () => true], ['luna', 'Luna Cycle 7-day alerts (beta)', () => !!(PROF && (PROF.is_admin || PROF.beta))]];
 const ROOMPREF = [['free', 'Free'], ['premium', 'Premium'], ['pro', 'Pro']];
 async function prefLoad(){ if(!on() || !USER) return; const r = await api('/rest/v1/ttm_prefs?select=prefs&user_id=eq.' + USER.id); if(r.ok && Array.isArray(r.json) && r.json[0] && r.json[0].prefs) PREFS = r.json[0].prefs; try{ ui(); }catch(err){} }
 function prefsHtml(){
@@ -907,12 +919,12 @@ function prefsHtml(){
   const rooms = ROOMPREF.filter(r => rmCan(r[0])), mode = PREFS.rooms || 'ttm';
   const rmHtml = rooms.length ? `<div style="margin:8px 0 4px"><small style="color:var(--mute)">Community chat alerts on my phone</small><select data-prefsel="rooms" style="display:block;margin:4px 0;max-width:340px"><option value="ttm" ${mode === 'ttm' ? 'selected' : ''}>Only messages from TTM</option><option value="all" ${mode === 'all' ? 'selected' : ''}>Every message in my rooms</option><option value="follow" ${mode === 'follow' ? 'selected' : ''}>Only members I follow</option><option value="off" ${mode === 'off' ? 'selected' : ''}>Off</option></select>`
     + rooms.map(r => `<label style="display:flex;gap:10px;align-items:center;font-size:13.5px;margin:3px 0;cursor:pointer"><input type="checkbox" data-pref="r_${r[0]}" ${PREFS['r_' + r[0]] === false ? '' : 'checked'} style="width:auto"> <span>${r[1]} room</span></label>`).join('')
-    + `<div style="font-size:13px;margin:6px 0 0">${(PREFS.follow || []).length ? 'Following: ' + PREFS.follow.map(f => `${e(f.n)} <u data-unfollow="${e(f.id)}" style="cursor:pointer;color:var(--mute)">remove</u>`).join(' · ') : '<span style="color:var(--mute)">Press <b>follow</b> on a member\'s message in a room to get alerts from them.</span>'}</div></div>` : '';
+    + `<div style="font-size:13px;margin:6px 0 0">${(PREFS.follow || []).length ? 'Following: ' + PREFS.follow.map(f => `${e(f.n)} <u data-unfollow="${e(f.id)}" style="cursor:pointer;color:var(--mute)">remove</u>`).join(' · ') : '<span style="color:var(--mute)">Press <b>follow</b> on a member\'s message in a room to get alerts from them.</span>'}</div><div style="font-size:12px;color:var(--mute);margin-top:4px">Following is private. Nobody is told, and nobody can see who you follow. It only decides which phone alerts you get.</div></div>` : '';
   return `<div style="margin:0 0 12px"><small style="color:var(--mute)">Alert settings</small>${rows}${rmHtml}<span id="prefNote" class="calendar-note"></span></div>`;
 }
 async function prefSave(){ const n = $('prefNote'); if(n) n.textContent = 'Saving…';
   const r = await api('/rest/v1/ttm_prefs?on_conflict=user_id', {method: 'POST', headers: {Prefer: 'resolution=merge-duplicates,return=minimal'}, body: JSON.stringify({user_id: USER.id, prefs: PREFS, updated: new Date().toISOString()})}); const n2 = $('prefNote'); if(n2) n2.textContent = r.ok ? ' Saved.' : ' Could not save. Ask TTM to run the settings step.'; return r.ok; }
-document.addEventListener('change', async ev => { const t = ev.target; if(!t || !t.dataset || !USER) return; if(t.dataset.pref){ PREFS[t.dataset.pref] = t.checked; await prefSave(); } else if(t.dataset.prefsel){ PREFS[t.dataset.prefsel] = t.value; await prefSave(); } });
+document.addEventListener('change', async ev => { const t = ev.target; if(!t || !t.dataset || !USER) return; if(t.dataset.pref){ PREFS[t.dataset.pref] = t.checked; await prefSave(); } else if(t.dataset.prefsel){ PREFS[t.dataset.prefsel] = t.value; await prefSave(); } if(t.dataset.pref === 'online'){ await presBeat(); presLoad(); } });
 fxLoad().then(() => { if(FX) ui(); });
 boot();
 })();
