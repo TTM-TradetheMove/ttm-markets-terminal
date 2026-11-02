@@ -89,6 +89,20 @@ async function sessionAlerts(now: number) {
   }
 }
 
+// token unlocks (beta): a heads-up 7 days and 24 hours before
+async function unlockAlerts(now: number) {
+  for (const [col, ms, label] of [["alerted7", 7 * 864e5, "7 days"], ["alerted1", 864e5, "24 hours"]] as [string, number, string][]) {
+    const due = await get(`ttm_unlocks?select=*&${col}=eq.false&unlock_at=gt.${new Date(now).toISOString()}&unlock_at=lte.${new Date(now + ms).toISOString()}`);
+    for (const u of due) {
+      if (!(await claim("ttm_unlocks", u.id, col))) continue;
+      if (col === "alerted7" && new Date(u.unlock_at).getTime() - now <= 864e5) continue;   // added late: only the 24 hour alert
+      const people = await get("ttm_profiles?select=id&or=(is_admin.eq.true,beta.eq.true)");
+      const bits = [u.pct != null ? Number(u.pct).toFixed(2) + "% of supply" : "", u.amount ? Number(u.amount).toLocaleString("en-US", {maximumFractionDigits: 0}) + " " + u.token : "", u.kind || ""].filter(Boolean).join(" · ");
+      await send(await subsFor(idsOf(people)), {title: "🔓 " + String(u.token).toUpperCase() + " unlock in " + label, body: bits || "Scheduled token unlock", tag: "unlock-" + u.id + "-" + col, url: "./crypto/index.html#tokenunlocks"}, "vest");
+    }
+  }
+}
+
 // room message alerts: who has access to the room, then each member's own settings decide
 async function roomPush(m: any) {
   const accRow = (await get("ttm_settings?select=value&key=eq.access"))[0];
@@ -171,6 +185,7 @@ Deno.serve(async (req) => {
     return new Response("msg " + n);
   }
 
+  try { await unlockAlerts(now); } catch (e) { console.log("unlock alerts failed:", String(e)); }
   // cron tick: market session alerts, new community room messages, then live sessions
   try { await sessionAlerts(now); } catch (e) { console.log("session alerts failed:", String(e)); }
   const fresh0 = new Date(now - 10 * 60000).toISOString();

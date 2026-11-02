@@ -14,7 +14,7 @@ const CAT = [
   ['c:calendar', 'Crypto · Macro Watch', ['free']], ['c:tradinghours', 'Crypto · Trading Hours', ['free']], ['c:fomo', 'Crypto · FOMO Finder & RSI Chart', ['free']],
   ['c:btcmonthly', 'Crypto · BTC Monthly (with cycle tops)', ['free']], ['c:tokenevents', 'Crypto · Token Events', []], ['c:library', 'Crypto · Reports library', []], ['c:transparency', 'Crypto · Transparency Watch', ['free']],
   ['c:marketpulse', 'Crypto · Market Pulse (liquidations, funding, open interest)', ['premium']], ['c:rsimap', 'Crypto · RSI Heatmap', ['premium']], ['c:community', 'Crypto · Community chat rooms (section)', ['free']], ['room:free', 'Chat room · Free (read and write)', ['free', 'premium']], ['room:premium', 'Chat room · Premium (read and write)', ['premium']], ['room:pro', 'Chat room · Pro (read and write)', []],
-  ['c:lunacycles', 'Crypto · Luna Cycles (BTC and the eclipse cycles)', ['beta'], 'off'], ['c:painzones', 'Crypto · Pain Zones (any coin: average cost, support / resistance, RSI)', [], 'off'], ['c:maxpain', 'Crypto · Max Pain (options, with RSI confluence)', ['premium']], ['c:volume', 'Crypto · Volume Heatmap', ['premium']], ['c:socialpulse', 'Crypto · Social Pulse', ['premium']],
+  ['c:lunacycles', 'Crypto · Luna Cycles (BTC and the eclipse cycles)', ['beta'], 'off'], ['c:tokenunlocks', 'Crypto · Token Unlocks (upcoming vesting unlocks)', ['beta'], 'off'], ['c:painzones', 'Crypto · Pain Zones (any coin: average cost, support / resistance, RSI)', [], 'off'], ['c:maxpain', 'Crypto · Max Pain (options, with RSI confluence)', ['premium']], ['c:volume', 'Crypto · Volume Heatmap', ['premium']], ['c:socialpulse', 'Crypto · Social Pulse', ['premium']],
   ['c:riskreward', 'Crypto · Risk / Reward calculator', ['premium']], ['c:tradejournal', 'Crypto · Trade Tracker & win ratio', []], ['c:portfolio', 'Crypto · Portfolio Forecast', []],
   ['t:calendar', 'TradFi · Macro Watch', ['free']], ['t:tradinghours', 'TradFi · Trading Hours', ['free']], ['t:congress', 'TradFi · Congress Watch', []],
   ['t:globalmarkets', 'TradFi · Global Markets', ['premium']], ['t:bonds', 'TradFi · Bonds & Rates', ['premium']], ['t:macrointel', 'TradFi · Macro Intel', ['premium']], ['t:newsrisk', 'TradFi · News & Risk', ['premium']], ['t:tfcalc', 'TradFi · Risk / Reward calculator', ['premium']],
@@ -913,6 +913,44 @@ document.head.appendChild(css3);
 window.addEventListener('hashchange', () => { if(location.hash === '#community'){ RM.built = false; setTimeout(() => { rmLoad(true); }, 120); } });
 setTimeout(() => { rmStart(); if(location.hash === '#community') rmLoad(true); }, 1500);
 
+
+// ---------- Token unlocks (beta) ----------
+const UN = {rows: [], px: null, f: '30', edit: null, t: null};
+const unUsd = v => v == null || !isFinite(v) ? '—' : v >= 1e9 ? '$' + (v / 1e9).toFixed(2) + 'B' : v >= 1e6 ? '$' + (v / 1e6).toFixed(1) + 'M' : '$' + Math.round(v).toLocaleString();
+const unNum = v => v == null ? '—' : v >= 1e9 ? (v / 1e9).toFixed(2) + 'B' : v >= 1e6 ? (v / 1e6).toFixed(2) + 'M' : Math.round(v).toLocaleString();
+function unLeft(ms){ if(ms <= 0) return 'now'; const d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / 36e5), m = Math.floor(ms % 36e5 / 6e4); return d >= 2 ? d + ' days' : d ? d + 'd ' + h + 'h' : h ? h + 'h ' + m + 'm' : m + ' min'; }
+async function unLoad(){
+  const root = $('unApp'); if(!root || !can('c:tokenunlocks')) return;
+  if(!UN.px){ try{ const r = await fetch(BASE + 'top_coins.json?' + Date.now()); const j = await r.json(); UN.px = {}; (j.coins || []).forEach(c => { UN.px[c.s] = c.p; }); }catch(err){ UN.px = {}; } }
+  const r = await api('/rest/v1/ttm_unlocks?select=*&order=unlock_at.asc&limit=500');
+  if(!r.ok){ root.innerHTML = '<div class="rr-warn y"><b>One database step is missing.</b> Ask TTM to run supabase/unlocks.sql in Supabase.</div>'; return; }
+  UN.rows = r.json || []; unPaint();
+}
+function unPaint(){
+  const root = $('unApp'); if(!root) return; const now = Date.now(), adm = !!(PROF && PROF.is_admin), lim = UN.f === 'all' ? 1e15 : +UN.f * 864e5;
+  const l = UN.rows.filter(x => { const t = Date.parse(x.unlock_at); return t > now - 864e5 && t - now <= lim; });
+  const chips = [['7', '7 days'], ['30', '30 days'], ['90', '90 days'], ['all', 'All']].map(c => `<button class="filter-chip ${UN.f === c[0] ? 'active' : ''}" data-unf="${c[0]}">${c[1]}</button>`).join('');
+  const tot = l.reduce((t, x) => { const p = UN.px && UN.px[String(x.token).toUpperCase()]; return t + (p && x.amount ? p * x.amount : 0); }, 0);
+  const rows = l.map(x => { const t = Date.parse(x.unlock_at), p = UN.px && UN.px[String(x.token).toUpperCase()], v = p && x.amount ? p * x.amount : null, soon = t - now < 864e5 * 2;
+    return `<tr><td><b>${e(String(x.token).toUpperCase())}</b>${x.name ? `<br><small style="color:var(--mute)">${e(x.name)}</small>` : ''}</td><td style="${soon ? 'color:var(--gold2);font-weight:700' : ''}">${unLeft(t - now)}<br><small style="color:var(--mute)">${new Date(t).toLocaleString([], {weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'})}</small></td><td>${unNum(x.amount)}</td><td>${x.pct == null ? '—' : Number(x.pct).toFixed(2) + '%'}</td><td>${unUsd(v)}</td><td>${e(x.kind || '')}${x.note ? `<br><small style="color:var(--mute)">${e(x.note)}</small>` : ''}${x.link && /^https?:\/\//.test(x.link) ? `<br><a href="${e(x.link)}" target="_blank" rel="noopener noreferrer" style="color:var(--gold2)">source</a>` : ''}</td>${adm ? `<td style="white-space:nowrap"><u data-unedit="${x.id}" style="cursor:pointer">edit</u> · <u data-undel="${x.id}" style="cursor:pointer">delete</u></td>` : ''}</tr>`; }).join('');
+  const ed = UN.edit != null ? (UN.rows.find(x => x.id === UN.edit) || {}) : {}, dt = ed.unlock_at ? new Date(Date.parse(ed.unlock_at) - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 16) : '';
+  const inp = (id, ph, v, ty, w) => `<input id="${id}" type="${ty || 'text'}" placeholder="${ph}" value="${e(v == null ? '' : v)}" ${ty === 'number' ? 'step="any" inputmode="decimal"' : ''} style="${w ? 'width:' + w + ';' : ''}min-width:90px">`;
+  const form = adm ? `<div class="rr-card" style="margin-top:14px"><h3>${UN.edit != null ? 'Edit unlock' : 'Add an unlock'} <small style="font-weight:400;color:var(--mute)">(admin only)</small></h3><div style="display:flex;gap:8px;flex-wrap:wrap">${inp('unTok', 'Ticker e.g. OP', ed.token, 0, '90px')}${inp('unName', 'Name (optional)', ed.name)}<input id="unAt" type="datetime-local" value="${dt}">${inp('unAmt', 'Tokens unlocking', ed.amount, 'number')}${inp('unPct', '% of supply', ed.pct, 'number', '110px')}${inp('unKind', 'Type e.g. team', ed.kind)}${inp('unNote', 'Note', ed.note)}${inp('unLink', 'Source link', ed.link)}</div><div style="display:flex;gap:8px;margin-top:10px"><button class="rr-btn sm" id="unSave">${UN.edit != null ? 'Save changes' : 'Add unlock'}</button>${UN.edit != null ? '<button class="rr-btn ghost sm" id="unCancel">Cancel</button>' : ''}<span class="calendar-note" id="unNote" style="margin:0"></span></div><p class="calendar-note" style="margin:8px 0 0">The date is in your own time zone. Members with beta access get a phone alert 7 days and 24 hours before each unlock, if they leave the setting on.</p></div>` : '';
+  root.innerHTML = `<div class="filter-row" style="margin:6px 0 10px">${chips}</div><p class="calendar-note" style="margin:0 0 8px">${l.length} unlock${l.length === 1 ? '' : 's'} in this window${tot ? ' · about ' + unUsd(tot) + ' at current prices' : ''}</p>${l.length ? `<div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Token</th><th>Unlocks in</th><th>Tokens</th><th>% of supply</th><th>Value now</th><th>Details</th>${adm ? '<th></th>' : ''}</tr></thead><tbody>${rows}</tbody></table></div>` : '<p class="calendar-note">Nothing listed in this window yet.</p>'}${form}<p class="calendar-note" style="margin:10px 0 0">Education only, not financial advice. Unlock schedules can change and a scheduled unlock does not mean the tokens will be sold.</p>`;
+}
+document.addEventListener('click', async ev => { const t = ev.target; if(!t || !t.dataset && !t.id) return;
+  if(t.dataset && t.dataset.unf){ UN.f = t.dataset.unf; unPaint(); }
+  else if(t.dataset && t.dataset.unedit){ UN.edit = +t.dataset.unedit; unPaint(); const f = $('unTok'); if(f) f.scrollIntoView({block: 'center'}); }
+  else if(t.dataset && t.dataset.undel){ if(!armTap(t, 'tap again to delete')) return; await api('/rest/v1/ttm_unlocks?id=eq.' + t.dataset.undel, {method: 'DELETE'}); unLoad(); }
+  else if(t.id === 'unCancel'){ UN.edit = null; unPaint(); }
+  else if(t.id === 'unSave'){ const n = $('unNote'), tok = ($('unTok').value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12), at = $('unAt').value; if(!tok || !at){ n.textContent = 'Enter a ticker and a date.'; return; }
+    const num = v => { const x = parseFloat(v); return isFinite(x) ? x : null; }, row = {token: tok, name: ($('unName').value || '').trim().slice(0, 60), unlock_at: new Date(at).toISOString(), amount: num($('unAmt').value), pct: num($('unPct').value), kind: ($('unKind').value || '').trim().slice(0, 40), note: ($('unNote').value || '').trim().slice(0, 140), link: ($('unLink').value || '').trim().slice(0, 300), alerted7: false, alerted1: false};
+    n.textContent = 'Saving…'; const r = UN.edit != null ? await api('/rest/v1/ttm_unlocks?id=eq.' + UN.edit, {method: 'PATCH', headers: {Prefer: 'return=minimal'}, body: JSON.stringify(row)}) : await api('/rest/v1/ttm_unlocks', {method: 'POST', headers: {Prefer: 'return=minimal'}, body: JSON.stringify(row)});
+    if(r.ok){ UN.edit = null; unLoad(); } else n.textContent = 'Could not save. Run supabase/unlocks.sql in Supabase first.'; }
+});
+window.addEventListener('hashchange', () => { if(location.hash === '#tokenunlocks') unLoad(); });
+setTimeout(() => { if(location.hash === '#tokenunlocks') unLoad(); }, 1800); setInterval(() => { if(location.hash === '#tokenunlocks' && !document.hidden && UN.edit == null) unPaint(); }, 30000);
+
 // ---------- Disclaimer gate ----------
 const DISC_VER = '2026-11-02';
 const DISC_HTML = `<h2 style="margin:0 0 12px;color:var(--gold2,#f2c14e);font-size:22px;letter-spacing:.04em">TTM DISCLAIMER</h2>
@@ -962,7 +1000,7 @@ setTimeout(presBeat, 3500);
 
 // ---------- Member alert settings ----------
 let PREFS = {};
-const PREFDEF = [['live', 'Live sessions (new session and 15-minute reminder)', () => true], ['mytrade', 'My trade alerts (TP, SL and stop moves on my own trades)', () => true], ['spot', 'TTM Spot moves (Pro)', () => isPro()], ['chat', 'Replies from TTM in my private chat (Pro)', () => isPro()], ['inbox', 'Private messages from members (admin)', () => !!(PROF && PROF.is_admin)], ['luna', 'Luna Cycle 7-day alerts (beta)', () => !!(PROF && (PROF.is_admin || PROF.beta))]];
+const PREFDEF = [['live', 'Live sessions (new session and 15-minute reminder)', () => true], ['mytrade', 'My trade alerts (TP, SL and stop moves on my own trades)', () => true], ['spot', 'TTM Spot moves (Pro)', () => isPro()], ['chat', 'Replies from TTM in my private chat (Pro)', () => isPro()], ['inbox', 'Private messages from members (admin)', () => !!(PROF && PROF.is_admin)], ['vest', 'Token unlock alerts, 7 days and 24 hours before (beta)', () => !!(PROF && (PROF.is_admin || PROF.beta))], ['luna', 'Luna Cycle 7-day alerts (beta)', () => !!(PROF && (PROF.is_admin || PROF.beta))]];
 const ROOMPREF = [['free', 'Free'], ['premium', 'Premium'], ['pro', 'Pro']];
 async function prefLoad(){ if(!on() || !USER) return; const r = await api('/rest/v1/ttm_prefs?select=prefs&user_id=eq.' + USER.id); if(r.ok && Array.isArray(r.json) && r.json[0] && r.json[0].prefs) PREFS = r.json[0].prefs; try{ ui(); }catch(err){} }
 const SESSPREF = [['s_asia_open', 'ASIA open'], ['s_asia_close', 'ASIA close'], ['s_ldn_open', 'London open'], ['s_ldn_close', 'London close'], ['s_ny_open', 'US open'], ['s_ny_close', 'US close']];
@@ -977,7 +1015,7 @@ function prefsHtml(){
     + `<div style="font-size:13px;margin:6px 0 0">${(PREFS.follow || []).length ? 'Following: ' + PREFS.follow.map(f => `${e(f.n)} <u data-unfollow="${e(f.id)}" style="cursor:pointer;color:var(--mute)">remove</u>`).join(' · ') : '<span style="color:var(--mute)">Press <b>follow</b> on a member\'s message in a room to get alerts from them.</span>'}</div><div style="font-size:12px;color:var(--mute);margin-top:4px">Following is private. Nobody is told, and nobody can see who you follow. It only decides which phone alerts you get.</div>` : '';
   const sess = `<div style="font-size:12.5px;color:var(--mute);margin:2px 0 4px">Phone alert when a core market session opens or closes. All off until you tick them.</div>` + SESSPREF.map(s => cb(s[0], s[1], false)).join('') + cb('s_warn', '15-minute warning before the ones I ticked', false);
   return `<div style="margin:0 0 12px"><h4 style="margin:6px 0 0;font-size:15px">My settings <span style="font-weight:400;color:var(--mute);font-size:12px">alerts and messages</span></h4>`
-    + grp('Trades and TTM', pick(['live', 'mytrade', 'spot', 'chat', 'inbox', 'luna']))
+    + grp('Trades and TTM', pick(['live', 'mytrade', 'spot', 'chat', 'inbox', 'luna', 'vest']))
     + grp('Market sessions', sess)
     + (rooms.length ? grp('Community chat', rmHtml + cb('online', 'Show me as online in the community chat')) : grp('Community chat', cb('online', 'Show me as online in the community chat')))
     + `<span id="prefNote" class="calendar-note"></span></div>`;
