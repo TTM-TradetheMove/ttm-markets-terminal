@@ -137,7 +137,7 @@ async function boot(){
     const t = await token();
     if(t){ const u = await raw('/auth/v1/user', {}, t); if(u.ok && u.json && u.json.id){ USER = {id: u.json.id, email: u.json.email}; let p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email,plan_until,beta,tg_handle`); if(!p.ok) p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email,plan_until,beta`); if(!p.ok) p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email,plan_until`); if(!p.ok) p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email`); PROF = (p.ok && p.json && p.json[0]) || {plan: 'free', is_admin: false}; PROF.plan = normPlan(PROF.plan); if(PROF.plan_until && !PROF.is_admin && new Date(PROF.plan_until) < new Date()){ PROF.expiredPlan = PROF.plan; PROF.plan = 'free'; PROF.plan_until = null; api('/rest/v1/rpc/ttm_expire_me', {method: 'POST', body: '{}'}).catch(() => {}); } } }
   }
-  ui(); if(USER){ syncInit(); tgInit(); fbLoad(true); prefLoad(); } trkStart(); trkNote();
+  ui(); if(USER){ syncInit(); tgInit(); fbLoad(true); prefLoad(); discCheck(); } trkStart(); trkNote();
 }
 // access: does the current visitor get this section or feature?
 function can(key){
@@ -504,10 +504,11 @@ async function adminUi(){ await fbLoad(true);
     ${noTg || FB.err ? `<div class="rr-warn y"><b>One database step is missing.</b> In Supabase open SQL Editor, New query, paste this and press Run, then refresh. It adds the Telegram name and the beta feedback box.<pre style="white-space:pre-wrap;margin:8px 0 0;user-select:all;max-height:240px;overflow:auto">${e(FBSQL)}</pre></div>` : ''}
     ${lvAdminHtml()}
     ${rmAdminHtml()}
+    ${discAdminHtml()}
     ${fbAdminHtml()}
     <div class="rr-card"><h3>Members (${users.length})</h3><div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Email</th><th>Telegram</th><th>Joined</th><th>Plan</th><th>Until</th><th>Beta</th><th></th></tr></thead><tbody>${users.map(u => `<tr><td>${e(u.email)}${u.is_admin ? ' <span class="rr-pill be">admin</span>' : ''}</td><td>${u.tg_handle ? '@' + e(u.tg_handle) : '<span class="ins-sub">—</span>'}</td><td>${new Date(u.created_at).toLocaleDateString()}</td><td>${sel('data-uid="' + u.id + '"', normPlan(u.plan))}</td><td style="white-space:nowrap">${u.plan_until ? (new Date(u.plan_until) < new Date() ? '<span style="color:#e0554d">ended ' : '<span style="color:var(--gold2)">') + new Date(u.plan_until).toLocaleDateString(undefined, {day: 'numeric', month: 'short'}) + '</span>' + (u.plan_note ? ' <span class="ins-sub">' + e(u.plan_note) + '</span>' : '') : '<span class="ins-sub">no end</span>'}</td><td style="text-align:center"><input type="checkbox" data-beta="${u.id}" ${u.beta ? 'checked' : ''}></td><td>${USER && u.id === USER.id ? '' : `<button class="rr-btn ghost sm" data-delu="${e(u.id)}" data-em="${e(u.email)}" style="border-color:#e0554d;color:#e0554d">Delete</button>`}</td></tr>`).join('') || '<tr><td colspan="7" style="color:var(--mute)">No members yet.</td></tr>'}</tbody></table></div></div>
     <div class="rr-card"><h3>Usage insights</h3><p class="calendar-note" style="margin:0 0 10px">An executive summary of what people open and click: trends against the previous period, what is useful and what is not, where visitors are, and charts you can click into.</p><a class="rr-btn" style="text-decoration:none;display:inline-block" href="#insights">Open Insights →</a></div>`;
-  lvLoad(); rmMutesLoad();
+  lvLoad(); rmMutesLoad(); discAdminLoad();
 }
 
 // ---------- Insights page (admin only): #insights
@@ -897,6 +898,42 @@ css3.textContent = `.rm-m{max-width:88%;align-self:flex-start;background:rgba(25
 document.head.appendChild(css3);
 window.addEventListener('hashchange', () => { if(location.hash === '#community'){ RM.built = false; setTimeout(() => { rmLoad(true); }, 120); } });
 setTimeout(() => { rmStart(); if(location.hash === '#community') rmLoad(true); }, 1500);
+
+// ---------- Disclaimer gate ----------
+const DISC_VER = '2026-11-02';
+const DISC_HTML = `<h2 style="margin:0 0 12px;color:var(--gold2,#f2c14e);font-size:22px;letter-spacing:.04em">TTM DISCLAIMER</h2>
+<p>All content shared within TTM, including the terminal, reports, charts, calculators, alerts, live sessions and community chat, is for <b>educational and informational purposes only</b> and is <b>not financial advice</b>.</p>
+<p>TTM is not a licensed financial adviser, and nothing here takes into account your personal objectives, financial situation or needs. Any trade ideas, charts, analysis or market discussions are personal opinions and should not be taken as recommendations to buy or sell any asset. Consider speaking to a licensed adviser before you invest.</p>
+<p>Trading and investing involve significant risk, and you may lose some or all of your capital. Past performance does not guarantee future results. Prices, levels, liquidation figures and other data are estimates and can be delayed or wrong. Always do your own research and manage your own risk.</p>
+<p>By participating in TTM, you acknowledge that all trading and investment decisions are made at your own risk and responsibility.</p>`;
+async function discCheck(){ if(!on() || !USER) return; const r = await api(`/rest/v1/ttm_acceptances?select=id&user_id=eq.${USER.id}&version=eq.${DISC_VER}&limit=1`); if(!r.ok || !Array.isArray(r.json)) return; if(!r.json.length) discShow(); }
+function discShow(){
+  if($('ttmDisc')) return; const d = document.createElement('div'); d.id = 'ttmDisc';
+  d.style.cssText = 'position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto';
+  d.innerHTML = `<div style="max-width:560px;width:100%;background:var(--card,#16161a);border:1px solid var(--gold,#dba118);border-radius:16px;padding:24px;color:var(--text,#e8e6e1);font-size:14.5px;line-height:1.55;box-shadow:0 20px 60px rgba(0,0,0,.7)"><div style="font-weight:800;letter-spacing:.14em;font-size:11px;color:var(--mute,#9a978f);margin-bottom:6px">TRADE THE MOVE</div>${DISC_HTML}
+  <label style="display:flex;gap:10px;align-items:flex-start;margin:14px 0;cursor:pointer;font-weight:600"><input type="checkbox" id="discTick" style="width:auto;margin-top:3px"> <span>I have read and understood the TTM disclaimer, and I accept it.</span></label>
+  <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="ttm-btn" id="discOk" disabled style="opacity:.5">Accept and continue</button><button class="ttm-btn ghost" id="discOut">Sign out</button></div><p id="discNote" style="margin:10px 0 0;font-size:12px;color:var(--mute,#9a978f)"></p></div>`;
+  document.body.appendChild(d);
+}
+document.addEventListener('change', ev => { if(ev.target && ev.target.id === 'discTick'){ const b = $('discOk'); b.disabled = !ev.target.checked; b.style.opacity = ev.target.checked ? 1 : .5; } });
+document.addEventListener('click', async ev => { const t = ev.target; if(!t || !t.id) return;
+  if(t.id === 'discOk'){ t.disabled = true; $('discNote').textContent = 'Saving…'; const r = await api('/rest/v1/ttm_acceptances?on_conflict=user_id,version', {method: 'POST', headers: {Prefer: 'resolution=ignore-duplicates,return=minimal'}, body: JSON.stringify({user_id: USER.id, version: DISC_VER})}); if(r.ok){ const d = $('ttmDisc'); if(d) d.remove(); } else { t.disabled = false; $('discNote').textContent = 'Could not save. Check your connection and try again.'; } }
+  else if(t.id === 'discOut'){ try{ await api('/auth/v1/logout', {method: 'POST'}); }catch(err){} try{ localStorage.removeItem(AK); localStorage.removeItem(SYNCK); }catch(err){} location.reload(); }
+  else if(t.dataset && t.dataset.accdel){ if(!armTap(t, 'tap again to remove')) return; if(await delRow('/rest/v1/ttm_acceptances?id=eq.' + t.dataset.accdel)) discAdminLoad(); }
+  else if(t.id === 'accCsv'){ const rows = ACCS_LIST.map(x => [x.email || '', x.tg_handle || '', x.version, x.accepted_at].map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')); const blob = new Blob(['Email,Telegram,Version,Accepted\n' + rows.join('\n')], {type: 'text/csv'}); const a2 = document.createElement('a'); a2.href = URL.createObjectURL(blob); a2.download = 'ttm-disclaimer-acceptances.csv'; a2.click(); setTimeout(() => URL.revokeObjectURL(a2.href), 2000); }
+});
+let ACCS_LIST = [];
+function discAdminHtml(){ return `<div class="rr-card"><h3>Disclaimer acceptances</h3><p class="calendar-note" style="margin:0 0 10px">Every member ticks the disclaimer before using the terminal. These records stay here until you remove them, even if the member closes their account.</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 8px"><input id="accSearch" placeholder="Search email or name" autocomplete="off" style="flex:1;min-width:180px"><button class="rr-btn ghost sm" id="accCsv">Download CSV</button></div><div id="accList" class="rr-wrap"></div></div>`; }
+async function discAdminLoad(){
+  const box = $('accList'); if(!box) return; const r = await api('/rest/v1/ttm_acceptances?select=*&order=accepted_at.desc&limit=1000');
+  if(!r.ok){ box.innerHTML = '<div class="rr-warn y"><b>One database step is missing.</b> Run supabase/disclaimer.sql in the Supabase SQL editor, then refresh.</div>'; return; }
+  ACCS_LIST = r.json || []; discAdminPaint();
+}
+function discAdminPaint(){
+  const box = $('accList'); if(!box) return; const q = (($('accSearch') || {}).value || '').toLowerCase(), l = ACCS_LIST.filter(x => !q || (x.email || '').toLowerCase().includes(q) || (x.tg_handle || '').toLowerCase().includes(q));
+  box.innerHTML = l.length ? `<table class="rr-tbl"><thead><tr><th>Email</th><th>Telegram</th><th>Accepted</th><th>Version</th><th></th></tr></thead><tbody>${l.map(x => `<tr><td>${e(x.email || '')}</td><td>${x.tg_handle ? '@' + e(x.tg_handle) : ''}</td><td>${new Date(x.accepted_at).toLocaleString([], {day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'})}</td><td>${e(x.version)}</td><td><u data-accdel="${x.id}" style="cursor:pointer">remove</u></td></tr>`).join('')}</tbody></table>` : '<p class="calendar-note" style="margin:0">No acceptances yet.</p>';
+}
+document.addEventListener('input', ev => { if(ev.target && ev.target.id === 'accSearch') discAdminPaint(); });
 
 // ---------- Who is online ----------
 const PRES = {t: null, list: []};
