@@ -226,6 +226,13 @@ document.addEventListener('click', async ev => {
   else if(t.dataset && t.dataset.rmmute){ if(!armTap(t, 'tap again to mute')) return; await rmMute(t.dataset.rmmute, 'all'); const n = $('rmNote'); if(n) n.textContent = 'Member muted in every room. Unmute them in Admin.'; }
   else if(t.id === 'rmMuteBtn'){ await rmMuteForm(); }
   else if(t.dataset && t.dataset.rmunmute){ await api('/rest/v1/ttm_room_mutes?user_id=eq.' + t.dataset.rmunmute + '&room=eq.' + (t.dataset.rmroom || 'all'), {method: 'DELETE'}); rmMutesLoad(); }
+  else if(t.dataset && t.dataset.rxopen){ RM.rxpick = +t.dataset.rxopen; RM.sig = ''; rmLoad(true); }
+  else if(t.dataset && t.dataset.rx){ const [mid, em] = t.dataset.rx.split('|'), mine = (RM.rx[mid] || []).some(x => x.user_id === USER.id && x.emoji === em); RM.rxpick = null;
+    if(mine) await api('/rest/v1/ttm_room_reacts?msg_id=eq.' + mid + '&user_id=eq.' + USER.id + '&emoji=eq.' + encodeURIComponent(em), {method: 'DELETE'});
+    else { const r = await api('/rest/v1/ttm_room_reacts', {method: 'POST', headers: {Prefer: 'resolution=ignore-duplicates,return=minimal'}, body: JSON.stringify({msg_id: +mid, emoji: em})}); if(!r.ok){ const n = $('rmNote'); if(n) n.textContent = 'You cannot react here (muted, or the reactions step is missing).'; } }
+    RM.sig = ''; rmLoad(true); }
+  else if(t.id === 'rmEmoBtn'){ const b = $('rmEmoBox'); if(b) b.style.display = b.style.display === 'none' ? 'flex' : 'none'; }
+  else if(t.dataset && t.dataset.emo){ const i = $('rmIn'); if(i && !i.disabled){ i.value += t.dataset.emo; i.focus(); } }
   else if(t.dataset && t.dataset.rmf){ PREFS.rfilter = t.dataset.rmf === 'follow' ? 'follow' : 'all'; RM.sig = ''; rmFiltPaint(); prefSave(); rmLoad(true); }
   else if(t.dataset && t.dataset.rmat){ const i = $('rmIn'); if(i && !i.disabled){ i.value = (i.value + (i.value && !/\s$/.test(i.value) ? ' ' : '') + '@' + t.dataset.rmat.replace(/^@/, '') + ' '); i.focus(); } }
   else if(t.dataset && t.dataset.rmfollow){ const id = t.dataset.rmfollow, f = PREFS.follow || [], i = f.findIndex(x => x.id === id); if(i >= 0) f.splice(i, 1); else f.push({id, n: t.dataset.n || 'Member'}); PREFS.follow = f.slice(0, 50); await prefSave(); RM.sig = ''; rmLoad(true); }
@@ -823,7 +830,8 @@ async function lvAdd(){ const n = $('lvNoteMsg'), title = ($('lvTitle').value ||
   if(r.ok){ n.textContent = 'Added. It posts to Telegram within a minute.'; ['lvTitle', 'lvWhen', 'lvUrl', 'lvNote'].forEach(i => { $(i).value = ''; }); lvLoad(); } else n.textContent = 'Could not save. Run supabase/messaging.sql first.'; }
 
 // ---------- Community chat rooms (Free / Premium / Pro) ----------
-const RM = {room: null, sig: '', pend: null, muted: false, timer: null, built: false, busy: false};
+const RXS = ['👍', '🔥', '🚀', '😂', '❤️', '👀'], EMO = ['😀', '😂', '🤣', '😊', '😍', '😎', '🤔', '😅', '😭', '😡', '👍', '👎', '👏', '🙏', '💪', '🔥', '🚀', '🌙', '💎', '🐂', '🐻', '📈', '📉', '💰', '🎯', '✅', '❌', '⚠️', '👀', '🤝'];
+const RM = {rx: {}, rxpick: null, room: null, sig: '', pend: null, muted: false, timer: null, built: false, busy: false};
 const ROOMS = [['free', 'Free'], ['premium', 'Premium'], ['pro', 'Pro']];
 const rmCan = r => !!USER && can('room:' + r);
 const rmImgOk = u => typeof u === 'string' && CFG.url && u.indexOf(CFG.url + '/storage/v1/object/public/room-images/') === 0;
@@ -833,6 +841,12 @@ function rmFmt(m){
   imgs.forEach(id => { const src = 'https://s3.tradingview.com/snapshots/' + id[0].toLowerCase() + '/' + id + '.png'; h += `<a href="https://www.tradingview.com/x/${e(id)}/" target="_blank" rel="noopener noreferrer"><img class="rm-img" loading="lazy" referrerpolicy="no-referrer" src="${e(src)}" alt="TradingView chart" onerror="this.style.display='none'"></a>`; });
   if(rmImgOk(m.img)) h += `<a href="${e(m.img)}" target="_blank" rel="noopener noreferrer"><img class="rm-img" loading="lazy" src="${e(m.img)}" alt="Screenshot"></a>`;
   return h;
+}
+function rxHtml(m){
+  const l = RM.rx[m.id] || [], by = {}; l.forEach(x => { (by[x.emoji] = by[x.emoji] || []).push(x.user_id); });
+  let h = Object.keys(by).map(k => `<button class="rm-rx${USER && by[k].includes(USER.id) ? ' me' : ''}" data-rx="${m.id}|${k}">${k} ${by[k].length}</button>`).join('');
+  h += RM.rxpick === m.id ? RXS.map(k => `<button class="rm-rx" data-rx="${m.id}|${k}">${k}</button>`).join('') : `<button class="rm-rx add" data-rxopen="${m.id}" title="React">☺ +</button>`;
+  return `<div class="rm-rxw">${h}</div>`;
 }
 function rmBuild(){
   const root = $('rmApp'); if(!root) return false;
@@ -844,7 +858,8 @@ function rmBuild(){
     <div class="filter-row" id="rmFilt" style="margin:0 0 8px"><button class="filter-chip" data-rmf="all">Everyone</button><button class="filter-chip" data-rmf="follow">Only people I follow</button></div>
     <div class="rr-card" style="padding:0;overflow:hidden"><div id="rmList" style="height:min(60vh,520px);overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px"></div>
       <div id="rmPrev" style="display:none;padding:8px 12px;border-top:1px solid var(--line)"></div>
-      <div style="display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);align-items:flex-end"><button class="rr-btn ghost sm" id="rmImgBtn" title="Add a screenshot">Image</button><input type="file" id="rmFile" accept="image/*" style="display:none"><textarea id="rmIn" rows="1" maxlength="1000" placeholder="Write a message. Paste a TradingView snapshot link or an image." style="flex:1;resize:none;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 10px;font:inherit;font-size:14px;max-height:120px"></textarea><button class="rr-btn sm" id="rmSend">Send</button></div></div>
+      <div id="rmEmoBox" style="display:none;padding:8px 10px;border-top:1px solid var(--line);flex-wrap:wrap;gap:4px">${EMO.map(k => `<button class="rm-rx" data-emo="${k}" style="font-size:18px">${k}</button>`).join('')}</div>
+      <div style="display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);align-items:flex-end"><button class="rr-btn ghost sm" id="rmEmoBtn" title="Emoji">😊</button><button class="rr-btn ghost sm" id="rmImgBtn" title="Add a screenshot">Image</button><input type="file" id="rmFile" accept="image/*" style="display:none"><textarea id="rmIn" rows="1" maxlength="1000" placeholder="Write a message. Paste a TradingView snapshot link or an image." style="flex:1;resize:none;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 10px;font:inherit;font-size:14px;max-height:120px"></textarea><button class="rr-btn sm" id="rmSend">Send</button></div></div>
     <p class="calendar-note" id="rmNote" style="margin:8px 0 0">Be respectful. TTM can remove messages and mute members. Nothing here is financial advice.</p>`;
   $('rmIn').addEventListener('keydown', ev => { if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); rmSend(); } });
   $('rmIn').addEventListener('paste', ev => { const it = Array.from((ev.clipboardData || {}).items || []).find(x => x.type && x.type.indexOf('image/') === 0); if(it){ ev.preventDefault(); rmPick1(it.getAsFile()); } });
@@ -861,12 +876,13 @@ async function rmLoad(force){
     const r = await api(`/rest/v1/ttm_room_msgs?select=*&room=eq.${RM.room}&order=id.desc&limit=80`);
     const l = $('rmList'); if(!l) return;
     if(!r.ok || !Array.isArray(r.json)){ l.innerHTML = '<p style="color:var(--mute);font-size:13px;margin:4px 2px">Could not open this room. If you just upgraded, refresh. The chat database step may also be missing.</p>'; return; }
+    { const ids = r.json.map(x => x.id); RM.rx = {}; if(ids.length){ const q = await api('/rest/v1/ttm_room_reacts?select=msg_id,user_id,emoji&msg_id=in.(' + ids.join(',') + ')'); if(q.ok && Array.isArray(q.json)) q.json.forEach(x => { (RM.rx[x.msg_id] = RM.rx[x.msg_id] || []).push(x); }); } }
     const fol = PREFS.rfilter === 'follow', fids = new Set((PREFS.follow || []).map(f => f.id));
-    const rows = r.json.slice().reverse().filter(x => !fol || fids.has(x.user_id) || (USER && x.user_id === USER.id)), sig = (fol ? 'f:' : '') + rows.map(x => x.id).join(','); if(rows.length && location.hash === '#community' && !document.hidden){ rmSeenSet(RM.room, rows[rows.length - 1].id); RMU[RM.room] = 0; commBtn(); rmTabs(); }
+    const rows = r.json.slice().reverse().filter(x => !fol || fids.has(x.user_id) || (USER && x.user_id === USER.id)), sig = (fol ? 'f:' : '') + rows.map(x => x.id + ':' + (RM.rx[x.id] || []).map(y => y.emoji + y.user_id.slice(0, 4)).sort().join('')).join(',') + '|' + RM.rxpick; if(rows.length && location.hash === '#community' && !document.hidden){ rmSeenSet(RM.room, rows[rows.length - 1].id); RMU[RM.room] = 0; commBtn(); rmTabs(); }
     if(sig === RM.sig && !force) return; RM.sig = sig;
     const near = l.scrollHeight - l.scrollTop - l.clientHeight < 80, first = !l.children.length, adm = !!(PROF && PROF.is_admin);
     l.innerHTML = rows.length ? rows.map(m => { const mine = USER && m.user_id === USER.id, tm = new Date(m.ts).toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'});
-      return `<div class="rm-m ${mine ? 'me' : ''}"><div class="rm-h"><b ${mine ? '' : `data-rmat="${e(m.name || '')}" title="Tap to tag"`}>${e(m.name || 'Member')}</b><span>${tm}</span>${mine || adm ? `<u data-rmdel="${m.id}">delete</u>` : ''}${adm && !mine ? `<u data-rmmute="${m.user_id}">mute</u>` : ''}${!mine ? `<u data-rmfollow="${m.user_id}" data-n="${e(m.name || 'Member')}">${(PREFS.follow || []).some(x => x.id === m.user_id) ? 'following' : 'follow'}</u>` : ''}</div>${rmFmt(m)}</div>`; }).join('') : (fol ? '<p style="color:var(--mute);font-size:13px;margin:4px 2px">No messages from people you follow yet. Switch to Everyone to find people, then press <b>follow</b> on their messages.</p>' : '<p style="color:var(--mute);font-size:13px;margin:4px 2px">No messages yet. Say hello.</p>');
+      return `<div class="rm-m ${mine ? 'me' : ''}"><div class="rm-h"><b ${mine ? '' : `data-rmat="${e(m.name || '')}" title="Tap to tag"`}>${e(m.name || 'Member')}</b><span>${tm}</span>${mine || adm ? `<u data-rmdel="${m.id}">delete</u>` : ''}${adm && !mine ? `<u data-rmmute="${m.user_id}">mute</u>` : ''}${!mine ? `<u data-rmfollow="${m.user_id}" data-n="${e(m.name || 'Member')}">${(PREFS.follow || []).some(x => x.id === m.user_id) ? 'following' : 'follow'}</u>` : ''}</div>${rmFmt(m)}${rxHtml(m)}</div>`; }).join('') : (fol ? '<p style="color:var(--mute);font-size:13px;margin:4px 2px">No messages from people you follow yet. Switch to Everyone to find people, then press <b>follow</b> on their messages.</p>' : '<p style="color:var(--mute);font-size:13px;margin:4px 2px">No messages yet. Say hello.</p>');
     if(near || first) l.scrollTop = l.scrollHeight;
     if(first){ const mu = await api('/rest/v1/ttm_room_mutes?select=room&user_id=eq.' + USER.id); RM.muted = !!(mu.ok && Array.isArray(mu.json) && mu.json.length); const i = $('rmIn'); if(i && RM.muted){ i.disabled = true; i.placeholder = 'You have been muted by TTM.'; } }
   } finally { RM.busy = false; }
@@ -912,7 +928,7 @@ async function rmMutesLoad(){
   box.innerHTML = rows.map(x => `<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line)"><span>${e(who[x.user_id] || x.user_id)} <small style="color:var(--mute)">· ${x.room === 'all' ? 'all rooms' : e(x.room) + ' room'}</small></span><button class="rr-btn ghost sm" data-rmunmute="${e(x.user_id)}" data-rmroom="${e(x.room)}">Unmute</button></div>`).join('');
 }
 const css3 = document.createElement('style');
-css3.textContent = `.rm-m{max-width:88%;align-self:flex-start;background:rgba(255,255,255,.06);border-radius:12px;padding:8px 11px;font-size:14px;line-height:1.45;word-break:break-word}.rm-m.me{align-self:flex-end;background:rgba(219,161,24,.18)}.rm-h{display:flex;gap:8px;align-items:baseline;margin-bottom:2px;font-size:12px;color:var(--mute,#9a978f)}.rm-h b{color:var(--gold2,#f2c14e);font-size:13px}.rm-h u{cursor:pointer;text-decoration:none;color:var(--text,#e8e6e1);font-size:11px;border:1px solid var(--line,#2a2a2e);border-radius:6px;padding:1px 7px;margin-left:auto}.rm-h u+u{margin-left:0}.rm-h u:hover{color:#e0554d}.rm-img{display:block;max-width:100%;max-height:340px;border-radius:8px;margin-top:6px}.rm-m a{color:var(--gold2,#f2c14e)}.rm-at{color:var(--gold2,#f2c14e);background:rgba(219,161,24,.15);border-radius:4px;padding:0 3px}.rm-h b[data-rmat]{cursor:pointer}`;
+css3.textContent = `.rm-m{max-width:88%;align-self:flex-start;background:rgba(255,255,255,.06);border-radius:12px;padding:8px 11px;font-size:14px;line-height:1.45;word-break:break-word}.rm-m.me{align-self:flex-end;background:rgba(219,161,24,.18)}.rm-h{display:flex;gap:8px;align-items:baseline;margin-bottom:2px;font-size:12px;color:var(--mute,#9a978f)}.rm-h b{color:var(--gold2,#f2c14e);font-size:13px}.rm-h u{cursor:pointer;text-decoration:none;color:var(--text,#e8e6e1);font-size:11px;border:1px solid var(--line,#2a2a2e);border-radius:6px;padding:1px 7px;margin-left:auto}.rm-h u+u{margin-left:0}.rm-h u:hover{color:#e0554d}.rm-img{display:block;max-width:100%;max-height:340px;border-radius:8px;margin-top:6px}.rm-m a{color:var(--gold2,#f2c14e)}.rm-rxw{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.rm-rx{background:rgba(255,255,255,.06);border:1px solid var(--line,#2a2a2e);color:var(--text,#e8e6e1);border-radius:999px;padding:1px 9px;font:inherit;font-size:13px;cursor:pointer;line-height:1.6}.rm-rx.me{border-color:var(--gold,#dba118);background:rgba(219,161,24,.2)}.rm-rx.add{opacity:.6;font-size:12px}.rm-rx:hover{border-color:var(--gold,#dba118)}.rm-at{color:var(--gold2,#f2c14e);background:rgba(219,161,24,.15);border-radius:4px;padding:0 3px}.rm-h b[data-rmat]{cursor:pointer}`;
 document.head.appendChild(css3);
 window.addEventListener('hashchange', () => { if(location.hash === '#community'){ RM.built = false; setTimeout(() => { rmLoad(true); }, 120); } });
 setTimeout(() => { rmStart(); if(location.hash === '#community') rmLoad(true); }, 1500);
