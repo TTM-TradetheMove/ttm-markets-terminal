@@ -131,7 +131,7 @@ document.addEventListener('click', ev => { const t = ev.target; if(t && t.id ===
 function trkNote(){ const n = document.getElementById('ttmTrkNote'); if(!n) return; const off = trkOff(); n.innerHTML = 'We count which pages and buttons are used, never what you type, to improve the terminal. Tracking is currently <b>' + (off ? 'off' : 'on') + '</b> for this device. <a href="#" id="ttmTrkToggle" style="color:var(--gold2)">' + (off ? 'Turn on' : 'Turn off') + '</a>'; }
 
 async function boot(){
-  try{ const r = await fetch(BASE + 'ttm_config.json?t=' + Date.now(), {cache: 'no-store'}); if(r.ok){ const c = await r.json(); CFG = {url: c.supabase_url || '', key: c.supabase_anon_key || '', tv: c.tradingview || [], plans: c.plans || {}, vapid_public: c.vapid_public || ''}; } }catch(err){}
+  try{ const r = await fetch(BASE + 'ttm_config.json?t=' + Date.now(), {cache: 'no-store'}); if(r.ok){ const c = await r.json(); CFG = {url: c.supabase_url || '', key: c.supabase_anon_key || '', tv: c.tradingview || [], plans: c.plans || {}, vapid_public: c.vapid_public || '', giphy_key: c.giphy_key || ''}; } }catch(err){}
   if(on()){
     try{ const r = await raw('/rest/v1/ttm_settings?select=key,value'); if(r.ok && Array.isArray(r.json)) r.json.forEach(x => { if(x.key === 'charging') SET.charging = x.value === true || x.value === 'true'; if(x.key === 'wall') SET.wall = x.value === true || x.value === 'true'; if(x.key === 'track') SET.track = !(x.value === false || x.value === 'false'); if(x.key === 'access' && x.value && typeof x.value === 'object'){ const hasPro = x.value._pro === true; Object.keys(x.value).forEach(k => { if(k === '_pro') return; const a = (x.value[k] || []).map(normPlan); if(!hasPro) a.push('pro'); SET.access[k] = a.filter((v, i) => a.indexOf(v) === i); }); } }); }catch(err){}
     const t = await token();
@@ -226,6 +226,15 @@ document.addEventListener('click', async ev => {
   else if(t.dataset && t.dataset.rmmute){ if(!armTap(t, 'tap again to mute')) return; await rmMute(t.dataset.rmmute, 'all'); const n = $('rmNote'); if(n) n.textContent = 'Member muted in every room. Unmute them in Admin.'; }
   else if(t.id === 'rmMuteBtn'){ await rmMuteForm(); }
   else if(t.dataset && t.dataset.rmunmute){ await api('/rest/v1/ttm_room_mutes?user_id=eq.' + t.dataset.rmunmute + '&room=eq.' + (t.dataset.rmroom || 'all'), {method: 'DELETE'}); rmMutesLoad(); }
+  else if(t.id === 'rmGifBtn'){ const b = $('rmGifBox'); if(!b) return; const open = b.style.display === 'none'; b.style.display = open ? 'block' : 'none'; if(open) gifPanel(); }
+  else if(t.dataset && t.dataset.gif){ const i = $('rmIn'); if(i){ i.value = (i.value ? i.value + ' ' : '') + 'https://media.giphy.com/media/' + t.dataset.gif + '/giphy.gif'; i.focus(); $('rmGifBox').style.display = 'none'; } }
+  else if(t.id === 'rmPollBtn'){ pollForm(); }
+  else if(t.id === 'rmPoAdd'){ const c = $('rmPopts'); if(c && c.children.length < 10){ const i = document.createElement('input'); i.placeholder = 'Option ' + (c.children.length + 1); i.maxLength = 100; i.autocomplete = 'off'; i.style.cssText = 'width:100%;box-sizing:border-box;margin-bottom:6px'; c.appendChild(i); } }
+  else if(t.id === 'rmPoGo'){ await pollCreate(); }
+  else if(t.dataset && t.dataset.vote){ const t2 = t.closest('[data-vote]') || t, [mid, op] = t2.dataset.vote.split('|'), mine = (RM.votes[mid] || []).some(v => v.user_id === USER.id && v.opt === +op);
+    if(mine) await api('/rest/v1/ttm_room_votes?msg_id=eq.' + mid + '&user_id=eq.' + USER.id + '&opt=eq.' + op, {method: 'DELETE'});
+    else { const r = await api('/rest/v1/ttm_room_votes', {method: 'POST', headers: {Prefer: 'resolution=ignore-duplicates,return=minimal'}, body: JSON.stringify({msg_id: +mid, opt: +op})}); if(!r.ok){ const n = $('rmNote'); if(n) n.textContent = 'You cannot vote here (muted, or the polls step is missing).'; } }
+    RM.sig = ''; rmLoad(true); }
   else if(t.dataset && t.dataset.rxopen){ RM.rxpick = +t.dataset.rxopen; RM.sig = ''; rmLoad(true); }
   else if(t.dataset && t.dataset.rx){ const [mid, em] = t.dataset.rx.split('|'), mine = (RM.rx[mid] || []).some(x => x.user_id === USER.id && x.emoji === em); RM.rxpick = null;
     if(mine) await api('/rest/v1/ttm_room_reacts?msg_id=eq.' + mid + '&user_id=eq.' + USER.id + '&emoji=eq.' + encodeURIComponent(em), {method: 'DELETE'});
@@ -831,16 +840,47 @@ async function lvAdd(){ const n = $('lvNoteMsg'), title = ($('lvTitle').value ||
 
 // ---------- Community chat rooms (Free / Premium / Pro) ----------
 const RXS = ['👍', '🔥', '🚀', '😂', '❤️', '👀'], EMO = ['😀', '😂', '🤣', '😊', '😍', '😎', '🤔', '😅', '😭', '😡', '👍', '👎', '👏', '🙏', '💪', '🔥', '🚀', '🌙', '💎', '🐂', '🐻', '📈', '📉', '💰', '🎯', '✅', '❌', '⚠️', '👀', '🤝'];
-const RM = {rx: {}, rxpick: null, room: null, sig: '', pend: null, muted: false, timer: null, built: false, busy: false};
+const RM = {votes: {}, rx: {}, rxpick: null, room: null, sig: '', pend: null, muted: false, timer: null, built: false, busy: false};
 const ROOMS = [['free', 'Free'], ['premium', 'Premium'], ['pro', 'Pro']];
 const rmCan = r => !!USER && can('room:' + r);
 const rmImgOk = u => typeof u === 'string' && CFG.url && u.indexOf(CFG.url + '/storage/v1/object/public/room-images/') === 0;
 function rmFmt(m){
+  const gifs = []; (String(m.body || '').match(/https?:\/\/[^\s<]+/g) || []).forEach(u => { let g = null; const gm = u.match(/^https:\/\/giphy\.com\/gifs\/(?:[^\/?#]*-)?([A-Za-z0-9]{8,24})(?:[\/?#]|$)/); if(gm) g = 'https://media.giphy.com/media/' + gm[1] + '/giphy.gif'; else if(/^https:\/\/(?:media\d*\.giphy\.com|i\.giphy\.com|media\.tenor\.com|c\.tenor\.com)\/[^\s?#]+\.(?:gif|webp)(?:\?[^\s]*)?$/.test(u)) g = u; if(g && gifs.indexOf(g) < 0) gifs.push(g); });
   const imgs = []; let t = e(m.body || '').replace(/(^|[\s(])@([A-Za-z0-9_]{2,32})/g, '$1<b class="rm-at">@$2</b>').replace(/https?:\/\/[^\s<]+/g, u => { const c = u.replace(/&amp;/g, '&'), tv = c.match(/^https:\/\/(?:www\.)?tradingview\.com\/x\/([A-Za-z0-9]{5,14})/); if(tv) imgs.push(tv[1]); return `<a href="${e(c)}" target="_blank" rel="noopener noreferrer">${e(c.length > 48 ? c.slice(0, 45) + '…' : c)}</a>`; }).replace(/\n/g, '<br>');
   let h = t ? `<div>${t}</div>` : '';
   imgs.forEach(id => { const src = 'https://s3.tradingview.com/snapshots/' + id[0].toLowerCase() + '/' + id + '.png'; h += `<a href="https://www.tradingview.com/x/${e(id)}/" target="_blank" rel="noopener noreferrer"><img class="rm-img" loading="lazy" referrerpolicy="no-referrer" src="${e(src)}" alt="TradingView chart" onerror="this.style.display='none'"></a>`; });
+  gifs.slice(0, 2).forEach(g => { h += `<a href="${e(g)}" target="_blank" rel="noopener noreferrer"><img class="rm-img" loading="lazy" referrerpolicy="no-referrer" src="${e(g)}" alt="GIF" onerror="this.style.display='none'"></a>`; });
+  if(m.poll) h = pollHtml(m) + h;
   if(rmImgOk(m.img)) h += `<a href="${e(m.img)}" target="_blank" rel="noopener noreferrer"><img class="rm-img" loading="lazy" src="${e(m.img)}" alt="Screenshot"></a>`;
   return h;
+}
+function pollHtml(m){
+  const p = m.poll || {}, opts = Array.isArray(p.opts) ? p.opts : [], vs = RM.votes[m.id] || [], voters = new Set(vs.map(v => v.user_id)).size, total = vs.length || 0;
+  const mine = new Set(vs.filter(v => USER && v.user_id === USER.id).map(v => v.opt));
+  return `<div class="rm-poll"><div class="rm-pq">📊 ${e(p.q || m.body || 'Poll')}</div><div class="rm-pm">${p.multi ? 'Pick one or more' : 'Pick one'} · ${voters} vote${voters === 1 ? '' : 'rs'}</div>` + opts.map((o, i) => { const c = vs.filter(v => v.opt === i).length, pc = total ? Math.round(c / total * 100) : 0;
+    return `<button class="rm-po${mine.has(i) ? ' me' : ''}" data-vote="${m.id}|${i}"><span class="rm-pb" style="width:${pc}%"></span><span class="rm-pt">${e(String(o))}</span><span class="rm-pn">${c ? pc + '% · ' + c : ''}</span></button>`; }).join('') + `</div>`;
+}
+function gifPanel(){
+  const box = $('rmGifBox'); if(!box) return; const key = CFG.giphy_key;
+  if(!key){ box.innerHTML = '<p class="calendar-note" style="margin:0">Paste a <b>Giphy</b> or <b>Tenor</b> link into your message and it shows as a GIF. You can also upload a GIF file with the Image button (up to 2 MB).</p>'; return; }
+  box.innerHTML = '<input id="rmGifQ" placeholder="Search GIFs" autocomplete="off" style="width:100%;box-sizing:border-box;margin-bottom:8px"><div id="rmGifRes" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-height:260px;overflow:auto"></div><p class="calendar-note" style="margin:6px 0 0">Powered by GIPHY</p>'; gifSearch('');
+}
+async function gifSearch(q){
+  const res = $('rmGifRes'); if(!res || !CFG.giphy_key) return;
+  try{ const r = await fetch('https://api.giphy.com/v1/gifs/' + (q ? 'search' : 'trending') + '?api_key=' + encodeURIComponent(CFG.giphy_key) + '&limit=18&rating=pg' + (q ? '&q=' + encodeURIComponent(q) : '')); const j = await r.json();
+    res.innerHTML = (j.data || []).map(g => `<img src="${e(g.images.fixed_height_small.url)}" data-gif="${e(g.id)}" alt="" style="width:100%;height:90px;object-fit:cover;border-radius:6px;cursor:pointer">`).join('') || '<p class="calendar-note">No GIFs found.</p>'; }catch(err){ res.innerHTML = '<p class="calendar-note">GIF search is not available right now.</p>'; }
+}
+function pollForm(){
+  const box = $('rmPollBox'); if(!box) return; if(box.dataset.open === '1'){ box.style.display = 'none'; box.dataset.open = ''; return; }
+  box.dataset.open = '1'; box.style.display = 'block'; const inp = (id, ph) => `<input id="${id}" placeholder="${ph}" maxlength="100" autocomplete="off" style="width:100%;box-sizing:border-box;margin-bottom:6px">`;
+  box.innerHTML = `${inp('rmPq', 'Poll question')}<div id="rmPopts">${inp('rmPo0', 'Option 1')}${inp('rmPo1', 'Option 2')}</div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="rr-btn ghost sm" id="rmPoAdd">+ Add option</button><label style="font-size:13px;display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="rmPMulti" style="width:auto"> Allow several answers</label><button class="rr-btn sm" id="rmPoGo" style="margin-left:auto">Post poll</button></div>`;
+}
+async function pollCreate(){
+  const n = $('rmNote'), q = ($('rmPq').value || '').trim(), opts = [...document.querySelectorAll('#rmPopts input')].map(x => x.value.trim()).filter(Boolean);
+  if(!q || opts.length < 2){ n.textContent = 'Enter a question and at least two options.'; return; }
+  const r = await api('/rest/v1/ttm_room_msgs', {method: 'POST', headers: {Prefer: 'return=minimal'}, body: JSON.stringify({room: RM.room, body: '📊 ' + q, poll: {q, opts: opts.slice(0, 10), multi: !!$('rmPMulti').checked}})});
+  if(!r.ok){ n.textContent = 'Could not post the poll. Run the polls step (supabase/polls.sql) in Supabase.'; return; }
+  const b = $('rmPollBox'); b.style.display = 'none'; b.dataset.open = ''; n.textContent = 'Poll posted.'; await rmLoad(true); const l = $('rmList'); if(l) l.scrollTop = l.scrollHeight;
 }
 function rxHtml(m){
   const l = RM.rx[m.id] || [], by = {}; l.forEach(x => { (by[x.emoji] = by[x.emoji] || []).push(x.user_id); });
@@ -858,8 +898,10 @@ function rmBuild(){
     <div class="filter-row" id="rmFilt" style="margin:0 0 8px"><button class="filter-chip" data-rmf="all">Everyone</button><button class="filter-chip" data-rmf="follow">Only people I follow</button></div>
     <div class="rr-card" style="padding:0;overflow:hidden"><div id="rmList" style="height:min(60vh,520px);overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px"></div>
       <div id="rmPrev" style="display:none;padding:8px 12px;border-top:1px solid var(--line)"></div>
+      <div id="rmGifBox" style="display:none;padding:8px 10px;border-top:1px solid var(--line)"></div>
+      <div id="rmPollBox" style="display:none;padding:10px;border-top:1px solid var(--line)"></div>
       <div id="rmEmoBox" style="display:none;padding:8px 10px;border-top:1px solid var(--line);flex-wrap:wrap;gap:4px">${EMO.map(k => `<button class="rm-rx" data-emo="${k}" style="font-size:18px">${k}</button>`).join('')}</div>
-      <div style="display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);align-items:flex-end"><button class="rr-btn ghost sm" id="rmEmoBtn" title="Emoji">😊</button><button class="rr-btn ghost sm" id="rmImgBtn" title="Add a screenshot">Image</button><input type="file" id="rmFile" accept="image/*" style="display:none"><textarea id="rmIn" rows="1" maxlength="1000" placeholder="Write a message. Paste a TradingView snapshot link or an image." style="flex:1;resize:none;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 10px;font:inherit;font-size:14px;max-height:120px"></textarea><button class="rr-btn sm" id="rmSend">Send</button></div></div>
+      <div style="display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);align-items:flex-end"><button class="rr-btn ghost sm" id="rmEmoBtn" title="Emoji">😊</button><button class="rr-btn ghost sm" id="rmGifBtn" title="GIF">GIF</button>${PROF && PROF.is_admin ? '<button class="rr-btn ghost sm" id="rmPollBtn" title="Create a poll">Poll</button>' : ''}<button class="rr-btn ghost sm" id="rmImgBtn" title="Add a screenshot">Image</button><input type="file" id="rmFile" accept="image/*" style="display:none"><textarea id="rmIn" rows="1" maxlength="1000" placeholder="Write a message. Paste a TradingView snapshot link or an image." style="flex:1;resize:none;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 10px;font:inherit;font-size:14px;max-height:120px"></textarea><button class="rr-btn sm" id="rmSend">Send</button></div></div>
     <p class="calendar-note" id="rmNote" style="margin:8px 0 0">Be respectful. TTM can remove messages and mute members. Nothing here is financial advice.</p>`;
   $('rmIn').addEventListener('keydown', ev => { if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); rmSend(); } });
   $('rmIn').addEventListener('paste', ev => { const it = Array.from((ev.clipboardData || {}).items || []).find(x => x.type && x.type.indexOf('image/') === 0); if(it){ ev.preventDefault(); rmPick1(it.getAsFile()); } });
@@ -877,8 +919,9 @@ async function rmLoad(force){
     const l = $('rmList'); if(!l) return;
     if(!r.ok || !Array.isArray(r.json)){ l.innerHTML = '<p style="color:var(--mute);font-size:13px;margin:4px 2px">Could not open this room. If you just upgraded, refresh. The chat database step may also be missing.</p>'; return; }
     { const ids = r.json.map(x => x.id); RM.rx = {}; if(ids.length){ const q = await api('/rest/v1/ttm_room_reacts?select=msg_id,user_id,emoji&msg_id=in.(' + ids.join(',') + ')'); if(q.ok && Array.isArray(q.json)) q.json.forEach(x => { (RM.rx[x.msg_id] = RM.rx[x.msg_id] || []).push(x); }); } }
+    { const ids = r.json.filter(x => x.poll).map(x => x.id); RM.votes = {}; if(ids.length){ const q = await api('/rest/v1/ttm_room_votes?select=msg_id,user_id,opt&msg_id=in.(' + ids.join(',') + ')'); if(q.ok && Array.isArray(q.json)) q.json.forEach(x => { (RM.votes[x.msg_id] = RM.votes[x.msg_id] || []).push(x); }); } }
     const fol = PREFS.rfilter === 'follow', fids = new Set((PREFS.follow || []).map(f => f.id));
-    const rows = r.json.slice().reverse().filter(x => !fol || fids.has(x.user_id) || (USER && x.user_id === USER.id)), sig = (fol ? 'f:' : '') + rows.map(x => x.id + ':' + (RM.rx[x.id] || []).map(y => y.emoji + y.user_id.slice(0, 4)).sort().join('')).join(',') + '|' + RM.rxpick; if(rows.length && location.hash === '#community' && !document.hidden){ rmSeenSet(RM.room, rows[rows.length - 1].id); RMU[RM.room] = 0; commBtn(); rmTabs(); }
+    const rows = r.json.slice().reverse().filter(x => !fol || fids.has(x.user_id) || (USER && x.user_id === USER.id)), sig = (fol ? 'f:' : '') + rows.map(x => x.id + ':' + (RM.rx[x.id] || []).map(y => y.emoji + y.user_id.slice(0, 4)).sort().join('')).join(',') + '|' + RM.rxpick + '|' + Object.keys(RM.votes || {}).map(k => k + ':' + RM.votes[k].length + RM.votes[k].filter(v => USER && v.user_id === USER.id).map(v => v.opt).join('')).join(','); if(rows.length && location.hash === '#community' && !document.hidden){ rmSeenSet(RM.room, rows[rows.length - 1].id); RMU[RM.room] = 0; commBtn(); rmTabs(); }
     if(sig === RM.sig && !force) return; RM.sig = sig;
     const near = l.scrollHeight - l.scrollTop - l.clientHeight < 80, first = !l.children.length, adm = !!(PROF && PROF.is_admin);
     l.innerHTML = rows.length ? rows.map(m => { const mine = USER && m.user_id === USER.id, tm = new Date(m.ts).toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'});
@@ -890,6 +933,7 @@ async function rmLoad(force){
 function rmPrev(){ const p = $('rmPrev'); if(!p) return; if(!RM.pend){ p.style.display = 'none'; p.innerHTML = ''; return; } p.style.display = 'flex'; p.style.gap = '10px'; p.style.alignItems = 'center'; p.innerHTML = `<img src="${RM.pend.url}" alt="" style="height:54px;border-radius:6px"><small style="color:var(--mute)">${Math.round(RM.pend.blob.size / 1024)} KB</small><button class="rr-btn ghost sm" id="rmClrImg">Remove</button>`; }
 async function rmPick1(file){
   const n = $('rmNote'); if(!file || file.type.indexOf('image/') !== 0){ if(n) n.textContent = 'Pick an image file.'; return; }
+  if(file.type === 'image/gif'){ if(file.size > 2e6){ if(n) n.textContent = 'That GIF is over 2 MB. Try a shorter one, or paste a Giphy or Tenor link instead.'; return; } RM.pend = {blob: file, url: URL.createObjectURL(file)}; rmPrev(); return; }
   try{ const bmp = await createImageBitmap(file), sc = Math.min(1, 1600 / Math.max(bmp.width, bmp.height)), c = document.createElement('canvas'); c.width = Math.round(bmp.width * sc); c.height = Math.round(bmp.height * sc); c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
     let blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.86)); if(blob && blob.size > 1.9e6) blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.6));
     if(!blob || blob.size > 2e6){ if(n) n.textContent = 'That image is too large. Try a smaller screenshot.'; return; }
@@ -900,8 +944,8 @@ async function rmSend(){
   RM.sending = true; n.textContent = RM.pend ? 'Uploading…' : 'Sending…';
   try{
     let img = null;
-    if(RM.pend){ const t = await token(), path = USER.id + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.jpg';
-      const up = await fetch(CFG.url + '/storage/v1/object/room-images/' + path, {method: 'POST', headers: {apikey: CFG.key, Authorization: 'Bearer ' + t, 'Content-Type': 'image/jpeg'}, body: RM.pend.blob});
+    if(RM.pend){ const t = await token(), path = USER.id + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + (RM.pend.blob.type === 'image/gif' ? '.gif' : '.jpg');
+      const up = await fetch(CFG.url + '/storage/v1/object/room-images/' + path, {method: 'POST', headers: {apikey: CFG.key, Authorization: 'Bearer ' + t, 'Content-Type': RM.pend.blob.type === 'image/gif' ? 'image/gif' : 'image/jpeg'}, body: RM.pend.blob});
       if(!up.ok){ n.textContent = 'Could not upload the image. The storage step may be missing, or it is over 2 MB.'; return; }
       img = CFG.url + '/storage/v1/object/public/room-images/' + path; }
     const r = await api('/rest/v1/ttm_room_msgs', {method: 'POST', headers: {Prefer: 'return=minimal'}, body: JSON.stringify({room: RM.room, body, img})});
@@ -928,7 +972,7 @@ async function rmMutesLoad(){
   box.innerHTML = rows.map(x => `<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line)"><span>${e(who[x.user_id] || x.user_id)} <small style="color:var(--mute)">· ${x.room === 'all' ? 'all rooms' : e(x.room) + ' room'}</small></span><button class="rr-btn ghost sm" data-rmunmute="${e(x.user_id)}" data-rmroom="${e(x.room)}">Unmute</button></div>`).join('');
 }
 const css3 = document.createElement('style');
-css3.textContent = `.rm-m{max-width:88%;align-self:flex-start;background:rgba(255,255,255,.06);border-radius:12px;padding:8px 11px;font-size:14px;line-height:1.45;word-break:break-word}.rm-m.me{align-self:flex-end;background:rgba(219,161,24,.18)}.rm-h{display:flex;gap:8px;align-items:baseline;margin-bottom:2px;font-size:12px;color:var(--mute,#9a978f)}.rm-h b{color:var(--gold2,#f2c14e);font-size:13px}.rm-h u{cursor:pointer;text-decoration:none;color:var(--text,#e8e6e1);font-size:11px;border:1px solid var(--line,#2a2a2e);border-radius:6px;padding:1px 7px;margin-left:auto}.rm-h u+u{margin-left:0}.rm-h u:hover{color:#e0554d}.rm-img{display:block;max-width:100%;max-height:340px;border-radius:8px;margin-top:6px}.rm-m a{color:var(--gold2,#f2c14e)}.rm-rxw{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.rm-rx{background:rgba(255,255,255,.06);border:1px solid var(--line,#2a2a2e);color:var(--text,#e8e6e1);border-radius:999px;padding:1px 9px;font:inherit;font-size:13px;cursor:pointer;line-height:1.6}.rm-rx.me{border-color:var(--gold,#dba118);background:rgba(219,161,24,.2)}.rm-rx.add{opacity:.6;font-size:12px}.rm-rx:hover{border-color:var(--gold,#dba118)}.rm-at{color:var(--gold2,#f2c14e);background:rgba(219,161,24,.15);border-radius:4px;padding:0 3px}.rm-h b[data-rmat]{cursor:pointer}`;
+css3.textContent = `.rm-m{max-width:88%;align-self:flex-start;background:rgba(255,255,255,.06);border-radius:12px;padding:8px 11px;font-size:14px;line-height:1.45;word-break:break-word}.rm-m.me{align-self:flex-end;background:rgba(219,161,24,.18)}.rm-h{display:flex;gap:8px;align-items:baseline;margin-bottom:2px;font-size:12px;color:var(--mute,#9a978f)}.rm-h b{color:var(--gold2,#f2c14e);font-size:13px}.rm-h u{cursor:pointer;text-decoration:none;color:var(--text,#e8e6e1);font-size:11px;border:1px solid var(--line,#2a2a2e);border-radius:6px;padding:1px 7px;margin-left:auto}.rm-h u+u{margin-left:0}.rm-h u:hover{color:#e0554d}.rm-img{display:block;max-width:100%;max-height:340px;border-radius:8px;margin-top:6px}.rm-m a{color:var(--gold2,#f2c14e)}.rm-poll{margin:4px 0 2px;min-width:230px}.rm-pq{font-weight:700;margin-bottom:2px}.rm-pm{font-size:12px;color:var(--mute,#9a978f);margin-bottom:6px}.rm-po{position:relative;display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;background:rgba(255,255,255,.05);border:1px solid var(--line,#2a2a2e);color:var(--text,#e8e6e1);border-radius:8px;padding:7px 10px;margin:0 0 5px;font:inherit;font-size:13.5px;cursor:pointer;overflow:hidden}.rm-po.me{border-color:var(--gold,#dba118)}.rm-pb{position:absolute;left:0;top:0;bottom:0;background:rgba(219,161,24,.22);z-index:0}.rm-pt,.rm-pn{position:relative;z-index:1}.rm-pn{color:var(--mute,#9a978f);font-size:12px;white-space:nowrap}.rm-rxw{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.rm-rx{background:rgba(255,255,255,.06);border:1px solid var(--line,#2a2a2e);color:var(--text,#e8e6e1);border-radius:999px;padding:1px 9px;font:inherit;font-size:13px;cursor:pointer;line-height:1.6}.rm-rx.me{border-color:var(--gold,#dba118);background:rgba(219,161,24,.2)}.rm-rx.add{opacity:.6;font-size:12px}.rm-rx:hover{border-color:var(--gold,#dba118)}.rm-at{color:var(--gold2,#f2c14e);background:rgba(219,161,24,.15);border-radius:4px;padding:0 3px}.rm-h b[data-rmat]{cursor:pointer}`;
 document.head.appendChild(css3);
 window.addEventListener('hashchange', () => { if(location.hash === '#community'){ RM.built = false; setTimeout(() => { rmLoad(true); }, 120); } });
 setTimeout(() => { rmStart(); if(location.hash === '#community') rmLoad(true); }, 1500);
@@ -1012,7 +1056,7 @@ function discAdminPaint(){
   const box = $('accList'); if(!box) return; const q = (($('accSearch') || {}).value || '').toLowerCase(), l = ACCS_LIST.filter(x => !q || (x.email || '').toLowerCase().includes(q) || (x.tg_handle || '').toLowerCase().includes(q));
   box.innerHTML = l.length ? `<table class="rr-tbl"><thead><tr><th>Email</th><th>Telegram</th><th>Accepted</th><th>Version</th><th></th></tr></thead><tbody>${l.map(x => `<tr><td>${e(x.email || '')}</td><td>${x.tg_handle ? '@' + e(x.tg_handle) : ''}</td><td>${new Date(x.accepted_at).toLocaleString([], {day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'})}</td><td>${e(x.version)}</td><td><u data-accdel="${x.id}" style="cursor:pointer">remove</u></td></tr>`).join('')}</tbody></table>` : '<p class="calendar-note" style="margin:0">No acceptances yet.</p>';
 }
-document.addEventListener('input', ev => { if(ev.target && ev.target.id === 'accSearch') discAdminPaint(); });
+document.addEventListener('input', ev => { if(ev.target && ev.target.id === 'accSearch') discAdminPaint(); else if(ev.target && ev.target.id === 'rmGifQ'){ clearTimeout(gifSearch.t); gifSearch.t = setTimeout(() => gifSearch(ev.target.value.trim()), 350); } });
 
 // ---------- Who is online ----------
 const PRES = {t: null, list: []};
