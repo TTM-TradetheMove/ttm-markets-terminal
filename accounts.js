@@ -215,16 +215,19 @@ document.addEventListener('click', async ev => {
   else if(t.id === 'chBack'){ CH.sel = null; chatPaint(); }
   else if(t.dataset && t.dataset.chc){ CH.sel = t.dataset.chc; chatPaint(); chatSeen(); }
   else if(t.id === 'chSend'){ chatSend(); }
-  else if(t.dataset && t.dataset.chdel){ if(!confirm('Delete this message?')) return; await api('/rest/v1/ttm_chat?id=eq.' + t.dataset.chdel, {method: 'DELETE'}); chatLoad(); }
+  else if(t.dataset && t.dataset.chdel){ if(!armTap(t)) return; if(await delRow('/rest/v1/ttm_chat?id=eq.' + t.dataset.chdel)) chatLoad(); else alert('Could not delete this message. Run the community update SQL in Supabase, then try again.'); }
   else if(t.id === 'lvAdd'){ lvAdd(); }
   else if(t.dataset && t.dataset.lvdel){ if(!confirm('Delete this live session?')) return; await api('/rest/v1/ttm_live?id=eq.' + t.dataset.lvdel, {method: 'DELETE'}); lvLoad(); LIVE.rows = LIVE.rows.filter(x => String(x.id) !== t.dataset.lvdel); liveBanner(); }
   else if(t.dataset && t.dataset.rmtab){ rmPick(t.dataset.rmtab); }
   else if(t.id === 'rmSend'){ rmSend(); }
   else if(t.id === 'rmImgBtn'){ const f = $('rmFile'); if(f) f.click(); }
   else if(t.id === 'rmClrImg'){ RM.pend = null; rmPrev(); }
-  else if(t.dataset && t.dataset.rmdel){ if(!confirm('Delete this message?')) return; await api('/rest/v1/ttm_room_msgs?id=eq.' + t.dataset.rmdel, {method: 'DELETE'}); rmLoad(true); }
-  else if(t.dataset && t.dataset.rmmute){ if(!confirm('Mute this member in every chat room? You can unmute them in Admin.')) return; await api('/rest/v1/ttm_room_mutes', {method: 'POST', headers: {Prefer: 'resolution=ignore-duplicates,return=minimal'}, body: JSON.stringify({user_id: t.dataset.rmmute, room: 'all'})}); rmMutesLoad(); const n = $('rmNote'); if(n) n.textContent = 'Member muted.'; }
-  else if(t.dataset && t.dataset.rmunmute){ await api('/rest/v1/ttm_room_mutes?user_id=eq.' + t.dataset.rmunmute, {method: 'DELETE'}); rmMutesLoad(); }
+  else if(t.dataset && t.dataset.rmdel){ if(!armTap(t)) return; if(await delRow('/rest/v1/ttm_room_msgs?id=eq.' + t.dataset.rmdel)) rmLoad(true); else { const n = $('rmNote'); if(n) n.textContent = 'Could not delete this message. Run the community update SQL in Supabase, then try again.'; } }
+  else if(t.dataset && t.dataset.rmmute){ if(!armTap(t, 'tap again to mute')) return; await rmMute(t.dataset.rmmute, 'all'); const n = $('rmNote'); if(n) n.textContent = 'Member muted in every room. Unmute them in Admin.'; }
+  else if(t.id === 'rmMuteBtn'){ await rmMuteForm(); }
+  else if(t.dataset && t.dataset.rmunmute){ await api('/rest/v1/ttm_room_mutes?user_id=eq.' + t.dataset.rmunmute + '&room=eq.' + (t.dataset.rmroom || 'all'), {method: 'DELETE'}); rmMutesLoad(); }
+  else if(t.dataset && t.dataset.rmfollow){ const id = t.dataset.rmfollow, f = PREFS.follow || [], i = f.findIndex(x => x.id === id); if(i >= 0) f.splice(i, 1); else f.push({id, n: t.dataset.n || 'Member'}); PREFS.follow = f.slice(0, 50); await prefSave(); RM.sig = ''; rmLoad(true); }
+  else if(t.dataset && t.dataset.unfollow){ PREFS.follow = (PREFS.follow || []).filter(x => x.id !== t.dataset.unfollow); await prefSave(); ui(); }
   else if(t.id === 'authPwIn' || t.id === 'authPwUp'){ const em = ($('authEmail').value || '').trim(), pw = ($('authPw').value || ''), up = t.id === 'authPwUp';
     if(!/^\S+@\S+\.\S+$/.test(em)){ $('authNote').textContent = 'Enter a valid email address.'; return; }
     if(pw.length < 8){ $('authNote').textContent = 'Password needs 8 or more characters.'; return; }
@@ -347,7 +350,7 @@ function planCards(){
   const card = (p, head, items) => `<div class="plan-card ${PROF && PROF.plan === p ? 'me' : ''}"><h4>${pname(p)}</h4><div class="pr">${price(p)}${PROF && PROF.plan === p ? ' · <b style="color:var(--gold2)">your plan</b>' : ''}</div><div style="font-size:12px;color:var(--mute);margin-bottom:4px">${head}</div><ul>${items.map(c => `<li>${e(lab(c))}</li>`).join('') || '<li>—</li>'}</ul></div>`;
   return `<div class="plan-grid">${card('free', 'Includes', free)}${card('premium', 'Everything in Free, plus (Crypto and TradFi together)', only('premium'))}${card('pro', 'Everything in Premium, plus', pro)}</div>`;
 }
-function ui(){ try{ chatUi(); liveBanner(); }catch(err){}
+function ui(){ try{ chatUi(); liveBanner(); commBtn(); }catch(err){}
   const b = $('acctBtn'); if(b){ b.textContent = USER ? (PROF && PROF.tg_handle ? '@' + PROF.tg_handle : 'Account') : 'Sign in'; b.title = USER ? (PROF && PROF.tg_handle ? '@' + PROF.tg_handle + ' · ' : '') + 'Plan: ' + pname(PROF.plan) : 'Sign in or create a free account'; }
   const na = $('navAdmin'); if(na) na.style.display = PROF && PROF.is_admin ? '' : 'none';
   applyGates();
@@ -420,18 +423,22 @@ create policy p_fb_del on public.ttm_feedback for delete
 grant select, insert, update, delete on public.ttm_feedback to authenticated;
 `;
 const tgClean = v => String(v || '').trim().replace(/^@+/, '').replace(/[^A-Za-z0-9_]/g, '').slice(0, 32);
-async function tgSave(h){ const r = await api('/rest/v1/rpc/ttm_set_tg', {method: 'POST', body: JSON.stringify({p_handle: h})}); if(r.ok && PROF) PROF.tg_handle = h || null; return r.ok; }
+let TGERR = '';
+async function tgSave(h){ TGERR = ''; const r = await api('/rest/v1/rpc/ttm_set_tg', {method: 'POST', body: JSON.stringify({p_handle: h})}); if(r.ok && PROF) PROF.tg_handle = h || null;
+  if(!r.ok){ const m = JSON.stringify(r.json || ''); TGERR = /name_ttm/.test(m) ? 'Names with TTM in them are kept for the TTM team. Please pick another name.' : /name_taken/.test(m) ? 'That name is already taken. Please pick another one.' : ''; }
+  return r.ok; }
 async function tgInit(){
   if(!USER || !PROF || !('tg_handle' in PROF) || PROF.tg_handle) return;
-  const pend = ls('ttm_tg_pending', ''); if(pend){ if(await tgSave(pend)){ try{ localStorage.removeItem('ttm_tg_pending'); }catch(err){} ui(); } return; }
+  const pend = ls('ttm_tg_pending', ''); if(pend){ const okp = await tgSave(pend); if(okp){ try{ localStorage.removeItem('ttm_tg_pending'); }catch(err){} ui(); return; } if(!TGERR) return; try{ localStorage.removeItem('ttm_tg_pending'); }catch(err){}
+    openAuth(`<p style="margin:0 0 10px"><b>${e(TGERR)}</b></p><input id="authTgIn" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="@yourname"><div class="row"><button class="ttm-btn" id="tgSaveBtn">Save</button><button class="ttm-btn ghost" id="tgSkipBtn">Not now</button></div><p id="authNote" style="margin:12px 0 0"></p>`); return; }
   if(ls('ttm_tg_skip', 0) || PROF.is_admin) return;
   openAuth(`<p style="margin:0 0 10px">Add your <b>Telegram name</b> so we know who you are. It shows at the top right instead of "Account". Your email stays private.</p><input id="authTgIn" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="@yourname"><div class="row"><button class="ttm-btn" id="tgSaveBtn">Save</button><button class="ttm-btn ghost" id="tgSkipBtn">Not now</button></div><p id="authNote" style="margin:12px 0 0"><small>You can change it any time in your Account card.</small></p>`);
 }
 document.addEventListener('click', async ev => { const t = ev.target; if(!t || !t.id) return;
   if(t.id === 'tgSkipBtn'){ lw('ttm_tg_skip', Date.now()); closeAuth(); }
-  else if(t.id === 'tgSaveBtn'){ const h = tgClean(($('authTgIn') || {}).value); if(!h){ $('authNote').textContent = 'Type your Telegram name first, or press Not now.'; return; } t.disabled = true; if(await tgSave(h)){ closeAuth(); ui(); } else { t.disabled = false; $('authNote').textContent = 'Could not save it yet. The database step is missing; ask TTM.'; } }
+  else if(t.id === 'tgSaveBtn'){ const h = tgClean(($('authTgIn') || {}).value); if(!h){ $('authNote').textContent = 'Type your Telegram name first, or press Not now.'; return; } t.disabled = true; if(await tgSave(h)){ closeAuth(); ui(); } else { t.disabled = false; $('authNote').textContent = TGERR || 'Could not save it yet. The database step is missing; ask TTM.'; } }
   else if(t.id === 'memPush'){ const n = $('memPushNote'); t.disabled = true; n.textContent = 'Working…'; const was = t.textContent === 'Turn off'; let er = ''; try{ if(was) await pushOff(); else er = await pushOn(); }catch(err){ er = 'Could not set up alerts on this device.'; } t.disabled = false; if(er){ n.textContent = er; } else { t.textContent = was ? 'Turn on' : 'Turn off'; n.textContent = was ? 'Off.' : 'On for this phone.'; } }
-  else if(t.id === 'memTgSave'){ const h = tgClean(($('memTgIn') || {}).value), n = $('memTgNote'); n.textContent = 'Saving…'; if(await tgSave(h)){ n.textContent = 'Saved.'; ui(); } else n.textContent = 'Could not save.'; }
+  else if(t.id === 'memTgSave'){ const h = tgClean(($('memTgIn') || {}).value), n = $('memTgNote'); n.textContent = 'Saving…'; if(await tgSave(h)){ n.textContent = 'Saved.'; ui(); } else n.textContent = TGERR || 'Could not save.'; }
 });
 
 // ---------- beta sections: badge for testers, feedback thread, admin inbox
@@ -724,7 +731,20 @@ function chatUi(){
   if(!CH.t){ CH.t = setInterval(() => { if(!document.hidden) chatLoad(); }, 8000); chatLoad(); }
   if(location.hash === '#chat'){ try{ history.replaceState(null, '', location.pathname + location.search); }catch(err){} chatToggle(true); }
 }
+const css5 = document.createElement('style');
+css5.textContent = `#ttmCommBtn{text-decoration:none;font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap}#ttmCommBtn.hdr{display:inline-flex;align-items:center;border:1px solid var(--gold,#dba118);color:var(--gold2,#f2c14e);border-radius:999px;padding:7px 14px;margin-right:8px;background:transparent}#ttmCommBtn.hdr:hover{background:rgba(219,161,24,.15)}#ttmCommBtn.fab{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:2600;background:var(--gold,#dba118);color:#111;border-radius:999px;padding:11px 16px;box-shadow:0 6px 22px rgba(0,0,0,.5);font-size:13.5px}`;
+document.head.appendChild(css5);
+function commBtn(){
+  let b = $('ttmCommBtn'); if(!b){ b = document.createElement('a'); b.id = 'ttmCommBtn'; b.textContent = 'Community Chat'; document.body.appendChild(b); }
+  b.href = TERM === 'crypto' ? '#community' : BASE + 'crypto/index.html#community';
+  const wide = window.innerWidth > 760, ac = $('acctBtn');
+  if(wide && ac && ac.parentNode){ b.className = 'hdr'; if(b.nextSibling !== ac) ac.parentNode.insertBefore(b, ac); }
+  else { b.className = 'fab'; if(b.parentNode !== document.body) document.body.appendChild(b); }
+}
+window.addEventListener('resize', () => { try{ commBtn(); }catch(err){} });
 function chatToggle(v){ const p = $('ttmChat'); if(!p) return; CH.open = v; p.classList.toggle('open', v); if(v){ chatPaint(); chatSeen(); } }
+function armTap(t, txt){ if(t.dataset.arm === '1') return true; t.dataset.arm = '1'; const old = t.textContent; t.textContent = txt || 'tap again to delete'; t.style.color = '#e0554d'; setTimeout(() => { t.dataset.arm = ''; t.textContent = old; t.style.color = ''; }, 3500); return false; }
+async function delRow(path){ const r = await api(path, {method: 'DELETE', headers: {Prefer: 'return=representation'}}); return r.ok && Array.isArray(r.json) && r.json.length > 0; }
 async function chatLoad(){
   if(!chatOK()) return;
   const r = await api(isAdm() ? '/rest/v1/ttm_chat?select=*&order=ts.desc&limit=400' : `/rest/v1/ttm_chat?select=*&member_id=eq.${USER.id}&order=ts.desc&limit=200`);
@@ -743,7 +763,7 @@ function chatPaint(){
     body.innerHTML = ids.length ? ids.map(id => { const l = g[id], last = l[l.length - 1], un = l.filter(m => !m.from_admin && !m.seen).length; return `<div class="ch-c" data-chc="${e(id)}"><span style="pointer-events:none"><b>${e(CH.who[id] || 'Member')}</b><br><small style="color:var(--mute)">${e((last.from_admin ? 'You: ' : '') + last.body.slice(0, 60))}</small></span>${un ? `<i style="pointer-events:none">${un}</i>` : ''}</div>`; }).join('') : '<p style="color:var(--mute);font-size:13px;margin:6px 2px">No messages yet. Pro members can write to you from the Message TTM button.</p>';
   } else {
     const l = CH.msgs.filter(m => adm ? m.member_id === CH.sel : true);
-    body.innerHTML = l.length ? l.map(m => { const me = adm ? m.from_admin : !m.from_admin; return `<div class="ch-m ${me ? 'me' : ''}">${adm ? `<u data-chdel="${m.id}" title="Delete">delete</u>` : ''}${e(m.body)}<small>${me ? 'You' : (adm ? e(CH.who[CH.sel] || 'Member') : 'TTM')} · ${tm(m.ts)}${me && adm ? (m.seen ? ' · read' : '') : (me && m.seen ? ' · read' : '')}</small></div>`; }).join('') : '<p style="color:var(--mute);font-size:13px;margin:6px 2px">Write a private message to TTM. You get a notification on your phone when TTM replies (turn on Phone alerts in your Account card).</p>';
+    body.innerHTML = l.length ? l.map(m => { const me = adm ? m.from_admin : !m.from_admin; return `<div class="ch-m ${me ? 'me' : ''}">${adm || !m.from_admin ? `<u data-chdel="${m.id}" title="Delete">delete</u>` : ''}${e(m.body)}<small>${me ? 'You' : (adm ? e(CH.who[CH.sel] || 'Member') : 'TTM')} · ${tm(m.ts)}${me && adm ? (m.seen ? ' · read' : '') : (me && m.seen ? ' · read' : '')}</small></div>`; }).join('') : '<p style="color:var(--mute);font-size:13px;margin:6px 2px">Write a private message to TTM. You get a notification on your phone when TTM replies (turn on Phone alerts in your Account card).</p>';
     if(atBottom || CH.force){ body.scrollTop = body.scrollHeight; CH.force = false; }
   }
 }
@@ -825,7 +845,7 @@ async function rmLoad(force){
     if(sig === RM.sig && !force) return; RM.sig = sig;
     const near = l.scrollHeight - l.scrollTop - l.clientHeight < 80, first = !l.children.length, adm = !!(PROF && PROF.is_admin);
     l.innerHTML = rows.length ? rows.map(m => { const mine = USER && m.user_id === USER.id, tm = new Date(m.ts).toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'});
-      return `<div class="rm-m ${mine ? 'me' : ''}"><div class="rm-h"><b>${e(m.name || 'Member')}</b><span>${tm}</span>${mine || adm ? `<u data-rmdel="${m.id}">delete</u>` : ''}${adm && !mine ? `<u data-rmmute="${m.user_id}">mute</u>` : ''}</div>${rmFmt(m)}</div>`; }).join('') : '<p style="color:var(--mute);font-size:13px;margin:4px 2px">No messages yet. Say hello.</p>';
+      return `<div class="rm-m ${mine ? 'me' : ''}"><div class="rm-h"><b>${e(m.name || 'Member')}</b><span>${tm}</span>${mine || adm ? `<u data-rmdel="${m.id}">delete</u>` : ''}${adm && !mine ? `<u data-rmmute="${m.user_id}">mute</u>` : ''}${!mine ? `<u data-rmfollow="${m.user_id}" data-n="${e(m.name || 'Member')}">${(PREFS.follow || []).some(x => x.id === m.user_id) ? 'following' : 'follow'}</u>` : ''}</div>${rmFmt(m)}</div>`; }).join('') : '<p style="color:var(--mute);font-size:13px;margin:4px 2px">No messages yet. Say hello.</p>';
     if(near || first) l.scrollTop = l.scrollHeight;
     if(first){ const mu = await api('/rest/v1/ttm_room_mutes?select=room&user_id=eq.' + USER.id); RM.muted = !!(mu.ok && Array.isArray(mu.json) && mu.json.length); const i = $('rmIn'); if(i && RM.muted){ i.disabled = true; i.placeholder = 'You have been muted by TTM.'; } }
   } finally { RM.busy = false; }
@@ -853,30 +873,45 @@ async function rmSend(){
   } finally { RM.sending = false; }
 }
 function rmStart(){ if(!$('rmApp')) return; clearInterval(RM.timer); RM.timer = setInterval(() => { if(!document.hidden && location.hash === '#community') rmLoad(false); }, 4000); }
-function rmAdminHtml(){ return `<div class="rr-card"><h3>Chat room mutes</h3><p class="calendar-note" style="margin:0 0 10px">Who can read and write each room is set in the access table above (rows "Chat room"). To mute a member, open the room and press mute on one of their messages. Muted members can read but not post.</p><div id="rmMutes"></div></div>`; }
+function rmAdminHtml(){ return `<div class="rr-card"><h3>Chat room mutes</h3><p class="calendar-note" style="margin:0 0 10px">Who can read and write each room is set in the access table above (rows "Chat room"). Muted members can still read but cannot post. Mute someone below, or press <b>mute</b> on any of their messages in the room. Delete any message with <b>delete</b> (tap twice).</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px"><input id="rmMuteWho" placeholder="@telegram name or email" autocomplete="off" style="flex:1;min-width:180px"><select id="rmMuteRoom"><option value="all">All rooms</option><option value="free">Free room</option><option value="premium">Premium room</option><option value="pro">Pro room</option></select><button class="rr-btn sm" id="rmMuteBtn">Mute</button></div><p class="calendar-note" id="rmMuteNote" style="margin:0 0 8px"></p><div id="rmMutes"></div></div>`; }
+async function rmMute(uid, room){ const r = await api('/rest/v1/ttm_room_mutes', {method: 'POST', headers: {Prefer: 'resolution=ignore-duplicates,return=minimal'}, body: JSON.stringify({user_id: uid, room})}); rmMutesLoad(); return r.ok; }
+async function rmMuteForm(){
+  const n = $('rmMuteNote'), q = (($('rmMuteWho') || {}).value || '').trim().replace(/^@+/, '').replace(/[^A-Za-z0-9_.@+-]/g, ''); if(!q){ n.textContent = 'Type a Telegram name or email first.'; return; }
+  const r = await api(`/rest/v1/ttm_profiles?select=id,email,tg_handle&or=(email.ilike.${encodeURIComponent(q)},tg_handle.ilike.${encodeURIComponent(q)})&limit=5`);
+  if(!r.ok || !Array.isArray(r.json) || !r.json.length){ n.textContent = 'No member found with that name or email.'; return; }
+  if(r.json.length > 1){ n.textContent = 'More than one match. Type the full name or email.'; return; }
+  const ok = await rmMute(r.json[0].id, $('rmMuteRoom').value); n.textContent = ok ? 'Muted ' + (r.json[0].tg_handle ? '@' + r.json[0].tg_handle : r.json[0].email) + '.' : 'Could not mute. Run the community update SQL in Supabase.'; if(ok) $('rmMuteWho').value = '';
+}
 async function rmMutesLoad(){
   const box = $('rmMutes'); if(!box) return; const r = await api('/rest/v1/ttm_room_mutes?select=user_id,room,created&order=created.desc&limit=100');
   if(!r.ok){ box.innerHTML = '<div class="rr-warn y"><b>One database step is missing.</b> Run supabase/rooms.sql in the Supabase SQL editor, then refresh.</div>'; return; }
   const rows = r.json || []; if(!rows.length){ box.innerHTML = '<p class="calendar-note" style="margin:0">Nobody is muted.</p>'; return; }
   const p = await api('/rest/v1/ttm_profiles?select=id,email,tg_handle&id=in.(' + rows.map(x => x.user_id).join(',') + ')'), who = {}; (p.json || []).forEach(x => { who[x.id] = x.tg_handle ? '@' + String(x.tg_handle).replace(/^@/, '') : x.email; });
-  box.innerHTML = rows.map(x => `<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line)"><span>${e(who[x.user_id] || x.user_id)}</span><button class="rr-btn ghost sm" data-rmunmute="${e(x.user_id)}">Unmute</button></div>`).join('');
+  box.innerHTML = rows.map(x => `<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line)"><span>${e(who[x.user_id] || x.user_id)} <small style="color:var(--mute)">· ${x.room === 'all' ? 'all rooms' : e(x.room) + ' room'}</small></span><button class="rr-btn ghost sm" data-rmunmute="${e(x.user_id)}" data-rmroom="${e(x.room)}">Unmute</button></div>`).join('');
 }
 const css3 = document.createElement('style');
-css3.textContent = `.rm-m{max-width:88%;align-self:flex-start;background:rgba(255,255,255,.06);border-radius:12px;padding:8px 11px;font-size:14px;line-height:1.45;word-break:break-word}.rm-m.me{align-self:flex-end;background:rgba(219,161,24,.18)}.rm-h{display:flex;gap:8px;align-items:baseline;margin-bottom:2px;font-size:12px;color:var(--mute,#9a978f)}.rm-h b{color:var(--gold2,#f2c14e);font-size:13px}.rm-h u{cursor:pointer;text-decoration:none;color:var(--mute,#9a978f);font-size:11px}.rm-h u:hover{color:#e0554d}.rm-img{display:block;max-width:100%;max-height:340px;border-radius:8px;margin-top:6px}.rm-m a{color:var(--gold2,#f2c14e)}`;
+css3.textContent = `.rm-m{max-width:88%;align-self:flex-start;background:rgba(255,255,255,.06);border-radius:12px;padding:8px 11px;font-size:14px;line-height:1.45;word-break:break-word}.rm-m.me{align-self:flex-end;background:rgba(219,161,24,.18)}.rm-h{display:flex;gap:8px;align-items:baseline;margin-bottom:2px;font-size:12px;color:var(--mute,#9a978f)}.rm-h b{color:var(--gold2,#f2c14e);font-size:13px}.rm-h u{cursor:pointer;text-decoration:none;color:var(--text,#e8e6e1);font-size:11px;border:1px solid var(--line,#2a2a2e);border-radius:6px;padding:1px 7px;margin-left:auto}.rm-h u+u{margin-left:0}.rm-h u:hover{color:#e0554d}.rm-img{display:block;max-width:100%;max-height:340px;border-radius:8px;margin-top:6px}.rm-m a{color:var(--gold2,#f2c14e)}`;
 document.head.appendChild(css3);
 window.addEventListener('hashchange', () => { if(location.hash === '#community'){ RM.built = false; setTimeout(() => { rmLoad(true); }, 120); } });
 setTimeout(() => { rmStart(); if(location.hash === '#community') rmLoad(true); }, 1500);
 
 // ---------- Member alert settings ----------
 let PREFS = {};
-const PREFDEF = [['live', 'Live sessions (new session and 15-minute reminder)', () => true], ['mytrade', 'My trade alerts (TP, SL and stop moves on my own trades)', () => true], ['spot', 'TTM spot moves (Pro)', () => isPro()], ['chat', 'Replies from TTM in my private chat (Pro)', () => isPro()], ['luna', 'Luna Cycle 7-day alerts (beta)', () => !!(PROF && (PROF.is_admin || PROF.beta))]];
+const PREFDEF = [['live', 'Live sessions (new session and 15-minute reminder)', () => true], ['mytrade', 'My trade alerts (TP, SL and stop moves on my own trades)', () => true], ['spot', 'TTM Spot moves (Pro)', () => isPro()], ['chat', 'Replies from TTM in my private chat (Pro)', () => isPro()], ['inbox', 'Private messages from members (admin)', () => !!(PROF && PROF.is_admin)], ['luna', 'Luna Cycle 7-day alerts (beta)', () => !!(PROF && (PROF.is_admin || PROF.beta))]];
+const ROOMPREF = [['free', 'Free'], ['premium', 'Premium'], ['pro', 'Pro']];
 async function prefLoad(){ if(!on() || !USER) return; const r = await api('/rest/v1/ttm_prefs?select=prefs&user_id=eq.' + USER.id); if(r.ok && Array.isArray(r.json) && r.json[0] && r.json[0].prefs) PREFS = r.json[0].prefs; try{ ui(); }catch(err){} }
 function prefsHtml(){
   const rows = PREFDEF.filter(p => p[2]()).map(p => `<label style="display:flex;gap:10px;align-items:center;font-size:13.5px;margin:4px 0;cursor:pointer"><input type="checkbox" data-pref="${p[0]}" ${PREFS[p[0]] === false ? '' : 'checked'} style="width:auto"> <span>${e(p[1])}</span></label>`).join('');
-  return `<div style="margin:0 0 12px"><small style="color:var(--mute)">Alert settings</small>${rows}<span id="prefNote" class="calendar-note"></span></div>`;
+  const rooms = ROOMPREF.filter(r => rmCan(r[0])), mode = PREFS.rooms || 'ttm';
+  const rmHtml = rooms.length ? `<div style="margin:8px 0 4px"><small style="color:var(--mute)">Community chat alerts on my phone</small><select data-prefsel="rooms" style="display:block;margin:4px 0;max-width:340px"><option value="ttm" ${mode === 'ttm' ? 'selected' : ''}>Only messages from TTM</option><option value="all" ${mode === 'all' ? 'selected' : ''}>Every message in my rooms</option><option value="follow" ${mode === 'follow' ? 'selected' : ''}>Only members I follow</option><option value="off" ${mode === 'off' ? 'selected' : ''}>Off</option></select>`
+    + rooms.map(r => `<label style="display:flex;gap:10px;align-items:center;font-size:13.5px;margin:3px 0;cursor:pointer"><input type="checkbox" data-pref="r_${r[0]}" ${PREFS['r_' + r[0]] === false ? '' : 'checked'} style="width:auto"> <span>${r[1]} room</span></label>`).join('')
+    + `<div style="font-size:13px;margin:6px 0 0">${(PREFS.follow || []).length ? 'Following: ' + PREFS.follow.map(f => `${e(f.n)} <u data-unfollow="${e(f.id)}" style="cursor:pointer;color:var(--mute)">remove</u>`).join(' · ') : '<span style="color:var(--mute)">Press <b>follow</b> on a member\'s message in a room to get alerts from them.</span>'}</div></div>` : '';
+  return `<div style="margin:0 0 12px"><small style="color:var(--mute)">Alert settings</small>${rows}${rmHtml}<span id="prefNote" class="calendar-note"></span></div>`;
 }
-document.addEventListener('change', async ev => { const t = ev.target; if(!t || !t.dataset || !t.dataset.pref || !USER) return; PREFS[t.dataset.pref] = t.checked; const n = $('prefNote'); if(n) n.textContent = 'Saving…';
-  const r = await api('/rest/v1/ttm_prefs?on_conflict=user_id', {method: 'POST', headers: {Prefer: 'resolution=merge-duplicates,return=minimal'}, body: JSON.stringify({user_id: USER.id, prefs: PREFS, updated: new Date().toISOString()})}); if(n) n.textContent = r.ok ? ' Saved.' : ' Could not save. Ask TTM to run the settings step.'; });
+async function prefSave(){ const n = $('prefNote'); if(n) n.textContent = 'Saving…';
+  const r = await api('/rest/v1/ttm_prefs?on_conflict=user_id', {method: 'POST', headers: {Prefer: 'resolution=merge-duplicates,return=minimal'}, body: JSON.stringify({user_id: USER.id, prefs: PREFS, updated: new Date().toISOString()})}); const n2 = $('prefNote'); if(n2) n2.textContent = r.ok ? ' Saved.' : ' Could not save. Ask TTM to run the settings step.'; return r.ok; }
+document.addEventListener('change', async ev => { const t = ev.target; if(!t || !t.dataset || !USER) return; if(t.dataset.pref){ PREFS[t.dataset.pref] = t.checked; await prefSave(); } else if(t.dataset.prefsel){ PREFS[t.dataset.prefsel] = t.value; await prefSave(); } });
 fxLoad().then(() => { if(FX) ui(); });
 boot();
 })();

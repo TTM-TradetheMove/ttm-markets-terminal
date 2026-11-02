@@ -51,6 +51,33 @@ const wall = (ms: number) => { const p: any = Object.fromEntries(new Intl.DateTi
 const addDays = (iso: string, days: number) => { const base = new Date(iso).getTime(), target = wall(base) + days * 864e5; let g = base + days * 864e5; for (let i = 0; i < 3; i++) g += target - wall(g); return new Date(g).toISOString(); };
 const when = (iso: string) => new Intl.DateTimeFormat("en-AU", {timeZone: "Australia/Melbourne", weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit", hour12: true}).format(new Date(iso)) + " Melbourne time";
 
+// room message alerts: who has access to the room, then each member's own settings decide
+async function roomPush(m: any) {
+  const accRow = (await get("ttm_settings?select=value&key=eq.access"))[0];
+  const dflt: Record<string, string[]> = {free: ["free", "premium", "pro"], premium: ["premium", "pro"], pro: ["pro"]};
+  const allowed: string[] = (accRow?.value && accRow.value["room:" + m.room]) || dflt[m.room] || [];
+  const subs = (await get("ttm_push_subs?select=*")).filter((s: any) => s.user_id !== m.user_id);
+  const ids = [...new Set(subs.map((s: any) => s.user_id))]; if (!ids.length) return;
+  const profs = await get(`ttm_profiles?select=id,is_admin,beta,plan,plan_until&id=in.(${ids.join(",")})`);
+  const sender = (await get(`ttm_profiles?select=is_admin&id=eq.${m.user_id}`))[0];
+  const prefs: Record<string, any> = {}; (await get(`ttm_prefs?select=user_id,prefs&user_id=in.(${ids.join(",")})`)).forEach((x: any) => { prefs[x.user_id] = x.prefs || {}; });
+  const nowIso = new Date().toISOString();
+  const to = new Set(profs.filter((p: any) => {
+    let plan = p.plan === "crypto" || p.plan === "tradfi" ? "premium" : (p.plan || "free");
+    if (plan !== "free" && p.plan_until && p.plan_until < nowIso) plan = "free";
+    const ok = p.is_admin || allowed.includes("free") || allowed.includes(plan) || (p.beta && allowed.includes("beta"));
+    if (!ok) return false;
+    const pr = prefs[p.id] || {}, mode = pr.rooms || "ttm";
+    if (mode === "off" || pr["r_" + m.room] === false) return false;
+    if (mode === "all") return true;
+    if (mode === "follow") return Array.isArray(pr.follow) && pr.follow.some((f: any) => f.id === m.user_id);
+    return !!sender?.is_admin;
+  }).map((p: any) => p.id));
+  const list = subs.filter((s: any) => to.has(s.user_id)); if (!list.length) return;
+  const room = m.room.charAt(0).toUpperCase() + m.room.slice(1);
+  await send(list, {title: (m.name || "Member") + " · " + room + " room", body: m.img && !m.body ? "Sent an image" : String(m.body).slice(0, 140), tag: "room-" + m.room, url: "./crypto/index.html#community"});
+}
+
 Deno.serve(async (req) => {
   let b: any = {}; try { b = await req.json(); } catch (_) {}
   const table = b.table || "cron", rec = b.record || {};
@@ -60,7 +87,7 @@ Deno.serve(async (req) => {
     const row = rec.id && await claim("ttm_spot_feed", rec.id, "pushed"); if (!row) return new Response("skip");
     const dir = /Short/.test(row.title) ? "Short" : "Long";
     const short: Record<string, string> = {buy: dir + " position opened", fill: dir + " limit order collected", tp: dir + " TP hit", part: "partial profit taken", sell: dir + " position closed", add: dir + " position added to"};
-    const title = row.asset && short[row.kind] ? row.asset + " " + short[row.kind] : row.title;
+    const title = row.asset && short[row.kind] ? row.asset + " (Spot) " + short[row.kind] : row.title;
     const pros = await get(`ttm_profiles?select=id&or=(is_admin.eq.true,and(plan.eq.pro,or(plan_until.is.null,plan_until.gt.${new Date().toISOString()})))`);
     const n = await send(await subsFor(idsOf(pros)), {title, body: row.body || "TTM Spot portfolio", tag: "ttm-" + row.id, url: "./crypto/index.html"}, "spot");
     return new Response("spot " + n);
@@ -81,11 +108,16 @@ Deno.serve(async (req) => {
     }
     const p = (await get(`ttm_profiles?select=email,tg_handle&id=eq.${row.member_id}`))[0] || {};
     const admins = await get("ttm_profiles?select=id&is_admin=eq.true");
-    const n = await send(await subsFor(idsOf(admins)), {title: "Message from " + (p.tg_handle ? "@" + String(p.tg_handle).replace(/^@/, "") : p.email || "a member"), body: text, tag: "chat-" + row.member_id, url: "./crypto/index.html#chat"});
+    const n = await send(await subsFor(idsOf(admins)), {title: "Message from " + (p.tg_handle ? "@" + String(p.tg_handle).replace(/^@/, "") : p.email || "a member"), body: text, tag: "chat-" + row.member_id, url: "./crypto/index.html#chat"}, "inbox");
     return new Response("msg " + n);
   }
 
-  // cron tick: live sessions
+  // cron tick: new community room messages, then live sessions
+  const fresh0 = new Date(now - 10 * 60000).toISOString();
+  for (const m of await get(`ttm_room_msgs?select=*&pushed=eq.false&ts=gt.${fresh0}&order=id.asc&limit=20`)) {
+    if (!(await claim("ttm_room_msgs", m.id, "pushed"))) continue;
+    await roomPush(m);
+  }
   const soon = new Date(now + 15 * 60000).toISOString(), back = new Date(now - 10 * 60000).toISOString();
   const due = await get(`ttm_live?select=*&reminded=eq.false&starts_at=lte.${soon}&starts_at=gt.${back}`);
   for (const s of due) {

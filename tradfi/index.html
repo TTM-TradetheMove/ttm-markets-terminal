@@ -898,11 +898,12 @@ function draw(D, feed){
   const ago = Math.round((Date.now() - D.t) / 60000); $('hdUpdated').textContent = 'Updated ' + (ago < 90 ? ago + ' min' : Math.round(ago / 60) + ' h') + ' ago';
   let h = block(H, '');
   if(KEY === 'tradfi' && D.tokenised && ((D.tokenised.items && D.tokenised.items.length) || (D.tokenised.pending && D.tokenised.pending.length) || (D.tokenised.sold && D.tokenised.sold.length))) h += block(D.tokenised, 'Tokenised stocks (traded with USDT / USDC)');
-  if(feed && feed.length) h += '<div class="rr-card"><h3>Recent moves</h3>' + feed.map(e => '<div style="padding:8px 0;border-top:1px solid var(--line)"><b>' + esc(e.title) + '</b> <small style="color:var(--mute)">' + new Date(e.ts).toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}) + '</small>' + (e.body ? '<div style="font-size:13px;color:var(--mute)">' + esc(e.body) + '</div>' : '') + '</div>').join('') + '<p class="calendar-note" style="margin:8px 0 0">Pro members see each move as it happens, with a pop-up on their dashboard. Everyone else sees it 14 days later.</p></div>';
+  feed = (feed || []).filter(e => /^(buy|add|fill)$/.test(e.kind)).slice(0, 10);
+  if(feed && feed.length) h += '<div class="rr-card"><h3>Recent buys</h3>' + feed.map(e => '<div style="padding:8px 0;border-top:1px solid var(--line)"><b>' + esc(e.title) + '</b> <small style="color:var(--mute)">' + new Date(e.ts).toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}) + '</small>' + (e.body ? '<div style="font-size:13px;color:var(--mute)">' + esc(e.body) + '</div>' : '') + '</div>').join('') + '<p class="calendar-note" style="margin:8px 0 0">Pro members see each buy as it happens, with a pop-up on their dashboard. Everyone else sees it 14 days later.</p></div>';
   else h += '<p class="calendar-note">Pro members see TTM\'s buys, sells, limit orders and part take-profits live, with a pop-up. Everyone else sees them 14 days later.</p>';
   $('hdBody').innerHTML = h;
 }
-async function load(){ if(!window.ttmHoldings) return; const [d, f] = await Promise.all([ttmHoldings(), window.ttmFeedList ? window.ttmFeedList(15) : []]); draw(d, f); }
+async function load(){ if(!window.ttmHoldings) return; const [d, f] = await Promise.all([ttmHoldings(), window.ttmFeedList ? window.ttmFeedList(40) : []]); draw(d, f); }
 window.addEventListener('hashchange', () => { if(location.hash === '#holdings') load(); }); if(location.hash === '#holdings') setTimeout(load, 700); setInterval(() => { if(location.hash === '#holdings') load(); }, 120000);
 })();
 </script>

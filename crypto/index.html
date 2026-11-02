@@ -728,7 +728,6 @@ button.tkr{background:none;border:0;padding:0;margin:0;color:var(--gold2);font:i
     <p class="lead">Crypto today, equities and metals next. Check the macro calendar, then pull up any asset's Review or full 7-point Deep Dive — all from one link.</p>
     <div class="hero-ctas">
       <a class="btn-primary" href="#library">Open the report library</a>
-      <a class="btn-ghost" href="https://t.me/+fxWM17n8TxE3ODc1" target="_blank" rel="noopener">TTM Telegram community</a>
     </div>
   </div>
   <button type="button" class="cycle-card" id="cycleOpenBtn" aria-haspopup="dialog">
@@ -1114,6 +1113,10 @@ button.tkr{background:none;border:0;padding:0;margin:0;color:var(--gold2);font:i
             <div class="rr-f"><label>Market type (set by account)</label><div class="rr-seg" id="rrMkt"><button type="button" data-m="spot">Spot</button><button type="button" class="on" data-m="fut">Futures / Perp</button></div></div>
             <div class="rr-f"><label for="rrLev">Leverage</label><select id="rrLev"></select></div>
           </div>
+          <div class="rr-row" id="rrMmRow">
+            <div class="rr-f"><label>Margin mode</label><div class="rr-seg" id="rrMm"><button type="button" class="on" data-mm="iso">Isolated</button><button type="button" data-mm="cross">Cross</button></div></div>
+            <div class="rr-f"><label>&nbsp;</label><div class="calendar-note" id="rrMmNote" style="margin:0"></div></div>
+          </div>
           <div class="rr-row">
             <div class="rr-f"><label for="rrTf">Time frame you are trading</label><select id="rrTf"></select></div>
           </div>
@@ -1380,11 +1383,12 @@ function draw(D, feed){
   const ago = Math.round((Date.now() - D.t) / 60000); $('hdUpdated').textContent = 'Updated ' + (ago < 90 ? ago + ' min' : Math.round(ago / 60) + ' h') + ' ago';
   let h = block(H, '');
   if(KEY === 'tradfi' && D.tokenised && ((D.tokenised.items && D.tokenised.items.length) || (D.tokenised.pending && D.tokenised.pending.length) || (D.tokenised.sold && D.tokenised.sold.length))) h += block(D.tokenised, 'Tokenised stocks (traded with USDT / USDC)');
-  if(feed && feed.length) h += '<div class="rr-card"><h3>Recent moves</h3>' + feed.map(e => '<div style="padding:8px 0;border-top:1px solid var(--line)"><b>' + esc(e.title) + '</b> <small style="color:var(--mute)">' + new Date(e.ts).toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}) + '</small>' + (e.body ? '<div style="font-size:13px;color:var(--mute)">' + esc(e.body) + '</div>' : '') + '</div>').join('') + '<p class="calendar-note" style="margin:8px 0 0">Pro members see each move as it happens, with a pop-up on their dashboard. Everyone else sees it 14 days later.</p></div>';
+  feed = (feed || []).filter(e => /^(buy|add|fill)$/.test(e.kind)).slice(0, 10);
+  if(feed && feed.length) h += '<div class="rr-card"><h3>Recent buys</h3>' + feed.map(e => '<div style="padding:8px 0;border-top:1px solid var(--line)"><b>' + esc(e.title) + '</b> <small style="color:var(--mute)">' + new Date(e.ts).toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}) + '</small>' + (e.body ? '<div style="font-size:13px;color:var(--mute)">' + esc(e.body) + '</div>' : '') + '</div>').join('') + '<p class="calendar-note" style="margin:8px 0 0">Pro members see each buy as it happens, with a pop-up on their dashboard. Everyone else sees it 14 days later.</p></div>';
   else h += '<p class="calendar-note">Pro members see TTM\'s buys, sells, limit orders and part take-profits live, with a pop-up. Everyone else sees them 14 days later.</p>';
   $('hdBody').innerHTML = h;
 }
-async function load(){ if(!window.ttmHoldings) return; const [d, f] = await Promise.all([ttmHoldings(), window.ttmFeedList ? window.ttmFeedList(15) : []]); draw(d, f); }
+async function load(){ if(!window.ttmHoldings) return; const [d, f] = await Promise.all([ttmHoldings(), window.ttmFeedList ? window.ttmFeedList(40) : []]); draw(d, f); }
 window.addEventListener('hashchange', () => { if(location.hash === '#holdings') load(); }); if(location.hash === '#holdings') setTimeout(load, 700); setInterval(() => { if(location.hash === '#holdings') load(); }, 120000);
 })();
 </script>
@@ -3497,7 +3501,7 @@ let COINS = ['BTC','ETH','SOL','XRP','BNB','DOGE','ADA','AVAX','LINK','SUI','TON
 addExtra();
 const LEVS = [1,2,3,5,10,15,20,25,50,75,100];
 const KEY = 'ttm_rr_state_v1', SKEY = 'ttm_rr_saved_v1';
-const DEF = {asset:'BTC', dir:'long', mkt:'fut', lev:10, entry:'', stop:'', tp1:'', s1:50, tp2:'', s2:50, tp3:'', s3:0, pstop:'', psh:50, bal:5000, risk:1, fee:0.06, daily:250, min:2, mmr:0.5, acc:'lev', tf:'h1', mode:'pct', rusd:50, inv:1000, split:false, lo1p:'', lo1w:'', lo2p:'', lo2w:'', lo3p:'', lo3w:'', lo4p:'', lo4w:'', lo5p:'', lo5w:''};
+const DEF = {asset:'BTC', dir:'long', mkt:'fut', lev:10, entry:'', stop:'', tp1:'', s1:50, tp2:'', s2:50, tp3:'', s3:0, pstop:'', psh:50, mm:'iso', bal:5000, risk:1, fee:0.06, daily:250, min:2, mmr:0.5, acc:'lev', tf:'h1', mode:'pct', rusd:50, inv:1000, split:false, lo1p:'', lo1w:'', lo2p:'', lo2w:'', lo3p:'', lo3w:'', lo4p:'', lo4w:'', lo5p:'', lo5w:''};
 let S = Object.assign({}, DEF);
 function lsGet(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); if(window.ttmSync && (k === 'ttm_rr_saved_v1' || k === 'ttm_rr_bals_v1')) window.ttmSync.dirty(); return true; }catch(e){ return false; } }
@@ -3523,6 +3527,9 @@ function pushInputs(){
   document.querySelectorAll('#rrDir button').forEach(b => { b.classList.toggle('on', b.dataset.d === S.dir); b.classList.toggle('short', b.dataset.d === 'short'); });
   document.querySelectorAll('#rrMkt button').forEach(b => b.classList.toggle('on', b.dataset.m === S.mkt));
   $('rrLev').disabled = S.mkt === 'spot';
+  { const fut = S.mkt === 'fut', cm = S.acc === 'coinm'; $('rrMmRow').style.display = fut ? '' : 'none';
+    document.querySelectorAll('#rrMm button').forEach(b => b.classList.toggle('on', b.dataset.mm === (S.mm === 'cross' && !cm ? 'cross' : 'iso')));
+    $('rrMmNote').textContent = cm ? 'Coin-M is shown as isolated.' : S.mm === 'cross' ? 'Cross: your whole free balance backs this trade, so liquidation sits much further away than isolated. Other open trades share the same balance and are not counted here.' : 'Isolated: only the margin you put into this trade backs it, so liquidation is closer.'; }
   const z = S.mode || 'pct';
   document.querySelectorAll('#rrSz button').forEach(b => b.classList.toggle('on', b.dataset.z === z));
   $('fPct').style.display = z === 'pct' ? '' : 'none'; $('fUsd').style.display = z === 'usd' ? '' : 'none'; $('fInv').style.display = z === 'inv' ? '' : 'none';
@@ -3539,6 +3546,8 @@ function splitRows(){
   for(let k = 1; k <= 5; k++){ const p = num(S['lo' + k + 'p']), w = num(S['lo' + k + 'w']); if(p > 0 && w > 0) r.push({p, w, k}); }
   if(r.length < 2) return null; const t = r.reduce((a, x) => a + x.w, 0); r.forEach(x => { x.share = x.w / t * 100; }); return r;
 }
+// unrealised profit on this account's open, filled trades (cross margin can use it as margin on exchanges)
+function unrealOf(id){ let u = 0; try{ loadSaved().forEach(x => { if(x.status === 'open' && x.snap && accOf(x) === id && x.fill !== 'pending' && x.snap.mkt !== 'spot'){ const o = openState(x); if(o && isFinite(o.pnl)) u += o.pnl; } }); }catch(e){} return Math.max(0, u); }
 function calc(){
   const long = S.dir === 'long', lev = S.mkt === 'spot' ? 1 : (num(S.lev) || 1);
   let SPL = splitRows(), A = acct(), E = SPL ? SPL.reduce((a, x) => a + x.p * x.share / 100, 0) : num(S.entry), SL = num(S.stop), bal = A.equity, noSL = S.mkt === 'spot' && SL == null, mode = noSL ? 'inv' : (S.mode || 'pct'), rk = num(S.risk), ru = num(S.rusd), inv = num(S.inv), fee = (num(S.fee) || 0) / 100, mmr = (num(S.mmr) || 0) / 100;
@@ -3578,15 +3587,20 @@ function calc(){
   out.rrTotal = out.tps.length ? profit / out.riskUsd : null;
   out.be = out.rr != null && out.rr > 0 ? 100 / (1 + out.rr) : null;
   // liquidation estimate (isolated, linear contract): liq = entry * (1 -/+ 1/lev +/- mmr)
+  const cross = S.mkt === 'fut' && S.mm === 'cross' && S.acc !== 'coinm'; out.cross = cross;
+  const UR = cross ? unrealOf(S.acc) : 0; out.unreal = UR;
   if(S.mkt === 'fut' && lev > 1){
-    out.liq = S.acc === 'coinm' ? (long ? E * lev / (lev + 1 - lev * mmr) : E * lev / Math.max(0.0001, lev - 1 + lev * mmr)) : (long ? E * (1 - 1 / lev + mmr) : E * (1 + 1 / lev - mmr));
-    out.liqDist = Math.abs(E - out.liq) / E * 100;
-    const stopBeyond = long ? SL <= out.liq : SL >= out.liq;
-    if(stopBeyond) out.warns.push(['bad', `Your stop is at or beyond the estimated liquidation price (${pr(out.liq)}). You would be liquidated before the stop triggers. Lower the leverage or tighten the stop.`]);
+    if(cross){ const col = out.margin > A.avail ? A.avail + UR : A.avail; out.liq = long ? E - (col - mmr * out.notional) / out.units : E + (col - mmr * out.notional) / out.units; if(out.liq <= 0){ out.liq = null; out.liqNone = true; } }
+    else out.liq = S.acc === 'coinm' ? (long ? E * lev / (lev + 1 - lev * mmr) : E * lev / Math.max(0.0001, lev - 1 + lev * mmr)) : (long ? E * (1 - 1 / lev + mmr) : E * (1 + 1 / lev - mmr));
+    if(out.liq != null) out.liqDist = Math.abs(E - out.liq) / E * 100;
+    const stopBeyond = out.liq != null && (long ? SL <= out.liq : SL >= out.liq);
+    if(out.liq == null){}
+    else if(stopBeyond) out.warns.push(['bad', `Your stop is at or beyond the estimated liquidation price (${pr(out.liq)}). You would be liquidated before the stop triggers. Lower the leverage or tighten the stop.`]);
     else if(Math.abs(SL - out.liq) / E * 100 < out.distPct * 0.25) out.warns.push(['y', `Your stop is close to the estimated liquidation price (${pr(out.liq)}). Small slippage or wicks could liquidate you first.`]);
   }
   const av = A.avail;
-  if(out.margin > av + 0.005){
+  if(cross && out.margin > av + 0.005 && out.margin <= av + UR + 0.005){ out.usesUnreal = out.margin - av; out.warns.push(['y', `Cross margin: this trade needs ${usd(out.usesUnreal)} more than your ${usd(av)} of available funds, so it would use unrealised profit from your open trades (${usd(UR)} right now). When you press Open trade you can choose to shrink it to the funds you have available instead.`]); }
+  else if(out.margin > av + 0.005){
     const f = av > 0 ? av / out.margin : 0; out.fitKey = mode === 'pct' ? 'risk' : mode === 'usd' ? 'rusd' : 'inv'; out.fit = mode === 'pct' ? rk * f : mode === 'usd' ? ru * f : av;
     out.warns.push(['bad', `The margin needed (${usd(out.margin)}) is more than the ${usd(av)} you have available in ${({spot: 'your spot portfolio', lev: 'your leverage account', coinm: 'your Coin-M account', super: 'your super / retirement account', tradfi: 'your TradFi investment account', tokenised: 'your tokenised stocks account'})[S.acc] || 'this account'}` + (A.locked > 0 ? ` (${usd(A.locked)} is locked in ${A.open} open trade${A.open > 1 ? 's' : ''})` : '') + '. ' + (av > 0 ? 'Reduce the size, use more leverage, or tighten the stop.' : 'Close a trade or add capital first.'), av > 0 ? out.fit : 0, out.fitKey]); }
   else if(out.margin > av * 0.5) out.warns.push(['y', `This position locks up ${(out.margin / av * 100).toFixed(0)}% of your available balance as margin (${usd(av - out.margin)} would be left).`]);
@@ -3623,7 +3637,7 @@ function render(){
     row('Position notional', usd(c.notional)) + row('Risk : reward', c.rr == null ? '—' : '1 : ' + c.rr.toFixed(2), 'y') + row('Stop distance' + (c.psl ? ' (weighted)' : ''), c.distPct.toFixed(2) + '%') + (c.psl ? row('Part stop', pr(c.psl.P) + ' · ' + c.psl.share + '%', 'r') : '') +
     row('Break-even win rate', c.be == null ? '—' : c.be.toFixed(1) + '%') + row('Est. fees (round trip at stop)', usd(c.units * c.fee * (c.E + c.SL))) + row('Investment (margin)', usd(c.margin)) + row('Risk as % of investment', c.riskPctInv.toFixed(2) + '%', 'r') + row('Risk as % of account', c.riskPctAcct.toFixed(2) + '%', 'r');
   $('rrLevOut').innerHTML = row('Leverage', c.lev + '×') + row('Margin required', usd(c.margin) + `<br><span style="font-size:11px;color:var(--mute);font-weight:400">${(c.margin / c.notional * 100).toFixed(1)}% of notional</span>`) +
-    row('Liquidation (est.)', c.liq == null ? (S.mkt === 'spot' ? 'n/a (spot)' : 'n/a at 1×') : pr(c.liq) + `<br><span style="font-size:11px;color:var(--mute);font-weight:400">${c.liqDist.toFixed(1)}% from entry</span>`, c.liq != null ? 'r' : '');
+    row('Liquidation (est.)' + (c.cross ? ' · cross' : S.mkt === 'fut' && c.lev > 1 ? ' · isolated' : ''), c.liq == null ? (S.mkt === 'spot' ? 'n/a (spot)' : c.liqNone ? 'None (your balance covers a move to zero)' : 'n/a at 1×') : pr(c.liq) + `<br><span style="font-size:11px;color:var(--mute);font-weight:400">${c.liqDist.toFixed(1)}% from entry</span>`, c.liq != null ? 'r' : '');
   // take-profit table
   let t = '<thead><tr><th>Target</th><th>Price</th><th>% of position</th><th>Size</th><th>Profit (net of fees)</th><th>Return on balance</th><th>R multiple</th></tr></thead><tbody>';
   c.tps.forEach(x => { t += `<tr><td>TP${x.i}</td><td>${pr(x.P)}</td><td>${x.share}%</td><td>${qty(x.u)}</td><td style="color:#3fb47a">${usd(x.net)}</td><td style="color:#3fb47a">+${x.ret.toFixed(2)}%</td><td>${x.rr.toFixed(2)}R</td></tr>`; });
@@ -3694,7 +3708,7 @@ function renderAcct(){
   if($('jAcct')) $('jAcct').innerHTML = tiles(jA());
   [$('rrPort'), $('jPort')].forEach(el => { if(el) el.innerHTML = portHtml(); });
 }
-function snapOf(c, st){ st = st || S; return {asset: st.asset, acc: st.acc || 'lev', tf: st.tf || 'h1', long: c.long, mkt: st.mkt, lev: c.lev, E: c.E, SL: c.SL, units: c.units, notional: c.notional, margin: c.margin, riskUsd: c.riskUsd, fee: c.fee, tps: c.tps.map(t => ({P: t.P, share: t.share})), noSL: !!c.noSL, psl: c.psl ? {P: c.psl.P, share: c.psl.share} : null}; }
+function snapOf(c, st){ st = st || S; return {asset: st.asset, acc: st.acc || 'lev', tf: st.tf || 'h1', long: c.long, mkt: st.mkt, lev: c.lev, E: c.E, SL: c.SL, units: c.units, notional: c.notional, margin: c.margin, riskUsd: c.riskUsd, fee: c.fee, tps: c.tps.map(t => ({P: t.P, share: t.share})), mm: c.cross ? 'cross' : 'iso', usedUnreal: c.usesUnreal || 0, noSL: !!c.noSL, psl: c.psl ? {P: c.psl.P, share: c.psl.share} : null}; }
 // ---- limit orders: a trade can be built from up to 5 orders (x.orders). The position shown everywhere (snap) is always worked out from the orders that have filled.
 const MAXLO = 5;
 function syncOrders(x){
@@ -3964,8 +3978,19 @@ function wireJournal(){
   $('jImport').addEventListener('change', e => { $('rrImport').files = e.target.files; $('rrImport').dispatchEvent(new Event('change')); });
   $('jClear').addEventListener('click', () => { if(confirm('Delete ALL saved plans, open and closed trades from this browser? This cannot be undone. Export first if you want a copy.')){ saveAll([]); renderSaved(); render(); } });
 }
-function startTrade(c, setup, name, replaceIdx){
+function unrealAsk(c, setup, name, replaceIdx){
+  let m = $('rrUnrealAsk'); if(!m){ m = document.createElement('div'); m.id = 'rrUnrealAsk'; m.style.cssText = 'position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:16px'; document.body.appendChild(m); }
+  m.innerHTML = `<div class="rr-card" style="max-width:440px;margin:0"><h3>This trade uses unrealised profit</h3><p style="margin:0 0 8px;font-size:14px">Cross margin: this trade needs <b>${usd(c.margin)}</b> margin, but you only have <b>${usd(c.avail)}</b> of available funds. The other <b>${usd(c.usesUnreal)}</b> would come from unrealised profit on your open trades, which can disappear if those trades turn around.</p><p style="margin:0 0 12px;font-size:14px"><b>Do you want to adjust?</b> Yes shrinks the trade to the funds you have available. No opens it using the unrealised profit.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="rr-btn" id="uaYes">Yes, use available funds only</button><button class="rr-btn ghost" id="uaNo">No, use unrealised profit</button><button class="rr-btn ghost" id="uaCancel">Cancel</button></div></div>`;
+  const done = () => m.remove();
+  $('uaCancel').onclick = done;
+  $('uaNo').onclick = () => { done(); startTrade(c, setup, name, replaceIdx, true); };
+  $('uaYes').onclick = () => { done(); const save = S, st = Object.assign({}, DEF, setup, {mode: 'inv', inv: Math.floor(c.avail * 100) / 100}); S = st; const c2 = calc(); S = save;
+    if(replaceIdx == null){ S.mode = 'inv'; S.inv = st.inv; persist(); pushInputs(); render(); }
+    startTrade(c2, st, name, replaceIdx, true); };
+}
+function startTrade(c, setup, name, replaceIdx, okUnreal){
   const note = $('rrOpenNote');
+  if(c.ok && c.usesUnreal > 0.005 && !okUnreal && !c.warns.some(w => w[0] === 'bad')){ unrealAsk(c, setup, name, replaceIdx); return false; }
   if(!c.ok || c.warns.some(w => w[0] === 'bad')){ note.textContent = 'Fix the red warnings first, then open the trade.'; note.style.color = '#e0554d'; return false; }
   if(!c.tps.length){ note.textContent = 'Add at least one take-profit target before opening the trade.'; note.style.color = '#e0554d'; return false; }
   const list = loadSaved(), item = {id: uid(), name: (name || '').trim() || `${setup.asset} ${setup.mkt === 'spot' ? 'spot' : setup.lev + '×'} ${setup.dir}`, t: Date.now(), opened: Date.now(), s: Object.assign({}, setup), status: 'open', snap: snapOf(c, setup)};
@@ -4526,6 +4551,7 @@ function wire(){
   $('rrAsset').addEventListener('blur', e => { list.classList.remove('open'); const v = clean(e.target.value); if(v && v !== S.asset) choose(v); else e.target.value = S.asset; });
   fetch('../top_coins.json?t=' + Date.now(), {cache: 'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null).then(d => { if(d && d.coins && d.coins.length > 20){ COINS = d.coins.map(c => ({s: c.s, n: c.n, r: c.r, p: c.p})); addExtra(); } });
   $('rrLev').addEventListener('change', e => { S.lev = +e.target.value; persist(); render(); });
+  $('rrMm').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; S.mm = b.dataset.mm; persist(); pushInputs(); render(); });
   $('rrDir').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; S.dir = b.dataset.d; pushInputs(); persist(); render(); });
   
   $('rrLive').addEventListener('click', async () => {
