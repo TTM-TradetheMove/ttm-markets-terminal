@@ -1120,6 +1120,11 @@ button.tkr{background:none;border:0;padding:0;margin:0;color:var(--gold2);font:i
             <div class="rr-f"><label for="rrEntry">Entry price (USD)</label><input id="rrEntry" type="number" inputmode="decimal" step="any"></div>
             <div class="rr-f"><label for="rrStop">Stop loss (USD), optional on spot</label><input id="rrStop" type="number" inputmode="decimal" step="any"></div>
           </div>
+          <div class="rr-row">
+            <div class="rr-f"><label for="rrPStop">Part stop loss (USD), optional</label><input id="rrPStop" type="number" inputmode="decimal" step="any" placeholder="Closes only part of the trade"></div>
+            <div class="rr-f"><label for="rrPSh">% of position closed at the part stop</label><input id="rrPSh" type="number" inputmode="decimal" step="any"></div>
+          </div>
+          <p class="calendar-note" style="margin:-4px 0 10px">A part stop closes only that share of the trade. The rest stays on the main stop above, and your risk is worked out from both.</p>
           <div class="rr-f" style="margin:2px 0 10px"><label style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="rrSplit" style="width:auto"> Split the entry into up to 5 limit orders</label>
             <div id="rrSplitBox" style="display:none;margin-top:8px"><div class="calendar-note" style="margin:0 0 8px">Price and share of the position for each order. The average entry is worked out for you and used for the risk, stop and targets. When an order fills, your tracker updates the average entry and draws it on the trade chart.</div>
               <div class="rr-tp" style="margin-bottom:6px"><input id="rrLo1p" type="number" inputmode="decimal" step="any" placeholder="Order 1 price"><input id="rrLo1w" type="number" inputmode="decimal" step="any" placeholder="% of position"></div><div class="rr-tp" style="margin-bottom:6px"><input id="rrLo2p" type="number" inputmode="decimal" step="any" placeholder="Order 2 price"><input id="rrLo2w" type="number" inputmode="decimal" step="any" placeholder="% of position"></div><div class="rr-tp" style="margin-bottom:6px"><input id="rrLo3p" type="number" inputmode="decimal" step="any" placeholder="Order 3 price"><input id="rrLo3w" type="number" inputmode="decimal" step="any" placeholder="% of position"></div><div class="rr-tp" style="margin-bottom:6px"><input id="rrLo4p" type="number" inputmode="decimal" step="any" placeholder="Order 4 price"><input id="rrLo4w" type="number" inputmode="decimal" step="any" placeholder="% of position"></div><div class="rr-tp" style="margin-bottom:6px"><input id="rrLo5p" type="number" inputmode="decimal" step="any" placeholder="Order 5 price"><input id="rrLo5w" type="number" inputmode="decimal" step="any" placeholder="% of position"></div>
@@ -3480,7 +3485,7 @@ let COINS = ['BTC','ETH','SOL','XRP','BNB','DOGE','ADA','AVAX','LINK','SUI','TON
 addExtra();
 const LEVS = [1,2,3,5,10,15,20,25,50,75,100];
 const KEY = 'ttm_rr_state_v1', SKEY = 'ttm_rr_saved_v1';
-const DEF = {asset:'BTC', dir:'long', mkt:'fut', lev:10, entry:'', stop:'', tp1:'', s1:50, tp2:'', s2:50, tp3:'', s3:0, bal:5000, risk:1, fee:0.06, daily:250, min:2, mmr:0.5, acc:'lev', tf:'h1', mode:'pct', rusd:50, inv:1000, split:false, lo1p:'', lo1w:'', lo2p:'', lo2w:'', lo3p:'', lo3w:'', lo4p:'', lo4w:'', lo5p:'', lo5w:''};
+const DEF = {asset:'BTC', dir:'long', mkt:'fut', lev:10, entry:'', stop:'', tp1:'', s1:50, tp2:'', s2:50, tp3:'', s3:0, pstop:'', psh:50, bal:5000, risk:1, fee:0.06, daily:250, min:2, mmr:0.5, acc:'lev', tf:'h1', mode:'pct', rusd:50, inv:1000, split:false, lo1p:'', lo1w:'', lo2p:'', lo2w:'', lo3p:'', lo3w:'', lo4p:'', lo4w:'', lo5p:'', lo5w:''};
 let S = Object.assign({}, DEF);
 function lsGet(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); if(window.ttmSync && (k === 'ttm_rr_saved_v1' || k === 'ttm_rr_bals_v1')) window.ttmSync.dirty(); return true; }catch(e){ return false; } }
@@ -3494,7 +3499,7 @@ $('rrSrc').innerHTML = [['okx', 'OKX'], ['binance', 'Binance'], ['bybit', 'Bybit
 $('rrAcc').innerHTML = [['spot', 'Spot portfolio'], ['lev', 'Leverage / futures'], ['coinm', 'Coin-M futures (coin-margined)'], ['super', 'Super / retirement'], ['tokenised', 'Tokenised stocks']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
 if(!['spot', 'lev', 'coinm', 'super', 'tokenised'].includes(S.acc)){ S.acc = 'spot'; S.mkt = 'spot'; S.dir = 'long'; try{ persist(); }catch(e){} }
 $('rrTf').innerHTML = [['m5', '5 min'], ['m15', '15 min'], ['h1', '1 hour'], ['h2', '2 hour'], ['h4', '4 hour'], ['h8', '8 hour'], ['h12', '12 hour'], ['d1', 'Daily'], ['w1', 'Weekly'], ['mo1', 'Monthly']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
-const IDS = {entry:'rrEntry', stop:'rrStop', tp1:'rrTp1', s1:'rrS1', tp2:'rrTp2', s2:'rrS2', tp3:'rrTp3', s3:'rrS3', risk:'rrRisk', rusd:'rrRusd', inv:'rrInv', fee:'rrFee', daily:'rrDaily', min:'rrMin', mmr:'rrMmr', lo1p:'rrLo1p', lo1w:'rrLo1w', lo2p:'rrLo2p', lo2w:'rrLo2w', lo3p:'rrLo3p', lo3w:'rrLo3w', lo4p:'rrLo4p', lo4w:'rrLo4w', lo5p:'rrLo5p', lo5w:'rrLo5w'};
+const IDS = {entry:'rrEntry', stop:'rrStop', pstop:'rrPStop', psh:'rrPSh', tp1:'rrTp1', s1:'rrS1', tp2:'rrTp2', s2:'rrS2', tp3:'rrTp3', s3:'rrS3', risk:'rrRisk', rusd:'rrRusd', inv:'rrInv', fee:'rrFee', daily:'rrDaily', min:'rrMin', mmr:'rrMmr', lo1p:'rrLo1p', lo1w:'rrLo1w', lo2p:'rrLo2p', lo2w:'rrLo2w', lo3p:'rrLo3p', lo3w:'rrLo3w', lo4p:'rrLo4p', lo4w:'rrLo4w', lo5p:'rrLo5p', lo5w:'rrLo5w'};
 function pushInputs(){
   if($('rrSplit')){ $('rrSplit').checked = !!S.split; $('rrSplitBox').style.display = S.split ? 'block' : 'none'; }
   Object.keys(IDS).forEach(k => { $(IDS[k]).value = S[k] === '' || S[k] == null ? '' : S[k]; });
@@ -3535,9 +3540,13 @@ function calc(){
   if(E == null || SL == null || bal == null || sizeIn == null || E <= 0 || (!noSL && SL <= 0) || bal <= 0 || sizeIn <= 0) return out;
   if(long ? SL >= E : SL <= E){ out.warns.push(['bad', long ? 'For a long trade the stop-loss must be below the entry.' : 'For a short trade the stop-loss must be above the entry.']); return out; }
   if(S.mkt === 'spot' && !long) out.warns.push(['y', 'Shorting is not possible on spot; switch to Futures / Perp to model a short.']);
-  const dist = Math.abs(E - SL);
+  let dist = Math.abs(E - SL), SLe = SL; const PS = num(S.pstop), PSH = Math.min(100, Math.max(0, num(S.psh) || 0));
+  if(PS != null && PS > 0 && PSH > 0 && !noSL){
+    if(long ? (PS >= E || PS <= SL) : (PS <= E || PS >= SL)) out.warns.push(['bad', long ? 'For a long trade the part stop must sit between the main stop and the entry.' : 'For a short trade the part stop must sit between the entry and the main stop.']);
+    else { out.psl = {P: PS, share: PSH}; dist = PSH / 100 * Math.abs(E - PS) + (1 - PSH / 100) * Math.abs(E - SL); SLe = long ? E - dist : E + dist; }
+  }
   out.dist = dist; out.distPct = dist / E * 100;
-  const perUnitLoss = dist + fee * (E + SL);            // loss per unit at the stop including fees on both sides
+  const perUnitLoss = dist + fee * (E + SLe);            // loss per unit at the stop including fees on both sides
   if(mode === 'inv'){ out.margin = inv; out.notional = inv * lev; out.units = out.notional / E; out.riskUsd = out.units * perUnitLoss; }
   else { out.riskUsd = mode === 'usd' ? ru : bal * rk / 100; out.units = out.riskUsd / perUnitLoss; out.notional = out.units * E; out.margin = out.notional / lev; }
   out.riskPctAcct = out.riskUsd / bal * 100; out.riskPctInv = out.riskUsd / out.margin * 100;
@@ -3599,7 +3608,7 @@ function render(){
   $('rrVerdict').innerHTML = c.rr == null ? '' : `<span class="rr-badge ${meets ? 'ok' : 'bad'}">R:R 1:${c.rr.toFixed(2)} ${meets ? '✓ meets target' : '✕ below target'}</span>`;
   const sym = S.asset || 'units';
   $('rrOut').innerHTML = row('Risk at stop', usd(-c.riskUsd).replace('-', ''), 'r') + row('Potential profit', c.tps.length ? usd(c.profit) : '—', 'g') + row('Position size', qty(c.units) + ' ' + sym) +
-    row('Position notional', usd(c.notional)) + row('Risk : reward', c.rr == null ? '—' : '1 : ' + c.rr.toFixed(2), 'y') + row('Stop distance', c.distPct.toFixed(2) + '%') +
+    row('Position notional', usd(c.notional)) + row('Risk : reward', c.rr == null ? '—' : '1 : ' + c.rr.toFixed(2), 'y') + row('Stop distance' + (c.psl ? ' (weighted)' : ''), c.distPct.toFixed(2) + '%') + (c.psl ? row('Part stop', pr(c.psl.P) + ' · ' + c.psl.share + '%', 'r') : '') +
     row('Break-even win rate', c.be == null ? '—' : c.be.toFixed(1) + '%') + row('Est. fees (round trip at stop)', usd(c.units * c.fee * (c.E + c.SL))) + row('Investment (margin)', usd(c.margin)) + row('Risk as % of investment', c.riskPctInv.toFixed(2) + '%', 'r') + row('Risk as % of account', c.riskPctAcct.toFixed(2) + '%', 'r');
   $('rrLevOut').innerHTML = row('Leverage', c.lev + '×') + row('Margin required', usd(c.margin) + `<br><span style="font-size:11px;color:var(--mute);font-weight:400">${(c.margin / c.notional * 100).toFixed(1)}% of notional</span>`) +
     row('Liquidation (est.)', c.liq == null ? (S.mkt === 'spot' ? 'n/a (spot)' : 'n/a at 1×') : pr(c.liq) + `<br><span style="font-size:11px;color:var(--mute);font-weight:400">${c.liqDist.toFixed(1)}% from entry</span>`, c.liq != null ? 'r' : '');
@@ -3619,6 +3628,7 @@ function render(){
 function drawChart(c){
   const svg = $('rrChart'); if(!svg) return; if(!c.ok){ svg.innerHTML = '<text x="260" y="150" fill="#8b8f9a" font-size="13" text-anchor="middle">Enter your levels to see the trade map</text>'; return; }
   const lv = [{k:'Entry', p:c.E, col:'#dba118'}, {k:'Stop', p:c.SL, col:'#e0554d'}];
+  if(c.psl) lv.push({k:'Part stop', p:c.psl.P, col:'#e0884d'});
   c.tps.forEach(x => lv.push({k:'TP' + x.i, p:x.P, col:'#3fb47a'}));
   if(c.liq != null) lv.push({k:'Liq (est.)', p:c.liq, col:'#b04bd6'});
   const ps = lv.map(l => l.p), mn = Math.min(...ps), mx = Math.max(...ps), pad = (mx - mn) * .12 || mx * .02, lo = mn - pad, hi = mx + pad, H = 300, T = 14, B = 14;
@@ -3672,7 +3682,7 @@ function renderAcct(){
   if($('jAcct')) $('jAcct').innerHTML = tiles(jA());
   [$('rrPort'), $('jPort')].forEach(el => { if(el) el.innerHTML = portHtml(); });
 }
-function snapOf(c, st){ st = st || S; return {asset: st.asset, acc: st.acc || 'lev', tf: st.tf || 'h1', long: c.long, mkt: st.mkt, lev: c.lev, E: c.E, SL: c.SL, units: c.units, notional: c.notional, margin: c.margin, riskUsd: c.riskUsd, fee: c.fee, tps: c.tps.map(t => ({P: t.P, share: t.share})), noSL: !!c.noSL}; }
+function snapOf(c, st){ st = st || S; return {asset: st.asset, acc: st.acc || 'lev', tf: st.tf || 'h1', long: c.long, mkt: st.mkt, lev: c.lev, E: c.E, SL: c.SL, units: c.units, notional: c.notional, margin: c.margin, riskUsd: c.riskUsd, fee: c.fee, tps: c.tps.map(t => ({P: t.P, share: t.share})), noSL: !!c.noSL, psl: c.psl ? {P: c.psl.P, share: c.psl.share} : null}; }
 // ---- limit orders: a trade can be built from up to 5 orders (x.orders). The position shown everywhere (snap) is always worked out from the orders that have filled.
 const MAXLO = 5;
 function syncOrders(x){
@@ -3689,6 +3699,8 @@ function settle(sn, hits, rest){
   let pnl = 0, usedU = 0;
   sn.tps.forEach((t, i) => { if(hits[i]){ const u = sn.units * t.share / 100; pnl += u * Math.abs(t.P - sn.E) - u * sn.fee * (sn.E + t.P); usedU += u; } });
   const ru = Math.max(0, sn.units - usedU), mv = sn.long ? rest - sn.E : sn.E - rest;
+  if(sn.psl && rest === sn.SL){ const pu = Math.min(ru, sn.units * sn.psl.share / 100), pm = sn.long ? sn.psl.P - sn.E : sn.E - sn.psl.P;
+    return pnl + pu * pm - pu * sn.fee * (sn.E + sn.psl.P) + (ru - pu) * mv - (ru - pu) * sn.fee * (sn.E + rest); }
   return pnl + ru * mv - ru * sn.fee * (sn.E + rest);
 }
 function pill(x){ if(x.status === 'open') return '<span class="rr-pill open">Open</span>'; if(!x.res) return ''; const k = kind(x.res.pnl, x.snap.riskUsd); return `<span class="rr-pill ${k}">${k === 'win' ? 'Win' : k === 'loss' ? 'Loss' : 'Break-even'}</span>`; }
@@ -4263,6 +4275,8 @@ function trackHits(){
       if(x.hit[i] && !x.sent.tp[i]){ x.sent.tp[i] = true; changed = true; spotEv(x, 'tp', 'tp:' + x.id + ':' + i, Math.round(sn.tps.reduce((a, q, k) => a + (x.hit[k] ? q.share : 0), 0) * 10) / 10);
         myPush(x, 'tp:' + x.id + ':' + i, i === sn.tps.length - 1 ? 'Full TP hit' : 'Part TP hit', i === sn.tps.length - 1 ? 'All targets are in at ' + pr(t.P) : 'TP' + (i + 1) + ' at ' + pr(t.P) + (i === 0 && sn.SL !== sn.E ? ' · move SL to entry' : ' · trail your stop'));
         if(cfg.on) tgSend(`🎯 <b>TP${i + 1} hit</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nTarget ${pr(t.P)} reached (live ${pr(p)}).\n` + (i === 0 && sn.SL !== sn.E ? `👉 <b>Move your stop-loss to entry (${pr(sn.E)})</b> to protect the trade.\n` : i === sn.tps.length - 1 ? 'All targets are in. Consider closing the trade in your tracker.\n' : 'Consider trailing your stop up.\n') + `<i>${esc(x.name)} · TTM Trade Tracker</i>`); } });
+    if(sn.psl && !x.sent.psl && (sn.long ? p <= sn.psl.P : p >= sn.psl.P)){ x.sent.psl = true; changed = true; myPush(x, 'psl:' + x.id, 'Part SL hit', sn.psl.share + '% of the trade stopped at ' + pr(sn.psl.P) + ' · rest stays on the main stop');
+      if(cfg.on) tgSend(`🛑 <b>Part stop hit</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nPrice ${pr(p)} touched your part stop ${pr(sn.psl.P)}. Close ${sn.psl.share}% of the trade on your exchange and book it in your tracker. The rest stays on the main stop ${pr(sn.SL)}.\n<i>${esc(x.name)} · TTM Trade Tracker</i>`); }
     const stopped = sn.long ? p <= sn.SL : p >= sn.SL;
     if(stopped && !x.sent.sl){ x.sent.sl = true; changed = true; myPush(x, 'sl:' + x.id, 'SL hit', 'Price touched your stop at ' + pr(sn.SL)); if(cfg.on) tgSend(`🛑 <b>Stop level reached</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nPrice ${pr(p)} touched your stop ${pr(sn.SL)}. Check your exchange and close the trade in your tracker.\n<i>${esc(x.name)} · TTM Trade Tracker</i>`); }
     if(!stopped && x.sent.sl){ x.sent.sl = false; changed = true; } });

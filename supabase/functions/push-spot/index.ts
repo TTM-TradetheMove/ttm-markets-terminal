@@ -29,10 +29,18 @@ async function send(subs: any[], payload: object) {
   return sent;
 }
 async function telegram(text: string, zoom: string) {
-  const tok = Deno.env.get("TELEGRAM_BOT_TOKEN"), chat = Deno.env.get("TELEGRAM_CHAT_ID"); if (!tok || !chat) return;
-  await fetch(`https://api.telegram.org/bot${tok}/sendMessage`, {method: "POST", headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({chat_id: chat, message_thread_id: +(Deno.env.get("TELEGRAM_LIVE_THREAD_ID") || "41"), text, disable_web_page_preview: true,
-      reply_markup: {inline_keyboard: [[{text: "Join the live session", url: zoom}]]}})});
+  const tok = Deno.env.get("TELEGRAM_BOT_TOKEN"), chat = Deno.env.get("TELEGRAM_CHAT_ID");
+  if (!tok || !chat) { console.log("telegram skipped: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID secret is missing"); return false; }
+  const thread = +(Deno.env.get("TELEGRAM_LIVE_THREAD_ID") || "41");
+  const markup = {inline_keyboard: [[{text: "Join the live session", url: zoom}]]};
+  const call = async (method: string, extra: object) => {
+    const r = await fetch(`https://api.telegram.org/bot${tok}/${method}`, {method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({chat_id: chat, message_thread_id: thread, reply_markup: markup, ...extra})});
+    const j = await r.json(); if (!j.ok) console.log("telegram " + method + " failed:", j.error_code, j.description); return !!j.ok;
+  };
+  const photo = Deno.env.get("LIVE_IMAGE_URL") || "https://ttm-tradethemove.github.io/ttm-markets-terminal/promo/live-session.jpg";
+  if (await call("sendPhoto", {photo, caption: text.slice(0, 1000)})) return true;
+  return await call("sendMessage", {text, disable_web_page_preview: true});
 }
 const when = (iso: string) => new Intl.DateTimeFormat("en-AU", {timeZone: "Australia/Melbourne", weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit", hour12: true}).format(new Date(iso)) + " Melbourne time";
 
