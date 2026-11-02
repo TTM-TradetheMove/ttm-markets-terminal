@@ -734,10 +734,23 @@ function chatUi(){
   if(location.hash === '#chat'){ try{ history.replaceState(null, '', location.pathname + location.search); }catch(err){} chatToggle(true); }
 }
 const css5 = document.createElement('style');
-css5.textContent = `#ttmCommBtn{text-decoration:none;font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap}#ttmCommBtn.hdr{display:inline-flex;align-items:center;border:1px solid var(--gold,#dba118);color:var(--gold2,#f2c14e);border-radius:999px;padding:7px 14px;margin-right:8px;background:transparent}#ttmCommBtn.hdr:hover{background:rgba(219,161,24,.15)}#ttmCommBtn.fab{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:2600;background:var(--gold,#dba118);color:#111;border-radius:999px;padding:11px 16px;box-shadow:0 6px 22px rgba(0,0,0,.5);font-size:13.5px}`;
+css5.textContent = `#ttmCommBtn{text-decoration:none;font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap}#ttmCommBtn i{font-style:normal;background:#e0554d;color:#fff;border-radius:999px;padding:1px 7px;margin-left:8px;font-size:12px}#ttmCommBtn.hdr{display:inline-flex;align-items:center;border:1px solid var(--gold,#dba118);color:var(--gold2,#f2c14e);border-radius:999px;padding:7px 14px;margin-right:8px;background:transparent}#ttmCommBtn.hdr:hover{background:rgba(219,161,24,.15)}#ttmCommBtn.fab{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:2600;background:var(--gold,#dba118);color:#111;border-radius:999px;padding:11px 16px;box-shadow:0 6px 22px rgba(0,0,0,.5);font-size:13.5px}`;
 document.head.appendChild(css5);
+const RMU = {};
+const rmSeenGet = r => { try{ const v = localStorage.getItem('ttm_rmseen_' + r); return v == null ? null : +v; }catch(err){ return null; } };
+const rmSeenSet = (r, id) => { try{ localStorage.setItem('ttm_rmseen_' + r, String(id)); }catch(err){} };
+async function rmUnread(){
+  if(!on() || !USER) return;
+  for(const r of ROOMS){ const k = r[0]; if(!rmCan(k)){ RMU[k] = 0; continue; }
+    const x = await api(`/rest/v1/ttm_room_msgs?select=id,user_id&room=eq.${k}&order=id.desc&limit=30`); if(!x.ok || !Array.isArray(x.json)) continue;
+    const top = x.json.length ? x.json[0].id : 0, seen = rmSeenGet(k), viewing = location.hash === '#community' && RM.room === k && !document.hidden;
+    if(seen == null || viewing){ rmSeenSet(k, top); RMU[k] = 0; } else RMU[k] = x.json.filter(m => m.id > seen && m.user_id !== USER.id).length; }
+  commBtn(); rmTabs();
+}
+setInterval(() => { if(!document.hidden) rmUnread(); }, 30000); setTimeout(rmUnread, 3000);
 function commBtn(){
-  let b = $('ttmCommBtn'); if(!b){ b = document.createElement('a'); b.id = 'ttmCommBtn'; b.textContent = 'Community Chat'; document.body.appendChild(b); }
+  let b = $('ttmCommBtn'); if(!b){ b = document.createElement('a'); b.id = 'ttmCommBtn'; document.body.appendChild(b); }
+  { const n = Object.keys(RMU).reduce((t, k) => t + RMU[k], 0), h = 'Community Chat' + (n ? `<i>${n > 99 ? '99+' : n}</i>` : ''); if(b.innerHTML !== h) b.innerHTML = h; }
   b.href = TERM === 'crypto' ? '#community' : BASE + 'crypto/index.html#community';
   const wide = window.innerWidth > 760, ac = $('acctBtn');
   if(wide && ac && ac.parentNode){ b.className = 'hdr'; if(b.nextSibling !== ac) ac.parentNode.insertBefore(b, ac); }
@@ -835,7 +848,7 @@ function rmBuild(){
   $('rmFile').addEventListener('change', ev => { const f = ev.target.files && ev.target.files[0]; ev.target.value = ''; if(f) rmPick1(f); });
   RM.built = true; presBeat().then(presLoad); return true;
 }
-function rmTabs(){ document.querySelectorAll('#rmTabs [data-rmtab]').forEach(b => b.classList.toggle('active', b.dataset.rmtab === RM.room)); }
+function rmTabs(){ document.querySelectorAll('#rmTabs [data-rmtab]').forEach(b => { const k = b.dataset.rmtab; b.classList.toggle('active', k === RM.room); const lab = (ROOMS.find(r => r[0] === k) || [0, k])[1] + (rmCan(k) ? '' : ' 🔒') + (RMU[k] && k !== RM.room ? ` (${RMU[k]})` : ''); if(b.textContent !== lab) b.textContent = lab; }); }
 function rmPick(r){ if(!rmCan(r)){ const n = $('rmNote'); if(n) n.textContent = 'The ' + (ROOMS.find(x => x[0] === r) || [0, r])[1] + ' room is for ' + needText('room:' + r) + ' members.'; return; } RM.room = r; RM.sig = ''; rmTabs(); const l = $('rmList'); if(l) l.innerHTML = ''; rmLoad(true); }
 async function rmLoad(force){
   if(!rmBuild()) return; if(!RM.room){ RM.room = (ROOMS.find(r => rmCan(r[0])) || ['free'])[0]; rmTabs(); }
@@ -844,7 +857,7 @@ async function rmLoad(force){
     const r = await api(`/rest/v1/ttm_room_msgs?select=*&room=eq.${RM.room}&order=id.desc&limit=80`);
     const l = $('rmList'); if(!l) return;
     if(!r.ok || !Array.isArray(r.json)){ l.innerHTML = '<p style="color:var(--mute);font-size:13px;margin:4px 2px">Could not open this room. If you just upgraded, refresh. The chat database step may also be missing.</p>'; return; }
-    const rows = r.json.slice().reverse(), sig = rows.map(x => x.id).join(',');
+    const rows = r.json.slice().reverse(), sig = rows.map(x => x.id).join(','); if(rows.length && location.hash === '#community' && !document.hidden){ rmSeenSet(RM.room, rows[rows.length - 1].id); RMU[RM.room] = 0; commBtn(); rmTabs(); }
     if(sig === RM.sig && !force) return; RM.sig = sig;
     const near = l.scrollHeight - l.scrollTop - l.clientHeight < 80, first = !l.children.length, adm = !!(PROF && PROF.is_admin);
     l.innerHTML = rows.length ? rows.map(m => { const mine = USER && m.user_id === USER.id, tm = new Date(m.ts).toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'});
