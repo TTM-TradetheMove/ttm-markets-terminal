@@ -3857,7 +3857,7 @@ function drawModal(){
 let ed = null;
 function openEdit(i){
   const x = loadSaved()[i]; if(!x || !x.snap) return; const sn = x.snap;
-  ed = {i, sl: sn.SL, tp: [0, 1, 2].map(k => sn.tps[k] ? sn.tps[k].P : ''), sh: [0, 1, 2].map(k => sn.tps[k] ? sn.tps[k].share : ''), addm: '', addp: ''};
+  ed = {i, sl: sn.SL, tp: [0, 1, 2].map(k => sn.tps[k] ? sn.tps[k].P : ''), sh: [0, 1, 2].map(k => sn.tps[k] ? sn.tps[k].share : ''), addm: '', addp: '', ps: sn.psl ? sn.psl.P : '', psh: sn.psl ? sn.psl.share : ''};
   drawEdit(); $('rrModal').classList.add('open');
 }
 function editCalc(){
@@ -3881,9 +3881,13 @@ function editCalc(){
   if(!tps.length) errs.push('Keep at least one take-profit.');
   hit.forEach((h, k) => { if(h && sn.tps[k] && (num(ed.tp[k]) !== sn.tps[k].P || num(ed.sh[k]) !== sn.tps[k].share)) errs.push(`TP${k + 1} has already been hit, so its price and share are locked.`); });
   let risk = sn.riskUsd; const lossSide = SL > 0 && (long ? SL < E : SL > E);
-  if(lossSide) risk = units * (Math.abs(E - SL) + fee * (E + SL));
+  const PS = num(ed.ps), PSH = Math.min(100, Math.max(0, num(ed.psh) || 0)); let psl = null; const pslHit = !!(x.sent && x.sent.psl);
+  if(PS > 0 && PSH > 0){ if(!(SL > 0)) errs.push('Enter the main stop-loss before a part stop.'); else if(long ? (PS >= E || PS <= SL) : (PS <= E || PS >= SL)){ if(!hitAny || !(sn.psl && sn.psl.P === PS)) errs.push(`The part stop must sit between the main stop and the entry (${long ? 'above the stop, below the entry' : 'below the stop, above the entry'}).`); else psl = {P: PS, share: PSH}; } else psl = {P: PS, share: PSH}; }
+  else if(PS > 0) errs.push('Enter the % of the position that closes at the part stop.');
+  if(pslHit && (!psl || !sn.psl || psl.P !== sn.psl.P || psl.share !== sn.psl.share)) errs.push('The part stop has already been hit, so it is locked.');
+  if(lossSide){ const dist = psl ? psl.share / 100 * Math.abs(E - psl.P) + (1 - psl.share / 100) * Math.abs(E - SL) : Math.abs(E - SL), SLe = long ? E - dist : E + dist; risk = units * (dist + fee * (E + SLe)); }
   const out = {errs: errs.filter((v, i, a) => a.indexOf(v) === i), units, E, margin, notional, risk, tps, SL, used, addM, hitAny};
-  const snap = Object.assign({}, sn, {E, SL: SL || sn.SL, units, notional, margin, riskUsd: risk, tps: tps.map(t => ({P: t.P, share: t.share}))});
+  const snap = Object.assign({}, sn, {E, SL: SL || sn.SL, units, notional, margin, riskUsd: risk, tps: tps.map(t => ({P: t.P, share: t.share})), psl});
   let profit = 0; snap.tps.forEach(t => { const u = units * t.share / 100; profit += u * Math.abs(t.P - E) - u * fee * (E + t.P); });
   out.snap = snap; out.profit = profit; out.rr = lossSide && used > 0 ? profit / (risk * Math.min(used, 100) / 100) : null; return out;
 }
@@ -3899,6 +3903,8 @@ function drawEdit(){
   const inp = (id, v, ph, dis) => `<input id="${id}" type="number" step="any" inputmode="decimal" value="${v === '' || v == null ? '' : v}" placeholder="${ph || ''}" ${dis ? 'disabled' : ''} style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 10px;font:inherit;${dis ? 'opacity:.5' : ''}">`;
   $('rrModalBody').innerHTML = `<h3>Edit open trade</h3><p style="margin:0 0 12px;font-size:13.5px"><b>${esc(x.name)}</b> · ${esc(sn.asset)} ${sn.long ? 'long' : 'short'} · ${sn.mkt === 'spot' ? 'spot' : sn.lev + '×'} · entry ${pr(sn.E)}${pp ? ' · live ' + pr(pp.p) : ''}</p>
     <div class="rr-f" style="margin-bottom:10px"><label>Stop loss</label>${inp('edSl', ed.sl)}</div>
+    <div style="font-size:12px;color:var(--mute);margin-bottom:6px">Part stop loss (optional): price and % of position closed there${x.sent && x.sent.psl ? ' · already hit, locked' : ''}</div>
+    <div class="rr-tp" style="margin-bottom:10px">${inp('edPs', ed.ps, 'Part stop price', x.sent && x.sent.psl)}${inp('edPsh', ed.psh, '% of position', x.sent && x.sent.psl)}</div>
     <div style="font-size:12px;color:var(--mute);margin-bottom:6px">Targets (price and % of position)${hit.some(Boolean) ? ' · hit targets are locked' : ''}</div>
     ${[0, 1, 2].map(k => `<div class="rr-tp" style="margin-bottom:8px">${inp('edTp' + k, ed.tp[k], 'TP' + (k + 1) + ' price', hit[k])}${inp('edSh' + k, ed.sh[k], '% of position', hit[k])}</div>`).join('')}
     <div style="font-size:12px;color:var(--mute);margin:12px 0 6px">Add to the position${hitAny ? ' (not available once a target has hit)' : ''}</div>
@@ -3912,7 +3918,7 @@ function drawEdit(){
 function wireEdit(){
   const B = $('rrModalBody');
   B.addEventListener('input', e => { if(!ed || !e.target.id || e.target.id.slice(0, 2) !== 'ed') return; const id = e.target.id, v = e.target.value;
-    if(id === 'edSl') ed.sl = v; else if(id === 'edAddM') ed.addm = v; else if(id === 'edAddP') ed.addp = v; else if(/^edTp\d$/.test(id)) ed.tp[+id.slice(4)] = v; else if(/^edSh\d$/.test(id)) ed.sh[+id.slice(4)] = v; edPrev(); });
+    if(id === 'edSl') ed.sl = v; else if(id === 'edPs') ed.ps = v; else if(id === 'edPsh') ed.psh = v; else if(id === 'edAddM') ed.addm = v; else if(id === 'edAddP') ed.addp = v; else if(/^edTp\d$/.test(id)) ed.tp[+id.slice(4)] = v; else if(/^edSh\d$/.test(id)) ed.sh[+id.slice(4)] = v; edPrev(); });
   B.addEventListener('click', async e => {
     if(!ed) return;
     if(e.target.id === 'edCancel'){ $('rrModal').classList.remove('open'); ed = null; }
@@ -3921,8 +3927,8 @@ function wireEdit(){
       if(c.addM > 0){ ensureOrders(x); x.orders.push({id: uid() + 'a', p: num(ed.addp), m: c.addM, side: 1, filled: true, ft: Date.now()}); }
       x.snap = c.snap; x.snap.slMoved = c.SL === c.E; if(x.orders) syncOrders(x);
       const hit = x.hit || [], sent = x.sent || {tp: [], sl: false};
-      x.hit = c.tps.map((t, k) => !!hit[k]); x.sent = {tp: c.tps.map((t, k) => !!(sent.tp && sent.tp[k]) && old.tps[k] && old.tps[k].P === t.P), sl: false};
-      x.s = Object.assign({}, x.s, {stop: String(c.SL), entry: String(+c.E.toPrecision(8))}); c.tps.forEach((t, k) => { x.s['tp' + (k + 1)] = String(t.P); x.s['s' + (k + 1)] = t.share; }); for(let k = c.tps.length; k < 3; k++){ x.s['tp' + (k + 1)] = ''; x.s['s' + (k + 1)] = 0; }
+      x.hit = c.tps.map((t, k) => !!hit[k]); x.sent = {tp: c.tps.map((t, k) => !!(sent.tp && sent.tp[k]) && old.tps[k] && old.tps[k].P === t.P), sl: false, psl: !!sent.psl && !!c.snap.psl && !!old.psl && old.psl.P === c.snap.psl.P};
+      x.s = Object.assign({}, x.s, {stop: String(c.SL), entry: String(+c.E.toPrecision(8)), pstop: c.snap.psl ? String(c.snap.psl.P) : '', psh: c.snap.psl ? c.snap.psl.share : 50}); if(JSON.stringify(old.psl || null) !== JSON.stringify(c.snap.psl || null)) myPush(x, 'pslmv:' + x.id + ':' + (c.snap.psl ? c.snap.psl.P : 'off'), c.snap.psl ? 'Part SL moved' : 'Part SL removed', c.snap.psl ? 'Part stop is now at ' + pr(c.snap.psl.P) + ' (' + c.snap.psl.share + '% of the trade)' : ''); c.tps.forEach((t, k) => { x.s['tp' + (k + 1)] = String(t.P); x.s['s' + (k + 1)] = t.share; }); for(let k = c.tps.length; k < 3; k++){ x.s['tp' + (k + 1)] = ''; x.s['s' + (k + 1)] = 0; }
       (x.edits = x.edits || []).push({t: Date.now(), sl: [old.SL, c.SL], tps: old.tps.map(t => t.P).join('/') + ' → ' + c.tps.map(t => t.P).join('/'), added: c.addM || 0});
       saveAll(list); $('rrModal').classList.remove('open'); ed = null; render(); renderSaved(); }
   });
