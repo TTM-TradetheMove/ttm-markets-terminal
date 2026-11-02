@@ -226,6 +226,7 @@ document.addEventListener('click', async ev => {
   else if(t.dataset && t.dataset.rmmute){ if(!armTap(t, 'tap again to mute')) return; await rmMute(t.dataset.rmmute, 'all'); const n = $('rmNote'); if(n) n.textContent = 'Member muted in every room. Unmute them in Admin.'; }
   else if(t.id === 'rmMuteBtn'){ await rmMuteForm(); }
   else if(t.dataset && t.dataset.rmunmute){ await api('/rest/v1/ttm_room_mutes?user_id=eq.' + t.dataset.rmunmute + '&room=eq.' + (t.dataset.rmroom || 'all'), {method: 'DELETE'}); rmMutesLoad(); }
+  else if(t.dataset && t.dataset.rmf){ PREFS.rfilter = t.dataset.rmf === 'follow' ? 'follow' : 'all'; RM.sig = ''; rmFiltPaint(); prefSave(); rmLoad(true); }
   else if(t.dataset && t.dataset.rmat){ const i = $('rmIn'); if(i && !i.disabled){ i.value = (i.value + (i.value && !/\s$/.test(i.value) ? ' ' : '') + '@' + t.dataset.rmat.replace(/^@/, '') + ' '); i.focus(); } }
   else if(t.dataset && t.dataset.rmfollow){ const id = t.dataset.rmfollow, f = PREFS.follow || [], i = f.findIndex(x => x.id === id); if(i >= 0) f.splice(i, 1); else f.push({id, n: t.dataset.n || 'Member'}); PREFS.follow = f.slice(0, 50); await prefSave(); RM.sig = ''; rmLoad(true); }
   else if(t.dataset && t.dataset.unfollow){ PREFS.follow = (PREFS.follow || []).filter(x => x.id !== t.dataset.unfollow); await prefSave(); ui(); }
@@ -840,6 +841,7 @@ function rmBuild(){
   const tabs = ROOMS.map(r => `<button class="filter-chip" data-rmtab="${r[0]}" ${rmCan(r[0]) ? '' : 'style="opacity:.45"'}>${r[1]}${rmCan(r[0]) ? '' : ' 🔒'}</button>`).join('');
   root.innerHTML = `<div class="filter-row" id="rmTabs" style="margin-bottom:8px">${tabs}</div>
     <p class="calendar-note" id="rmOnline" style="margin:0 0 8px"></p>
+    <div class="filter-row" id="rmFilt" style="margin:0 0 8px"><button class="filter-chip" data-rmf="all">Everyone</button><button class="filter-chip" data-rmf="follow">Only people I follow</button></div>
     <div class="rr-card" style="padding:0;overflow:hidden"><div id="rmList" style="height:min(60vh,520px);overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px"></div>
       <div id="rmPrev" style="display:none;padding:8px 12px;border-top:1px solid var(--line)"></div>
       <div style="display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);align-items:flex-end"><button class="rr-btn ghost sm" id="rmImgBtn" title="Add a screenshot">Image</button><input type="file" id="rmFile" accept="image/*" style="display:none"><textarea id="rmIn" rows="1" maxlength="1000" placeholder="Write a message. Paste a TradingView snapshot link or an image." style="flex:1;resize:none;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 10px;font:inherit;font-size:14px;max-height:120px"></textarea><button class="rr-btn sm" id="rmSend">Send</button></div></div>
@@ -849,7 +851,8 @@ function rmBuild(){
   $('rmFile').addEventListener('change', ev => { const f = ev.target.files && ev.target.files[0]; ev.target.value = ''; if(f) rmPick1(f); });
   RM.built = true; presBeat().then(presLoad); return true;
 }
-function rmTabs(){ document.querySelectorAll('#rmTabs [data-rmtab]').forEach(b => { const k = b.dataset.rmtab; b.classList.toggle('active', k === RM.room); const lab = (ROOMS.find(r => r[0] === k) || [0, k])[1] + (rmCan(k) ? '' : ' 🔒') + (RMU[k] && k !== RM.room ? ` (${RMU[k]})` : ''); if(b.textContent !== lab) b.textContent = lab; }); }
+function rmFiltPaint(){ document.querySelectorAll('#rmFilt [data-rmf]').forEach(b => b.classList.toggle('active', b.dataset.rmf === (PREFS.rfilter === 'follow' ? 'follow' : 'all'))); }
+function rmTabs(){ rmFiltPaint(); document.querySelectorAll('#rmTabs [data-rmtab]').forEach(b => { const k = b.dataset.rmtab; b.classList.toggle('active', k === RM.room); const lab = (ROOMS.find(r => r[0] === k) || [0, k])[1] + (rmCan(k) ? '' : ' 🔒') + (RMU[k] && k !== RM.room ? ` (${RMU[k]})` : ''); if(b.textContent !== lab) b.textContent = lab; }); }
 function rmPick(r){ if(!rmCan(r)){ const n = $('rmNote'); if(n) n.textContent = 'The ' + (ROOMS.find(x => x[0] === r) || [0, r])[1] + ' room is for ' + needText('room:' + r) + ' members.'; return; } RM.room = r; RM.sig = ''; rmTabs(); const l = $('rmList'); if(l) l.innerHTML = ''; rmLoad(true); }
 async function rmLoad(force){
   if(!rmBuild()) return; if(!RM.room){ RM.room = (ROOMS.find(r => rmCan(r[0])) || ['free'])[0]; rmTabs(); }
@@ -858,11 +861,12 @@ async function rmLoad(force){
     const r = await api(`/rest/v1/ttm_room_msgs?select=*&room=eq.${RM.room}&order=id.desc&limit=80`);
     const l = $('rmList'); if(!l) return;
     if(!r.ok || !Array.isArray(r.json)){ l.innerHTML = '<p style="color:var(--mute);font-size:13px;margin:4px 2px">Could not open this room. If you just upgraded, refresh. The chat database step may also be missing.</p>'; return; }
-    const rows = r.json.slice().reverse(), sig = rows.map(x => x.id).join(','); if(rows.length && location.hash === '#community' && !document.hidden){ rmSeenSet(RM.room, rows[rows.length - 1].id); RMU[RM.room] = 0; commBtn(); rmTabs(); }
+    const fol = PREFS.rfilter === 'follow', fids = new Set((PREFS.follow || []).map(f => f.id));
+    const rows = r.json.slice().reverse().filter(x => !fol || fids.has(x.user_id) || (USER && x.user_id === USER.id)), sig = (fol ? 'f:' : '') + rows.map(x => x.id).join(','); if(rows.length && location.hash === '#community' && !document.hidden){ rmSeenSet(RM.room, rows[rows.length - 1].id); RMU[RM.room] = 0; commBtn(); rmTabs(); }
     if(sig === RM.sig && !force) return; RM.sig = sig;
     const near = l.scrollHeight - l.scrollTop - l.clientHeight < 80, first = !l.children.length, adm = !!(PROF && PROF.is_admin);
     l.innerHTML = rows.length ? rows.map(m => { const mine = USER && m.user_id === USER.id, tm = new Date(m.ts).toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'});
-      return `<div class="rm-m ${mine ? 'me' : ''}"><div class="rm-h"><b ${mine ? '' : `data-rmat="${e(m.name || '')}" title="Tap to tag"`}>${e(m.name || 'Member')}</b><span>${tm}</span>${mine || adm ? `<u data-rmdel="${m.id}">delete</u>` : ''}${adm && !mine ? `<u data-rmmute="${m.user_id}">mute</u>` : ''}${!mine ? `<u data-rmfollow="${m.user_id}" data-n="${e(m.name || 'Member')}">${(PREFS.follow || []).some(x => x.id === m.user_id) ? 'following' : 'follow'}</u>` : ''}</div>${rmFmt(m)}</div>`; }).join('') : '<p style="color:var(--mute);font-size:13px;margin:4px 2px">No messages yet. Say hello.</p>';
+      return `<div class="rm-m ${mine ? 'me' : ''}"><div class="rm-h"><b ${mine ? '' : `data-rmat="${e(m.name || '')}" title="Tap to tag"`}>${e(m.name || 'Member')}</b><span>${tm}</span>${mine || adm ? `<u data-rmdel="${m.id}">delete</u>` : ''}${adm && !mine ? `<u data-rmmute="${m.user_id}">mute</u>` : ''}${!mine ? `<u data-rmfollow="${m.user_id}" data-n="${e(m.name || 'Member')}">${(PREFS.follow || []).some(x => x.id === m.user_id) ? 'following' : 'follow'}</u>` : ''}</div>${rmFmt(m)}</div>`; }).join('') : (fol ? '<p style="color:var(--mute);font-size:13px;margin:4px 2px">No messages from people you follow yet. Switch to Everyone to find people, then press <b>follow</b> on their messages.</p>' : '<p style="color:var(--mute);font-size:13px;margin:4px 2px">No messages yet. Say hello.</p>');
     if(near || first) l.scrollTop = l.scrollHeight;
     if(first){ const mu = await api('/rest/v1/ttm_room_mutes?select=room&user_id=eq.' + USER.id); RM.muted = !!(mu.ok && Array.isArray(mu.json) && mu.json.length); const i = $('rmIn'); if(i && RM.muted){ i.disabled = true; i.placeholder = 'You have been muted by TTM.'; } }
   } finally { RM.busy = false; }
