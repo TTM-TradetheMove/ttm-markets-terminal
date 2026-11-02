@@ -46,6 +46,7 @@ create table if not exists public.ttm_live (
   reminded  boolean not null default false,
   created   timestamptz not null default now()
 );
+alter table public.ttm_live add column if not exists repeat_days int not null default 0;
 alter table public.ttm_live enable row level security;
 drop policy if exists p_lv_sel on public.ttm_live;
 create policy p_lv_sel on public.ttm_live for select to authenticated using (true);

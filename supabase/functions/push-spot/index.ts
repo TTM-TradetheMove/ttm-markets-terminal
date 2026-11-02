@@ -42,6 +42,10 @@ async function telegram(text: string, zoom: string) {
   if (await call("sendPhoto", {photo, caption: text.slice(0, 1000)})) return true;
   return await call("sendMessage", {text, disable_web_page_preview: true});
 }
+// same clock time in Sydney, a number of days later (so a weekly session stays at the same time across daylight saving)
+const TZ = "Australia/Sydney";
+const wall = (ms: number) => { const p: any = Object.fromEntries(new Intl.DateTimeFormat("en-CA", {timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23"}).formatToParts(new Date(ms)).map((x) => [x.type, x.value])); return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute); };
+const addDays = (iso: string, days: number) => { const base = new Date(iso).getTime(), target = wall(base) + days * 864e5; let g = base + days * 864e5; for (let i = 0; i < 3; i++) g += target - wall(g); return new Date(g).toISOString(); };
 const when = (iso: string) => new Intl.DateTimeFormat("en-AU", {timeZone: "Australia/Melbourne", weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit", hour12: true}).format(new Date(iso)) + " Melbourne time";
 
 Deno.serve(async (req) => {
@@ -84,6 +88,11 @@ Deno.serve(async (req) => {
   for (const s of due) {
     const c = await claim("ttm_live", s.id, "reminded"); if (!c) continue;
     await rest(`ttm_live?id=eq.${s.id}`, {method: "PATCH", body: JSON.stringify({announced: true})});
+    if (s.repeat_days > 0) {
+      const next = addDays(s.starts_at, s.repeat_days);
+      if (!(await get(`ttm_live?select=id&starts_at=eq.${encodeURIComponent(next)}&title=eq.${encodeURIComponent(s.title)}`)).length)
+        await rest("ttm_live", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({title: s.title, starts_at: next, zoom_url: s.zoom_url, note: s.note, repeat_days: s.repeat_days, announced: true})});
+    }
     const mins = Math.max(1, Math.round((new Date(s.starts_at).getTime() - now) / 60000));
     await telegram(`LIVE SESSION STARTING SOON\n\n${s.title}\nStarts in about ${mins} minutes\n${when(s.starts_at)}\n\n${s.zoom_url}`, s.zoom_url);
     await send(await subsFor(null), {title: "Live in " + mins + " minutes", body: s.title, tag: "live-" + s.id, url: s.zoom_url});
