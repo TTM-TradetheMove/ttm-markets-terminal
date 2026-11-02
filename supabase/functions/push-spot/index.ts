@@ -20,7 +20,10 @@ const claim = async (table: string, id: number, col: string) => {
 };
 const idsOf = (rows: any[]) => rows.map((p) => p.id).join(",");
 const subsFor = async (ids: string | null) => ids === null ? await get("ttm_push_subs?select=*") : ids ? await get(`ttm_push_subs?select=*&user_id=in.(${ids})`) : [];
-async function send(subs: any[], payload: object) {
+// members who switched this kind of alert off in their settings
+const offFor = async (key: string) => new Set((await get(`ttm_prefs?select=user_id&prefs->>${key}=eq.false`)).map((x: any) => x.user_id));
+async function send(subs: any[], payload: object, key?: string) {
+  if (key) { const off = await offFor(key); subs = subs.filter((s: any) => !off.has(s.user_id)); }
   const body = JSON.stringify(payload); let sent = 0;
   await Promise.all(subs.map(async (s: any) => {
     try { await webpush.sendNotification({endpoint: s.endpoint, keys: {p256dh: s.p256dh, auth: s.auth}}, body, {TTL: 3600, urgency: "high"}); sent++; }
@@ -59,13 +62,13 @@ Deno.serve(async (req) => {
     const short: Record<string, string> = {buy: dir + " position opened", fill: dir + " limit order collected", tp: dir + " TP hit", part: "partial profit taken", sell: dir + " position closed", add: dir + " position added to"};
     const title = row.asset && short[row.kind] ? row.asset + " " + short[row.kind] : row.title;
     const pros = await get(`ttm_profiles?select=id&or=(is_admin.eq.true,and(plan.eq.pro,or(plan_until.is.null,plan_until.gt.${new Date().toISOString()})))`);
-    const n = await send(await subsFor(idsOf(pros)), {title, body: row.body || "TTM Spot portfolio", tag: "ttm-" + row.id, url: "./crypto/index.html"});
+    const n = await send(await subsFor(idsOf(pros)), {title, body: row.body || "TTM Spot portfolio", tag: "ttm-" + row.id, url: "./crypto/index.html"}, "spot");
     return new Response("spot " + n);
   }
 
   if (table === "ttm_my_alerts") {
     const row = rec.id && await claim("ttm_my_alerts", rec.id, "pushed"); if (!row) return new Response("skip");
-    const n = await send(await subsFor(row.user_id), {title: row.title, body: row.body || "", tag: "my-" + row.id, url: "./crypto/index.html#riskreward"});
+    const n = await send(await subsFor(row.user_id), {title: row.title, body: row.body || "", tag: "my-" + row.id, url: "./crypto/index.html#riskreward"}, "mytrade");
     return new Response("mine " + n);
   }
 
@@ -73,7 +76,7 @@ Deno.serve(async (req) => {
     const row = rec.id && await claim("ttm_chat", rec.id, "pushed"); if (!row) return new Response("skip");
     const text = String(row.body).slice(0, 140);
     if (row.from_admin) {
-      const n = await send(await subsFor(row.member_id), {title: "TTM replied to you", body: text, tag: "chat-" + row.member_id, url: "./crypto/index.html#chat"});
+      const n = await send(await subsFor(row.member_id), {title: "TTM replied to you", body: text, tag: "chat-" + row.member_id, url: "./crypto/index.html#chat"}, "chat");
       return new Response("reply " + n);
     }
     const p = (await get(`ttm_profiles?select=email,tg_handle&id=eq.${row.member_id}`))[0] || {};
@@ -95,20 +98,20 @@ Deno.serve(async (req) => {
     }
     const mins = Math.max(1, Math.round((new Date(s.starts_at).getTime() - now) / 60000));
     await telegram(`LIVE SESSION STARTING SOON\n\n${s.title}\nStarts in about ${mins} minutes\n${when(s.starts_at)}\n\n${s.zoom_url}`, s.zoom_url);
-    await send(await subsFor(null), {title: "Live in " + mins + " minutes", body: s.title, tag: "live-" + s.id, url: s.zoom_url});
+    await send(await subsFor(null), {title: "Live in " + mins + " minutes", body: s.title, tag: "live-" + s.id, url: s.zoom_url}, "live");
   }
   const fresh = await get(`ttm_live?select=*&announced=eq.false&starts_at=gt.${new Date(now).toISOString()}`);
   for (const s of fresh) {
     const c = await claim("ttm_live", s.id, "announced"); if (!c) continue;
     await telegram(`LIVE SESSION\n\n${s.title}\n${when(s.starts_at)}\n${s.note ? "\n" + s.note + "\n" : ""}\n${s.zoom_url}`, s.zoom_url);
-    await send(await subsFor(null), {title: "New live session", body: s.title + " · " + when(s.starts_at), tag: "live-new-" + s.id, url: "./crypto/index.html"});
+    await send(await subsFor(null), {title: "New live session", body: s.title + " · " + when(s.starts_at), tag: "live-new-" + s.id, url: "./crypto/index.html"}, "live");
   }
   const luna = await get(`ttm_luna_alerts?select=*&notified=eq.false&starts_at=gt.${new Date(now).toISOString()}&starts_at=lte.${new Date(now + 7 * 864e5).toISOString()}`);
   for (const s of luna) {
     const c = await claim("ttm_luna_alerts", s.id, "notified"); if (!c) continue;
     const people = await get("ttm_profiles?select=id&or=(is_admin.eq.true,beta.eq.true)");
     const day = new Intl.DateTimeFormat("en-AU", {timeZone: "Australia/Melbourne", weekday: "short", day: "numeric", month: "short", year: "numeric"}).format(new Date(s.starts_at));
-    await send(await subsFor(idsOf(people)), {title: (s.color === "green" ? "🟢 " : "🔴 ") + s.name, body: "Starts in 7 days · " + day, tag: "luna-" + s.id, url: "./crypto/index.html#lunacycles"});
+    await send(await subsFor(idsOf(people)), {title: (s.color === "green" ? "🟢 " : "🔴 ") + s.name, body: "Starts in 7 days · " + day, tag: "luna-" + s.id, url: "./crypto/index.html#lunacycles"}, "luna");
   }
   return new Response("tick");
 });
