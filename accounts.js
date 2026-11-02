@@ -13,7 +13,8 @@ const CAT = [
   ['c:holdings', 'Crypto · TTM Holdings (spot portfolio, % only)', ['free']], ['t:holdings', 'TradFi · TTM Holdings (invested, % only)', ['free']],
   ['c:calendar', 'Crypto · Macro Watch', ['free']], ['c:tradinghours', 'Crypto · Trading Hours', ['free']], ['c:fomo', 'Crypto · FOMO Finder & RSI Chart', ['free']],
   ['c:btcmonthly', 'Crypto · BTC Monthly (with cycle tops)', ['free']], ['c:tokenevents', 'Crypto · Token Events', []], ['c:library', 'Crypto · Reports library', []], ['c:transparency', 'Crypto · Transparency Watch', ['free']],
-  ['c:marketpulse', 'Crypto · Market Pulse (liquidations, funding, open interest)', ['premium']], ['c:rsimap', 'Crypto · RSI Heatmap', ['premium']], ['c:lunacycles', 'Crypto · Luna Cycles (BTC and the eclipse cycles)', ['beta'], 'off'], ['c:painzones', 'Crypto · Pain Zones (any coin: average cost, support / resistance, RSI)', [], 'off'], ['c:maxpain', 'Crypto · Max Pain (options, with RSI confluence)', ['premium']], ['c:volume', 'Crypto · Volume Heatmap', ['premium']], ['c:socialpulse', 'Crypto · Social Pulse', ['premium']],
+  ['c:marketpulse', 'Crypto · Market Pulse (liquidations, funding, open interest)', ['premium']], ['c:rsimap', 'Crypto · RSI Heatmap', ['premium']], ['c:community', 'Crypto · Community chat rooms (section)', ['free']], ['room:free', 'Chat room · Free (read and write)', ['free', 'premium']], ['room:premium', 'Chat room · Premium (read and write)', ['premium']], ['room:pro', 'Chat room · Pro (read and write)', []],
+  ['c:lunacycles', 'Crypto · Luna Cycles (BTC and the eclipse cycles)', ['beta'], 'off'], ['c:painzones', 'Crypto · Pain Zones (any coin: average cost, support / resistance, RSI)', [], 'off'], ['c:maxpain', 'Crypto · Max Pain (options, with RSI confluence)', ['premium']], ['c:volume', 'Crypto · Volume Heatmap', ['premium']], ['c:socialpulse', 'Crypto · Social Pulse', ['premium']],
   ['c:riskreward', 'Crypto · Risk / Reward calculator', ['premium']], ['c:tradejournal', 'Crypto · Trade Tracker & win ratio', []], ['c:portfolio', 'Crypto · Portfolio Forecast', []],
   ['t:calendar', 'TradFi · Macro Watch', ['free']], ['t:tradinghours', 'TradFi · Trading Hours', ['free']], ['t:congress', 'TradFi · Congress Watch', []],
   ['t:globalmarkets', 'TradFi · Global Markets', ['premium']], ['t:bonds', 'TradFi · Bonds & Rates', ['premium']], ['t:macrointel', 'TradFi · Macro Intel', ['premium']], ['t:newsrisk', 'TradFi · News & Risk', ['premium']], ['t:tfcalc', 'TradFi · Risk / Reward calculator', ['premium']],
@@ -217,6 +218,13 @@ document.addEventListener('click', async ev => {
   else if(t.dataset && t.dataset.chdel){ if(!confirm('Delete this message?')) return; await api('/rest/v1/ttm_chat?id=eq.' + t.dataset.chdel, {method: 'DELETE'}); chatLoad(); }
   else if(t.id === 'lvAdd'){ lvAdd(); }
   else if(t.dataset && t.dataset.lvdel){ if(!confirm('Delete this live session?')) return; await api('/rest/v1/ttm_live?id=eq.' + t.dataset.lvdel, {method: 'DELETE'}); lvLoad(); LIVE.rows = LIVE.rows.filter(x => String(x.id) !== t.dataset.lvdel); liveBanner(); }
+  else if(t.dataset && t.dataset.rmtab){ rmPick(t.dataset.rmtab); }
+  else if(t.id === 'rmSend'){ rmSend(); }
+  else if(t.id === 'rmImgBtn'){ const f = $('rmFile'); if(f) f.click(); }
+  else if(t.id === 'rmClrImg'){ RM.pend = null; rmPrev(); }
+  else if(t.dataset && t.dataset.rmdel){ if(!confirm('Delete this message?')) return; await api('/rest/v1/ttm_room_msgs?id=eq.' + t.dataset.rmdel, {method: 'DELETE'}); rmLoad(true); }
+  else if(t.dataset && t.dataset.rmmute){ if(!confirm('Mute this member in every chat room? You can unmute them in Admin.')) return; await api('/rest/v1/ttm_room_mutes', {method: 'POST', headers: {Prefer: 'resolution=ignore-duplicates,return=minimal'}, body: JSON.stringify({user_id: t.dataset.rmmute, room: 'all'})}); rmMutesLoad(); const n = $('rmNote'); if(n) n.textContent = 'Member muted.'; }
+  else if(t.dataset && t.dataset.rmunmute){ await api('/rest/v1/ttm_room_mutes?user_id=eq.' + t.dataset.rmunmute, {method: 'DELETE'}); rmMutesLoad(); }
   else if(t.id === 'authPwIn' || t.id === 'authPwUp'){ const em = ($('authEmail').value || '').trim(), pw = ($('authPw').value || ''), up = t.id === 'authPwUp';
     if(!/^\S+@\S+\.\S+$/.test(em)){ $('authNote').textContent = 'Enter a valid email address.'; return; }
     if(pw.length < 8){ $('authNote').textContent = 'Password needs 8 or more characters.'; return; }
@@ -487,10 +495,11 @@ async function adminUi(){ await fbLoad(true);
       <p class="calendar-note" id="grNote2" style="margin:8px 0 0"></p></div>
     ${noTg || FB.err ? `<div class="rr-warn y"><b>One database step is missing.</b> In Supabase open SQL Editor, New query, paste this and press Run, then refresh. It adds the Telegram name and the beta feedback box.<pre style="white-space:pre-wrap;margin:8px 0 0;user-select:all;max-height:240px;overflow:auto">${e(FBSQL)}</pre></div>` : ''}
     ${lvAdminHtml()}
+    ${rmAdminHtml()}
     ${fbAdminHtml()}
     <div class="rr-card"><h3>Members (${users.length})</h3><div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Email</th><th>Telegram</th><th>Joined</th><th>Plan</th><th>Until</th><th>Beta</th><th></th></tr></thead><tbody>${users.map(u => `<tr><td>${e(u.email)}${u.is_admin ? ' <span class="rr-pill be">admin</span>' : ''}</td><td>${u.tg_handle ? '@' + e(u.tg_handle) : '<span class="ins-sub">—</span>'}</td><td>${new Date(u.created_at).toLocaleDateString()}</td><td>${sel('data-uid="' + u.id + '"', normPlan(u.plan))}</td><td style="white-space:nowrap">${u.plan_until ? (new Date(u.plan_until) < new Date() ? '<span style="color:#e0554d">ended ' : '<span style="color:var(--gold2)">') + new Date(u.plan_until).toLocaleDateString(undefined, {day: 'numeric', month: 'short'}) + '</span>' + (u.plan_note ? ' <span class="ins-sub">' + e(u.plan_note) + '</span>' : '') : '<span class="ins-sub">no end</span>'}</td><td style="text-align:center"><input type="checkbox" data-beta="${u.id}" ${u.beta ? 'checked' : ''}></td><td>${USER && u.id === USER.id ? '' : `<button class="rr-btn ghost sm" data-delu="${e(u.id)}" data-em="${e(u.email)}" style="border-color:#e0554d;color:#e0554d">Delete</button>`}</td></tr>`).join('') || '<tr><td colspan="7" style="color:var(--mute)">No members yet.</td></tr>'}</tbody></table></div></div>
     <div class="rr-card"><h3>Usage insights</h3><p class="calendar-note" style="margin:0 0 10px">An executive summary of what people open and click: trends against the previous period, what is useful and what is not, where visitors are, and charts you can click into.</p><a class="rr-btn" style="text-decoration:none;display:inline-block" href="#insights">Open Insights →</a></div>`;
-  lvLoad();
+  lvLoad(); rmMutesLoad();
 }
 
 // ---------- Insights page (admin only): #insights
@@ -775,6 +784,88 @@ async function lvAdd(){ const n = $('lvNoteMsg'), title = ($('lvTitle').value ||
   const t = new Date(w); if(!(t.getTime() > Date.now())){ n.textContent = 'Pick a time in the future.'; return; }
   n.textContent = 'Saving…'; const r = await api('/rest/v1/ttm_live', {method: 'POST', headers: {Prefer: 'return=minimal'}, body: JSON.stringify({title, starts_at: t.toISOString(), zoom_url: url, note: ($('lvNote').value || '').trim() || null, repeat_days: +($('lvRep').value || 0)})});
   if(r.ok){ n.textContent = 'Added. It posts to Telegram within a minute.'; ['lvTitle', 'lvWhen', 'lvUrl', 'lvNote'].forEach(i => { $(i).value = ''; }); lvLoad(); } else n.textContent = 'Could not save. Run supabase/messaging.sql first.'; }
+
+// ---------- Community chat rooms (Free / Premium / Pro) ----------
+const RM = {room: null, sig: '', pend: null, muted: false, timer: null, built: false, busy: false};
+const ROOMS = [['free', 'Free'], ['premium', 'Premium'], ['pro', 'Pro']];
+const rmCan = r => !!USER && can('room:' + r);
+const rmImgOk = u => typeof u === 'string' && CFG.url && u.indexOf(CFG.url + '/storage/v1/object/public/room-images/') === 0;
+function rmFmt(m){
+  const imgs = []; let t = e(m.body || '').replace(/https?:\/\/[^\s<]+/g, u => { const c = u.replace(/&amp;/g, '&'), tv = c.match(/^https:\/\/(?:www\.)?tradingview\.com\/x\/([A-Za-z0-9]{5,14})/); if(tv) imgs.push(tv[1]); return `<a href="${e(c)}" target="_blank" rel="noopener noreferrer">${e(c.length > 48 ? c.slice(0, 45) + '…' : c)}</a>`; }).replace(/\n/g, '<br>');
+  let h = t ? `<div>${t}</div>` : '';
+  imgs.forEach(id => { const src = 'https://s3.tradingview.com/snapshots/' + id[0].toLowerCase() + '/' + id + '.png'; h += `<a href="https://www.tradingview.com/x/${e(id)}/" target="_blank" rel="noopener noreferrer"><img class="rm-img" loading="lazy" referrerpolicy="no-referrer" src="${e(src)}" alt="TradingView chart" onerror="this.style.display='none'"></a>`; });
+  if(rmImgOk(m.img)) h += `<a href="${e(m.img)}" target="_blank" rel="noopener noreferrer"><img class="rm-img" loading="lazy" src="${e(m.img)}" alt="Screenshot"></a>`;
+  return h;
+}
+function rmBuild(){
+  const root = $('rmApp'); if(!root) return false;
+  if(!USER){ root.innerHTML = '<div class="rr-card"><p style="margin:0 0 10px">Sign in to join the chat rooms.</p><button class="rr-btn sm" id="memSignIn">Sign in</button></div>'; RM.built = false; return false; }
+  if(RM.built && root.querySelector('#rmList')) return true;
+  const tabs = ROOMS.map(r => `<button class="filter-chip" data-rmtab="${r[0]}" ${rmCan(r[0]) ? '' : 'style="opacity:.45"'}>${r[1]}${rmCan(r[0]) ? '' : ' 🔒'}</button>`).join('');
+  root.innerHTML = `<div class="filter-row" id="rmTabs" style="margin-bottom:8px">${tabs}</div>
+    <div class="rr-card" style="padding:0;overflow:hidden"><div id="rmList" style="height:min(60vh,520px);overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px"></div>
+      <div id="rmPrev" style="display:none;padding:8px 12px;border-top:1px solid var(--line)"></div>
+      <div style="display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);align-items:flex-end"><button class="rr-btn ghost sm" id="rmImgBtn" title="Add a screenshot">Image</button><input type="file" id="rmFile" accept="image/*" style="display:none"><textarea id="rmIn" rows="1" maxlength="1000" placeholder="Write a message. Paste a TradingView snapshot link or an image." style="flex:1;resize:none;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 10px;font:inherit;font-size:14px;max-height:120px"></textarea><button class="rr-btn sm" id="rmSend">Send</button></div></div>
+    <p class="calendar-note" id="rmNote" style="margin:8px 0 0">Be respectful. TTM can remove messages and mute members. Nothing here is financial advice.</p>`;
+  $('rmIn').addEventListener('keydown', ev => { if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); rmSend(); } });
+  $('rmIn').addEventListener('paste', ev => { const it = Array.from((ev.clipboardData || {}).items || []).find(x => x.type && x.type.indexOf('image/') === 0); if(it){ ev.preventDefault(); rmPick1(it.getAsFile()); } });
+  $('rmFile').addEventListener('change', ev => { const f = ev.target.files && ev.target.files[0]; ev.target.value = ''; if(f) rmPick1(f); });
+  RM.built = true; return true;
+}
+function rmTabs(){ document.querySelectorAll('#rmTabs [data-rmtab]').forEach(b => b.classList.toggle('active', b.dataset.rmtab === RM.room)); }
+function rmPick(r){ if(!rmCan(r)){ const n = $('rmNote'); if(n) n.textContent = 'The ' + (ROOMS.find(x => x[0] === r) || [0, r])[1] + ' room is for ' + needText('room:' + r) + ' members.'; return; } RM.room = r; RM.sig = ''; rmTabs(); const l = $('rmList'); if(l) l.innerHTML = ''; rmLoad(true); }
+async function rmLoad(force){
+  if(!rmBuild()) return; if(!RM.room){ RM.room = (ROOMS.find(r => rmCan(r[0])) || ['free'])[0]; rmTabs(); }
+  if(RM.busy) return; RM.busy = true;
+  try{
+    const r = await api(`/rest/v1/ttm_room_msgs?select=*&room=eq.${RM.room}&order=id.desc&limit=80`);
+    const l = $('rmList'); if(!l) return;
+    if(!r.ok || !Array.isArray(r.json)){ l.innerHTML = '<p style="color:var(--mute);font-size:13px;margin:4px 2px">Could not open this room. If you just upgraded, refresh. The chat database step may also be missing.</p>'; return; }
+    const rows = r.json.slice().reverse(), sig = rows.map(x => x.id).join(',');
+    if(sig === RM.sig && !force) return; RM.sig = sig;
+    const near = l.scrollHeight - l.scrollTop - l.clientHeight < 80, first = !l.children.length, adm = !!(PROF && PROF.is_admin);
+    l.innerHTML = rows.length ? rows.map(m => { const mine = USER && m.user_id === USER.id, tm = new Date(m.ts).toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'});
+      return `<div class="rm-m ${mine ? 'me' : ''}"><div class="rm-h"><b>${e(m.name || 'Member')}</b><span>${tm}</span>${mine || adm ? `<u data-rmdel="${m.id}">delete</u>` : ''}${adm && !mine ? `<u data-rmmute="${m.user_id}">mute</u>` : ''}</div>${rmFmt(m)}</div>`; }).join('') : '<p style="color:var(--mute);font-size:13px;margin:4px 2px">No messages yet. Say hello.</p>';
+    if(near || first) l.scrollTop = l.scrollHeight;
+    if(first){ const mu = await api('/rest/v1/ttm_room_mutes?select=room&user_id=eq.' + USER.id); RM.muted = !!(mu.ok && Array.isArray(mu.json) && mu.json.length); const i = $('rmIn'); if(i && RM.muted){ i.disabled = true; i.placeholder = 'You have been muted by TTM.'; } }
+  } finally { RM.busy = false; }
+}
+function rmPrev(){ const p = $('rmPrev'); if(!p) return; if(!RM.pend){ p.style.display = 'none'; p.innerHTML = ''; return; } p.style.display = 'flex'; p.style.gap = '10px'; p.style.alignItems = 'center'; p.innerHTML = `<img src="${RM.pend.url}" alt="" style="height:54px;border-radius:6px"><small style="color:var(--mute)">${Math.round(RM.pend.blob.size / 1024)} KB</small><button class="rr-btn ghost sm" id="rmClrImg">Remove</button>`; }
+async function rmPick1(file){
+  const n = $('rmNote'); if(!file || file.type.indexOf('image/') !== 0){ if(n) n.textContent = 'Pick an image file.'; return; }
+  try{ const bmp = await createImageBitmap(file), sc = Math.min(1, 1600 / Math.max(bmp.width, bmp.height)), c = document.createElement('canvas'); c.width = Math.round(bmp.width * sc); c.height = Math.round(bmp.height * sc); c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    let blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.86)); if(blob && blob.size > 1.9e6) blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.6));
+    if(!blob || blob.size > 2e6){ if(n) n.textContent = 'That image is too large. Try a smaller screenshot.'; return; }
+    RM.pend = {blob, url: URL.createObjectURL(blob)}; rmPrev(); }catch(err){ if(n) n.textContent = 'Could not read that image.'; }
+}
+async function rmSend(){
+  if(RM.sending || RM.muted) return; const i = $('rmIn'), n = $('rmNote'), body = (i.value || '').trim(); if(!body && !RM.pend) return; if(!RM.room) return;
+  RM.sending = true; n.textContent = RM.pend ? 'Uploading…' : 'Sending…';
+  try{
+    let img = null;
+    if(RM.pend){ const t = await token(), path = USER.id + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.jpg';
+      const up = await fetch(CFG.url + '/storage/v1/object/room-images/' + path, {method: 'POST', headers: {apikey: CFG.key, Authorization: 'Bearer ' + t, 'Content-Type': 'image/jpeg'}, body: RM.pend.blob});
+      if(!up.ok){ n.textContent = 'Could not upload the image. The storage step may be missing, or it is over 2 MB.'; return; }
+      img = CFG.url + '/storage/v1/object/public/room-images/' + path; }
+    const r = await api('/rest/v1/ttm_room_msgs', {method: 'POST', headers: {Prefer: 'return=minimal'}, body: JSON.stringify({room: RM.room, body, img})});
+    if(!r.ok){ const m = JSON.stringify(r.json || ''); n.textContent = /Slow down/i.test(m) ? 'Slow down a little, one message every few seconds.' : 'You cannot post in this room (muted, or not included in your plan).'; return; }
+    i.value = ''; RM.pend = null; rmPrev(); n.textContent = ''; await rmLoad(true); const l = $('rmList'); if(l) l.scrollTop = l.scrollHeight;
+  } finally { RM.sending = false; }
+}
+function rmStart(){ if(!$('rmApp')) return; clearInterval(RM.timer); RM.timer = setInterval(() => { if(!document.hidden && location.hash === '#community') rmLoad(false); }, 4000); }
+function rmAdminHtml(){ return `<div class="rr-card"><h3>Chat room mutes</h3><p class="calendar-note" style="margin:0 0 10px">Who can read and write each room is set in the access table above (rows "Chat room"). To mute a member, open the room and press mute on one of their messages. Muted members can read but not post.</p><div id="rmMutes"></div></div>`; }
+async function rmMutesLoad(){
+  const box = $('rmMutes'); if(!box) return; const r = await api('/rest/v1/ttm_room_mutes?select=user_id,room,created&order=created.desc&limit=100');
+  if(!r.ok){ box.innerHTML = '<div class="rr-warn y"><b>One database step is missing.</b> Run supabase/rooms.sql in the Supabase SQL editor, then refresh.</div>'; return; }
+  const rows = r.json || []; if(!rows.length){ box.innerHTML = '<p class="calendar-note" style="margin:0">Nobody is muted.</p>'; return; }
+  const p = await api('/rest/v1/ttm_profiles?select=id,email,tg_handle&id=in.(' + rows.map(x => x.user_id).join(',') + ')'), who = {}; (p.json || []).forEach(x => { who[x.id] = x.tg_handle ? '@' + String(x.tg_handle).replace(/^@/, '') : x.email; });
+  box.innerHTML = rows.map(x => `<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line)"><span>${e(who[x.user_id] || x.user_id)}</span><button class="rr-btn ghost sm" data-rmunmute="${e(x.user_id)}">Unmute</button></div>`).join('');
+}
+const css3 = document.createElement('style');
+css3.textContent = `.rm-m{max-width:88%;align-self:flex-start;background:rgba(255,255,255,.06);border-radius:12px;padding:8px 11px;font-size:14px;line-height:1.45;word-break:break-word}.rm-m.me{align-self:flex-end;background:rgba(219,161,24,.18)}.rm-h{display:flex;gap:8px;align-items:baseline;margin-bottom:2px;font-size:12px;color:var(--mute,#9a978f)}.rm-h b{color:var(--gold2,#f2c14e);font-size:13px}.rm-h u{cursor:pointer;text-decoration:none;color:var(--mute,#9a978f);font-size:11px}.rm-h u:hover{color:#e0554d}.rm-img{display:block;max-width:100%;max-height:340px;border-radius:8px;margin-top:6px}.rm-m a{color:var(--gold2,#f2c14e)}`;
+document.head.appendChild(css3);
+window.addEventListener('hashchange', () => { if(location.hash === '#community'){ RM.built = false; setTimeout(() => { rmLoad(true); }, 120); } });
+setTimeout(() => { rmStart(); if(location.hash === '#community') rmLoad(true); }, 1500);
 fxLoad().then(() => { if(FX) ui(); });
 boot();
 })();
