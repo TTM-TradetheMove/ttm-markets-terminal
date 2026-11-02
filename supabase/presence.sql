@@ -8,7 +8,7 @@ create table if not exists public.ttm_presence (
 alter table public.ttm_presence enable row level security;
 drop policy if exists p_pr_sel on public.ttm_presence;
 create policy p_pr_sel on public.ttm_presence for select to authenticated
-  using (user_id = auth.uid() or (hidden = false and seen > now() - interval '4 minutes'));
+  using (user_id = auth.uid() or (hidden = false and seen > now() - interval '2 minutes'));
 drop policy if exists p_pr_ins on public.ttm_presence;
 create policy p_pr_ins on public.ttm_presence for insert to authenticated with check (user_id = auth.uid());
 drop policy if exists p_pr_upd on public.ttm_presence;

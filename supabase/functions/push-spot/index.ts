@@ -51,6 +51,44 @@ const wall = (ms: number) => { const p: any = Object.fromEntries(new Intl.DateTi
 const addDays = (iso: string, days: number) => { const base = new Date(iso).getTime(), target = wall(base) + days * 864e5; let g = base + days * 864e5; for (let i = 0; i < 3; i++) g += target - wall(g); return new Date(g).toISOString(); };
 const when = (iso: string) => new Intl.DateTimeFormat("en-AU", {timeZone: "Australia/Melbourne", weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit", hour12: true}).format(new Date(iso)) + " Melbourne time";
 
+// ---- market sessions: same core hours as the Trading Hours clocks (all exchanges of a region open together)
+const EXCH: [string, string, number, number][] = [
+  ["asia", "Australia/Sydney", 600, 960], ["asia", "Asia/Tokyo", 540, 930], ["asia", "Asia/Hong_Kong", 570, 960], ["asia", "Asia/Singapore", 540, 1020],
+  ["ldn", "Europe/London", 480, 990], ["ldn", "Europe/Berlin", 540, 1050], ["ny", "America/New_York", 570, 960]];
+const SESS: Record<string, {name: string; zone: string; icon: string}> = {asia: {name: "ASIA", zone: "Australia/Melbourne", icon: "🌏"}, ldn: {name: "London", zone: "Europe/London", icon: "🇬🇧"}, ny: {name: "US", zone: "America/New_York", icon: "🇺🇸"}};
+const wz = (ms: number, zone: string) => { const p: any = Object.fromEntries(new Intl.DateTimeFormat("en-CA", {timeZone: zone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23"}).formatToParts(new Date(ms)).map((x) => [x.type, x.value])); return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute); };
+const localToUtc = (day: number, min: number, zone: string) => { const want = day + min * 60000; let g = want; for (let i = 0; i < 3; i++) g += want - wz(g, zone); return g; };
+function sessionEvents(now: number) {
+  const out: {t: number; id: string; key: string; warn: boolean; title: string; body: string}[] = [];
+  for (const k of Object.keys(SESS)) {
+    let spans: [number, number][] | null = null;
+    for (const [kk, zone, o, c] of EXCH) {
+      if (kk !== k) continue;
+      const base = Math.floor(wz(now, zone) / 864e5) * 864e5, w: [number, number][] = [-1, 0, 1].map((d) => [localToUtc(base + d * 864e5, o, zone), localToUtc(base + d * 864e5, c, zone)]);
+      spans = spans === null ? w : spans.flatMap(([a1, b1]) => w.map(([a2, b2]) => [Math.max(a1, a2), Math.min(b1, b2)] as [number, number]).filter(([a, b]) => a < b));
+    }
+    for (const [st, en] of spans || []) {
+      const dow = new Date(wz(st, SESS[k].zone)).getUTCDay(); if (dow === 0 || dow === 6) continue;
+      const day = new Date(wz(st, SESS[k].zone)).toISOString().slice(0, 10), s = SESS[k];
+      out.push({t: st - 15 * 60000, id: `${k}-warnopen-${day}`, key: `s_${k}_open`, warn: true, title: `${s.icon} ${s.name} opens in 15 min`, body: "Core market session about to start"});
+      out.push({t: st, id: `${k}-open-${day}`, key: `s_${k}_open`, warn: false, title: `${s.icon} ${s.name} session open`, body: "Core market session is now live"});
+      out.push({t: en - 15 * 60000, id: `${k}-warnclose-${day}`, key: `s_${k}_close`, warn: true, title: `${s.icon} ${s.name} closes in 15 min`, body: "Core market session ending soon"});
+      out.push({t: en, id: `${k}-close-${day}`, key: `s_${k}_close`, warn: false, title: `${s.icon} ${s.name} session closed`, body: "Core market session has ended"});
+    }
+  }
+  return out;
+}
+async function sessionAlerts(now: number) {
+  for (const ev of sessionEvents(now)) {
+    if (!(ev.t <= now && ev.t > now - 150000)) continue;
+    const r = await rest("ttm_session_fired?on_conflict=ukey", {method: "POST", headers: {Prefer: "resolution=ignore-duplicates,return=representation"}, body: JSON.stringify({ukey: ev.id})});
+    const j = await r.json(); if (!Array.isArray(j) || !j.length) continue;   // already sent
+    const who = await get(`ttm_prefs?select=user_id&prefs->>${ev.key}=eq.true${ev.warn ? "&prefs->>s_warn=eq.true" : ""}`);
+    if (!who.length) continue;
+    await send(await subsFor(idsOf(who.map((x: any) => ({id: x.user_id})))), {title: ev.title, body: ev.body, tag: "sess-" + ev.id, url: "./crypto/index.html#tradinghours"});
+  }
+}
+
 // room message alerts: who has access to the room, then each member's own settings decide
 async function roomPush(m: any) {
   const accRow = (await get("ttm_settings?select=value&key=eq.access"))[0];
@@ -62,7 +100,28 @@ async function roomPush(m: any) {
   const sender = (await get(`ttm_profiles?select=is_admin&id=eq.${m.user_id}`))[0];
   const prefs: Record<string, any> = {}; (await get(`ttm_prefs?select=user_id,prefs&user_id=in.(${ids.join(",")})`)).forEach((x: any) => { prefs[x.user_id] = x.prefs || {}; });
   const nowIso = new Date().toISOString();
+  // @tags: the tagged member gets their own alert, whatever their room setting (unless they turned tags off)
+  const tags = [...new Set([...String(m.body || "").matchAll(/(?:^|[\s(])@([A-Za-z0-9_]{2,32})/g)].map((x) => x[1].toLowerCase()))].slice(0, 5);
+  const tagged = new Set<string>();
+  if (tags.length) {
+    const tp = await get(`ttm_profiles?select=id,is_admin,beta,plan,plan_until,tg_handle&tg_handle=in.(${tags.map((x) => '"' + x + '"').join(",")})`);
+    const byLower = tp.filter((p: any) => tags.includes(String(p.tg_handle || "").toLowerCase()));
+    const tIds = byLower.map((p: any) => p.id).filter((id: string) => id !== m.user_id);
+    if (tIds.length) {
+      const tprefs: Record<string, any> = {}; (await get(`ttm_prefs?select=user_id,prefs&user_id=in.(${tIds.join(",")})`)).forEach((x: any) => { tprefs[x.user_id] = x.prefs || {}; });
+      const tsubs = await get(`ttm_push_subs?select=*&user_id=in.(${tIds.join(",")})`);
+      const okIds = byLower.filter((p: any) => {
+        let plan = p.plan === "crypto" || p.plan === "tradfi" ? "premium" : (p.plan || "free");
+        if (plan !== "free" && p.plan_until && p.plan_until < nowIso) plan = "free";
+        return (p.is_admin || allowed.includes("free") || allowed.includes(plan) || (p.beta && allowed.includes("beta"))) && (tprefs[p.id] || {}).mention !== false;
+      }).map((p: any) => p.id);
+      okIds.forEach((id: string) => tagged.add(id));
+      const rm = m.room.charAt(0).toUpperCase() + m.room.slice(1);
+      await send(tsubs.filter((s: any) => okIds.includes(s.user_id)), {title: (m.name || "Member") + " tagged you · " + rm + " room", body: String(m.body).slice(0, 140), tag: "tag-" + m.id, url: "./crypto/index.html#community"});
+    }
+  }
   const to = new Set(profs.filter((p: any) => {
+    if (tagged.has(p.id)) return false;
     let plan = p.plan === "crypto" || p.plan === "tradfi" ? "premium" : (p.plan || "free");
     if (plan !== "free" && p.plan_until && p.plan_until < nowIso) plan = "free";
     const ok = p.is_admin || allowed.includes("free") || allowed.includes(plan) || (p.beta && allowed.includes("beta"));
@@ -112,7 +171,8 @@ Deno.serve(async (req) => {
     return new Response("msg " + n);
   }
 
-  // cron tick: new community room messages, then live sessions
+  // cron tick: market session alerts, new community room messages, then live sessions
+  try { await sessionAlerts(now); } catch (e) { console.log("session alerts failed:", String(e)); }
   const fresh0 = new Date(now - 10 * 60000).toISOString();
   for (const m of await get(`ttm_room_msgs?select=*&pushed=eq.false&ts=gt.${fresh0}&order=id.asc&limit=20`)) {
     if (!(await claim("ttm_room_msgs", m.id, "pushed"))) continue;
