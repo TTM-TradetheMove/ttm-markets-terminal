@@ -198,10 +198,12 @@ Deno.serve(async (req) => {
   for (const s of due) {
     const c = await claim("ttm_live", s.id, "reminded"); if (!c) continue;
     await rest(`ttm_live?id=eq.${s.id}`, {method: "PATCH", body: JSON.stringify({announced: true})});
-    if (s.repeat_days > 0) {
-      const next = addDays(s.starts_at, s.repeat_days);
+    const dows: number[] = Array.isArray(s.repeat_dow) ? s.repeat_dow : [];
+    if (dows.length || s.repeat_days > 0) {
+      let next = addDays(s.starts_at, s.repeat_days > 0 ? s.repeat_days : 7);
+      if (dows.length) { for (let k = 1; k <= 7; k++) { const c = addDays(s.starts_at, k); if (dows.includes(new Date(wall(new Date(c).getTime())).getUTCDay())) { next = c; break; } } }
       if (!(await get(`ttm_live?select=id&starts_at=eq.${encodeURIComponent(next)}&title=eq.${encodeURIComponent(s.title)}`)).length)
-        await rest("ttm_live", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({title: s.title, starts_at: next, zoom_url: s.zoom_url, note: s.note, repeat_days: s.repeat_days, announced: true})});
+        await rest("ttm_live", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({title: s.title, starts_at: next, zoom_url: s.zoom_url, note: s.note, repeat_days: s.repeat_days || 7, repeat_dow: dows, announced: true})});
     }
     const mins = Math.max(1, Math.round((new Date(s.starts_at).getTime() - now) / 60000));
     await telegram(`LIVE SESSION STARTING SOON\n\n${s.title}\nStarts in about ${mins} minutes\n${when(s.starts_at)}\n\n${s.zoom_url}`, s.zoom_url);
