@@ -10,6 +10,16 @@ const out = (o: unknown, s = 200) => new Response(JSON.stringify(o), {status: s,
 const rest = (p: string, o: any = {}) => fetch(URL_ + "/rest/v1/" + p, {...o, headers: {...H, ...(o.headers || {})}});
 const get = async (p: string) => { const r = await rest(p); const j = await r.json(); return Array.isArray(j) ? j : []; };
 const num = (x: unknown) => Number(x);
+// Telegram alert on every open and close. Never lets a failed alert stop the engine.
+async function alertTg(text: string) {
+  try {
+    const tok = Deno.env.get("TELEGRAM_BOT_TOKEN"), chat = Deno.env.get("TELEGRAM_CHAT_ID"); if (!tok || !chat) return;
+    const th = Deno.env.get("TELEGRAM_ENGINE_THREAD_ID"); const body: Record<string, unknown> = {chat_id: chat, text};
+    if (th) body.message_thread_id = +th;
+    await fetch(`https://api.telegram.org/bot${tok}/sendMessage`, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+  } catch (_) { /* ignore */ }
+}
+const sgn = (x: number) => (x >= 0 ? "+" : "") + x.toFixed(2) + "%";
 
 async function isAdminCall(req: Request): Promise<boolean> {
   const secret = Deno.env.get("ENGINE_KEY"); if (secret && req.headers.get("x-engine-key") === secret) return true;
@@ -45,7 +55,8 @@ Deno.serve(async (req) => {
     const price = (p: string) => cs[p][cs[p].length - 1].c;
     const open: Pos[] = (await get("ttm_engine_positions?select=*&status=eq.open&order=id.asc")).map((x: any) => ({...x, entry: num(x.entry), units: num(x.units), notional: num(x.notional), lev: num(x.lev), margin: num(x.margin), sl: num(x.sl), tp: x.tp == null ? null : num(x.tp), risk_usd: num(x.risk_usd)}));
     const closeIt = async (p: Pos, px: number, why: string) => { const pnl = pnlOf(p, px);
-      await rest(`ttm_engine_positions?id=eq.${p.id}`, {method: "PATCH", body: JSON.stringify({status: "closed", closed_at: new Date().toISOString(), exit_price: px, pnl, close_reason: why})}); log.push(`closed ${p.pair} ${why} ${pnl.toFixed(2)}`); };
+      await rest(`ttm_engine_positions?id=eq.${p.id}`, {method: "PATCH", body: JSON.stringify({status: "closed", closed_at: new Date().toISOString(), exit_price: px, pnl, close_reason: why})}); log.push(`closed ${p.pair} ${why} ${pnl.toFixed(2)}`);
+      await alertTg(`${pnl >= 0 ? "🟢" : "🔴"} ${p.pair.replace("USDT", "")} ${p.side.toUpperCase()} CLOSED (${why === "ai" ? "agent exit" : why})\n${sgn(pnl / p.margin * 100)} on margin`); };
     // 1) stops and targets
     let still: Pos[] = [];
     for (const p of open) { const hit = cs[p.pair] ? checkExit(p, cs[p.pair]) : null; if (hit) await closeIt(p, hit.price, hit.reason); else still.push(p); }
@@ -70,7 +81,7 @@ Deno.serve(async (req) => {
       else if (act === "close") { const p = still.find((x) => x.pair === pair); if (p) { await closeIt(p, px, "ai"); still = still.filter((x) => x.id !== p.id); ok = true; } else why = "nothing to close"; }
       else { acc = account(still); const v = validateOpen(d, px, acc.equity, acc.cash, still, cfg);
         if (v.ok) { const ins = await rest("ttm_engine_positions", {method: "POST", headers: {Prefer: "return=representation"}, body: JSON.stringify({pair, ...v.pos, reason: String(d.reason || "").slice(0, 600)})});
-          const row = (await ins.json())[0]; if (row) { still.push({...row, entry: v.pos.entry, units: v.pos.units, notional: v.pos.notional, lev: v.pos.lev, margin: v.pos.margin, sl: v.pos.sl, tp: v.pos.tp, risk_usd: v.pos.risk_usd}); ok = true; log.push(`opened ${act} ${pair}`); } else why = "could not save"; }
+          const row = (await ins.json())[0]; if (row) { still.push({...row, entry: v.pos.entry, units: v.pos.units, notional: v.pos.notional, lev: v.pos.lev, margin: v.pos.margin, sl: v.pos.sl, tp: v.pos.tp, risk_usd: v.pos.risk_usd}); ok = true; log.push(`opened ${act} ${pair}`); await alertTg(`⚡ ${pair.replace("USDT", "")} ${v.pos.side.toUpperCase()} OPENED\nTimeframe: 1hr`); } else why = "could not save"; }
         else why = v.reason; }
       await rest("ttm_engine_decisions", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({pair, action: act, price: px || null, reason: String(d.reason || "").slice(0, 600), accepted: ok, reject_reason: ok ? null : why, raw: d})});
     }
