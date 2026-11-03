@@ -1,6 +1,12 @@
 {
  "central_banks": [
   {
+   "bank": "RBA",
+   "title": "Statement by the Monetary Policy Board: Monetary Policy Decision",
+   "link": "https://www.rba.gov.au/media-releases/2026/mr-26-30.html",
+   "ts": 1793676600
+  },
+  {
    "bank": "ECB",
    "title": "Boris Vuj\u010di\u0107: Integrated, open and resilient: Europe\u2019s strengths in a fragmenting world",
    "link": "https://www.ecb.europa.eu//press/key/date/2026/html/ecb.sp.261102~70003226e9.en.html",
@@ -115,12 +121,6 @@
    "ts": 1792148400
   },
   {
-   "bank": "RBA",
-   "title": "Appointment of Chief Risk Officer",
-   "link": "https://www.rba.gov.au/media-releases/2026/mr-26-29.html",
-   "ts": 1791946800
-  },
-  {
    "bank": "Fed",
    "title": "Minutes of the Board's discount rate meetings on August 17, September 9, and September 16, 2026",
    "link": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20261013a.htm",
@@ -153,10 +153,57 @@
  ],
  "policy": [
   {
-   "title": "Trump, Carney signal progress on U.S.-Canada trade deal as automotive tariff uncertainty persists - Car Dealership Guy News",
-   "link": "https://news.google.com/rss/articles/CBMixwFBVV95cUxOYXlxV3g5WEJ0WUV1bXFQbXlNVGhWM1RUdXhDak5BTXdVQlpyNURkVl9RVHZSU3VHaUE2SXlHWFhpWVQ5V09qZ0ZpSkh2SER6bVZ2MHZBaG9aTExYQXNhZF9mMEF5N0Y3bzZuNUxNVTNBX1JWcWp6b1c2MHA5ZHJVQXV2OWRRcHVzQTB1YlRhWWNHcWdhdzB3bjN2aHQ0NDh4TW5POXdqU01KbUt3SzV5aUc0a2I3NXVmVDE0aF9HR2xIMGpOVHQw?oc=5",
-   "source": "Car Dealership Guy News",
-   "ts": 1793663189,
+   "title": "Israeli PM, central bank lock horns over sanctions evasion - CoinGeek",
+   "link": "https://news.google.com/rss/articles/CBMihgFBVV95cUxQbmtiNVBZUG1EV29lTnU2NGMwYzdRU0dpeTlELW5rVk1Ia0ZjVVNlX2FackRhODF3WFZzX0F3T1h1Wjg3WElhQnpfMk5iUnNPN3M2bEZ4bU4zME40U1RaOG9Ca3plcUNPUXFZOVFFUHZBZjl0bWI0N016TFVodmxQa0tWT2xJQQ?oc=5",
+   "source": "CoinGeek",
+   "ts": 1793685600,
+   "affects": [
+    "Gold",
+    "Oil",
+    "Risk sentiment"
+   ]
+  },
+  {
+   "title": "Letter: Want cheaper gas? Take the tariffs off Canadian oil - Wadena Pioneer Journal",
+   "link": "https://news.google.com/rss/articles/CBMinwFBVV95cUxQVlZxbW5GaEVTOGI0Tjg5ajQ0UmlRdE5tc2lpMDZUbkhDWjhxSXZCTG9aQVZWX29ZZ1FVUkxqTjJkYm9TdUplTlVKYVBpNWN3Q0ExWkhtbnBOd0RMLXRjMEhBb3phX2hCRGstcmFxQXcwZFNKaUdVdWxXWUIwNUJUSXVGYUR3VU1ObndBcWdvTnF5RklLQm1zUjBmR2xsUjg?oc=5",
+   "source": "Wadena Pioneer Journal",
+   "ts": 1793684309,
+   "affects": [
+    "Equities",
+    "FX",
+    "Commodities",
+    "Oil"
+   ]
+  },
+  {
+   "title": "ICC President Akane urges UN to protect court from US sanctions \u2014 The Japan Times - UA.NEWS",
+   "link": "https://news.google.com/rss/articles/CBMirgFBVV95cUxQTndBX2RzQy1EUTduLS1RcjJneWN5RVkxRXVUbFlELTZMTDlCRENkNVZOcEJOU0RhRUpfZ3d5b2hCWEZubUwtcDZnUWxZdjlpNUduZVJqdEprRUxLUG14aER0NVpjbklqcDJPVTZCb1NkSmhHZTAyREdNVlBsOUFBUkxMS2JCV3FKaGR3OUlBZzJ6dXpUWkMwdVVkVXVJakoyY0JQc2tEVmVPMEpfNXc?oc=5",
+   "source": "UA.NEWS",
+   "ts": 1793683901,
+   "affects": [
+    "Gold",
+    "Oil",
+    "Risk sentiment",
+    "JPY"
+   ]
+  },
+  {
+   "title": "ICC president urges U.N. members to defend court against U.S. sanctions - The Japan Times",
+   "link": "https://news.google.com/rss/articles/CBMifEFVX3lxTE1MRFB1LWRTQXpVT0ptMExWcXdkVE0xS2g1UzlnaVlwUXpPRE9zS016cXo0ZHJDTGt5RlhIWVBDUU1CTjFhYUxNdWJWUVBIN3Y4bzZGVDFrMGY2THpsYzc3T2c2eW52WmwxSXNoZEo5cDhVQmRkc2R6M3EzeHQ?oc=5",
+   "source": "The Japan Times",
+   "ts": 1793682780,
+   "affects": [
+    "Gold",
+    "Oil",
+    "Risk sentiment",
+    "JPY"
+   ]
+  },
+  {
+   "title": "British PM's Brexit plan may threaten U.S. trade deal: Trump - Reuters",
+   "link": "https://news.google.com/rss/articles/CBMiXEFVX3lxTE9UdG94emxta2VmbFBEMnZUc1ptZk1DeVlBQlhkNnl2OXE4SzE4WHFHSXBuUnppMXphVWJJQ0pVOWpBeFlNc19EMHJLUUl2U1JmbnphdHVaSVpPdE1k?oc=5",
+   "source": "Reuters",
+   "ts": 1793682115,
    "affects": [
     "Equities",
     "FX",
@@ -164,10 +211,21 @@
    ]
   },
   {
-   "title": "War, tariffs and China: What the US midterms mean for the Asia-Pacific - Al Jazeera",
-   "link": "https://news.google.com/rss/articles/CBMirgFBVV95cUxPcXdSUzdCZE1aZDlWYzNjZ0hTQ1NIclRrN2hvT2trYnM3djdIajN1Nk8zWEViT3FHQ1lPMEJNSDZDR1ZxMUNuS1lMeGM3RVdrckJXZWpERVpzakZVb3htaG1kcC1aNEVuLVhxSVRxUWZPNnd0THU2aF93R0xhdUNUQkM4aGNtMVpyb2FxeWlUZ2V0SWFPcGZOWWRxMG9WeWl2ZDJPR1VyZUluQTdZbUHSAbMBQVVfeXFMTnBxd2VhLVdiSEE4akU0M2FNUUJYT0gtWXIyVnFOM29RTElPVFFGczNaWHAyOFNmMl9UTjgzSlhyOHREaFNXU0dxdldFZXBJSXBWaldWel9rU1IxZ1N4aVd6azVEMXVSczM4Mko2RlBnQTZIWjZXdk95MzdrWlBNdFF4MWw1cnJ3QXJmTXVGbFJZcnFFcFU3VExWbUpNMWlTWnptRnY4YUxjTTdIal8wU0xBeDg?oc=5",
-   "source": "Al Jazeera",
-   "ts": 1793662913,
+   "title": "Can Europe Defend the ICC? US Sanctions Put Solidarity to the Test - Modern Diplomacy",
+   "link": "https://news.google.com/rss/articles/CBMipwFBVV95cUxOWUw1d3JiYXBiSldobXkxWHdjSGJOVDdYQWpWTWxjR2p3SVJhZEdLYmJDSTVPTGxaMVRGZEJraWd1SHhMbjVKRXJjVG1raDRrdG9KcnB2OHhuQVRoeEI5aWd6RGhiM2FFckZ5TjVLdTlPTmdzN29kb3AzczhmVGhSaklxc2ZVNzBKVVdWX09RS1dOYzdYM1ZMazcyaXk4d0RGNko3bDV1QQ?oc=5",
+   "source": "Modern Diplomacy",
+   "ts": 1793682031,
+   "affects": [
+    "Gold",
+    "Oil",
+    "Risk sentiment"
+   ]
+  },
+  {
+   "title": "Democratic Party campaign ads address tariffs ahead of midterms - China Daily Global Edition",
+   "link": "https://news.google.com/rss/articles/CBMiggFBVV95cUxOZHJZR1dDNV8tWkg4QS1IQ196Z0ZVSTVZUmN0Z1NTeTJ2ZVBRMzJ4NlFpODQzLWtNRWF4NXB0THo0UzJrVFVKSHdZS09sSlZiNWJiRWlKV0lqVDJ4M2d1MXRoVnF1d0h3cWRUUFM5bFB5WkJmVzdfdTIxQzltLUVZVlZR?oc=5",
+   "source": "China Daily Global Edition",
+   "ts": 1793681983,
    "affects": [
     "Equities",
     "FX",
@@ -176,10 +234,10 @@
    ]
   },
   {
-   "title": "White House cites Korean trade deal, Alaska gas project among Trump's fulfilled pledges - Korea JoongAng Daily",
-   "link": "https://news.google.com/rss/articles/CBMi0AFBVV95cUxQYXpJdXBLNG9IMWxKUnpyaGIwZWRlTTJIZndLWWZ3RTRZTVBGeE1IaHJxWjZ2S2swRk83ZW1OemhrZHNfNXB4Sm9LMUhwaG5fdmQzSlM3UVNkMTNKQmZtWl9XNFBWUXNqQTF1RG9wMi1SUWlvT0swVUdQYUFjTURjQU5FVXE1VVFYR25QYXc4SXdxaUtxU2c2U3hJVkF2Y2VWQkF1aEFob05mY2otMWx4MTVKcGNyQ1UyNlRSMDJZbjlOWU4xMkhvVWZHaS1qb19M?oc=5",
-   "source": "Korea JoongAng Daily",
-   "ts": 1793662567,
+   "title": "Tesla, Samsung Express Opposition to New US Tariffs on Vietnam - The Diplomat \u2013 Asia-Pacific Current Affairs Magazine",
+   "link": "https://news.google.com/rss/articles/CBMimgFBVV95cUxNM29JRTdPem1zam45WTE1M1NtT29CanBZdFpxajhhQnhBdE03SnhXQkR5MWREblFxazE0YldVQnlKQ0wtVlI2YkNrR2F5MTJhVFBvY0tVSW5NQVpYS1JRbzEzcTdXUEdIS1RJSk9uM25lamUtaEVoRm1oTWNIS21NSFVHQ0sxTGxzRW8xNG5ndEhaaTY5dmNRbm53?oc=5",
+   "source": "The Diplomat \u2013 Asia-Pacific Current Affairs Magazine",
+   "ts": 1793681563,
    "affects": [
     "Equities",
     "FX",
@@ -187,17 +245,10 @@
    ]
   },
   {
-   "title": "ICC president hits back at Trump administration penalties in remote UN address - Audacy",
-   "link": "https://news.google.com/rss/articles/CBMiuwFBVV95cUxQd2VmQWZmOHhuVTU5TmlHV3EwMXZ5SkdFWk5yVzJkX0p4MWVha2lLallZR1BJTkRWQmlhYnBhVXQ5RDRsT2NYN1hwNHkySHU2THRNZVdCNHdDZFRUeWxjamFwaGl3d2J1cDVocmtUeUcyckdBMnlQRG13Z3BIVjRMTDVQcGdHR3BZRW05bGZEbUowV1ZHWkVhYm96VUNnRDFFZml5V0IwNjBiVE50c0dMWEZkRjZxS2Nxdmpz?oc=5",
-   "source": "Audacy",
-   "ts": 1793662380,
-   "affects": []
-  },
-  {
-   "title": "US Imposes Sanctions On Rwanda Over Eastern Congo Conflict - Genocide Watch",
-   "link": "https://news.google.com/rss/articles/CBMiowFBVV95cUxQdHpSLTAyWEtSRnNQOF85SExVTXNEaFJNVk1yMWNaZmZDNFQ1N2QwMFgtdTJJc0lPUTZmUUtvRWQyVERzMVNLdnBRWFNuZGRMa3dWQVhzQ2JWeW1Zc0ZJclZFdnBpZW82ZjNVaDVFWkxFOTV5Q0Jocm5QdGd5aU9FbC1ZTFNCNlY0R3RFZkg2czBnY2k3WnNHSTRsTWdYa296ZTVV?oc=5",
-   "source": "Genocide Watch",
-   "ts": 1793661562,
+   "title": "War and sanctions squeeze Iran's medicine supply by sea and air - Amwaj.media",
+   "link": "https://news.google.com/rss/articles/CBMimAFBVV95cUxOaDRRemVCc3l2MnJNempldFZNbDBFWFNVTXpJdms5QTBKdk9HVDJMYkJuMmVDeS1NYnBQZDI2ZTdqcTJKWFIwRV9ueVV2UHA5eTlBUjFvM2VTdEhyZnpLamVRRkhZNEdDRHZycHhVM3hIdnVCcW9FQlhWS1ZHcDU1aHJKbG95bWZWVllnWklYWXA3MGV3SGxPVQ?oc=5",
+   "source": "Amwaj.media",
+   "ts": 1793678513,
    "affects": [
     "Gold",
     "Oil",
@@ -205,22 +256,22 @@
    ]
   },
   {
-   "title": "Huawei fights to put US sanctions guidance before jury - Global Investigations Review",
-   "link": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxOUkpSN1BBQTZUU1VjdTNnYl93WVJEUVUyOXRGVEd6cFo5VERoT3h1MHl3SXJmTGpHN1RpQlVUYXRlSWRGd090eWFIN0VsUDlkcG1kSUtHbXhOcnJlSDVIbWtVZ1I2c05Sb0xaNERTUGRtVzRDbVNoUFYzOEZiRWhDY0NPb2hzUmxMXzhZNk1QZTJLUjdodU9wbG1NU0dYSnBIaW0xM2k0Tkk2QQ?oc=5",
-   "source": "Global Investigations Review",
-   "ts": 1793660315,
+   "title": "Would prices have fallen without tariffs this past year? New York Fed research says yes for many consumer goods - Chase Bank",
+   "link": "https://news.google.com/rss/articles/CBMi1AFBVV95cUxNaUxma1d4QThmSzZ0MkRoQ2RJd3Z0blNnRGt3MjJLZTZfNXFNLXpFOXNNMUIxOTlPV3lmeGJzV1Z4WEhXMnBGUlFwT2l0ak52allDRHpDMUtvMlhFdU1BVTJlQnkzdzNqLW1sdEw0aFNvMU9wd2VjR2ltVkJ4Mm5aR0J2WTdtT0Jqb1FNYWU4RUZHamRMZXc5ako2TXZYNFlwWDN0LTVrcDlvUGVzc0tlZDIyX1RQWnQ5Uk1sYzdSajFkcUtMUGlQUDI3ejRvNUJFWS1Rdw?oc=5",
+   "source": "Chase Bank",
+   "ts": 1793674243,
    "affects": [
-    "Gold",
-    "Oil",
-    "Risk sentiment",
-    "Single stocks"
+    "Equities",
+    "FX",
+    "Commodities",
+    "Bonds"
    ]
   },
   {
-   "title": "Trump's tariffs hit Alaska residents as economic concerns continue to grow - BNN Bloomberg",
-   "link": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxOaWIxZkFTTUZELXRfTjhSRXhYbGs0UDJ0bHhOTzhlcmlZaU1VZmJGR3JDQ19POVNaRWRDMU9FX2FBWHg0TU12THUyNDBqblFyeFN5TUZfbUxCaHNNdUctdmFVU0ZHVjVYOGk2czJ4b2lXMU5FakhaM0l3M1BtVUd3SUxUWFE4amhXVWl0T0lRRjRrNlBBS2lNRkdrcVltaGYwcE55VzlSSlRrVWZWekszUkpnenczc0NuckFOYWZZbTVYNTRXQ0hOdQ?oc=5",
-   "source": "BNN Bloomberg",
-   "ts": 1793659413,
+   "title": "Trump and Carney outline potential U.S.-Canada trade deal - Finance & Commerce",
+   "link": "https://news.google.com/rss/articles/CBMie0FVX3lxTE1GNkxWR1NjN2F3NW9sX21pY0F5b0YzLVFFSnlELU1BRE9qc1RDS29LcVp0R3plX2lGVzVURUJCQ1B4VFZsckpFWjY2UEZabzhSZVVxNnZ6WUlvLTlBTUlmWEhhLWYzRnVqYTdhSk01cjJsY05QRnZKR1ZETQ?oc=5",
+   "source": "Finance & Commerce",
+   "ts": 1793674207,
    "affects": [
     "Equities",
     "FX",
@@ -228,10 +279,10 @@
    ]
   },
   {
-   "title": "Trump's tariffs hit Alaska residents as economic concerns continue to grow - CP24",
-   "link": "https://news.google.com/rss/articles/CBMiugFBVV95cUxOR3VhMUEtRmwzYXpoQ2lPMUtlWkpXaEJPbm5NSk95VERRbTYzX0dwZm5EM1JpVzhNZ1lQbDU3cURnV3A1Qjd5QkZiRFJNQUQ2NEVFcEFXMV92elk5OXpaRnNhb2xDQzdRME10U3hfMFExbXVLWThNUkZJZGVfaU9KTjQyOEczdmIyXzRocXE5SUZDRGh5U1hncWEtWUdHeFR6aFM4SDBReUdrMjdMQUR1Z1pXY05ha09EZFE?oc=5",
-   "source": "CP24",
-   "ts": 1793659413,
+   "title": "White House Lists India Trade Deal Among 127 Promises Kept - indica News",
+   "link": "https://news.google.com/rss/articles/CBMiigFBVV95cUxQX3ZTdUJPaUZONTZzRFNscGVZZUJieHRWSFVCYUVFcVV1UHRkRURQZ09oVHBUMjBEU3hJcWZ1S1VOS0RiWnNXQ2Rhel9MSHpOLUdjWnJhRVZsVkZvaUJPRFQzc2JnRnFJR3R1UE15RzVCcFh6eVRVLTFla19tUGlQbEt1QWwwWGlfbkE?oc=5",
+   "source": "indica News",
+   "ts": 1793673958,
    "affects": [
     "Equities",
     "FX",
@@ -239,10 +290,10 @@
    ]
   },
   {
-   "title": "Trump's tariffs hit Alaska residents as economic concerns continue to grow - CTV News",
-   "link": "https://news.google.com/rss/articles/CBMitAFBVV95cUxQWEJzYjIyOU9TMEJSVGhvQjhuWHliQ2RoUHBKWGx5RnQ1UVRSeU9KRFU5RDh4ZXQ3LWxnVmQwcmFZLV9Pd05XUWJ4SmZIa09IaWR4NzZkaS1GSnpiQTdYNnNSd0R4TUxIcmFwYlppN1V4VXo4ekxuOS0wZW1LZmpCZFdjZGY1RFVRMXN3MTlXbnpVS3AzMHJyNExWeXk2eUtXSV9IbVZnTTQ0OEFmam9aT2Z0eWs?oc=5",
-   "source": "CTV News",
-   "ts": 1793659413,
+   "title": "Exclusive - India assures commitment to lower Scotch tariffs in India-UK pact, sources say - MSN",
+   "link": "https://news.google.com/rss/articles/CBMi1gFBVV95cUxPOTEzRjVUYmdEdjNBQUVzQ2MxN2Z4OUM5N3owRFlWLVBYd0d0TlRlTm1MNzRVaHlvb2RsdVNGRURaNHUzbnBMeFBheHlMSjR4OTA0ZFpYT2dkMUdCRE5PYmk2NzdPOUxZOFZXRUUtUUktbEp5b2wxUi00NTBmWklwa1BtOVkyclVfbS1OeWNYYXplN3dzc0c0eHdlT0VUTG5USXVQOTlfRUhSU0ZFQnJEeURlOWlKZFEzenluVXFzRUk1TFdGc19KeURpbmFQR2g0OUgwSWxB?oc=5",
+   "source": "MSN",
+   "ts": 1793669231,
    "affects": [
     "Equities",
     "FX",
@@ -250,67 +301,24 @@
    ]
   },
   {
-   "title": "Michigan midterm election race focuses on Trump's auto tariffs - CTV News",
-   "link": "https://news.google.com/rss/articles/CBMipAFBVV95cUxQN2RlTENzcG5GUVl3N2RMVjR6cHJJYzRyRDE1ZXdqbmd2Wjhsc0tPc0czWU9iSTFqbk9QOTAzSlRfd1FFWjZpZnJTWS1oV3M2amVfa3BJaTdhMUZfNUp1QWdSVF9NZlRGQ00zNjFOaXpoSHN6OGpzZnBMcEN2Z3REQ0RWVllQV2ttc3dWUEo5T2hFc21helN1aHc3Ry1hQm1QaElKSA?oc=5",
-   "source": "CTV News",
-   "ts": 1793659367,
+   "title": "How a New Brunswick island is caught in the middle of the Canada-U.S. trade war - Global News",
+   "link": "https://news.google.com/rss/articles/CBMitgFBVV95cUxPZzlrSjFJdDdzM1FVa05yWkZ5WmtqdGRpa21Ta0E0cWpDWWtVdmZseHVSRTNlb3RsdlpZQllSN3J6VWtveEU0SndXOVlGSUkyZFBka0pIY2R6V19BX3BVN3lqQ3lLQ1plaERSNExvX0Jsa1I2eTN1U1ZwbzJjVlBTbl80YTZmbnBQTFpfLXpBNkIyZ2xWWjBrY24wTzI1Y3paM0Y1Tkk4T3FkTG5LdE1tUVJnTzZqZw?oc=5",
+   "source": "Global News",
+   "ts": 1793668844,
    "affects": [
     "Equities",
     "FX",
-    "Commodities"
-   ]
-  },
-  {
-   "title": "Michigan midterm election race focuses on Trump's auto tariffs - BNN Bloomberg",
-   "link": "https://news.google.com/rss/articles/CBMiuAFBVV95cUxNVllKX09mbS1tQW5VN1R4Nnk1aU1mUTgwWmZKbzk3ZkR4TXdYcVZac05WX191MlRlemRxdS16eGVldlNwbU16Z2R0Z2ZSTDFNNmFXb3NOSko2ZS0zWXFYZXpaUGhxLW1HUWphSWFncUpDdGUwaVNwM2ZNQ21NV2NVMUZLZjVQS1BfMUZGcXRWdWRiOXZxb2s5SzZwNGhsQXR3alNkQVE4Q1JZcm9ud2d1eWswaEF0ckNq?oc=5",
-   "source": "BNN Bloomberg",
-   "ts": 1793659367,
-   "affects": [
-    "Equities",
-    "FX",
-    "Commodities"
-   ]
-  },
-  {
-   "title": "A New Class of Jewish Democrats Could Reshape Congress' Approach to Israel - Haaretz",
-   "link": "https://news.google.com/rss/articles/CBMijwJBVV95cUxQcXNiU29KaGRCVUltYWRab18wVmRfUUZzbkhOSXEtdFdWaVNuVEVMc0pGSXo3d0JrTkdwenROOXZvcllWNy1abmFEMTZvcS1BS0R5NXFQUVdLY1Uxb3p1cmtEZzhZVTVEYS0tWV9PRkxzcy1WbzY1TktaOVdadmlaTE14WTBPUVQtcUFXTUNMdnRIdjZ3a3FkTjR5d3VYQUFkM2ZNZWQ0X3hIczB0bWEyNXFyM3d0ZnFNem1MSWU5T2hSRE5tYVB6UnB0bXpINDhSQnBoX0FHUzJjakpaekQzYUdRNmRIVjVfSkwtSnNQbEdMYmJjdUhYb1N0enczdS1zSlVzS2I5cnI0Qk5ON2xF?oc=5",
-   "source": "Haaretz",
-   "ts": 1793658900,
-   "affects": [
-    "Gold",
-    "Oil",
-    "Risk sentiment"
-   ]
-  },
-  {
-   "title": "US to exclude South Africa, Rwanda from Africa duty-free trade deal - AFP.com",
-   "link": "https://news.google.com/rss/articles/CBMiiAFBVV95cUxQTHFVS256dk9qaFNjR05Yc1RoNWJralR3QUt0UV9FaVJhbVduYk1ZblJ5WkJvdWlOeTJmVnJ6ZzdEdXppY1oxQXR3SnhKel9QLU11U1lMSkpqZmpiTzBYcDVUV05kVllELWZCR1dDam5lc2FUY3VmWWdHS3l0VGtKMFFRYlFsYmdE?oc=5",
-   "source": "AFP.com",
-   "ts": 1793658877,
-   "affects": [
-    "Equities",
-    "FX",
-    "Commodities"
-   ]
-  },
-  {
-   "title": "Tariffs Decoded: What Policy Shifts Mean for Your Bottom Line - Marietta Daily Journal",
-   "link": "https://news.google.com/rss/articles/CBMi7wFBVV95cUxPaVVHR3lBaEt4aG1BS3BpSG9RdDg5dDM3a1lId1lRSmJ2N1FxY3RNUWRxb1hHTlZNWUItMmhuN0szRVB4WjlyaGE3RFpvSXE1cHFkbmtlQmxMUDlzLUk5WEdWakpmVzJoMkVxbFFsZ3RkMW5xc2VNWmpqQVEzaW1RVXB6Y19FTE9abEZ0bnBfODZtTUstQTJ3SWw1Q2xwV2NnZkEyLWhReGN6MC1sS3BGV2luSllKZS1TX1JCbkZzeEh2Qmk2RGRtVmtQdGpyNmtSZlA0dE43LXR1M3Jhc1FJNC1NSmZyeU04OWZEdkQ0WQ?oc=5",
-   "source": "Marietta Daily Journal",
-   "ts": 1793657520,
-   "affects": [
-    "Equities",
-    "FX",
-    "Commodities"
+    "Commodities",
+    "Gold"
    ]
   }
  ],
  "geopolitics": [
   {
-   "title": "US to mediate Ukraine-Russia working-level peace talks in Abu Dhabi on Nov. 10-11 - Anadolu Ajans\u0131",
-   "link": "https://news.google.com/rss/articles/CBMivwFBVV95cUxQY0tuOTNDQ0loVjRKbUxZOExyVGtsUkswMTZ5RVZhYkp6c2UxWVlBSldMd21XSUJJbXJTeE9Ta3BmTk9GWXNpNlZTVFFNZGVUT2s4V3dqTW9pdEFhT2R2MjN0M0xKWGl3MmlkMFUyV3ltdjNoMkVkZXNPNjhYdndmX2toNHAxVC1rVUNQYmdMV1pWZmVkUTZodm9ISVB2Q003OVMtZEdZSHJUdV8tVFJBT2pEdmplSEc0NW8xWWJCaw?oc=5",
+   "title": "Nearly 70 injured as Russia, Ukraine trade accusations on overnight airstrikes - Anadolu Ajans\u0131",
+   "link": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxPWURFNXgwaXd1V3R1SXpjU0pJeHE0LUZFNmNVY0xBZGpWYnBlSk1sZFI3VDRnbS13NURhZmZqVE9laTBRbUJOVEl3YTBZZllqQ0VPV0xERXYwemJ5bHg0WTk0b0lXOHlybzB6WHJBQTQ4WHNmdkxUaDJlVnFHZDV3NmlSaHU0SGY0bHlEbkszNG9IWEdFOGVRUHZ4ZzFSbWFNRVByTUZLZzFiWVZDbFAwRVdmelpTTEdMb0IzSnN3MXBjUHVfdHYySg?oc=5",
    "source": "Anadolu Ajans\u0131",
-   "ts": 1793663217,
+   "ts": 1793687312,
    "affects": [
     "Gold",
     "Oil",
@@ -318,10 +326,89 @@
    ]
   },
   {
-   "title": "Russia And Ukraine Hack Emergency Alert Apps, Spread Fake Nuclear And Radiation Warnings - NewsCord",
-   "link": "https://news.google.com/rss/articles/CBMi6gFBVV95cUxPc1oybm10ZXRqQ0Q4VmJGT2laaUVsMkdZY2ZYOUtLNG1CSkN0dVZTbHV3UENGSUdZdG1nRzRVa0YwTzRFY3VMd0tjVG5JaFg1MGxGVmlDbEV5dHk0RnZDRzdYS3hGSDdPX1BQNkNiWWVkX25qSWgyRkNqaXlvZnlFd0hDakk0UGxVc1NHZzZDcG9rWkJQcE9seTI3b0prTDdueDdJZ1hNTlVkaFBUbDdGUFhhbU53dUtkUG9DMENQeVlKZlZxUHh0ZW5BNHlxN0JXNzROQnR1ZlhGTUJBODV0Rlo5QVlueHBoWHc?oc=5",
+   "title": "US Fighter Jet Destroys Iranian Missile System on Qeshm Island in Strait of Hormuz - Caspian Post",
+   "link": "https://news.google.com/rss/articles/CBMisAFBVV95cUxNWmRPSk1WYlgzQ3ZGWWNldjUzN2RMeGo5b0JhLS04RlJIX0MwN2tPWnp1cUJIemlVeVFzQ2F6T0hneTZRWU52S3hWZGFFT243U2VhcVM3aWRfelVVeGFRem5mZ2NUdlY4NkRxRzVoYzhpanVSVW1rblQzLVJ2bWFfZjZ1dEFBZFFQcWZlQ0FLUVp0WVRzbkowMF90RF90RkxCb2dtQXlRZ1FhYi00eV9wMQ?oc=5",
+   "source": "Caspian Post",
+   "ts": 1793686961,
+   "affects": [
+    "Oil",
+    "Energy equities",
+    "Inflation",
+    "Gold"
+   ]
+  },
+  {
+   "title": "European troops to rehearse post-war Ukraine deployment in Poland - Euronews.com",
+   "link": "https://news.google.com/rss/articles/CBMiuAFBVV95cUxQR3k0M09USllvUml3b2pCbjZhSjB5NlJlUmVoVzY4eENQVXgzbXl0YkNvRzU0TmFtVTY0X0laeVVUYXpsOXNvYkZoYklUWWFiUGNTOElWSGZVN21ieTVBcmVvR1hiTF9aX0tNbnRmNHg4ZFI0bHpJWFprUDFMZDkwWFJVR1NtQS02OTFjMjRlLU82OWxGYTF0YXpBbEpWY1YtaWNMWjBSRTJYUUhSVGJZemdQNGRIbDBK?oc=5",
+   "source": "Euronews.com",
+   "ts": 1793686597,
+   "affects": [
+    "Gold",
+    "Oil",
+    "Risk sentiment"
+   ]
+  },
+  {
+   "title": "North Korea conducts strategic cruise missile test with dispersal warhead, KCNA says - 1470 & 100.3 WMBD",
+   "link": "https://news.google.com/rss/articles/CBMiuAFBVV95cUxPNDBkNTVPSXc2UHF6bjAyaEFfbDM4VC1BV0hjLUcybjQ1enppOFNQOFVtelRmazlzVG9CQUZpaGNTRjVUUWxTbjJlSDVqNHVDTS00YU9YQmFHSjZkWVJHdkxsTUFzT3ZBOHk1dnpTNDMxZ3V3WUUtSVpZd29qLTRHbjg1NlBUMHJMWjEwVzVrREhGRTFEdGQwOXlyWjVuV1NkQ05GSUFYVVdITkVqN2hnOFBnMUdmSjd0?oc=5",
+   "source": "1470 & 100.3 WMBD",
+   "ts": 1793686402,
+   "affects": [
+    "Gold",
+    "Oil",
+    "Risk sentiment"
+   ]
+  },
+  {
+   "title": "Russia bombs aid center and shelter in southern Ukraine, killing 26, officials say - Chattanooga Times Free Press",
+   "link": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxNUWdaSEh1eGJUaS16dW5XS3Azb1dkc21OSHU3M1hZZTZUdTE3QUhudWZRRlREcG5IZ2p6WWNQRmIzcFNfNzZjRklHUW1hT0s3cDFZVFUtMVUxdG5HSWIwZ3Z3Vkt5cFNiR044RWhtUjE5c1RMUnNlM3hnbjBxREszLUxBRl9Ub2VGZ1JqejJrM2kxVFZNUHVMZTRvbUg0NkdKaVNObjNneV9qd0VhTmNfaVpnMV9yZ0xqXzkwM2dWSjZjTFZab0ZyRQ?oc=5",
+   "source": "Chattanooga Times Free Press",
+   "ts": 1793685958,
+   "affects": [
+    "Gold",
+    "Oil",
+    "Risk sentiment"
+   ]
+  },
+  {
+   "title": "U.S.-Ukraine-Russia talks on ending Moscow's war to resume - upi",
+   "link": "https://news.google.com/rss/articles/CBMimAFBVV95cUxNa3dNRmt2OHl3VFhUem9TZWxuTl82ZnNLVndnX3FTUDdMSWtDLTVHY01KR1A4VU9QLTFtVkZndzBuS1VKa3ByZ2VpNldfYm02MGozdWpfV1BiQVZhN1JWYXJ4SDBheXlnZGVpQTR0RFE4b0REUTJCNV9TcWxKMmV2ZmU3NDYzeEtDSTU4bWthMmF4TjlsYjRDaNIBngFBVV95cUxPQ1lhNXdzc05kOFJocFJqdUNhdC1nRVVKOEVIdUUzUG5uS1gzZFgxZm1CT1phRTQ4dVJlaVpWOE84OEFvekl5ODR6QnVhZEl6NUJxQ2NqNEtEUHJBLXM0WFJyRnF6eTVmUWVJZU5kVUxaVGw2Y3h1NDkxWkRtQnVwTHBFdUphUFFmTjZxeExjczJMcEh2RzJoZ3FUTWI1UQ?oc=5",
+   "source": "upi",
+   "ts": 1793684729,
+   "affects": [
+    "Gold",
+    "Oil",
+    "Risk sentiment"
+   ]
+  },
+  {
+   "title": "Explosions hit Iran\u2019s Qeshm Island as US media report US strikes in Hormuz - Al Jazeera",
+   "link": "https://news.google.com/rss/articles/CBMitAFBVV95cUxQazFFTTMzNUJ2SzhZblQxcGowTm9WbTNqa2lSYUJLckNuRkRvZmEyaVJrSlhsNkRQN1ZUbGFjZ0lFUVFtak5jOFppMFVGVHh0UUlOVFdKeWNHR2d4Tjh1ZXkyZ25iUVNJSFI0amw3cjdVOUEtMElHRnZ1UURVSDFRcTk1enNOSEk4RmE2ZUw1RVVXTXNVQmg1Rm1LMEk3UUJjRHF3bWtLUHl1UXhpVFJya1dYMkfSAboBQVVfeXFMUG52WkRoZDlGSHAxZ3BwOGhOUEp1SWJuTVNxZHJnSzBmaWEwSk55NUJqV0Y1cWplUkJtdV9OUjl6TUFqeXF2Um00RElDaVg2R2lHbjN1b2s1RFBvX3lDS1dMQlZrVVVlTk0ydno0OWZXU3M1eUlLa2dUMHMxRGRQNlBuWW9FeUdyb3c2Z2s1dXdjd2V6ajVLRGxyNDNzYWVod1p3X1prOWMzNDJqLWpDckN0S3NlbjI5QkFR?oc=5",
+   "source": "Al Jazeera",
+   "ts": 1793683766,
+   "affects": [
+    "Oil",
+    "Energy equities",
+    "Inflation",
+    "Gold"
+   ]
+  },
+  {
+   "title": "Ukraine War, Day 1,713: 26+ Civilians Murdered in Russian Bombing of Aid Center and Shelter - EA WorldView",
+   "link": "https://news.google.com/rss/articles/CBMirgFBVV95cUxNbERkUm9WZkNSMVJXWTlWQXd4QUJRNHB4dGc4T211N0Z4amxCaHVQbTU0ZFJTR19rWUJ0RDY0ZjM3dUNuTVB4VWRZLU51YmtQOGxiUFdHX3FnZHJ3Z0tZRWZoWW9zYi1uNndBVTl3dVBRMHlaWVN6YmpYM1VpOWwxVUl0NE1faFpIQ3FIc2RMaW1URC14T0RwZzBCN0laWjNQLXJfTFRCX3pxcm5PVWc?oc=5",
+   "source": "EA WorldView",
+   "ts": 1793683747,
+   "affects": [
+    "Gold",
+    "Oil",
+    "Risk sentiment"
+   ]
+  },
+  {
+   "title": "US Mediates Russia-Ukraine Talks In Abu Dhabi Nov. 10-11, Steve Witkoff Says: how 17 outlets framed it - NewsCord",
+   "link": "https://news.google.com/rss/articles/CBMi4gFBVV95cUxQQTVjZThOT3JQOXBNNEppdjhFOWJ6R21EemZWZzM0N0RndGpkYzkzLXNrcm90ZzBaTUJhOGFjODZSVGVEWFN4czRUeEJPVjRVdXpZTEQyQm84U1JFSnREeFYwUVptdDhHXzJ5LVNwU18xSHlTdi1EaUplWEF1SDJxZUtkQ1dXbGtFb2ZYTE1CWVN5dEZNN1lYS1VOZGNQbjVtQVY2THh2el9TWldjZ1BRdHpMVWdROHRTSmMwYXBWZU1JYk5IdXNDSWpvY1M5czhVdGxqUjNLOW5LcXFzUTZQeHBB?oc=5",
    "source": "NewsCord",
-   "ts": 1793661598,
+   "ts": 1793683526,
    "affects": [
     "Gold",
     "Oil",
@@ -329,279 +416,199 @@
    ]
   },
   {
-   "title": "IRNA Reports Five Explosions On Iran\u2019s Qeshm Island Near Strait Of Hormuz: how 15 outlets framed it - NewsCord",
-   "link": "https://news.google.com/rss/articles/CBMixgFBVV95cUxQNG5mT1NLVnFucXVoOEQ5Zll3YWszOEdtM1FrWmlxY1AwTnF5bmtIMW1YdU1mQVU2bEI4Um5SYnF1a19oRE94SF9yQTNYV1p6TzJyUVRiUDFrSDc3UndOU1NmN0diUnU2Wk9neVZzNEd4cnh3d3JfX1hpenh2TjBPcmhVM0E5RTVhVTAxLXJZZnhnV0Z4U3k3Umk3VWI1SU94RWtRSTJXNFNQQlZxX29JemV0MHQ2TmRibmdVV29tMnBWTFdES2c?oc=5",
-   "source": "NewsCord",
-   "ts": 1793661586,
+   "title": "Russian strikes choke Ukraine\u2019s economy as steel shuts down and grain exports stall - The Killeen Daily Herald",
+   "link": "https://news.google.com/rss/articles/CBMi9wFBVV95cUxNTDdjQWNncmpGNWNUU3gtcGQxWjZiTGVVVGRDVlcyRjNWc3NKTG1SQXNOd1VUZDZuVnNwclpjV1J3ZFhBdmFpcWRuaWM2OW5xck91SFBpWTZwSjRpOVk5M1NkQXJXYVpmSldQNDhGckkzcndCTjJMUUlZZ3AtWWZldTV4c1hrME9kMDBYUk83c21wZjZnYWlUb3dwX3FmUWU4YUE5Q0Y0TEpSdTJpV0xBUlYtYWFkSTZjVWxrVjcwdTBReDJYTS1aUnB0NjZ1ajZpdmRKM20zRnBjelZsOU0yMmtOMmtjcW5FM1VNSE11OHR4MHNuWjVj?oc=5",
+   "source": "The Killeen Daily Herald",
+   "ts": 1793682932,
+   "affects": [
+    "Gold",
+    "Oil",
+    "Risk sentiment"
+   ]
+  },
+  {
+   "title": "Russian strikes choke Ukraine\u2019s economy as steel shuts down and grain exports stall - Ottumwa Courier",
+   "link": "https://news.google.com/rss/articles/CBMikAJBVV95cUxPUXlZMmJrRXZKRW1jcUx2YURpT0VaVXdRYUxkSjBjanJyZExMNE1mNUtodlhISVpoN3VhSXpjZDVvZFg0VUJGX3YzU09WQUdiR0FQZWpDbTZIMmJOa0o5OVI3ZE01TURjeEtVRTBreVdVOHJsSzJ1Wjd4TFRoeHpGbE11SjZUbng5cE40bjBpQ0lqUGxQdE5COEZWTXJVSHdrTlozN1dQTlJDbUFrTzBSM2laamhCaUhCRXVoZGVtbll2Z1ZYQTBKZGNIalZmTTYzd0VFTE02djBCX2ttdUcyLXdiVFFWR3VUbDE4Y1JfSHdKYnpTRGEyWnhSTUc0d1lzX1ZTeFVCblo3ZHRvQ2ZXZQ?oc=5",
+   "source": "Ottumwa Courier",
+   "ts": 1793682932,
+   "affects": [
+    "Gold",
+    "Oil",
+    "Risk sentiment"
+   ]
+  },
+  {
+   "title": "Russian strikes choke Ukraine\u2019s economy as steel shuts down and grain exports stall - Temple Daily Telegram",
+   "link": "https://news.google.com/rss/articles/CBMihAFBVV95cUxNaGx4Q1BsUmQ0TnlhWTQwUlFMMnV0VGdfT08xZE1ySm80bUllS1lCaWhQbmpINjk1MXRQSzlWTm1wYTh4TlZvU3h6czdrcjZxZDNSeGV5eGlFU1RMMV9aXzZpVUNYWjJmb28zbkMzVXNkM0hBUWl2VDBBeHJOQjVrWmIyTi0?oc=5",
+   "source": "Temple Daily Telegram",
+   "ts": 1793682900,
+   "affects": [
+    "Gold",
+    "Oil",
+    "Risk sentiment"
+   ]
+  },
+  {
+   "title": "Russian strikes choke Ukraine\u2019s economy as steel shuts down and grain exports stall - AP News",
+   "link": "https://news.google.com/rss/articles/CBMijwFBVV95cUxNXzhEeHluRkpLRFJFZUEzdGd1am14LTE3dmJVT2pvclViYjlzTno3Si1GZ2RrOEV3NTZZanhhSExGS3hwQUZQRzBWS0pMR2lSR2VONjlhWWJTVndVRkpCaEdiT2NWbWduV2ZSN3Yxck1CSWxBRXAzWDJEa2JSbFlVNkJVdlBqVENCZ0hMRkNiOA?oc=5",
+   "source": "AP News",
+   "ts": 1793682600,
+   "affects": [
+    "Gold",
+    "Oil",
+    "Risk sentiment"
+   ]
+  },
+  {
+   "title": "Stephen Kinzer\u2019s \u2018Boiling Point\u2019 explores U.S. involvement in Russia-Ukraine war - Brown Daily Herald",
+   "link": "https://news.google.com/rss/articles/CBMiwwFBVV95cUxQbzNGR0xhQlZ3WENpdWlFeVgyeDNJUTVJSmZMYzc1YWoxY3hPeDZ1Y3V3MUpRY1YwQjNsNk9YTFpPSnVVOVl2MjdmbldFWkhpRXo5a1dhbFA3XzhUN1ZVUkNxR3VWbk5GOGpFcEJVZ3YzNzk1ZVRJeUFBQ1JzS05kZGpMNWJNdWlUM0JocWgydEhWTHkyMzRCZFo4MU55SXZkdnhrQ2Z2X3VhRVVSeldmU1lMSkNLX0QzaENLV2lRNHRvMHc?oc=5",
+   "source": "Brown Daily Herald",
+   "ts": 1793682507,
    "affects": [
     "Oil",
     "Energy equities",
     "Inflation",
     "Gold"
-   ]
-  },
-  {
-   "title": "Trump Reportedly Pushes Return of Russian Gas to Europe Through Ukraine as Part of Energy Ceasefire - Yahoo",
-   "link": "https://news.google.com/rss/articles/CBMinwFBVV95cUxOWXRSR0dxVHpBbEJwNFhuMDN1QTJxcDdhZjhONlBpelpEN1lnY1dseEgzWjhPQXJRekphMGdNMjlzaHJZVzhqbHVIUGZjUE4xM0RLS05kYlgwT2F1TE9zLUlmb2taeDNlR1UtUVp4UmtaV2k3WmRERWFyMHhWbi1MY3BXVTRIdWk1ZnNEMDBPV1hsVEVwNnpSeTlrNElUcm8?oc=5",
-   "source": "Yahoo",
-   "ts": 1793661241,
-   "affects": [
-    "Oil",
-    "Energy equities",
-    "Inflation",
-    "Gold"
-   ]
-  },
-  {
-   "title": "US to hold trilateral talks with Ukraine, Russia in Abu Dhabi next week, US official says - Reuters",
-   "link": "https://news.google.com/rss/articles/CBMiwwFBVV95cUxQcHg1TzJIbXNhYlFoOUJHZ1NBLUV1X00zQlZabmJDa2lpOUtCY0dpbUZxNmRPSXJUcnVHZ3JOc19MamxqUnpDNl9qT2FQbmppZ09qSnhRbnNGSFZxeGJYSlZqd1prMlktb0xkajhGMkpKTDNXcFZOcjZHVUFzRnpnNHExR2Fub1N0REhjZXVKUDVGanBacjFreWVNODNGc0xBd0xxTWotR2g2a0wtbzI1NTltZWJjX2h6WmV6UWFWUDJxLTQ?oc=5",
-   "source": "Reuters",
-   "ts": 1793660939,
-   "affects": [
-    "Gold",
-    "Oil",
-    "Risk sentiment"
-   ]
-  },
-  {
-   "title": "Zelensky confirms Ukraine targeted Russian emergency alert systems in retaliatory hack - The Kyiv Independent",
-   "link": "https://news.google.com/rss/articles/CBMitgFBVV95cUxOaVp6YTNpdkVNdWVINlJ6ZmtaaGVaRFgtYnNCTnJ2Rndwa0pCaTRKSzA3SU1hTFhxNl9wM25pT2FVMy1hMFlJYkQ1TXl2a3pfcDlmckhUMEl6MmF3aW53bzFvV3lTX1h4QUdXMGR5a1VyZ3hKTzJXZUh6QmlHMG00Q3lXT25vTGxIQ0h5TVRPREE5bnFmMXpYdmVFNjJlQk5OelhwaHgtaEVDd2lLb1lST280Zk1lZw?oc=5",
-   "source": "The Kyiv Independent",
-   "ts": 1793660788,
-   "affects": [
-    "Gold",
-    "Oil",
-    "Risk sentiment"
-   ]
-  },
-  {
-   "title": "Ukraine News Today: Breaking Updates & Live Coverage - November 3, 2026 from Kyiv Post - Kyiv Post",
-   "link": "https://news.google.com/rss/articles/CBMiTkFVX3lxTFBBRExaZHNPeUZoeElhdjNMdy1DZW9tQm9VVkR1QTNublQ1QUQ3bENNUWc0emFocGRUVkdTS2p1SVNyZ29KWFczQ1dCWnU0dw?oc=5",
-   "source": "Kyiv Post",
-   "ts": 1793660620,
-   "affects": [
-    "Gold",
-    "Oil",
-    "Risk sentiment"
-   ]
-  },
-  {
-   "title": "Ukraine says Russian strikes kill 26 people, dashing hopes for 'progress toward peace' - TRT World",
-   "link": "https://news.google.com/rss/articles/CBMiWEFVX3lxTE1STW5JVjRDR1NSbWN6S25hTFFOU0E4bnVjdFRPY3gwUDFWSS1qRzM2b3AzY205cTItUzZTbEdKeXJQZkVuV0hVb0JHUGNXdVVVNXZqa1lCdUM?oc=5",
-   "source": "TRT World",
-   "ts": 1793659920,
-   "affects": [
-    "Gold",
-    "Oil",
-    "Risk sentiment"
-   ]
-  },
-  {
-   "title": "US Midterms: What the Result Could Mean for Trump, Ukraine and Europe - Kyiv Post",
-   "link": "https://news.google.com/rss/articles/CBMiS0FVX3lxTFA2Q2NwSnlVNm03RE1DOEFiYUdtQ3lpbFJnZWg2UUFTYUZCam9QcmRGaE5VZGhCT0VSRThTQTZJckN4R2g0OHVBVS1DZw?oc=5",
-   "source": "Kyiv Post",
-   "ts": 1793659871,
-   "affects": [
-    "Gold",
-    "Oil",
-    "Risk sentiment"
-   ]
-  },
-  {
-   "title": "Iran\u2019s Revolutionary Guard says it downed 2 US drones in Strait of Hormuz - Anadolu Ajans\u0131",
-   "link": "https://news.google.com/rss/articles/CBMiugFBVV95cUxQeXFZamJsdm15R1NpbHh5M2w5TS1teThFR3JnX3dXM0diZHRyMXl0Nl9rdWl6TTJ6TkdoV1dYb3luaTJVUUFvaXhOUW5LczhFOVp2MUxsSkt1MnhtMHFYSWFuOFlCLXllMFFSa0pQc0wtUGRzSDhBR1lLVUVZd2JlMnNTTGl0QVpDWTdHUFdGM2JzRnZOZTBIeEg5Zmd0TElHVnI5V19IVXAxTjdVdVkta2tWa3hCejZ1Nmc?oc=5",
-   "source": "Anadolu Ajans\u0131",
-   "ts": 1793659799,
-   "affects": [
-    "Oil",
-    "Energy equities",
-    "Inflation",
-    "Gold"
-   ]
-  },
-  {
-   "title": "UKRAINE-CRISIS/ATTACK-ODESA - San Mateo Daily Journal",
-   "link": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxQRllkLThxem9sdlJmVEtfMWNvVFFwa3p4S0x4NnBEaWZ2X0I1aTFaemJFeTQ0SjIyaXFTMW92ZWFpTE93a01QcXRoMFFxaFhyZjB4eDBZcVpEeTNoRDdnVHlPMXZLS1JUOGI1T1ZsUWlNUmFJVlZKSDVUNFFMa0laSFJuTGdVNE81TE5FQjJqUVlLSVZScDhlTF85aHA1YXkwci0xNG9zUVltZw?oc=5",
-   "source": "San Mateo Daily Journal",
-   "ts": 1793659777,
-   "affects": [
-    "Gold",
-    "Oil",
-    "Risk sentiment"
-   ]
-  },
-  {
-   "title": "Middle East on edge as fears mount that war in Iran could restart after the midterms - WPTZ",
-   "link": "https://news.google.com/rss/articles/CBMihAFBVV95cUxPZUJkUjBidlpUbHdJSERMUXNMcC1pUEJqamgxWXVPc3JySDNtZnQxRTNqSFkwOXFFVDVTeHpsbXZXWWhpQklCNHB2UzcxM0JZSHhBbHEzNW1qMS1SVkx0ZFh1NkRjVnhwUkZGSFV1eVZGS0Uxcm9qSVJBSGI2MjZTYy1kWWQ?oc=5",
-   "source": "WPTZ",
-   "ts": 1793659500,
-   "affects": [
-    "Gold",
-    "Oil",
-    "Risk sentiment"
-   ]
-  },
-  {
-   "title": "Middle East on edge as fears mount that war in Iran could restart after the midterms - Gulf Coast News and Weather",
-   "link": "https://news.google.com/rss/articles/CBMilgFBVV95cUxPdFlwRWNlaFhXQmZDWTlXTXo4dzFxaTdHUENCXzFJcUpDQ09qckthWmlYSUtseHdNUGhJekVWM2xqWFVrbXFmckwxTlhyZkw3MXpkX0d6QzBkcjFiUDZnZUJHdms3WE9RUFFJMl9Lc3ZnR2wyQThyQWxyRnd0cE5mN3hTM3UtOEFaZXZCRzNEVE9ZR1V1X2c?oc=5",
-   "source": "Gulf Coast News and Weather",
-   "ts": 1793659500,
-   "affects": [
-    "Gold",
-    "Oil",
-    "Risk sentiment"
-   ]
-  },
-  {
-   "title": "Exclusive | U.S. Pushes to Restore Russian Gas Sales to Europe Via Ukraine - WSJ",
-   "link": "https://news.google.com/rss/articles/CBMipgFBVV95cUxNcGJ5czJUY0hNMkJORml6Z2ptY3h0SWp1MXNFVDhlNjNJY0RqQVRweDl0eGtJQ0RWZndidWFsM3VhLV82bTQ2TEYxUlRtVV9qdk1wSDd6RWM0QklacEhOWnFjeEQ0S0tZNXRDVlZiTk82cmdxZU1BY2J2dGE4aTlzcDJveW1tUUJtb0hudHI2cmJ0d2JvZDh4XzZ0Z0wtY2FwMG5YVGJn?oc=5",
-   "source": "WSJ",
-   "ts": 1793659440,
-   "affects": [
-    "Gold",
-    "Oil",
-    "Risk sentiment"
    ]
   }
  ],
  "companies": [
   {
-   "title": "G Mining Ventures (TSX:GMIN) Stock Looks Reasonable On Earnings Today - Yahoo Finance",
-   "link": "https://news.google.com/rss/articles/CBMilgFBVV95cUxOVEdfWlBiMXcyRWQ3eEN6MWtGNmZiZGJUWjlMekp1ejlvVEpwTDl5QkVMeld5SnVxY3RZcWRFOUl6anV5cGJSVGhaQjZmeDhIMkIzemY3SXVCcTJzYUVkaWVTY3Y4Z0RHb2V4cEhacWNjQS1RUHd3WGxrMHVkSVVoNHFnQm5kRDhoNFltZ2Q5RklwY19XMmc?oc=5",
+   "title": "3 British Growth Stocks With Earnings Growth Up To 34% - Yahoo Finance",
+   "link": "https://news.google.com/rss/articles/CBMingFBVV95cUxQU3BlU3BvRkFxZzFMdTV6YTk4aFN0SThrYXM3dUdmb1czRmppcUV6OUY5SVZjZUVTTTBwRThhM1JJbnBrZmFIS3ozVTZfUF9FRERDX0V4cEE1Z085S1ZtTHlSNVBUUWVXeHIyZW5JVDhUZGZmaHBpeVVLb3ZfSFRHX3MwMTlDVnNxeDFPcldmWHROaGR2MU9jM09MNlhfUQ?oc=5",
    "source": "Yahoo Finance",
-   "ts": 1793661471,
+   "ts": 1793682780,
    "affects": [
     "Single stocks",
     "Sector ETFs"
    ]
   },
   {
-   "title": "Palantir Stock Tumbles Even as Earnings Get Big Boost From U.S. Customers - Barron's",
-   "link": "https://news.google.com/rss/articles/CBMie0FVX3lxTFBmaHVqdkxNZVdKWERyTmp6U1VTRHdub05tMHZSRHlrd0MwajF1aDdWeW5YT2JHMXpSeTR5a3RXcG1PeUQ4S244U2xLT1NYTlRaajVDb0RGN1FlTjJINk1QQmdrRzFRMVhpa2ZuNU1PbTR5cWVtcGVtVlIybw?oc=5",
-   "source": "Barron's",
-   "ts": 1793661240,
-   "affects": [
-    "Single stocks",
-    "Sector ETFs"
-   ]
-  },
-  {
-   "title": "Calix: Q3 Earnings Snapshot - Yahoo Finance",
-   "link": "https://news.google.com/rss/articles/CBMilgFBVV95cUxPNDlmSHl6NGFjZTM4a3V6ZEVIbFpjMWJjMmtEeC1IUnR5bHJSaTNndHkxOUdaVWJrM3I3OFFOMjhqNFR6bXlZcTJySW90dkVaME1uSTVBZjl3N1BRY2l4a2V5b1d4NDhVNnNLbVBqVWtUZVJsVDYwaDRUWWZpWE9ySlBPcFNzek5FZEtxRUl3bUtoTFREelE?oc=5",
+   "title": "AMETEK (AME) Stock Could Be Pricey As Earnings Face A High Bar - Yahoo Finance",
+   "link": "https://news.google.com/rss/articles/CBMimgFBVV95cUxQYUgxblZvZ0VIbXVucVR2NHU0NXVZRnlmVC03ZXpvV2dQd1BnRFZldXlNN2htRHUxVHBQSFB2ejRJSXR3Sk5IWUlKdmRlSlVvUGw4V3dnem40NjZ6UDY3RkRZSXpDaWN0TU5nM3FjY2t1N0JIcTJPcUhXbXVHMFNKeUdVUGVobFgtMDd3OGU1YWpud1pPZGQwaUhB?oc=5",
    "source": "Yahoo Finance",
-   "ts": 1793660928,
+   "ts": 1793682720,
    "affects": [
     "Single stocks",
     "Sector ETFs"
    ]
   },
   {
-   "title": "BWX: Q3 Earnings Snapshot - Yahoo Finance",
-   "link": "https://news.google.com/rss/articles/CBMikwFBVV95cUxQTzRPRHNUUVlRQ2ZvaGVZWXdRNEROZGlMMmxCWUF0SFkzTXJmWHI4YkMwUzR4V1FpV0poY2NGVlZvXzJsdk9RZEg5dmpEWVAxV2hBZmpCN29XUThJQ1pkdWxVTFNYd1ppUERhOTYyLU42SV9ZUDUxckxCc0t6OXFaQWtNNnJ3VFpONHVaYVNfRjM5dHM?oc=5",
+   "title": "Earnings Beat May Change The Case For Krystal Biotech (KRYS) Stock - Yahoo Finance Singapore",
+   "link": "https://news.google.com/rss/articles/CBMihAFBVV95cUxOUUlHdHlPMDJfdGhwLWZ1OXdwSnR4YTZpOFkzUjZiODJnT3FIZUowcDJ2ZUdkRmhaTkFEWmVMbzZ3NzBDdXhqNG9tR0xzSi1YVzZ1NzA0V3VQVV9mdzZGYzg5R1JyYnFlQk1sa013WVFFNlpqcllhVGl3b09uV3dRU3I2ZkQ?oc=5",
+   "source": "Yahoo Finance Singapore",
+   "ts": 1793682600,
+   "affects": [
+    "Single stocks",
+    "Sector ETFs"
+   ]
+  },
+  {
+   "title": "Is Strong Earnings Altering The Investment Case For Neste Oyj (HLSE:NESTE)? - Yahoo Finance",
+   "link": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxNdlVVNFpMbUhYQUJQYjNLRnJVZFN2cnd3RnpTaTNxOFBPZ1QxeWtITDdQSmN0aWNaUld2SlJXUjh1M3JuZ1gwdWFOV0lhLV83WGdJLUZyaU9QdnZWNWE2bXZpWUJoRnlJV0g5M1FFQ0JISHVCZXZadTk3YUFBWU00RFpkWjhab2I4dERMem4tSW93LVpvTlh2TGlzc2FUaS1EOXUyZDFXUlM?oc=5",
    "source": "Yahoo Finance",
-   "ts": 1793660809,
+   "ts": 1793682349,
    "affects": [
     "Single stocks",
     "Sector ETFs"
    ]
   },
   {
-   "title": "Bioventus: Q3 Earnings Snapshot - Yahoo Finance",
-   "link": "https://news.google.com/rss/articles/CBMimwFBVV95cUxOeVFLSkp1OVhxdDl6MVVTaFdGNkRJOHJ0N0VRcHcyQ19KTHVUdWpNSkZuQjdZc05IZU11bVdWUHFpSGRhNWtaU0JnTXJQUlZIdFp6aVlGeDN3a2pDUzk2Wmg4ZFlvWjBEN1NMS1d2bHBDUFVycjBCVExmNFZEUmxYVWV0SjJhZGcyaGtyelRzSDJ1ZzR6ekctNjhaYw?oc=5",
+   "title": "Match Group: Q3 Earnings Snapshot - Yahoo Finance",
+   "link": "https://news.google.com/rss/articles/CBMingFBVV95cUxPMVRoVWxVTjRodXdyaVZycXlDdURySDhvakx0TkVaXzF1NnpySTI4b3Z2NFFBMTFCX012Q0hKS0RUVThmOUdtSHdPZnNVT1Y1MHg5RG1LVUVmRUtkTFp1dnF0TXRZOHdJY1pEWTZfajJITnNYY0VYSURCdGNBR0VyUWJEcmJlQXowbEw1UlBVYUwxa1I1VmlzX1Z5c0hndw?oc=5",
    "source": "Yahoo Finance",
-   "ts": 1793660465,
+   "ts": 1793682347,
    "affects": [
     "Single stocks",
     "Sector ETFs"
    ]
   },
   {
-   "title": "Allison Transmission: Q3 Earnings Snapshot - Yahoo Finance",
-   "link": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxPaE1ZYkRwLXdSenBVQTR1a29vYUtiTEpMeUlIN2ExOVU2V1U3RWFacEpBYi1ObnpwcWNMRWhMLXZfaWtLWE5LcFVDendLek16cEE4cnRiaFhxak85QlJEMGdKQXBmUzRycF93dGZsQzI5eGNFaGdxcG1NNGZxMkZoZEI2dnBhXzZGQ25HNkwzSWRyUzRLQU1FbjBQVHRrR3BieFdsaEp2dE1uZw?oc=5",
+   "title": "Fabrinet: Fiscal Q1 Earnings Snapshot - Yahoo Finance",
+   "link": "https://news.google.com/rss/articles/CBMiowFBVV95cUxNai04allmN3BXbWEyTWt2dmxRb2N4NG9hNF8zN3J5MnRsTDR2M3dTTG9XVm5VQ29iSEpQN2pGOURqWlN1ZV9MT3lUdGNxS1FLLXlxaFdxMzZQMTJJZ2VoS0hvOUFsemFicWp0c25iNUlsOTJXQ0dkR2tTZl84cjJMMGZwX19yS0xWTVRoNFd6Y1dOYTFzUUluRlRqRVp6c0xvQ0RV?oc=5",
    "source": "Yahoo Finance",
-   "ts": 1793660465,
+   "ts": 1793682307,
    "affects": [
     "Single stocks",
     "Sector ETFs"
    ]
   },
   {
-   "title": "Adeia shares tumble 24% on earnings miss and weak guidance - Yahoo Finance",
-   "link": "https://news.google.com/rss/articles/CBMinAFBVV95cUxQVDNlbzB3LXBKNzFmQU5meld0S0dZazZObGRsMGNrSjZtbHIzVkgyLXNfeGVSREYyVnBDc0Z0TEZtQkZNZEROZEdtZFJ4eFA1NUFTVmRpZlRXNzRpaHV2Q0hlNFdCNUJSZXUtMHZlVFZ4dl9KdHpXcmZYclJSQVAwV0UxekdibV9fRXFVN3VUdGp1bnJidFA1Y0pVSjY?oc=5",
+   "title": "Apple earnings beat fails to impress Wall Street as tech shares struggle ahead of US midterms - investingLive",
+   "link": "https://news.google.com/rss/articles/CBMixgFBVV95cUxPaUkwbFVMTWJUT3QzRFZ1VU81MjdnVmZDTkoxTExxMERVY0tjZFEwY2dmT0N2emtvQ0RHdVdER1g0OGpQckJlZ1lWR3phVWlQNEYwT2FGcHk0bmNkVnR1Y25UekpnWVJiRlRTUFM3c0ZtQnRCdkstUzYtbTBkSkF0YlBkRG9OSHZkc2JnWXY3ek5qSDJEWVBsNUVnYzBMZ3FORzJoQXdTeHo0QVFGOGw4TGhQeGl2RG5GeUpmbTRhMEl0bmVJcVE?oc=5",
+   "source": "investingLive",
+   "ts": 1793681630,
+   "affects": [
+    "Single stocks",
+    "Sector ETFs"
+   ]
+  },
+  {
+   "title": "AMETEK (AME) Nears Earnings As Growth Hopes Raise The Question Of Value - Yahoo Finance",
+   "link": "https://news.google.com/rss/articles/CBMingFBVV95cUxNYXdEeE9zLTd0MDJWSFAwSm1ueWJvdjFHUEI2U1kySVZ0eDZRbW9ZTWtsT2xDa2h5R05rV3phUTdIWFpiaVVVd2JrbDVtd3ljaENUbV9qTnRGLVBpOGNaUHl4c08zV0ZEWXpaWXJ0TUdfQXA4MkVucWI2bVNzcndUeXA5TVA3UDF0SDRlV2Z3ekJtT2VDUTFfd2FGRkVmQQ?oc=5",
    "source": "Yahoo Finance",
-   "ts": 1793659347,
+   "ts": 1793681383,
    "affects": [
     "Single stocks",
     "Sector ETFs"
    ]
   },
   {
-   "title": "AAPL Stock Ekes Out Minor Gains After-Hours After Tapering Q4 China Sales Growth Offsets Earnings Beat - Yahoo Finance",
-   "link": "https://news.google.com/rss/articles/CBMilwFBVV95cUxObzdtN1B3QVIxc1dVNk9Cd2xmZUVPTm1SVDM2TVRpeVNfOUpwRzQxQ091Rkx4WEJlS1NUb3lFVFp4d1BDT1BqRkhJdUpSeTNqQkJoNi1acG1lTnpxV1l6QnhMT1ZsdjBRLUtvajdkTjZabHhXLUFYaGt3QVFWWnZ4ekYzempKcS1mY0Q5S25qTkpnejlCRkZn?oc=5",
+   "title": "Lattice: Q3 Earnings Snapshot - Yahoo Finance",
+   "link": "https://news.google.com/rss/articles/CBMimAFBVV95cUxQd0p1WnlrajNLTjdqcjVxSnR5TWRiOGhYQWRoRFhIMXJ0bFA2YjluekkxUGY0UXIzQWF5eVBpX0llcFN5WDI0eWFxa1ZhR1p3TWlDNEhtOVVZZFR2NG9aSWhpYUtTN3h1WHFaNTRkWF9CTXNTWjJsZm1TSGtkUHRqVTUyR25PbnBqU2lqNFNXS2RxYXlyb0hZSQ?oc=5",
    "source": "Yahoo Finance",
-   "ts": 1793659309,
+   "ts": 1793681036,
    "affects": [
-    "Gold",
-    "Oil",
-    "Risk sentiment",
-    "Single stocks"
+    "Single stocks",
+    "Sector ETFs"
    ]
   },
   {
-   "title": "Jazz (JAZZ) Q3 Earnings: Taking a Look at Key Metrics Versus Estimates - Yahoo Finance",
-   "link": "https://news.google.com/rss/articles/CBMimAFBVV95cUxPQUduOHBQLXZtTDN6OGVPVEdnakNpUG9PaEFhZ2Q2QTNxOWxncDhtRkUzcHd3bWFwc0FKeXQ4S2NUR1RBdFR6SGdtS2F2RmZzSkhxa2Q2TUJxUWtjbG10YldRaFpGeTQzZkh5dVZvMHZSUVdrQmFpMl9WMDdrald2azBidnJUSDY0RWpJd1dZYWxLeXQ4UXpYTg?oc=5",
+   "title": "ON Semiconductor Corp.: Q3 Earnings Snapshot - Yahoo Finance",
+   "link": "https://news.google.com/rss/articles/CBMipwFBVV95cUxPQ3Vpcm1FQktNaVBXZzBFMXFPUU51NmxBelJFeEswTExyekNEX3R1S3JMaVJrbVFkX3ZZUGlicmJTbE4tbkRIdWZhTks0d01PeFBwTEdscWdrSGVKY0VNYzM1Z185Z1RJNjQ0RGVOS2FNa3pYSUdwWE1NRElqbURpV2lYNjR4Q1FDc1V2NlpncW1jTnd3OVZLTkowTE5wRXFpXzZzU0xOaw?oc=5",
    "source": "Yahoo Finance",
-   "ts": 1793658602,
+   "ts": 1793680987,
    "affects": [
     "Single stocks",
     "Sector ETFs"
    ]
   },
   {
-   "title": "Fabrinet Stock Surges on Earnings Beat Fueled by Data Center Demand - Barron's",
-   "link": "https://news.google.com/rss/articles/CBMie0FVX3lxTE5qUnp2S1BLUXV0eFlwazl3UUNsUVZnVVFJdVNzZ3pyRzNXbklwLVdqU3F4cEN5U3JTdlF6a25LZ1czdHFxb0M5ekZSV2VNV2g3MFlrWllxSTZuUmR4N2pVa0pJb3lhUzN3NHFkYVZyUmVEXzkxTG5mMFluUQ?oc=5",
-   "source": "Barron's",
-   "ts": 1793658300,
-   "affects": [
-    "Single stocks",
-    "Sector ETFs"
-   ]
-  },
-  {
-   "title": "Stock Market Today, Nov. 2: Apple Stock Slides Ahead of Earnings, but Its Latest Results Tell a Different Story - The Motley Fool",
-   "link": "https://news.google.com/rss/articles/CBMi_AFBVV95cUxPLTB4OTliUGQ0UWQ0S3Q0Q2xxeXBZak85VFFfRkZsTnVxUzl0ZlBCbHdwWnk5Q2w3VkNsN0xESkRTalBsc19JaDdZd1Vid1UxU3MwWFQ1YlhJY0hFeUZGd0xjTlgyelpueXc1SEd3czlVNFZRdkEyZ3RuQktTQUpaQmJyXzhMaFdvOENkWmhYcFFOYVFOTTVCOFFBRFF6b292bzhvS2VfTy1jWGh2NktoZERKQUxqaVZ4YUFtUmNpai1ELWxMS0pMSkF5Ym5vSVkwZTkwcXpzWmhyNVN3b3BtaTB5OFN6c0JRNy1JWFVtTXl2aUlIMVpSWHlhal8?oc=5",
-   "source": "The Motley Fool",
-   "ts": 1793658300,
-   "affects": [
-    "Single stocks",
-    "Sector ETFs"
-   ]
-  },
-  {
-   "title": "Aehr Revenue Triples as AI Orders Pile Up: Rapid Earnings Reaction - Yahoo Finance",
-   "link": "https://news.google.com/rss/articles/CBMimgFBVV95cUxNS3FDb0NfcXlJaHZHUE5FWkJMZ0R0V3g3VHBGTmZ4dnJfWUpuSWg0YzRyamFyTDBoWHpVMWRxeEFZaEhvMi1VYlpocjNDTHRaN3k4TFJwTWhGWlNEYXdETWFDRWxpVmdIamhOaWd6ZDNJQ0pXcUNsT0xBX1NRbkQ4b0NpS2V2Yl9zaEhLM2dSM1JJdzNFdFJxcVZ3?oc=5",
+   "title": "Asia stocks mixed as Apple outlook weighs; RBA raises rates to 18-yr high - Yahoo Finance",
+   "link": "https://news.google.com/rss/articles/CBMipgFBVV95cUxOOGd0YW9keTEzeG1KZ2x1NEliTnlCaHdlNkNnN0hfVVZhS0tHOTRraVNSWEpVdDJEUENTYXFxYkVKSzNCNnY3LThBSjZTd01uMWx1ZmdSV2ZyUl94NlU0aXZBNmtvYklzTHJTZEt4WmhUUW1KQnZZbTJicFVGcXdjOFNyczFjM1FFSjgwa0F0RHVWQUo3VFd5cTlaY1BfeDVoN1VoZS1n?oc=5",
    "source": "Yahoo Finance",
-   "ts": 1793658019,
+   "ts": 1793680800,
+   "affects": [
+    "Bonds",
+    "USD",
+    "Equities"
+   ]
+  },
+  {
+   "title": "Tennant: Q3 Earnings Snapshot - Yahoo Finance",
+   "link": "https://news.google.com/rss/articles/CBMimAFBVV95cUxOTWhiNmNxWG5ad005a0I2azByRl9Kd1BOU0VsTTJhY2M4bzVrRFhlMXNkeVR5eXl5V1lpaUlDUWVhY1QwYnJIc0JpeXRqQ3BsbWozTVpKLW8yamhPX1ZfNHlBSnV2NUdETXpVcnhMSlFxU2FpcDZidXpIQmppMUY4c2NVcXdUMkJkUG5IQnhPNGJBcE8wNmxRWg?oc=5",
+   "source": "Yahoo Finance",
+   "ts": 1793680500,
    "affects": [
     "Single stocks",
     "Sector ETFs"
    ]
   },
   {
-   "title": "Tactile Medical's Spending Outpaces Sales: Rapid Earnings Reaction - Yahoo Finance",
-   "link": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxPaEFPc3NDMTZ6ZWVZRW9Ib29oODF1ZjNwSlZDbGh5WUhyblhkblNCc05EQ3dMTkVzTWVOczdoR2xiUm9LcERsSW9CS0twUkFfQ2xWdkJiV21MSUc5cWlOZ1RCcTdQTXY5X0YyOXh4bV9oeFcySjhWcVRuQ3ZTUE1jVTIzSDVtMm1sbW9jcm5Qb0NZVVhpMXdWWVV0MU9NVVdxS3RfNUFPSkc?oc=5",
+   "title": "SBA Communications: Q3 Earnings Snapshot - Yahoo Finance",
+   "link": "https://news.google.com/rss/articles/CBMipwFBVV95cUxOLWtWWmRTSGdtVktaNnRQM3ZkODZ4cjNRWU5tZmJIWkRSM2FyV0xSU3hldDRnSnZNR2RzMjRsR21zRW4yODAyUnpEc2xqVDY4dDZvZ29IS2pFWmFFVndoR1Q4WXNDdUtoVXI2SEYySWNOdGhvWnlCclY0cjRnN09JdW5JN1pZNTd1TzhpOXQ0RGhiVDFwd0dVU3FRWXdBSWJZamsweHZpMA?oc=5",
    "source": "Yahoo Finance",
-   "ts": 1793657609,
+   "ts": 1793680380,
    "affects": [
     "Single stocks",
     "Sector ETFs"
    ]
   },
   {
-   "title": "How Investors Are Reacting To ExxonMobil Stock Earnings Beat - Yahoo Finance",
-   "link": "https://news.google.com/rss/articles/CBMirgFBVV95cUxPZWxteTRJT29ZQTdUbHhUNkwyX21CY19SWWp6WjdrUzl4VVBDYmg3cW56R3dFdl9UWjRCX3VHVW1BTUY3RE42WTBlakQ2aHFtcWlPelRObktXQ3NRc0xlM3NuS2JfanhjbVhIOG9fZjFGc1BLV09rTVBCQ242T1RETGpNajhPMnhmTXVWMExXejd3M0owUFFiamtQYlZTdG9DY3g5cHN2dGRkUXliRFE?oc=5",
+   "title": "V2X: Q3 Earnings Snapshot - Yahoo Finance",
+   "link": "https://news.google.com/rss/articles/CBMikwFBVV95cUxOUE1SZm90Vlk1VFFfU3k5YXAxSWtRYW85eGdUVFpOQ3VzX2hfWW5xZkhwVkNpYVR1eXhhMnd1UzYwQlRmbUMycndLZnBJU3lpLXNta21PdEhwb25WdjMwem45Yll5SF9RcnhSWFBONXNLRm5tUlVJM2lsaEFVRFhQd0hoeUNObUVpdklhSEYxdmhDNHc?oc=5",
    "source": "Yahoo Finance",
-   "ts": 1793657459,
+   "ts": 1793680320,
    "affects": [
     "Single stocks",
     "Sector ETFs"
@@ -610,10 +617,41 @@
  ],
  "liquidity": [
   {
-   "title": "A month after RBI\u2019s rate hike, banks start raising deposit rates as liquidity shrinks, Bank of India the l - The Economic Times",
-   "link": "https://news.google.com/rss/articles/CBMiqwJBVV95cUxOR1pHa3JiNl9xSlg3d2FjZjFWc3JfdGVGc1lyWFU2ZkVkSmpJWGZXR3JPbldJa3BWMjBCdGVqaVB6WGFYbk9JTEtQSTNFeldFVXpIdkxzcUJ4em02OFQ1MTQ1dHhhNkQ0X3I2TjA3cGdRWXdWc21HMWFNN0VwRmlNUDJYS1M4cE8tNEtkcDFrZzM0OVBOYUxQbXpheDhydW41bGIyaHZKMnM2dzRYdk5sdDZRUkxDalRuamFBNURZQV95WnVLamRYZzc2Mi1LTkxxMHdkRF9ULW91My16dGxNcHlWTG9yLWFMOVB4dXVsSEJxU1VEU09wUWN2dHFIN3NiQU9SZnhUTEU5S1RsU0NnSnd3c3Y4QmNZZlUwMWJkdFd0Vkp3Vll6aFZYONIBsAJBVV95cUxPcFo0NlhRVXQwV2ZxNU1YemsyV3E3b1dQVktZeFRYckg2cEZMcndJS1ZtR3VvYVZ5RVBSY1d1cjNaOE9KSUxBZHNpREhoQ0tTemRhYktSd21iRTdRZHlYLVo0TnZUXzFlQ0hzUmxVNUozVUZGc0FVQlhlVUM1WmFUaWU4V1BESmViTm1aV29YOWlOcDVCNS1LR0dScmpPSHN4WV96LXNNbTVweVZfQ0x0bW5hc0h1VWctTjhyRVFFZXJEQTFSSEF5b1ZmTTB6VGtfZ0I1SmtyTG1ncnRtdjNVU0dRT09pdENqeE5vTWZFNFVsaS1lTzNrZWJld1RrNXdDUmFWM3d0S1RYaFZEYXlIMm92ckFWME1XaVM3NUZ0ZldMb0JNVHhROEFIUkdlLWZq?oc=5",
-   "source": "The Economic Times",
-   "ts": 1793645431,
+   "title": "Chinese stocks drop as policy measures disappoint, but yuan rally halted - Devdiscourse",
+   "link": "https://news.google.com/rss/articles/CBMiygFBVV95cUxPT09TMm96b0pvS1o3OVJwVHEwand3N0dfVnlCWkIydGpLb1d3bUV1a1dIVm13bTVCejFIM0V3aWx0UzFGb04yVWpVQXVnRmZ0eDFsZmhWSUZzUWJsMWxOOGpBYW9HT1dHQTdrX0dJUWhSa3lkT1R2cVktWDh5Z2FuU2FkYjJoZU9tRjB0Tnd4Sk5fRUNvaHhXUHNHNTdMWngydXJvUTl1MHlSZUZtNng0djJJalc4VWc0bzY3SS1BRmN4eXVQQUc1UFlB0gHPAUFVX3lxTFBjaWJjZjBXYzFISGFDa25fRXNrbGdNQW90cFlUcVB6MVd0eHNlYTBibUxMYmg5S1Jwa3NpWjVXczNsY0ttOUFubFktQXdpT3gwNUdHMko3dk1vbHlqcDJGb3k3WUpWZFNzRWR3UXc0QzN2Z21NN1ozelZNbjJDMnd6d3JlLXhfbjRxSXVLaTV0eVE2NVlsLS1YQlpXZncxWTV1WUxMV0gtS2xFYkZDWEtYbEExUGx1RkJLM3p6X0ItSGp5MHBvckNHSm0xdk5Vbw?oc=5",
+   "source": "Devdiscourse",
+   "ts": 1793682413,
+   "affects": [
+    "CNH",
+    "Commodities",
+    "Asia equities"
+   ]
+  },
+  {
+   "title": "Ant International and Bank Partners Achieve Real-Time Cross-Bank Liquidity Management through Tokenised Deposits via CeBM under HKMA\u2019s EnsembleTX - Yahoo Finance",
+   "link": "https://news.google.com/rss/articles/CBMirAFBVV95cUxOLTRXVlNKX1Nod3d3ODFoNVNTYkttVFlEMTVMSHpxeVgyb0lpUkstanhkaFNxU2RSYVZOdzJFTTBjcWZZQVBLQlQ1OFJBYTFacXh5clB6Mk5qaTVDQlprblI4VkRvVktXakh2TzQ2TE05WGQtQl9JQTBuMUpfTkhQbkJPeXpZYTkzejNIRzlub1lkU1N3SE1XN2o2bkF2cGJPMUJzbHhrdkRLYzNT?oc=5",
+   "source": "Yahoo Finance",
+   "ts": 1793680104,
+   "affects": [
+    "Bonds",
+    "Funding markets"
+   ]
+  },
+  {
+   "title": "RBI withdraws net liquidity of \u20b92.03 lakh crore through money market operations on November 2 - Traders Union",
+   "link": "https://news.google.com/rss/articles/CBMimwFBVV95cUxPaDBPZU9OM3VQdmJ6dWpOQzhMcGFrSHA0aG5KZE9CLUN1RVJRY2FoenpOUVJfLUNIOTVkbTB5OXd6MDhCWGx5Z2xaYkc4RERzTkhIT05lSTg3dVgxY3RiMmhzZ1ZvOUpua0pGdUppX2ZlOE5IZjZhWGVzczJ0MWJuWVNYc2tJWDRBMm44NkJjS3hCNVVMR2xsMUdfRQ?oc=5",
+   "source": "Traders Union",
+   "ts": 1793679696,
+   "affects": [
+    "Bonds",
+    "Funding markets"
+   ]
+  },
+  {
+   "title": "Arthur Hayes Cautious on Bitcoin Until Fed or Banks Expand Balance Sheets - KuCoin",
+   "link": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxOcFp4eXhlVW5HV0R5ckVxOE5GS2c3eG4zaXlUYVBpbFc1TXFSeEZLb21QYUFoRk1zeUtpS3E2Mmo3eWQ4bElib3FpRnA4c2ctemdnQ3pXNElmNEo1cno2VjJ0Q1FUVWlvendOLTE1c0tsN2FUZWFyUGJHY1hQNXZ1TzkxWXBkaGZDM2xPcC1RdUN2Ynd3dmNxZXQwMFR0ckRoclM0dXdjbnFzOTg?oc=5",
+   "source": "KuCoin",
+   "ts": 1793678240,
    "affects": [
     "Bonds",
     "USD",
@@ -622,10 +660,22 @@
    ]
   },
   {
-   "title": "China Moves to Support Stocks With Buyback and Liquidity Measures - Caixin Global",
-   "link": "https://news.google.com/rss/articles/CBMivAFBVV95cUxPVUc2dWVUUjZzMjRES3VWVEFXUnFZbXZZS24zWlZxR3lmVm1mdEVTWkFUQmt5WDNrS0toNkZWdWFmSmVnRThCSjg4NUNLNFBPTXowa1RoX1ktWUZSQ1dzcUNTTE5LSm5lNXg3MllxVFBUVTQ2eTdDc0Q3cHJqbmZKLTNab1dyVUNfUTZfemJYM1pmeF9jZ3RRLTJJOUJtMHJTcGotX05UUWh3NEV4V3F6b0xiWHBoUFNuLUFDaw?oc=5",
-   "source": "Caixin Global",
-   "ts": 1793639280,
+   "title": "Arthur Hayes Says Bitcoin Faces Weakness Until Fed or Banks Expand Balance Sheets - BeInCrypto",
+   "link": "https://news.google.com/rss/articles/CBMid0FVX3lxTE5mdVRCeUJmNFIySEZUejl4U1FUMjg5bmVaVEFsQlRYYm44YTI5Y0tXRGNHQmJMMHk0ZjR1ZTQ4UWg3VWIyVnpUYW5ydEtiSV9pX21HUlZQM2ViQk1ORUFDVTJBVHJIUHJpM201SU1rWGZ5V2I4dThJ?oc=5",
+   "source": "BeInCrypto",
+   "ts": 1793674920,
+   "affects": [
+    "Bonds",
+    "USD",
+    "Equities",
+    "Funding markets"
+   ]
+  },
+  {
+   "title": "China's Central Bank Raises FX Deposit Reserve Ratio to 6%; Yuan Weakens, Dollar Liquidity Tightens - BigGo Finance",
+   "link": "https://news.google.com/rss/articles/CBMidkFVX3lxTE9PRFh3UVNKN0RyemNiaDd2NlVySUNlbkRyLU54aURRNlE3NHQzOFhtTFN0UVZQMEE0alJhb3lZQnFBeXozcW5uTEVxYlZEREJXYmlVRTZBWk9hSWJKM0o5eDFGWURvUDgwMDYyQktKLUlDOEFpTkE?oc=5",
+   "source": "BigGo Finance",
+   "ts": 1793674500,
    "affects": [
     "Gold",
     "Oil",
@@ -634,29 +684,10 @@
    ]
   },
   {
-   "title": "Tracker: The Federal Reserve\u2019s Balance Sheet Assets - The American Action Forum",
-   "link": "https://news.google.com/rss/articles/CBMikAFBVV95cUxNR2NrRDdoQ1MwS0paZFliV01BelV0MS1tQkNMSEdJYmYweWctanpzZU5hMllmVUtjQWR2cXBPSVhFeFluSFlMbi1ZVTg1ZS1TYzRMam81MFlRbWxockRRN2RpeEk2OGhpYWVXUVpsX3lvcUx4QUFERERGQVdkeVRndHJNeExJTU9DLS1GRW9GTW0?oc=5",
-   "source": "The American Action Forum",
-   "ts": 1793638385,
-   "affects": [
-    "Bonds",
-    "USD",
-    "Equities",
-    "Funding markets"
-   ]
-  },
-  {
-   "title": "Central Bank to Conduct Third Swap Facility Operation - Caixin Global",
-   "link": "https://news.google.com/rss/articles/CBMirAFBVV95cUxQWXFTSlBkSTJSYnk3MG0tYXV0cTU1a05GTVFsRlVld0lxQldzejFfdU1nekZ1T3M5WTRyelp6NEtMMmxlSXdDbHFvN2oxX1hOWU5qYnNfMUxnSVF5WHdtb2dfdElhbnNrRmIxTkdLdkdic2FSdzJ4LVE0NnkxbGgyWXZsVXpicjdDVHZWb042TUFURmlVekczaXlvR1VDVnkwVF9TQ19tN3pDd0pG?oc=5",
-   "source": "Caixin Global",
-   "ts": 1793634780,
-   "affects": []
-  },
-  {
-   "title": "China rolls out support measures to aid struggling stocks - The Straits Times",
-   "link": "https://news.google.com/rss/articles/CBMimwFBVV95cUxOMk9INFNDeWRlRHFSLVRWZDFnZmtuT3R4SmNRYTMtM0FMcnNVNHVsdG85d1g3aXNPX1pyR281U2RLME02bENjNVpwTzRwaG1wVlA1cXFQMC1IbGtEdV8yX0loY3l5TlBXQ1Y4R3FRazZZUUJ6cDI2d1d2N0dOajN5MnVxQTNjYm5ndzUtMTBWQkUwS1B5X2xyb0F2UQ?oc=5",
-   "source": "The Straits Times",
-   "ts": 1793632320,
+   "title": "China Raises FX Deposit Reserve Ratio to 6% as Yuan Hits Four-Year High - BigGo Finance",
+   "link": "https://news.google.com/rss/articles/CBMidkFVX3lxTE9tRklETDlyM3lmQWFXVXVLNjU1bDRaMVFRNTVzeFFvenZSekxVdE05LU1sUTdqV3dGV0pRS3RBNnJUd2lyZUlRZEgyNlk2TnA0VmlHZVZZR040SmNhcmxKaWFWSXZITkZ1ZHRzb1BybzVPaDd3U2c?oc=5",
+   "source": "BigGo Finance",
+   "ts": 1793673360,
    "affects": [
     "Gold",
     "Oil",
@@ -665,10 +696,10 @@
    ]
   },
   {
-   "title": "China rolls out support measures to aid struggling stocks - The Business Times",
-   "link": "https://news.google.com/rss/articles/CBMiowFBVV95cUxPR3A4RU82eGIxVTB6Z2o5dGVhUGRxRVRGaG5LRkotLU8tcDRheEVMWG1NRnE0bEM4anRRUTAzelYtWG9UanBZeGcwZUpNQWVUclJnMHAzS29KYnduY0tfZ0hIbFAwQzBKeG0zTTFmVjJxUXBUU21BVS1veWxXczBKeFdMYzRNN2ltR1lYOEJsbVpQc196UUNoaUI1ZHlPb0FQRS04?oc=5",
-   "source": "The Business Times",
-   "ts": 1793631540,
+   "title": "China Raises Forex Reserve Requirement To Curb Yuan Gains - BusinessToday Malaysia",
+   "link": "https://news.google.com/rss/articles/CBMipAFBVV95cUxQcEhIeTg0S2JKY3pPck1lbXZvY05kMkw4NW9sTmVNMDNEY1RaU09CNVkzbE1ZeV9xSzRDbVlhZ1JzMWY0Y3JmNDZjZUVva1VYa0pNbzNYbUo3eWlYWHdTblZYSHdGTXVLamVQMVZ5VnNpQ18xUXlmSWowbW9VOXFwU3FXSERfVUNrUTRXNjFtaUl6eDFybXRKbDVpQTJXWEFiZG94NQ?oc=5",
+   "source": "BusinessToday Malaysia",
+   "ts": 1793673340,
    "affects": [
     "Gold",
     "Oil",
@@ -677,10 +708,17 @@
    ]
   },
   {
-   "title": "China rolls out support measures to aid struggling stocks - Reuters",
-   "link": "https://news.google.com/rss/articles/CBMitgFBVV95cUxPbUowSGs1Q0hadWZXNFhieVFtSERoVm1uZHBNaDZYeVFoS2FXaVIxMVhnckRuMVY0NkJPQTNXZFdNeUtJQ2hYREZGZDM3UnhzcUE5bkJSMXhDTXpYRUltclJka2pJZS0yNGY0TGg2dDBkbTh3MnhQTjZxM0pKaWViT21HNmE0ajlHS0xGLVdkZmxMOHhzUndVU1Z4YXVPZElpZkJuQTRZSlZPcV9zRmJfQnRVWjRadw?oc=5",
-   "source": "Reuters",
-   "ts": 1793630952,
+   "title": "N2.59trn cash injection to influence borrowing costs - The Sun Nigeria",
+   "link": "https://news.google.com/rss/articles/CBMie0FVX3lxTE9ZRWhJWjBLVGtNMVk3WFA0aHp5d0J2cjNsQjFjYUl3eTVkSU5LNnd4S09qdkZQSmR6ci05XzYybGczOFRpbDFPMGEyZml5Tk04Uy02M2pjRUFFaTdDcnZLTHdwSlpEUGxsN25PWmFPMlJQUExtZHlITHNIOA?oc=5",
+   "source": "The Sun Nigeria",
+   "ts": 1793672766,
+   "affects": []
+  },
+  {
+   "title": "China\u2019s Central Bank Tweaks Forex Reserve Rules to Steady Yuan - WSJ",
+   "link": "https://news.google.com/rss/articles/CBMitAFBVV95cUxNaUVpai1RSG9LWk82anFJT1hrZlgtM0t3LTQ5ZDBHLXFOLVpyOFhiR0xZa3pLMkluNnpOdzBHWDdwbnZESzk2bWhybUhmdGZUSFFVd0owXzV1ZXJlcXliazhtclhMTV9vQzlSOGlZd0VlNUFLM2V2RUFwNG9SUjFWSG5aeXNUdzBlcmlvRl9RR3JvNUJwZFluUGVrVGduVXpNUEdCcjFTVFI5RktrU1JyMnd0R2E?oc=5",
+   "source": "WSJ",
+   "ts": 1793669880,
    "affects": [
     "Gold",
     "Oil",
@@ -689,41 +727,10 @@
    ]
   },
   {
-   "title": "Government faces US$800 million IMF payment, eyes Central Bank dollars - Buenos Aires Herald",
-   "link": "https://news.google.com/rss/articles/CBMirAFBVV95cUxPQUlrVk9kQWxOWXEwbFpMTmZxa1ktbld2TjgyOHEyWjd3R0NzdUJVRVVpeHI0aDl5dFRuSU1lazMwNzR1OHluNmFSUDFVLTZaMGRIX0tRYzd4OWFtbF93RHVPQk1ERDRfa2ZhR3htTzFkNkdTUEJrRjY1dW9ndnp3WGhsV0lKTWZfNUIzLUxOMTJHTldSYk1qS3FSQnFHUnpFOWp0M3dsS0JBVlJQ?oc=5",
-   "source": "Buenos Aires Herald",
-   "ts": 1793630429,
-   "affects": []
-  },
-  {
-   "title": "Goldman Puts a $19.5 Billion Price Tag on Gold's Liquidity Crunch - ad-hoc-news.de",
-   "link": "https://news.google.com/rss/articles/CBMi0gFBVV95cUxPRE9Oa1VUMGFQTE9VQUVKZ0UxYmdvbkMzQVB0bHRvU0RPZWtEaVBGWlNKUTQzUU1CUm1pR3BLel9aTHJLUGV1WjAxNVh3Z2pLNXB4SEtCWUItWXFfTUZPYm5PUEkzRWhBcHg5YjJwdG13dW8taDNzM253V2NFWUpoSmV1cUNBTUVlZXJ6UkNmbWhVZkl5YldJNDczNFVmQVRhNDJUeS12LXR2ckI4VE82VVVuMGxra0drQjQybFhqTzNxcENENklSUGl5TzYtcm5zMFE?oc=5",
-   "source": "ad-hoc-news.de",
-   "ts": 1793629870,
-   "affects": [
-    "Bonds",
-    "Funding markets"
-   ]
-  },
-  {
-   "title": "CBN pumps N3.20 trillion into banking system as debt repayments outpace auctions - Nairametrics",
-   "link": "https://news.google.com/rss/articles/CBMiuAFBVV95cUxPYU9abVpOQ25YNEVvck5vSkRBU212NlFKam1PU0JIYjNNZTJHQXNmWlVxekVkSFhFbk9aUVBSdkZzZ2tiLW5WTmV1QlB1NkJzal9HSWpSclJUUTllNkZKUzY3YzdKbHNLU1hUbE5mYnUtV1VMbkhSWHpDZVR5OVlfd3hjSnc1bDc0ZHV5ZkVNY1RvblRWX0YxUnhseEdEVVBHcW9NS25CRVY2VTZpR2Y1TTJ3VjNLNTZN?oc=5",
-   "source": "Nairametrics",
-   "ts": 1793628828,
-   "affects": []
-  },
-  {
-   "title": "Shanghai Composite closes 1.08% higher at 3,638.03 - ad-hoc-news.de",
-   "link": "https://news.google.com/rss/articles/CBMisAFBVV95cUxNYTJiTzJIWEd2cTkxQTQxLTg3SGtCSlNIRXJtcU53X3VPQlUwd2JvR2NIXzhKTFBvdXZfVUhvTC1XQjh2d1I1NTdVSGZjQ05oc1pTLVFfSkpYSXhSb3ZXMi1ERGo1aFlQZXMtSEE2LVB4ZmZxalJhTGhEck11ZUFOcUNTclNyTFg1MXVZbFhicVFPYXZVekZIYWJPem9Db09xX0hSUmhpWHBDUXRkdFpGZg?oc=5",
-   "source": "ad-hoc-news.de",
-   "ts": 1793623415,
-   "affects": []
-  },
-  {
-   "title": "China's central bank taps liquidity tool to aid struggling stocks - Nikkei Asia",
-   "link": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxOZkxmQTNCdUVhTEg2Z0l6SzRsOWJGMHFWUlVOUFdrOG54aGtJZmhxLVVzb3dxVzY3RnJMZG5CRjhWVEtST2ZVLUprTmxaU0hqbXVIalF6UUVOMEVPQlJZOEc4UzRiemdZejRnenVKY0Y5TG9yck5IQTlOa19QXy1OLXdCREFVOW5ld0t3clBaV1FBNlQ2YUlWOUx4RFpnZDd0d3RueWZPRHl1UQ?oc=5",
-   "source": "Nikkei Asia",
-   "ts": 1793622540,
+   "title": "China\u2019s Central Bank Tightens Dollar Liquidity To Cool The Yuan - Finimize",
+   "link": "https://news.google.com/rss/articles/CBMilgFBVV95cUxNeUMwbU5XRlIwbUN6ZWpoQUdPbmNtQnI2TWp3TUFlbEVZaUhYUzR5UmFRY2lPckZNMVdJYV9ReDVEblNOUjZGYTRJSHNHeENJUnJWeURSY0Y5MllOSGZ1OVVEYU9oZkR5eHk1SnJObDNoZWZhQWV1NkU5LWdGUy1SeEI0Skctb2p1X2ZKaGZtaXhsU1JOUEE?oc=5",
+   "source": "Finimize",
+   "ts": 1793669776,
    "affects": [
     "Gold",
     "Oil",
@@ -732,29 +739,36 @@
    ]
   },
   {
-   "title": "Darrell Duffie on the Fed\u2019s Balance Sheet and the Changing Financial System - Mercatus Center",
-   "link": "https://news.google.com/rss/articles/CBMipAFBVV95cUxOR251SngyN1NtR1hUdktUcWNCR3lpc1NnT1pfZ1d5YkZBQTFvX3ZvdWIwMG1LSUw5Z0Uxem9aa0ptNmVSampDMUtma3J6R1FPQmRfd3BDRldac1BPdlhpcTZKZHA5UFVJYTBYT0M1THlibFJPb2lZTmUxaF9Ba3l2bXAyR1R1WmhzQ0ZWTVpZQjR6R3RkZEQtb2F6bkVibXRQMzhWbg?oc=5",
-   "source": "Mercatus Center",
-   "ts": 1793620800,
+   "title": "China's central bank raises forex reserve requirement ratio to 6% amid yuan's gains; move could help curb excessive market swing: expert - Global Times",
+   "link": "https://news.google.com/rss/articles/CBMiYkFVX3lxTE1GOW5BVk96bEg2ZjlqeUJOS211eHVHZnZKYmJYQjdnY2g3Ykl5dDVkRDRnZnd0TTMxYUhsZWpwcUhwSmNRdkZUS1pNSk9DQXNpdzh3U2RocU9ZRzBBUUpWa0RB?oc=5",
+   "source": "Global Times",
+   "ts": 1793668980,
    "affects": [
-    "Bonds",
-    "USD",
-    "Equities",
-    "Funding markets"
+    "Gold",
+    "Oil",
+    "Risk sentiment",
+    "CNH"
    ]
   },
   {
-   "title": "Philippine banks set a record P31.6-trillion balance sheet, but profit grew at less than half that pace - astig.ph",
-   "link": "https://news.google.com/rss/articles/CBMijwFBVV95cUxNUzdoY1RLNDZCRXlJNS1hSkI3dlZMNzZsN2c0SjlBYkhDd2xLczZrQUQ1WEtzU1JLQ0Y5ZHdEVlB1b1VfNFNzQ0RtMnpOd2tENG51Z244VlJhejZNcEY0QU5wRE9fNFA0VW8xb1lnSUgxSmdKNVJrd21oNXlpNEh2UDFTa00xZl8yTlFLb25INA?oc=5",
-   "source": "astig.ph",
-   "ts": 1793619375,
+   "title": "PBOC to raise banks\u2019 forex reserve requirements amid yuan appreciation pressure - South China Morning Post",
+   "link": "https://news.google.com/rss/articles/CBMixwFBVV95cUxPQVl3aHZtWlhyajlpU1RkRk1fbkhKT2JSQnVoV3dxa0U4bm1tWGRUUHI0d2d6amg0VDlMa0d1UUdIRnVFdkhlUllTLUNZNjk1UlNZUW1jbGNJT0lTZjZTQ195SU9DZXlxUU1scE5jZFZES0ZhRWo1WGxQaTlZYnV4TzJBbVNOWjhsT25MNU9tZHB5N3JubExtM2dJLXJXRWhuM3ZpUzBNREJjeEpQWkJTakNhS05UUktzTHhvODVrVDNLdGxhWjFN?oc=5",
+   "source": "South China Morning Post",
+   "ts": 1793668392,
    "affects": [
-    "Single stocks",
-    "Sector ETFs",
-    "Bonds",
-    "Funding markets"
+    "Gold",
+    "Oil",
+    "Risk sentiment",
+    "CNH"
    ]
+  },
+  {
+   "title": "FX market battles seasonal dollar pressure despite $1.98bn CBN intervention - The Sun Nigeria",
+   "link": "https://news.google.com/rss/articles/CBMimAFBVV95cUxOQnJUZkpGTUw5ZkVwWGtYbDMtMjhNYjJKb3h0cWhrWFlodldrZ0tBOGpOQ1JEcDZHd3otcm02UHJUN0d6N1dxdGYzN0tsc0EtY1BMNE1ueXBWYVZDYy1iQ1l6NWw4Z1FGdFFfakdud3ZsRV9xYkc4M1RtbHd3Xzg3V3lsNEc3NXFWeVZXQ0x5Y3lsRlkybGstMw?oc=5",
+   "source": "The Sun Nigeria",
+   "ts": 1793667397,
+   "affects": []
   }
  ],
- "generated_at": "2026-11-02T23:52:38+00:00"
+ "generated_at": "2026-11-03T06:36:05+00:00"
 }
