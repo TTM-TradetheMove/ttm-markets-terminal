@@ -905,6 +905,9 @@ function rmBuild(){
     <p class="calendar-note" id="rmNote" style="margin:8px 0 0">Be respectful. TTM can remove messages and mute members. Nothing here is financial advice.</p>`;
   $('rmIn').addEventListener('keydown', ev => { if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); rmSend(); } });
   $('rmIn').addEventListener('paste', ev => { const it = Array.from((ev.clipboardData || {}).items || []).find(x => x.type && x.type.indexOf('image/') === 0); if(it){ ev.preventDefault(); rmPick1(it.getAsFile()); } });
+  const rmApp = $('rmApp'); ['dragenter', 'dragover'].forEach(e => rmApp.addEventListener(e, ev => { ev.preventDefault(); rmApp.style.outline = '2px dashed var(--accent,#4da3ff)'; }));
+  ['dragleave', 'drop'].forEach(e => rmApp.addEventListener(e, ev => { ev.preventDefault(); rmApp.style.outline = ''; }));
+  rmApp.addEventListener('drop', ev => { const f = Array.from((ev.dataTransfer || {}).files || []).find(x => /^image\/(png|jpeg|gif|webp)$/.test(x.type)); if(f) rmPick1(f); else { const n = $('rmNote'); if(n) n.textContent = 'Drop a PNG, JPG, GIF or WebP image.'; } });
   $('rmFile').addEventListener('change', ev => { const f = ev.target.files && ev.target.files[0]; ev.target.value = ''; if(f) rmPick1(f); });
   RM.built = true; presBeat().then(presLoad); return true;
 }
@@ -944,10 +947,13 @@ async function rmSend(){
   RM.sending = true; n.textContent = RM.pend ? 'Uploading…' : 'Sending…';
   try{
     let img = null;
-    if(RM.pend){ const t = await token(), path = USER.id + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + (RM.pend.blob.type === 'image/gif' ? '.gif' : '.jpg');
-      const up = await fetch(CFG.url + '/storage/v1/object/room-images/' + path, {method: 'POST', headers: {apikey: CFG.key, Authorization: 'Bearer ' + t, 'Content-Type': RM.pend.blob.type === 'image/gif' ? 'image/gif' : 'image/jpeg'}, body: RM.pend.blob});
-      if(!up.ok){ n.textContent = 'Could not upload the image. The storage step may be missing, or it is over 2 MB.'; return; }
-      img = CFG.url + '/storage/v1/object/public/room-images/' + path; }
+    if(RM.pend){ const t = await token(), mime = RM.pend.blob.type === 'image/gif' ? 'image/gif' : 'image/jpeg', path = USER.id + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + (mime === 'image/gif' ? '.gif' : '.jpg');
+      const up = await fetch(CFG.url + '/storage/v1/object/room-pending/' + path, {method: 'POST', headers: {apikey: CFG.key, Authorization: 'Bearer ' + t, 'Content-Type': mime}, body: RM.pend.blob});
+      if(!up.ok){ n.textContent = 'Could not upload the image. The scan step may not be set up yet, or it is over 2 MB.'; return; }
+      n.textContent = 'Scanning image…';
+      let sc = null; try{ const r = await fetch(CFG.url + '/functions/v1/scan-image', {method: 'POST', headers: {apikey: CFG.key, Authorization: 'Bearer ' + t, 'Content-Type': 'application/json'}, body: JSON.stringify({path, type: mime})}); sc = await r.json(); }catch(e){}
+      if(!sc || !sc.ok){ n.textContent = sc && sc.reason ? 'Image blocked: ' + sc.reason + '.' : 'Could not scan the image, so it was not sent. Try again.'; RM.pend = null; rmPrev(); return; }
+      img = sc.url; }
     const r = await api('/rest/v1/ttm_room_msgs', {method: 'POST', headers: {Prefer: 'return=minimal'}, body: JSON.stringify({room: RM.room, body, img})});
     if(!r.ok){ const m = JSON.stringify(r.json || ''); n.textContent = /Slow down/i.test(m) ? 'Slow down a little, one message every few seconds.' : 'You cannot post in this room (muted, or not included in your plan).'; return; }
     i.value = ''; RM.pend = null; rmPrev(); n.textContent = ''; await rmLoad(true); const l = $('rmList'); if(l) l.scrollTop = l.scrollHeight;
