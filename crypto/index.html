@@ -1233,7 +1233,7 @@ button.tkr{background:none;border:0;padding:0;margin:0;color:var(--gold2);font:i
     <div class="section-head">
       <span class="tag">Risk Tools</span>
       <h2>P&amp;L Calendar</h2>
-      <p>Your closed trades by day and month, with a running total. It reads the trades in your Trade Tracker. Use the eye button at the top of the page to show percentages instead of dollar amounts when you share your screen.</p>
+      <p>Your closed trades by day, week, month, quarter, six months or year, or any date range you choose, with a running total. It reads the trades in your Trade Tracker. Use the eye button at the top of the page to show percentages instead of dollar amounts when you share your screen.</p>
     </div>
     <div class="rr-card">
       <div class="pc-filters">
@@ -1247,13 +1247,14 @@ button.tkr{background:none;border:0;padding:0;margin:0;color:var(--gold2);font:i
     </div>
     <div class="rr-card">
       <div class="pc-head"><div class="pc-nav"><button type="button" class="rr-btn ghost sm" id="pcPrev" aria-label="Previous">&lsaquo;</button><b id="pcTitle"></b><button type="button" class="rr-btn ghost sm" id="pcNext" aria-label="Next">&rsaquo;</button><button type="button" class="rr-btn ghost sm" id="pcToday">Today</button></div>
-        <div class="pc-views"><button type="button" class="filter-chip active" data-pcv="day">Daily</button><button type="button" class="filter-chip" data-pcv="month">Monthly</button></div></div>
+        <div class="pc-views" id="pcViews"><button type="button" class="filter-chip active" data-pcv="day">Day</button><button type="button" class="filter-chip" data-pcv="week">Week</button><button type="button" class="filter-chip" data-pcv="month">Month</button><button type="button" class="filter-chip" data-pcv="quarter">Quarter</button><button type="button" class="filter-chip" data-pcv="half">6 months</button><button type="button" class="filter-chip" data-pcv="year">Year</button><button type="button" class="filter-chip" data-pcv="custom">Custom range</button></div></div>
+      <div id="pcCustom" class="pc-filters" style="display:none;margin:0 0 12px"><label><small>From</small><input type="date" id="pcFrom"></label><label><small>To</small><input type="date" id="pcTo"></label><label><small>Quick set</small><select id="pcQuick"><option value="">Choose…</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="180">Last 180 days</option><option value="365">Last 365 days</option><option value="ytd">This year so far</option><option value="fy">Last financial year (AU)</option></select></label></div>
       <div id="pcCal"></div>
       <div id="pcDayList"></div>
     </div>
     <div class="rr-card">
       <div class="pc-head"><h3 style="margin:0">Cumulative P&amp;L <small id="pcUnit" style="color:var(--mute);font-weight:400"></small></h3>
-        <div class="pc-views" id="pcRange"><button type="button" class="filter-chip" data-r="30">30 days</button><button type="button" class="filter-chip" data-r="90">90 days</button><button type="button" class="filter-chip" data-r="ytd">This year</button><button type="button" class="filter-chip active" data-r="all">All time</button></div></div>
+        <div class="pc-views" id="pcRange"><button type="button" class="filter-chip active" data-r="period">This period</button><button type="button" class="filter-chip" data-r="30">30 days</button><button type="button" class="filter-chip" data-r="90">90 days</button><button type="button" class="filter-chip" data-r="ytd">This year</button><button type="button" class="filter-chip" data-r="all">All time</button></div></div>
       <svg id="pcChart" viewBox="0 0 720 260" style="width:100%;height:auto;display:block"></svg>
     </div>
     <p class="calendar-note">Counts a trade on the day it was closed, in your own time zone. Partial profits taken on a trade count on the day you booked them. Nothing here leaves your device unless you use cloud sync.</p>
@@ -4861,9 +4862,11 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&': '&amp
 const rd = (k, d) => { try{ const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; }catch(e){ return d; } };
 const accOf = x => (x.snap && x.snap.acc) || (x.s && x.s.acc) || 'lev', tfOf = x => (x.snap && x.snap.tf) || (x.s && x.s.tf) || '';
 const hid = () => !!(window.ttmHid && window.ttmHid());
-const P = {view: 'day', y: new Date().getFullYear(), m: new Date().getMonth(), range: 'all', sel: null};
-const key = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
-function trades(){ const L = rd('ttm_rr_saved_v1', []), out = [];
+const z2 = n => String(n).padStart(2, '0'), key = t => { const d = new Date(t); return d.getFullYear() + '-' + z2(d.getMonth() + 1) + '-' + z2(d.getDate()); };
+const sod = d => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(), eod = d => sod(d) + 864e5 - 1;
+const fmtD = t => new Date(t).toLocaleDateString(undefined, {day: 'numeric', month: 'short', year: 'numeric'}), fmtS = t => new Date(t).toLocaleDateString(undefined, {day: 'numeric', month: 'short'});
+const P = {view: 'day', y: new Date().getFullYear(), m: new Date().getMonth(), range: 'period', sel: null, from: null, to: null};
+function allTrades(){ const L = rd('ttm_rr_saved_v1', []), out = [];
   (Array.isArray(L) ? L : []).forEach(x => { if(x && x.status === 'closed' && x.res && x.snap && isFinite(x.res.pnl)) out.push(x); });
   const f = {acc: $('pcAcc').value, asset: $('pcAsset').value, dir: $('pcDir').value, tf: $('pcTf').value, res: $('pcRes').value};
   return out.filter(x => (f.acc === 'all' || accOf(x) === f.acc) && (f.asset === 'all' || x.snap.asset === f.asset) && (f.dir === 'all' || (x.snap.dir || (x.snap.long === false ? 'short' : 'long')) === f.dir) && (f.tf === 'all' || tfOf(x) === f.tf) && (f.res === 'all' || (f.res === 'win' ? x.res.pnl > 0 : x.res.pnl < 0))).sort((a, b) => a.res.closed - b.res.closed); }
@@ -4875,51 +4878,82 @@ function fill(){ const L = rd('ttm_rr_saved_v1', []), assets = [...new Set((Arra
 function money(v, sb, plus){ if(hid()){ if(!(sb > 0)) return '•••'; const p = v / sb * 100; return (plus && p > 0 ? '+' : '') + p.toFixed(Math.abs(p) >= 10 ? 1 : 2) + '%'; }
   const a = Math.abs(v), s = a >= 1e6 ? (a / 1e6).toFixed(2) + 'M' : a >= 1e4 ? (a / 1e3).toFixed(1) + 'K' : a.toLocaleString(undefined, {maximumFractionDigits: a < 100 ? 2 : 0}); return (v < 0 ? '-' : plus && v > 0 ? '+' : '') + '$' + s; }
 const tint = (v, mx) => { if(!v || !mx) return ''; const a = Math.min(.55, .12 + .43 * Math.abs(v) / mx); return `background:${v > 0 ? 'rgba(63,180,122,' : 'rgba(224,85,77,'}${a.toFixed(2)})`; };
+// the period the page is showing: drives the stats, the title and the default chart range
+function period(A){ const v = P.view;
+  if(v === 'day') return [new Date(P.y, P.m, 1).getTime(), eod(new Date(P.y, P.m + 1, 0))];
+  if(v === 'year') return [-Infinity, Infinity];
+  if(v === 'custom'){ const f = P.from ? new Date(P.from + 'T00:00').getTime() : -Infinity, t = P.to ? eod(new Date(P.to + 'T00:00')) : Infinity; return [f, t]; }
+  return [new Date(P.y, 0, 1).getTime(), eod(new Date(P.y, 11, 31))]; }
+const inP = (T, per) => T.filter(x => x.res.closed >= per[0] && x.res.closed <= per[1]);
 function stats(T, sb){ const days = {}; T.forEach(x => { const k = key(x.res.closed); days[k] = (days[k] || 0) + x.res.pnl; }); const dv = Object.values(days);
   const net = T.reduce((t, x) => t + x.res.pnl, 0), w = T.filter(x => x.res.pnl > 0), l = T.filter(x => x.res.pnl < 0), gw = w.reduce((t, x) => t + x.res.pnl, 0), gl = -l.reduce((t, x) => t + x.res.pnl, 0);
   const tile = (k, v, c) => `<div><small>${k}</small><strong class="${c || ''}">${v}</strong></div>`;
   $('pcStats').innerHTML = tile('Total P&L', T.length ? money(net, sb, true) : '—', net > 0 ? 'g' : net < 0 ? 'r' : '') + tile('Trades', T.length) + tile('Win rate', w.length + l.length ? (w.length / (w.length + l.length) * 100).toFixed(1) + '%' : '—') + tile('Profit factor', gl > 0 ? (gw / gl).toFixed(2) : gw > 0 ? '∞' : '—')
-    + tile('Best day', dv.length ? money(Math.max(...dv), sb, true) : '—', 'g') + tile('Worst day', dv.length ? money(Math.min(...dv), sb, true) : '—', 'r') + tile('Green days', dv.length ? Math.round(dv.filter(v => v > 0).length / dv.length * 100) + '%' : '—') + tile('Avg win / loss', w.length && l.length ? money(gw / w.length, sb) + ' / ' + money(-gl / l.length, sb) : '—'); return days; }
+    + tile('Best day', dv.length ? money(Math.max(...dv), sb, true) : '—', 'g') + tile('Worst day', dv.length ? money(Math.min(...dv), sb, true) : '—', 'r') + tile('Green days', dv.length ? Math.round(dv.filter(v => v > 0).length / dv.length * 100) + '%' : '—') + tile('Average win', w.length ? money(gw / w.length, sb) : '—', 'g') + tile('Average loss', l.length ? money(-gl / l.length, sb) : '—', 'r'); return days; }
 function dayView(T, days, sb){ const y = P.y, m = P.m, first = new Date(y, m, 1), lead = (first.getDay() + 6) % 7, dim = new Date(y, m + 1, 0).getDate(), rows = Math.ceil((lead + dim) / 7);
   const cnt = {}; T.forEach(x => { const k = key(x.res.closed); cnt[k] = (cnt[k] || 0) + 1; }); let mx = 0; for(let d = 1; d <= dim; d++) mx = Math.max(mx, Math.abs(days[key(new Date(y, m, d))] || 0));
-  let h = '<div class="pc-grid">' + ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Week'].map(d => `<div class="pc-dow">${d}</div>`).join(''), wk = 0, wn = 0, mt = 0;
+  let h = '<div class="pc-grid">' + ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Week'].map(d => `<div class="pc-dow">${d}</div>`).join(''), wk = 0, wn = 0;
   for(let i = 0; i < rows * 7; i++){ const d = i - lead + 1, inM = d >= 1 && d <= dim;
-    if(inM){ const k = key(new Date(y, m, d)), v = days[k], has = v != null; if(has){ wk += v; wn += cnt[k]; mt += v; }
+    if(inM){ const k = key(new Date(y, m, d)), v = days[k], has = v != null; if(has){ wk += v; wn += cnt[k]; }
       h += `<button type="button" class="pc-d ${has ? 'has' : ''} ${P.sel === k ? 'sel' : ''}" data-k="${k}" style="${has ? tint(v, mx) : ''}"><i>${d}</i>${has ? `<b class="${v >= 0 ? 'pc-g' : 'pc-r'}">${money(v, sb, true)}</b><span>${cnt[k]} trade${cnt[k] > 1 ? 's' : ''}</span>` : '<span></span>'}</button>`; }
     else h += '<div class="pc-d out"></div>';
     if(i % 7 === 6){ h += `<div class="pc-d pc-w"><i>Week</i>${wn ? `<b class="${wk >= 0 ? 'pc-g' : 'pc-r'}">${money(wk, sb, true)}</b><span>${wn} trade${wn > 1 ? 's' : ''}</span>` : '<span></span>'}</div>`; wk = 0; wn = 0; } }
-  $('pcCal').innerHTML = h + '</div>'; $('pcTitle').textContent = MON[m] + ' ' + y; }
-function monthView(T, sb){ const mm = Array.from({length: 12}, () => ({p: 0, n: 0, w: 0, l: 0})); T.forEach(x => { const d = new Date(x.res.closed); if(d.getFullYear() !== P.y) return; const o = mm[d.getMonth()]; o.p += x.res.pnl; o.n++; if(x.res.pnl > 0) o.w++; else if(x.res.pnl < 0) o.l++; });
-  const mx = Math.max(0, ...mm.map(o => Math.abs(o.p))); $('pcCal').innerHTML = '<div class="pc-m">' + mm.map((o, i) => `<button type="button" class="pc-d ${o.n ? 'has' : ''}" data-mo="${i}" style="${o.n ? tint(o.p, mx) : ''}"><i>${MON[i].slice(0, 3)}</i>${o.n ? `<b class="${o.p >= 0 ? 'pc-g' : 'pc-r'}">${money(o.p, sb, true)}</b><span>${o.n} trade${o.n > 1 ? 's' : ''} · ${o.w + o.l ? Math.round(o.w / (o.w + o.l) * 100) + '% win' : '—'}</span>` : '<span></span>'}</button>`).join('') + '</div>';
-  const yt = mm.reduce((t, o) => t + o.p, 0); $('pcTitle').textContent = P.y + (mm.some(o => o.n) ? ' · ' + money(yt, sb, true) : ''); }
+  $('pcCal').innerHTML = h + '</div>'; }
+// cards for a list of buckets [{label, sub, from, to, go}]
+function cards(T, items, sb){ const rows = items.map(it => { const L = T.filter(x => x.res.closed >= it.from && x.res.closed <= it.to), w = L.filter(x => x.res.pnl > 0).length, l = L.filter(x => x.res.pnl < 0).length; return Object.assign({p: L.reduce((t, x) => t + x.res.pnl, 0), n: L.length, w, l}, it); });
+  const mx = Math.max(0, ...rows.map(o => Math.abs(o.p)));
+  $('pcCal').innerHTML = '<div class="pc-m">' + rows.map((o, i) => `<button type="button" class="pc-d ${o.n ? 'has' : ''}" data-card="${i}" style="${o.n ? tint(o.p, mx) : ''}"><i>${esc(o.label)}${o.sub ? ' · ' + esc(o.sub) : ''}</i>${o.n ? `<b class="${o.p >= 0 ? 'pc-g' : 'pc-r'}">${money(o.p, sb, true)}</b><span>${o.n} trade${o.n > 1 ? 's' : ''} · ${o.w + o.l ? Math.round(o.w / (o.w + o.l) * 100) + '% win' : '—'}</span>` : '<span></span>'}</button>`).join('') + '</div>'; P.items = rows; }
+function weeks(from, to){ const out = []; let d = new Date(from), dow = (d.getDay() + 6) % 7; d = new Date(d.getFullYear(), d.getMonth(), d.getDate() - dow); let n = 0;
+  while(d.getTime() <= to && n++ < 400){ const e = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 6); out.push({label: fmtS(d) + ' – ' + fmtS(e), from: d.getTime(), to: eod(e), go: [d.getFullYear(), d.getMonth()]}); d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 7); } return out; }
+function months(from, to){ const out = []; let d = new Date(new Date(from).getFullYear(), new Date(from).getMonth(), 1), n = 0; while(d.getTime() <= to && n++ < 400){ out.push({label: MON[d.getMonth()].slice(0, 3), sub: String(d.getFullYear()), from: d.getTime(), to: eod(new Date(d.getFullYear(), d.getMonth() + 1, 0)), go: [d.getFullYear(), d.getMonth()]}); d = new Date(d.getFullYear(), d.getMonth() + 1, 1); } return out; }
+function listView(T, sb){ const y = P.y, v = P.view; let items = [];
+  if(v === 'week') items = weeks(new Date(y, 0, 1).getTime(), new Date(y, 11, 31).getTime());
+  else if(v === 'month') items = months(new Date(y, 0, 1).getTime(), new Date(y, 11, 31).getTime());
+  else if(v === 'quarter') items = [0, 1, 2, 3].map(q => ({label: 'Q' + (q + 1), sub: MON[q * 3].slice(0, 3) + ' – ' + MON[q * 3 + 2].slice(0, 3), from: new Date(y, q * 3, 1).getTime(), to: eod(new Date(y, q * 3 + 3, 0)), range: true}));
+  else if(v === 'half') items = [0, 1].map(h => ({label: h ? 'Jul – Dec' : 'Jan – Jun', sub: String(y), from: new Date(y, h * 6, 1).getTime(), to: eod(new Date(y, h * 6 + 6, 0)), range: true}));
+  else if(v === 'year'){ const ys = T.map(x => new Date(x.res.closed).getFullYear()), a = Math.min(new Date().getFullYear(), ...(ys.length ? ys : [new Date().getFullYear()])), b = Math.max(new Date().getFullYear(), ...(ys.length ? ys : [0])); for(let k = a; k <= b; k++) items.push({label: String(k), from: new Date(k, 0, 1).getTime(), to: eod(new Date(k, 11, 31)), range: true}); }
+  else if(v === 'custom'){ const per = period(), f = isFinite(per[0]) ? per[0] : (T[0] ? T[0].res.closed : Date.now()), t = isFinite(per[1]) ? per[1] : Date.now(), span = (t - f) / 864e5;
+    if(span <= 45){ let d = new Date(new Date(f).getFullYear(), new Date(f).getMonth(), new Date(f).getDate()), n = 0; while(d.getTime() <= t && n++ < 60){ items.push({label: d.toLocaleDateString(undefined, {weekday: 'short', day: 'numeric', month: 'short'}), from: d.getTime(), to: eod(d)}); d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1); } }
+    else if(span <= 190) items = weeks(f, t); else items = months(f, t); }
+  cards(T, items, sb); }
 function dayList(T, sb){ const el = $('pcDayList'); if(P.view !== 'day' || !P.sel){ el.innerHTML = ''; return; } const L = T.filter(x => key(x.res.closed) === P.sel); if(!L.length){ el.innerHTML = ''; return; }
   el.innerHTML = `<h3 style="margin:16px 0 8px">${esc(new Date(P.sel + 'T00:00').toLocaleDateString(undefined, {weekday: 'long', day: 'numeric', month: 'long'}))}</h3><div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Trade</th><th>Asset</th><th>Account</th><th>Result</th><th>R</th></tr></thead><tbody>${L.map(x => `<tr><td>${esc(x.name || '')}</td><td>${esc(x.snap.asset || '')}</td><td>${esc((ACCS.find(a => a[0] === accOf(x)) || ['', accOf(x)])[1])}</td><td class="${x.res.pnl >= 0 ? 'pc-g' : 'pc-r'}"><b>${money(x.res.pnl, sb, true)}</b></td><td>${isFinite(x.res.r) ? x.res.r.toFixed(2) + 'R' : '—'}</td></tr>`).join('')}</tbody></table></div>`; }
-function chart(T, sb){ const svg = $('pcChart'), W = 720, H = 260, L = 58, R = 16, Tp = 14, B = 26; let list = T;
-  if(P.range !== 'all'){ const now = new Date(), from = P.range === 'ytd' ? new Date(now.getFullYear(), 0, 1).getTime() : Date.now() - +P.range * 864e5; list = T.filter(x => x.res.closed >= from); }
+function chart(T, sb, per){ const svg = $('pcChart'), W = 720, H = 260, L = 58, R = 16, Tp = 14, B = 26; let list = T;
+  if(P.range === 'period') list = inP(T, per); else if(P.range !== 'all'){ const from = P.range === 'ytd' ? new Date(new Date().getFullYear(), 0, 1).getTime() : Date.now() - +P.range * 864e5; list = T.filter(x => x.res.closed >= from); }
   const asPct = hid(); $('pcUnit').textContent = asPct ? '(% of starting balance)' : '(US dollars)';
   if(!list.length){ svg.innerHTML = `<text x="${W / 2}" y="${H / 2}" fill="#8b8f9a" font-size="14" text-anchor="middle">No closed trades match these filters yet.</text>`; return; }
   const byDay = {}; list.forEach(x => { const k = key(x.res.closed); byDay[k] = (byDay[k] || 0) + x.res.pnl; }); const ks = Object.keys(byDay).sort(); let c = 0; const pts = [{t: new Date(ks[0] + 'T00:00').getTime() - 864e5, v: 0, k: 'Start'}];
   ks.forEach(k => { c += byDay[k]; pts.push({t: new Date(k + 'T00:00').getTime(), v: c, k}); });
   const val = v => asPct ? (sb > 0 ? v / sb * 100 : 0) : v, lo = Math.min(0, ...pts.map(p => val(p.v))), hi = Math.max(0, ...pts.map(p => val(p.v))), pad = (hi - lo || 1) * .1, t0 = pts[0].t, t1 = pts[pts.length - 1].t || t0 + 1;
   const X = t => L + (t - t0) / (t1 - t0 || 1) * (W - L - R), Y = v => Tp + (1 - (val(v) - (lo - pad)) / (hi - lo + 2 * pad)) * (H - Tp - B), fm = v => asPct ? (v > 0 ? '+' : '') + v.toFixed(Math.abs(v) >= 10 ? 0 : 1) + '%' : money(v, sb);
-  let g = ''; [0, .5, 1].forEach(f => { const v = lo + (hi - lo) * f, y = Tp + (1 - (v - (lo - pad)) / (hi - lo + 2 * pad)) * (H - Tp - B); g += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="rgba(255,255,255,.08)"/><text x="${L - 6}" y="${y + 4}" font-size="10.5" fill="#8b8f9a" text-anchor="end">${fm(asPct ? v : v)}</text>`; });
-  const zy = Y(0), path = pts.map((p, i) => (i ? 'L' : 'M') + X(p.t).toFixed(1) + ' ' + Y(p.v).toFixed(1)).join(' '), last = pts[pts.length - 1], up = last.v >= 0, col = up ? '#3fb47a' : '#e0554d';
+  let g = ''; [0, .5, 1].forEach(f => { const v = lo + (hi - lo) * f, y = Tp + (1 - (v - (lo - pad)) / (hi - lo + 2 * pad)) * (H - Tp - B); g += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="rgba(255,255,255,.08)"/><text x="${L - 6}" y="${y + 4}" font-size="10.5" fill="#8b8f9a" text-anchor="end">${fm(v)}</text>`; });
+  const zy = Y(0), path = pts.map((p, i) => (i ? 'L' : 'M') + X(p.t).toFixed(1) + ' ' + Y(p.v).toFixed(1)).join(' '), last = pts[pts.length - 1], col = last.v >= 0 ? '#3fb47a' : '#e0554d';
   g += `<line x1="${L}" x2="${W - R}" y1="${zy}" y2="${zy}" stroke="rgba(255,255,255,.25)" stroke-dasharray="4 4"/><path d="${path} L${X(last.t).toFixed(1)} ${zy} L${X(pts[0].t).toFixed(1)} ${zy} Z" fill="${col}" opacity=".16"/><path d="${path}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linejoin="round"/>`;
   pts.slice(1).forEach(p => { g += `<circle cx="${X(p.t).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="${p === last ? 5 : 2.6}" fill="${col}"><title>${esc(p.k)}: ${esc(money(p.v, sb, true))}</title></circle>`; });
-  const fd = t => new Date(t).toLocaleDateString(undefined, {day: 'numeric', month: 'short'}); g += `<text x="${L}" y="${H - 6}" font-size="10.5" fill="#8b8f9a">${fd(pts[1] ? pts[1].t : t0)}</text><text x="${W - R}" y="${H - 6}" font-size="10.5" fill="#8b8f9a" text-anchor="end">${fd(t1)}</text>`;
+  g += `<text x="${L}" y="${H - 6}" font-size="10.5" fill="#8b8f9a">${fmtS(pts[1] ? pts[1].t : t0)}</text><text x="${W - R}" y="${H - 6}" font-size="10.5" fill="#8b8f9a" text-anchor="end">${fmtS(t1)}</text>`;
   svg.innerHTML = g; }
-function paint(){ const T = trades(), sb = startBal(); const days = stats(T, sb); if(P.view === 'day') dayView(T, days, sb); else monthView(T, sb); dayList(T, sb); chart(T, sb);
+function title(T, per, sb){ const v = P.view, tot = inP(T, per).reduce((t, x) => t + x.res.pnl, 0), has = inP(T, per).length;
+  const t = v === 'day' ? MON[P.m] + ' ' + P.y : v === 'year' ? 'All years' : v === 'custom' ? (P.from && P.to ? fmtD(new Date(P.from + 'T00:00')) + ' – ' + fmtD(new Date(P.to + 'T00:00')) : 'Pick a date range') : String(P.y);
+  $('pcTitle').textContent = t + (v !== 'day' && has ? ' · ' + money(tot, sb, true) : ''); $('pcPrev').style.visibility = $('pcNext').style.visibility = v === 'year' || v === 'custom' ? 'hidden' : ''; $('pcToday').style.display = v === 'custom' || v === 'year' ? 'none' : ''; $('pcCustom').style.display = v === 'custom' ? '' : 'none'; }
+function paint(){ const T = allTrades(), sb = startBal(), per = period(), TP = inP(T, per), days = stats(TP, sb);
+  if(P.view === 'day') dayView(TP, days, sb); else listView(T, sb); dayList(TP, sb); chart(T, sb, per); title(T, per, sb);
   document.querySelectorAll('[data-pcv]').forEach(b => b.classList.toggle('active', b.dataset.pcv === P.view)); document.querySelectorAll('#pcRange [data-r]').forEach(b => b.classList.toggle('active', b.dataset.r === P.range)); }
+function setRange(f, t){ P.from = key(f); P.to = key(t); $('pcFrom').value = P.from; $('pcTo').value = P.to; P.view = 'custom'; P.sel = null; }
 ['pcAcc', 'pcAsset', 'pcDir', 'pcTf', 'pcRes'].forEach(i => $(i).addEventListener('change', () => { P.sel = null; paint(); }));
+$('pcFrom').addEventListener('change', () => { P.from = $('pcFrom').value || null; paint(); }); $('pcTo').addEventListener('change', () => { P.to = $('pcTo').value || null; paint(); });
+$('pcQuick').addEventListener('change', () => { const v = $('pcQuick').value, n = new Date(); if(!v) return; if(v === 'ytd') setRange(new Date(n.getFullYear(), 0, 1), n); else if(v === 'fy'){ const y = n.getMonth() >= 6 ? n.getFullYear() - 1 : n.getFullYear() - 1; setRange(new Date(y, 6, 1), new Date(y + 1, 5, 30)); } else setRange(new Date(n.getFullYear(), n.getMonth(), n.getDate() - (+v - 1)), n); $('pcQuick').value = ''; paint(); });
 const step = n => { if(P.view === 'day'){ const d = new Date(P.y, P.m + n, 1); P.y = d.getFullYear(); P.m = d.getMonth(); } else P.y += n; P.sel = null; paint(); };
 $('pcPrev').onclick = () => step(-1); $('pcNext').onclick = () => step(1); $('pcToday').onclick = () => { const n = new Date(); P.y = n.getFullYear(); P.m = n.getMonth(); P.sel = null; paint(); };
-document.addEventListener('click', ev => { const t = ev.target; if(!t.closest || !t.closest('#pcnal, #pnlcal')) return; const v = t.closest('[data-pcv]'), r = t.closest('#pcRange [data-r]'), d = t.closest('.pc-d[data-k]'), mo = t.closest('.pc-d[data-mo]');
-  if(v){ P.view = v.dataset.pcv; P.sel = null; paint(); } else if(r){ P.range = r.dataset.r; paint(); } else if(d && d.classList.contains('has')){ P.sel = P.sel === d.dataset.k ? null : d.dataset.k; paint(); } else if(mo && mo.classList.contains('has')){ P.view = 'day'; P.m = +mo.dataset.mo; P.sel = null; paint(); } });
+document.addEventListener('click', ev => { const t = ev.target; if(!t.closest || !t.closest('#pnlcal')) return; const v = t.closest('[data-pcv]'), r = t.closest('#pcRange [data-r]'), d = t.closest('.pc-d[data-k]'), c = t.closest('.pc-d[data-card]');
+  if(v){ P.view = v.dataset.pcv; P.sel = null; if(P.view === 'custom' && !P.from){ const n = new Date(); setRange(new Date(n.getFullYear(), n.getMonth(), n.getDate() - 29), n); } paint(); }
+  else if(r){ P.range = r.dataset.r; paint(); }
+  else if(d && d.classList.contains('has')){ P.sel = P.sel === d.dataset.k ? null : d.dataset.k; paint(); }
+  else if(c && c.classList.contains('has') && P.items){ const it = P.items[+c.dataset.card]; if(it.go){ P.y = it.go[0]; P.m = it.go[1]; P.view = 'day'; P.sel = null; paint(); } else if(it.range){ setRange(new Date(it.from), new Date(Math.min(it.to, Date.now()))); paint(); } } });
 window.addEventListener('ttm-hide', paint); window.addEventListener('hashchange', () => { if(location.hash === '#pnlcal'){ fill(); paint(); } }); window.addEventListener('storage', e => { if(e.key === 'ttm_rr_saved_v1' || e.key === 'ttm_rr_bals_v1'){ fill(); paint(); } });
 fill(); paint();
 })();
 </script>
-<script src="../accounts.js?v=20261103182154"></script>
+<script src="../accounts.js?v=20261103225300"></script>
 <script>
 (function(){
   const secs = Array.from(document.querySelectorAll('body > section[id]'));
