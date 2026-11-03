@@ -1,4 +1,4 @@
-Run at 2026-11-03T01:20:21.683747+00:00
+Run at 2026-11-03T08:05:01.972524+00:00
 
 page title: 'Calendar | Forex Factory'
 page url after load: 'https://www.forexfactory.com/calendar'
@@ -15,16 +15,16 @@ TARGET ROW: date='Thu Nov 5' currency='USD' title='Unemployment Claims' actual='
 TARGET ROW: date='Fri Nov 6' currency='CAD' title='Unemployment Rate' actual=''
 TARGET ROW: date='Fri Nov 6' currency='USD' title='Unemployment Rate' actual=''
 TARGET ROW: date='Fri Nov 6' currency='USD' title='Prelim UoM Consumer Sentiment' actual=''
-matched-actuals by date: {'2026-11-01': 4, '2026-11-02': 16}
-Scraped 20 live actual values from forexfactory.com
-Past events without actual (1): 2026-11-02 USD Loan Officer Survey
+matched-actuals by date: {'2026-11-01': 4, '2026-11-02': 17, '2026-11-03': 2}
+Scraped 23 live actual values from forexfactory.com
+Past events without actual (5): 2026-11-02 USD Loan Officer Survey; 2026-11-03 GBP 10-y Bond Auction; 2026-11-03 USD RCM/TIPP Economic Optimism; 2026-11-03 USD Omdia Total Vehicle Sales; 2026-11-03 USD Congressional Elections
 Scraped GBP keys: [('2026-11-02', 'GBP', 'finalmanufacturingpmi')]
 
 -- month scrape --
-month nov.2026: title='Calendar | Forex Factory' url='https://www.forexfactory.com/calendar?month=nov.2026' rows=420 tracked=225
-month nov.2026: 225 rows for tracked currencies; sample: [{'date': 'Sun Nov 1', 'time': '2:00am', 'cur': 'USD', 'impact': 'icon icon--ff-impact-gra', 'title': 'Daylight Saving Time Shift', 'actual': '', 'forecast': '', 'previous': ''}, {'date': 'Sun Nov 1', 'time': '7:30pm', 'cur': 'JPY', 'impact': 'icon icon--ff-impact-yel', 'title': 'Final Manufacturing PMI', 'actual': '53.3', 'forecast': '53.3', 'previous': '53.3'}]
-month nov.2026: page timezone calibrated to America/New_York (65 matching rows)
-month nov.2026: added 156 events not already in the weekly feeds
+month nov.2026: title='Calendar | Forex Factory' url='https://www.forexfactory.com/calendar?month=nov.2026' rows=420 tracked=235
+month nov.2026: 235 rows for tracked currencies; sample: [{'date': 'Sun Nov 1', 'time': '2:00am', 'cur': 'USD', 'impact': 'icon icon--ff-impact-gra', 'title': 'Daylight Saving Time Shift', 'actual': '', 'forecast': '', 'previous': ''}, {'date': 'Sun Nov 1', 'time': '7:30pm', 'cur': 'JPY', 'impact': 'icon icon--ff-impact-yel', 'title': 'Final Manufacturing PMI', 'actual': '53.3', 'forecast': '53.3', 'previous': '53.3'}]
+month nov.2026: page timezone calibrated to America/New_York (71 matching rows)
+month nov.2026: added 160 events not already in the weekly feeds
 month dec.2026: title='Just a moment...' url='https://www.forexfactory.com/calendar?month=dec.2026' rows=0 tracked=0
 month dec.2026: first rows: []
 month dec.2026: 0 rows for tracked currencies; sample: []
