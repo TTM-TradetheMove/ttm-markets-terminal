@@ -1105,6 +1105,30 @@ function prefsHtml(){
 async function prefSave(){ const n = $('prefNote'); if(n) n.textContent = 'Saving…';
   const r = await api('/rest/v1/ttm_prefs?on_conflict=user_id', {method: 'POST', headers: {Prefer: 'resolution=merge-duplicates,return=minimal'}, body: JSON.stringify({user_id: USER.id, prefs: PREFS, updated: new Date().toISOString()})}); const n2 = $('prefNote'); if(n2) n2.textContent = r.ok ? ' Saved.' : ' Could not save. Ask TTM to run the settings step.'; return r.ok; }
 document.addEventListener('change', async ev => { const t = ev.target; if(!t || !t.dataset || !USER) return; if(t.dataset.pref){ PREFS[t.dataset.pref] = t.checked; await prefSave(); } else if(t.dataset.prefsel){ PREFS[t.dataset.prefsel] = t.value; await prefSave(); } if(t.dataset.pref === 'online'){ await presBeat(); presLoad(); } });
+
+// ---- Hide $ values (eye button in every header; one switch for all pages, remembered on this device)
+const HKEY = 'ttm_hide_usd';
+const hidOn = () => { try{ return localStorage.getItem(HKEY) === '1'; }catch(e){ return false; } };
+window.ttmHid = hidOn;
+window.ttmMask = str => hidOn() ? '•••••' : str;
+function hidApply(fire){
+  const on = hidOn(); document.documentElement.classList.toggle('hide-usd', on);
+  document.querySelectorAll('.eye-btn').forEach(b => { b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.title = on ? 'Dollar values hidden. Tap to show.' : 'Hide dollar values'; b.innerHTML = on ? EYE_OFF : EYE_ON; b.classList.toggle('on', on); });
+  if(fire) window.dispatchEvent(new Event('ttm-hide'));
+}
+const EYE_ON = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.9 10.9 0 0 1 12 19C5 19 1 12 1 12a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.1 9.1 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>';
+function hidInit(){
+  if(!document.getElementById('hideUsdCss')){ const st = document.createElement('style'); st.id = 'hideUsdCss';
+    st.textContent = '.eye-btn{background:transparent;border:1px solid var(--line,#444);color:var(--mute,#999);width:34px;height:34px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;margin-left:8px;flex:none}.eye-btn.on{color:var(--gold2,#e6b84a);border-color:var(--gold,#c9a227)}'
+      + '.hide-usd #rrBal,.hide-usd #rrRusd,.hide-usd #rrInv,.hide-usd #rrDaily,.hide-usd #rrMin,.hide-usd #ehAmt,.hide-usd #txBal,.hide-usd #txRiskUsd,.hide-usd [data-money]{filter:blur(7px)}';
+    document.head.appendChild(st); }
+  const ab = document.getElementById('acctBtn'); if(ab && !document.querySelector('.eye-btn')){ const b = document.createElement('button'); b.type = 'button'; b.className = 'eye-btn'; b.setAttribute('aria-label', 'Hide or show dollar values');
+    b.addEventListener('click', () => { try{ localStorage.setItem(HKEY, hidOn() ? '0' : '1'); }catch(e){} hidApply(true); }); ab.parentNode.insertBefore(b, ab); }
+  hidApply(false);
+}
+window.addEventListener('storage', e => { if(e.key === HKEY){ hidApply(true); } });
+hidInit();
 fxLoad().then(() => { if(FX) ui(); });
 boot();
 })();

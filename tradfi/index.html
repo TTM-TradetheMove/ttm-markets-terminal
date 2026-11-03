@@ -810,7 +810,7 @@ const $ = id => document.getElementById(id); if(!$('hdAdmin')) return;
 const SK = 'ttm_rr_saved_v1', BK = 'ttm_rr_bals_v1', ACC = 'tradfi';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
 const num = v => { const n = parseFloat(String(v).replace(/,/g, '')); return isFinite(n) ? n : null; };
-const usd = v => (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const usd = v => window.ttmHid && window.ttmHid() ? '\u2022\u2022\u2022\u2022\u2022' : (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 const px = v => v >= 1000 ? Math.round(v).toLocaleString() : v >= 1 ? v.toFixed(2) : v.toPrecision(3);
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 const rd = (k, d) => { try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } };
@@ -2165,7 +2165,7 @@ setInterval(() => {
   const $ = id => document.getElementById(id); let long = true;
   const n = id => { const v = parseFloat($(id).value); return isFinite(v) ? v : NaN; };
   const f = (v, d) => isFinite(v) ? v.toLocaleString('en-US', {maximumFractionDigits: d == null ? 2 : d}) : '—';
-  const usd = v => isFinite(v) ? (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('en-US', {maximumFractionDigits: 2, minimumFractionDigits: 2}) : '—';
+  const usd = v => isFinite(v) ? window.ttmHid && window.ttmHid() ? '\u2022\u2022\u2022\u2022\u2022' : (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('en-US', {maximumFractionDigits: 2, minimumFractionDigits: 2}) : '—';
   const CS = {fx: 100000, idx: 1, com: 1, stk: 1}; let LAST = null;
   const PK = 'ttm_tf_plans_v1', rdP = () => { try{ return JSON.parse(localStorage.getItem(PK) || '[]'); }catch(e){ return []; } }, wrP = l => { try{ localStorage.setItem(PK, JSON.stringify(l.slice(0, 60))); }catch(e){} };
   const IDS = ['txType', 'txSym', 'txBal', 'txLev', 'txRiskMode', 'txRisk', 'txE', 'txSL', 'txCS', 'txFee', 'txT1', 'txS1', 'txT2', 'txS2', 'txT3', 'txS3'];
@@ -2209,7 +2209,7 @@ setInterval(() => {
   setTimeout(plans, 900); setTimeout(plans, 3000); calc();
 })();
 </script>
-<script src="../accounts.js?v=20261103131523"></script>
+<script src="../accounts.js?v=20261103175620"></script>
 <script>
 (function(){
   const secs = Array.from(document.querySelectorAll('body > section[id]'));
