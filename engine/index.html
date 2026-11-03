@@ -1,3 +1,89 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>TTM Automated Trading Engine</title>
-<style>body{margin:0;background:#0b0c0f;color:#e8e6e1;font:16px/1.55 system-ui,sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:24px}main{max-width:560px;text-align:center}h1{color:#f2c14e;font-size:26px;margin:0 0 10px}p{color:#aaa49a}a{color:#f2c14e}</style></head>
-<body><main><h1>TTM Automated Trading Engine</h1><p>Early access. The engine is being built and nothing runs yet.</p><p>Planned access is for members who set up their exchange account through the TTM referral link.</p><p><a href="../index.html">Back to the terminal</a></p></main></body></html>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<link rel="icon" type="image/png" href="../favicon.png"><title>TTM Automated Trading Engine</title>
+<style>
+:root{--bg:#0b0b0c;--card:#17171a;--line:#2a2a2e;--text:#e8e6e1;--mute:#9a968c;--gold:#dba118;--gold2:#f2c14e;--g:#3fb47a;--r:#e0554d}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line)}
+header a.back{color:var(--text);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:13px}
+header b{color:var(--gold2);letter-spacing:.04em;text-transform:uppercase;font-size:14px;flex:1;min-width:160px}
+.acct-btn{background:transparent;border:1px solid var(--gold);color:var(--gold2);padding:7px 12px;border-radius:999px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+main{max-width:1100px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-left,0px)) 60px;display:flex;flex-direction:column;gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
+h1{font-size:24px;margin:0 0 4px;color:var(--gold2)}h2{font-size:13px;letter-spacing:.07em;text-transform:uppercase;color:var(--mute);margin:0 0 12px}
+p.note{color:var(--mute);font-size:13px;margin:6px 0 0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}.tiles div{border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}.tiles small{display:block;color:var(--mute);font-size:11.5px}.tiles strong{font-size:19px;font-variant-numeric:tabular-nums}
+.g{color:var(--g)}.r{color:var(--r)}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button.btn{background:var(--gold);color:#111;border:0;border-radius:9px;padding:9px 14px;font:inherit;font-weight:700;cursor:pointer}button.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}button.btn.off{background:var(--r);color:#fff}button.btn[disabled]{opacity:.5;cursor:default}
+.pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700;border:1px solid var(--line)}.pill.on{color:var(--g);border-color:var(--g)}.pill.offp{color:var(--r);border-color:var(--r)}
+table{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}th,td{text-align:left;padding:8px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--mute);font-weight:600;font-size:12px}.wrap{overflow-x:auto}
+.dec{border-top:1px solid var(--line);padding:10px 0;display:flex;gap:10px}.dec:first-child{border-top:0}.dec i{font-style:normal;font-size:11px;color:var(--mute);white-space:nowrap}.dec .why{color:var(--mute);font-size:13px}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}.form label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mute)}.form input{background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 10px;font:inherit}
+.eye-btn{background:transparent;border:1px solid var(--line);color:var(--mute);width:34px;height:34px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0}.eye-btn.on{color:var(--gold2);border-color:var(--gold)}
+.warn{border:1px solid var(--gold);background:rgba(219,161,24,.08);border-radius:10px;padding:10px 12px;font-size:13.5px}
+.hide-usd .form input.mny{filter:blur(7px)}
+</style></head>
+<body data-terminal="engine">
+<header><a class="back" href="../index.html">&larr; Terminal</a><b>TTM Automated Trading Engine</b><button type="button" class="acct-btn" id="acctBtn">Sign in</button></header>
+<main id="app"><div class="card"><p class="note">Loading&hellip;</p></div></main>
+<script src="../accounts.js"></script>
+<script>
+(function(){
+const $ = id => document.getElementById(id), esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const app = $('app'); let D = null, busy = false, last = '';
+const hid = () => !!(window.ttmHid && window.ttmHid());
+const usd = (v, sb, plus) => { if(hid()){ if(!(sb > 0)) return '•••'; const p = v / sb * 100; return (plus && p > 0 ? '+' : '') + p.toFixed(Math.abs(p) >= 10 ? 1 : 2) + '%'; } return (v < 0 ? '-' : plus && v > 0 ? '+' : '') + '$' + Math.abs(v).toLocaleString(undefined, {maximumFractionDigits: Math.abs(v) < 100 ? 2 : 0}); };
+const px = v => v == null ? '' : v >= 1000 ? Number(v).toLocaleString(undefined, {maximumFractionDigits: 1}) : v >= 1 ? Number(v).toFixed(3) : Number(v).toPrecision(4);
+const ago = t => { if(!t) return 'never'; const m = Math.round((Date.now() - new Date(t).getTime()) / 60000); return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : Math.round(m / 1440) + ' d ago'; };
+const A = (p, o) => window.ttmApi(p, o);
+async function load(){ if(busy) return; busy = true; try{
+  const [c, o, cl, d, e] = await Promise.all([A('/rest/v1/ttm_engine_config?select=*&id=eq.1'), A('/rest/v1/ttm_engine_positions?select=*&status=eq.open&order=opened_at.desc'), A('/rest/v1/ttm_engine_positions?select=*&status=eq.closed&order=closed_at.desc&limit=40'), A('/rest/v1/ttm_engine_decisions?select=*&order=ts.desc&limit=40'), A('/rest/v1/ttm_engine_equity?select=ts,equity&order=ts.desc&limit=500')]);
+  if(!c.ok){ D = {missing: true}; } else D = {cfg: (c.json || [])[0], open: o.json || [], closed: cl.json || [], dec: d.json || [], eq: (e.json || []).slice().reverse()}; }catch(err){ D = {missing: true}; } busy = false; paint(); }
+function locked(msg){ app.innerHTML = `<div class="card"><h1>TTM Automated Trading Engine</h1><p>${msg}</p><p class="note">Early access is for TTM and testers only while it is built.</p><p><a class="btn" style="display:inline-block;text-decoration:none;background:var(--gold);color:#111;border-radius:9px;padding:9px 14px;font-weight:700" href="../index.html">Back to the terminal</a></p></div>`; }
+function chart(eq, start){ if(eq.length < 2) return '<p class="note">The equity line appears after the first hourly check.</p>'; const W = 720, H = 240, L = 58, R = 14, T = 12, B = 24, pct = hid(), val = v => pct ? (start > 0 ? (v / start - 1) * 100 : 0) : v, ys = eq.map(p => val(+p.equity)), lo = Math.min(...ys, val(start)), hi = Math.max(...ys, val(start)), pad = (hi - lo || 1) * .12;
+  const t0 = new Date(eq[0].ts).getTime(), t1 = new Date(eq[eq.length - 1].ts).getTime() || t0 + 1, X = t => L + (t - t0) / (t1 - t0 || 1) * (W - L - R), Y = v => T + (1 - (v - (lo - pad)) / (hi - lo + 2 * pad)) * (H - T - B), fm = v => pct ? (v > 0 ? '+' : '') + v.toFixed(1) + '%' : '$' + Math.round(v).toLocaleString();
+  const path = eq.map((p, i) => (i ? 'L' : 'M') + X(new Date(p.ts).getTime()).toFixed(1) + ' ' + Y(val(+p.equity)).toFixed(1)).join(' '), up = +eq[eq.length - 1].equity >= start, col = up ? '#3fb47a' : '#e0554d', by = Y(val(start));
+  let g = [0, .5, 1].map(f => { const v = lo + (hi - lo) * f, y = Y(v); return `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="rgba(255,255,255,.08)"/><text x="${L - 6}" y="${y + 4}" font-size="10.5" fill="#8b8f9a" text-anchor="end">${fm(v)}</text>`; }).join('');
+  g += `<line x1="${L}" x2="${W - R}" y1="${by}" y2="${by}" stroke="#dba118" stroke-dasharray="4 4" opacity=".6"/><path d="${path} L${X(t1)} ${by} L${X(t0)} ${by} Z" fill="${col}" opacity=".14"/><path d="${path}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linejoin="round"/><circle cx="${X(t1)}" cy="${Y(val(+eq[eq.length - 1].equity))}" r="4.5" fill="${col}"/>`;
+  const fd = t => new Date(t).toLocaleDateString(undefined, {day: 'numeric', month: 'short'}); g += `<text x="${L}" y="${H - 6}" font-size="10.5" fill="#8b8f9a">${fd(t0)}</text><text x="${W - R}" y="${H - 6}" font-size="10.5" fill="#8b8f9a" text-anchor="end">${fd(t1)}</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${g}</svg>`; }
+function paint(){
+  const who = window.ttmWho ? window.ttmWho() : {user: false, ready: false};
+  if(!who.ready && !D){ return; }
+  if(!who.user){ locked('Sign in with your TTM account to continue.'); return; }
+  if(!who.tester){ locked('The engine is locked for your account.'); return; }
+  if(!D){ app.innerHTML = '<div class="card"><p class="note">Loading&hellip;</p></div>'; return; }
+  if(D.missing){ app.innerHTML = '<div class="card"><h1>One setup step is missing</h1><p>Run <b>supabase/engine.sql</b> in the Supabase SQL editor, then refresh this page.</p></div>'; return; }
+  const c = D.cfg, adm = who.admin, start = +c.start_balance, eq = D.eq, cur = eq.length ? +eq[eq.length - 1].equity : start, cl = D.closed, w = cl.filter(x => +x.pnl > 0).length, l = cl.filter(x => +x.pnl < 0).length;
+  let peak = start, dd = 0; eq.forEach(p => { peak = Math.max(peak, +p.equity); dd = Math.max(dd, peak - +p.equity); });
+  const tile = (k, v, cls) => `<div><small>${k}</small><strong class="${cls || ''}">${v}</strong></div>`, ts = new Date(c.last_tick).getTime(), stale = c.enabled && (!c.last_tick || Date.now() - ts > 3 * 3600000);
+  const open = D.open.map(p => `<tr><td><b>${esc(p.pair)}</b></td><td class="${p.side === 'long' ? 'g' : 'r'}">${p.side}</td><td>${px(+p.entry)}</td><td>${px(+p.sl)}</td><td>${p.tp == null ? '—' : px(+p.tp)}</td><td>${p.lev}×</td><td>${usd(+p.notional, start)}</td><td>${ago(p.opened_at)}</td></tr>`).join('') || '<tr><td colspan="8" style="color:var(--mute)">No open positions.</td></tr>';
+  const closed = cl.map(p => `<tr><td><b>${esc(p.pair)}</b></td><td class="${p.side === 'long' ? 'g' : 'r'}">${p.side}</td><td>${px(+p.entry)}</td><td>${px(+p.exit_price)}</td><td class="${+p.pnl >= 0 ? 'g' : 'r'}"><b>${usd(+p.pnl, start, true)}</b></td><td>${esc(p.close_reason || '')}</td><td>${ago(p.closed_at)}</td></tr>`).join('') || '<tr><td colspan="7" style="color:var(--mute)">No closed trades yet.</td></tr>';
+  const dec = D.dec.map(d => `<div class="dec"><i>${ago(d.ts)}</i><div><b>${esc(d.pair || '')}</b> ${esc((d.action || '').replace('_', ' '))} ${d.accepted ? '' : '<span class="pill offp">rejected: ' + esc(d.reject_reason || '') + '</span>'}<div class="why">${esc(d.reason || '')}</div></div></div>`).join('') || '<p class="note">No decisions yet. Switch the engine on and wait for the next hour.</p>';
+  const keep = ['eng_pairs', 'eng_risk', 'eng_open', 'eng_lev', 'eng_start', 'eng_model'].reduce((o, i) => { const el = $(i); if(el && document.activeElement === el) o[i] = el.value; return o; }, {});
+  app.innerHTML = `<div class="card"><h1>TTM Automated Trading Engine</h1><p class="note">Version 1 is <b>paper trading</b>. Claude reads live Bitget prices each hour and decides whether to open, close or hold. Orders are simulated. No exchange keys and no real money are used.</p>
+    <div class="bar" style="margin-top:12px"><span class="pill ${c.enabled ? 'on' : 'offp'}">${c.enabled ? 'ON' : 'OFF'}</span><span class="note" style="margin:0">Last check ${ago(c.last_tick)}</span>${adm ? `<button class="btn ${c.enabled ? 'off' : ''}" id="engTog">${c.enabled ? 'Switch off' : 'Switch on'}</button><button class="btn ghost" id="engRun" ${c.enabled ? '' : 'disabled'}>Check now</button>` : ''}</div>
+    ${c.last_error ? `<div class="warn" style="margin-top:12px"><b>Last check had a problem:</b> ${esc(c.last_error)}</div>` : ''}${stale ? '<div class="warn" style="margin-top:12px">No check in the last 3 hours. The hourly schedule may not be set up, or the function is not deployed.</div>' : ''}<p class="note" id="engMsg"></p></div>
+    <div class="card"><h2>Paper account</h2><div class="tiles">${tile('Equity', hid() ? '\u2022\u2022\u2022\u2022\u2022' : usd(cur, start))}${tile('Result since start', usd(cur - start, start, true), cur >= start ? 'g' : 'r')}${tile('Closed trades', cl.length)}${tile('Win rate', w + l ? Math.round(w / (w + l) * 100) + '%' : '—')}${tile('Open positions', D.open.length)}${tile('Max drawdown', dd ? usd(-dd, start) : '—', dd ? 'r' : '')}</div></div>
+    <div class="card"><h2>Equity</h2>${chart(eq, start)}</div>
+    <div class="card"><h2>Open positions</h2><div class="wrap"><table><thead><tr><th>Pair</th><th>Side</th><th>Entry</th><th>Stop</th><th>Target</th><th>Lev</th><th>Size</th><th>Opened</th></tr></thead><tbody>${open}</tbody></table></div></div>
+    <div class="card"><h2>What the AI decided</h2>${dec}</div>
+    <div class="card"><h2>Closed trades</h2><div class="wrap"><table><thead><tr><th>Pair</th><th>Side</th><th>Entry</th><th>Exit</th><th>Result</th><th>How</th><th>Closed</th></tr></thead><tbody>${closed}</tbody></table></div></div>
+    ${adm ? `<div class="card"><h2>Settings</h2><div class="form"><label>Pairs (comma separated)<input id="eng_pairs" value="${esc((c.pairs || []).join(', '))}"></label><label>Risk per trade (% of equity)<input id="eng_risk" type="number" step="0.1" min="0.1" max="5" value="${c.risk_pct}"></label><label>Max open positions<input id="eng_open" type="number" min="1" max="10" value="${c.max_open}"></label><label>Max leverage<input id="eng_lev" type="number" step="0.5" min="1" max="10" value="${c.max_lev}"></label><label>Starting balance (US$)<input id="eng_start" class="mny" type="number" min="100" value="${c.start_balance}"></label><label>AI model<input id="eng_model" value="${esc(c.model)}"></label></div>
+      <div class="bar" style="margin-top:12px"><button class="btn" id="engSave">Save settings</button><button class="btn ghost" id="engReset">Reset paper account</button></div><p class="note">Changing the starting balance only applies after a reset. Reset deletes all paper trades, decisions and the equity line, and switches the engine off.</p></div>` : ''}
+    <p class="note">Paper results do not predict real results. Simulated fills ignore slippage and queue position. This is not financial advice.</p>`;
+  Object.keys(keep).forEach(i => { if($(i)) $(i).value = keep[i]; }); }
+document.addEventListener('click', async ev => { const t = ev.target.closest && ev.target.closest('button'); if(!t || !D || !D.cfg) return; const m = $('engMsg'), say = s => { if($('engMsg')) $('engMsg').textContent = s; };
+  if(t.id === 'engTog'){ const r = await A('/rest/v1/ttm_engine_config?id=eq.1', {method: 'PATCH', body: JSON.stringify({enabled: !D.cfg.enabled, updated_at: new Date().toISOString()})}); if(!r.ok) say('Could not save.'); load(); }
+  else if(t.id === 'engRun'){ t.disabled = true; say('Checking the market and asking the AI. This takes about 10 to 30 seconds…'); try{ const cfg = window.ttmCfg(), tk = await window.ttmWho().token(); const r = await fetch(cfg.url + '/functions/v1/engine-tick', {method: 'POST', headers: {apikey: cfg.key, Authorization: 'Bearer ' + tk, 'Content-Type': 'application/json'}, body: '{}'}); const j = await r.json().catch(() => ({})); say(j.ok ? 'Done.' : j.skipped || ('Problem: ' + (j.error || j.reason || r.status))); }catch(e){ say('Could not reach the function. Is engine-tick deployed?'); } load(); }
+  else if(t.id === 'engSave'){ const body = {pairs: ($('eng_pairs').value || '').split(',').map(x => x.trim().toUpperCase()).filter(Boolean), risk_pct: +$('eng_risk').value, max_open: +$('eng_open').value, max_lev: +$('eng_lev').value, start_balance: +$('eng_start').value, model: $('eng_model').value.trim() || 'claude-sonnet-5-5'};
+    if(!body.pairs.length || !(body.risk_pct > 0 && body.risk_pct <= 5) || !(body.max_open >= 1) || !(body.max_lev >= 1) || !(body.start_balance >= 100)){ say('Check the settings: risk 0.1 to 5, at least one pair, leverage at least 1.'); return; }
+    const r = await A('/rest/v1/ttm_engine_config?id=eq.1', {method: 'PATCH', body: JSON.stringify(body)}); say(r.ok ? 'Saved.' : 'Could not save.'); load(); }
+  else if(t.id === 'engReset'){ if(!t.dataset.sure){ t.dataset.sure = '1'; t.textContent = 'Tap again to delete all paper trades'; setTimeout(() => { if(t.isConnected){ delete t.dataset.sure; t.textContent = 'Reset paper account'; } }, 4000); return; }
+    const r = await A('/rest/v1/rpc/ttm_engine_reset', {method: 'POST', body: '{}'}); say(r.ok ? 'Reset. The engine is off.' : 'Could not reset.'); load(); } });
+window.addEventListener('ttm-hide', paint);
+let tries = 0; const boot = setInterval(() => { const w = window.ttmWho ? window.ttmWho() : null; if(w && w.ready){ clearInterval(boot); if(w.user && w.tester) load(); else paint(); } else if(++tries > 40){ clearInterval(boot); paint(); } }, 300);
+setInterval(() => { const w = window.ttmWho ? window.ttmWho() : null; if(w && w.user && w.tester && !document.hidden) load(); }, 30000);
+})();
+</script></body></html>
