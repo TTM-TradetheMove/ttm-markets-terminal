@@ -3578,7 +3578,8 @@ function pushInputs(){
 }
 const num = v => { const n = parseFloat(v); return isFinite(n) ? n : null; };
 const usd = v => v == null || !isFinite(v) ? '—' : window.ttmHid && window.ttmHid() ? '\u2022\u2022\u2022\u2022\u2022' : (v < 0 ? '-' : '') + '$' + Math.abs(v).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-window.addEventListener('ttm-hide', () => { [render, renderAcct, renderSaved, renderJournal].forEach(f => { try{ f(); }catch(e){} }); });
+const ax = (v, base) => window.ttmHid && window.ttmHid() ? (base > 0 ? ((v / base - 1) * 100 >= 0 ? '+' : '') + ((v / base - 1) * 100).toFixed(1) + '%' : '\u2022\u2022\u2022') : Math.round(v).toLocaleString();
+window.addEventListener('ttm-hide', () => { [render, renderAcct, renderSaved, renderJournal, renderPortfolio].forEach(f => { try{ f(); }catch(e){} }); });
 const pr = v => v == null || !isFinite(v) ? '—' : v >= 1000 ? v.toLocaleString(undefined, {maximumFractionDigits: 2}) : v >= 1 ? v.toFixed(3) : v >= 0.01 ? v.toFixed(5) : v.toPrecision(4);
 const qty = v => v == null || !isFinite(v) ? '—' : v >= 100 ? v.toFixed(2) : v >= 1 ? v.toFixed(4) : v.toPrecision(4);
 // split entry: up to 5 limit orders; returns the valid rows with their share of the position (scaled to 100%)
@@ -3792,7 +3793,7 @@ function curve(pts){
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   const X = i => L + (W - L - R) * (i / (pts.length - 1)), Y = v => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
   let g = '';
-  [0, .5, 1].forEach(f => { const v = lo + (hi - lo) * f; g += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.08)"/><text x="${L - 6}" y="${Y(v) + 4}" font-size="${fs}" fill="#8b8f9a" text-anchor="end">${Math.round(v).toLocaleString()}</text>`; });
+  [0, .5, 1].forEach(f => { const v = lo + (hi - lo) * f; g += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.08)"/><text x="${L - 6}" y="${Y(v) + 4}" font-size="${fs}" fill="#8b8f9a" text-anchor="end">${ax(v, pts[0].v)}</text>`; });
   g += `<line x1="${L}" x2="${W - R}" y1="${Y(pts[0].v)}" y2="${Y(pts[0].v)}" stroke="#dba118" stroke-dasharray="4 4" opacity=".6"/>`;
   g += `<polyline fill="none" stroke="#dba118" stroke-width="2.2" points="${pts.map((p, i) => X(i) + ',' + Y(p.v)).join(' ')}"/>`;
   pts.forEach((p, i) => { g += `<circle cx="${X(i)}" cy="${Y(p.v)}" r="3.2" fill="${i === 0 ? '#8b8f9a' : p.d >= 0 ? '#3fb47a' : '#e0554d'}"><title>${esc(p.label)}: ${usd(p.v)}</title></circle>`; });
@@ -4384,13 +4385,13 @@ function renderPortfolio(){
   const n = hist.length, N = n + 2, vals = hist.concat([T.actual]).concat(hasOpen ? [T.best, T.worst].concat(T.exp != null ? [T.exp] : []) : []);
   let lo = Math.min(...vals), hi = Math.max(...vals); const pad = (hi - lo) * .15 || hi * .03 || 1; lo -= pad; hi += pad;
   const X = i => L + (W - L - R) * (i / N), Y = v => Tp + (H - Tp - Bt) * (1 - (v - lo) / (hi - lo));
-  let g = ''; [0, .5, 1].forEach(f => { const v = lo + (hi - lo) * f; g += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.07)"/><text x="${L - 6}" y="${Y(v) + 4}" font-size="${fs - .5}" fill="#8b8f9a" text-anchor="end">${Math.round(v).toLocaleString()}</text>`; });
+  let g = ''; [0, .5, 1].forEach(f => { const v = lo + (hi - lo) * f; g += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.07)"/><text x="${L - 6}" y="${Y(v) + 4}" font-size="${fs - .5}" fill="#8b8f9a" text-anchor="end">${ax(v, T.start)}</text>`; });
   g += `<line x1="${L}" x2="${W - R}" y1="${Y(T.start)}" y2="${Y(T.start)}" stroke="#dba118" stroke-dasharray="4 4" opacity=".5"/>`;
   g += `<polyline fill="none" stroke="#dba118" stroke-width="2.2" points="${hist.map((v, i) => X(i) + ',' + Y(v)).join(' ')}"/>`;
   hist.forEach((v, i) => { g += `<circle cx="${X(i)}" cy="${Y(v)}" r="3" fill="#dba118"/>`; });
   const x0 = X(n - 1), x1 = X(N), fan = [['Targets hit', hasOpen ? T.best : null, '#3fb47a'], ['Actual now', T.actual, '#f2c14e'], ['Expected', hasOpen ? T.exp : null, '#aeb2bd'], ['Stops hit', hasOpen ? T.worst : null, '#e0554d']].filter(f => f[1] != null);
   let lastLy = -99; fan.slice().sort((a, b) => b[1] - a[1]).forEach(f => { let ty = Y(f[1]); if(ty - lastLy < fs + 8) ty = lastLy + fs + 8; lastLy = ty;
-    g += `<line x1="${x0}" y1="${Y(hist[n - 1])}" x2="${x1}" y2="${Y(f[1])}" stroke="${f[2]}" stroke-width="${f[0] === 'Actual now' ? 2.4 : 1.6}" ${f[0] === 'Actual now' ? '' : 'stroke-dasharray="6 4"'}/><circle cx="${x1}" cy="${Y(f[1])}" r="4" fill="${f[2]}"/><rect x="${x1 + 8}" y="${ty - fs / 2 - 4}" width="${R - 12}" height="${fs + 8}" rx="4" fill="${f[2]}"/><text x="${x1 + 13}" y="${ty + fs / 2 - 1}" font-size="${fs}" font-weight="700" fill="#111">${f[0]} ${Math.round(f[1]).toLocaleString()}</text>`; });
+    g += `<line x1="${x0}" y1="${Y(hist[n - 1])}" x2="${x1}" y2="${Y(f[1])}" stroke="${f[2]}" stroke-width="${f[0] === 'Actual now' ? 2.4 : 1.6}" ${f[0] === 'Actual now' ? '' : 'stroke-dasharray="6 4"'}/><circle cx="${x1}" cy="${Y(f[1])}" r="4" fill="${f[2]}"/><rect x="${x1 + 8}" y="${ty - fs / 2 - 4}" width="${R - 12}" height="${fs + 8}" rx="4" fill="${f[2]}"/><text x="${x1 + 13}" y="${ty + fs / 2 - 1}" font-size="${fs}" font-weight="700" fill="#111">${f[0]} ${ax(f[1], T.start)}</text>`; });
   g += `<text x="${L}" y="${H - 6}" font-size="${fs - .5}" fill="#6c707b">Start</text>` + (n > 1 ? `<text x="${x0}" y="${H - 6}" font-size="${fs - .5}" fill="#6c707b" text-anchor="middle">Today (${n - 1} closed)</text>` : '');
   svg.innerHTML = g;
   let h = '<thead><tr><th>Account</th><th>Realised balance</th><th>Open P&amp;L now</th><th>Actual now</th><th>Expected</th><th>If targets hit</th><th>If stops hit (loss)</th><th>Open</th></tr></thead><tbody>';
@@ -4918,7 +4919,7 @@ window.addEventListener('ttm-hide', paint); window.addEventListener('hashchange'
 fill(); paint();
 })();
 </script>
-<script src="../accounts.js?v=20261103182035"></script>
+<script src="../accounts.js?v=20261103182154"></script>
 <script>
 (function(){
   const secs = Array.from(document.querySelectorAll('body > section[id]'));
