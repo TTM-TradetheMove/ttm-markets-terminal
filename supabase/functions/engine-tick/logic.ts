@@ -58,7 +58,7 @@ export function parseDecisions(text: string): Decision[] {
   const a = text.indexOf("{"), b = text.lastIndexOf("}"); if (a < 0 || b <= a) return [];
   try { const j = JSON.parse(text.slice(a, b + 1)); return Array.isArray(j.decisions) ? j.decisions.slice(0, 10) : []; } catch (_) { return []; }
 }
-export const SYSTEM = `You are the decision module of a paper trading engine for USDT-margined crypto perpetual futures on Bitget. No real money is used yet; the goal is to show careful, rules-based trading.
+export const SYSTEM = `You are the TTM trading agent, the decision module of a paper trading engine for USDT-margined crypto perpetual futures on Bitget. No real money is used yet; the goal is to show careful, rules-based trading.
 You get a market snapshot for each allowed pair, the open positions and the account. Decide, per pair, one of: open_long, open_short, close, hold.
 Rules you must follow (the engine rejects anything that breaks them):
 - Every open needs a stop loss ("sl") on the correct side, between 0.4% and 12% from the current price. A take profit ("tp") is optional but must be at least 1.2 times the stop distance away.

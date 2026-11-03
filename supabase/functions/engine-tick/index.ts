@@ -60,7 +60,7 @@ function parseDecisions(text: string): Decision[] {
   const a = text.indexOf("{"), b = text.lastIndexOf("}"); if (a < 0 || b <= a) return [];
   try { const j = JSON.parse(text.slice(a, b + 1)); return Array.isArray(j.decisions) ? j.decisions.slice(0, 10) : []; } catch (_) { return []; }
 }
-const SYSTEM = `You are the decision module of a paper trading engine for USDT-margined crypto perpetual futures on Bitget. No real money is used yet; the goal is to show careful, rules-based trading.
+const SYSTEM = `You are the TTM trading agent, the decision module of a paper trading engine for USDT-margined crypto perpetual futures on Bitget. No real money is used yet; the goal is to show careful, rules-based trading.
 You get a market snapshot for each allowed pair, the open positions and the account. Decide, per pair, one of: open_long, open_short, close, hold.
 Rules you must follow (the engine rejects anything that breaks them):
 - Every open needs a stop loss ("sl") on the correct side, between 0.4% and 12% from the current price. A take profit ("tp") is optional but must be at least 1.2 times the stop distance away.
@@ -93,7 +93,7 @@ async function ask(model: string, content: string): Promise<string> {
   const k = Deno.env.get("ANTHROPIC_API_KEY"); if (!k) throw new Error("ANTHROPIC_API_KEY secret is missing");
   const r = await fetch("https://api.anthropic.com/v1/messages", {method: "POST", headers: {"x-api-key": k, "anthropic-version": "2023-06-01", "content-type": "application/json"},
     body: JSON.stringify({model, max_tokens: 1200, system: SYSTEM, messages: [{role: "user", content}]})});
-  const j = await r.json(); if (!r.ok) throw new Error("Claude: " + (j.error?.message || r.status));
+  const j = await r.json(); if (!r.ok) throw new Error("Agent: " + (j.error?.message || r.status));
   return (j.content || []).filter((b: any) => b.type === "text").map((b: any) => b.text).join("");
 }
 
@@ -103,9 +103,12 @@ Deno.serve(async (req) => {
   const cfgRow = (await get("ttm_engine_config?select=*&id=eq.1"))[0]; if (!cfgRow) return out({ok: false, reason: "run engine.sql first"}, 500);
   if (!cfgRow.enabled) return out({ok: true, skipped: "engine is switched off"});
   const cfg: Cfg = {risk_pct: num(cfgRow.risk_pct), max_open: num(cfgRow.max_open), max_lev: num(cfgRow.max_lev), pairs: cfgRow.pairs || []};
-  const log: string[] = []; let err = "";
+  const log: string[] = []; let err = "", warn = "";
   try {
-    const cs: Record<string, Candle[]> = {}; for (const p of cfg.pairs) cs[p] = await candles(p);
+    const cs: Record<string, Candle[]> = {}, skipped: string[] = [];
+    for (const p of cfg.pairs) { try { cs[p] = await candles(p); if (cs[p].length < 30) throw new Error("too little data"); } catch (_) { delete cs[p]; skipped.push(p); } }
+    cfg.pairs = cfg.pairs.filter((p) => cs[p]); if (!cfg.pairs.length) throw new Error("No pair returned Bitget data. Skipped: " + skipped.join(", "));
+    if (skipped.length) warn = "Skipped (no Bitget futures data): " + skipped.join(", ");
     const price = (p: string) => cs[p][cs[p].length - 1].c;
     const open: Pos[] = (await get("ttm_engine_positions?select=*&status=eq.open&order=id.asc")).map((x: any) => ({...x, entry: num(x.entry), units: num(x.units), notional: num(x.notional), lev: num(x.lev), margin: num(x.margin), sl: num(x.sl), tp: x.tp == null ? null : num(x.tp), risk_usd: num(x.risk_usd)}));
     const closeIt = async (p: Pos, px: number, why: string) => { const pnl = pnlOf(p, px);
@@ -118,14 +121,14 @@ Deno.serve(async (req) => {
     const realised = closed.reduce((t: number, x: any) => t + num(x.pnl || 0), 0), start = num(cfgRow.start_balance);
     const unreal = (ps: Pos[]) => ps.reduce((t, p) => t + (cs[p.pair] ? pnlOf(p, price(p.pair)) : 0), 0);
     const account = (ps: Pos[]) => { const eq = start + realised + unreal(ps), cash = start + realised - ps.reduce((t, p) => t + p.margin, 0); return {equity: eq, cash}; };
-    // 3) ask Claude
+    // 3) ask the agent
     let acc = account(still);
     const snaps = cfg.pairs.map((p) => snapshot(p, cs[p]));
     const content = JSON.stringify({account: {equity: +acc.equity.toFixed(2), free_cash: +acc.cash.toFixed(2), risk_per_trade_pct: cfg.risk_pct, max_open_positions: cfg.max_open, max_leverage: cfg.max_lev},
       open_positions: still.map((p) => ({pair: p.pair, side: p.side, entry: p.entry, sl: p.sl, tp: p.tp, unrealised_usd: +pnlOf(p, price(p.pair)).toFixed(2), opened: p.opened_at})),
       recent_closed: closed.slice(0, 5).map((x: any) => ({pair: x.pair, side: x.side, pnl: +num(x.pnl).toFixed(2), how: x.close_reason})), market: snaps, time_utc: new Date().toISOString()});
     let raw = ""; try { raw = await ask(cfgRow.model || "claude-sonnet-5-5", content); } catch (e) { err = String(e).slice(0, 300); }
-    const decisions = parseDecisions(raw); if (raw && !decisions.length) err = "Claude reply could not be read";
+    const decisions = parseDecisions(raw); if (raw && !decisions.length) err = "The agent reply could not be read";
     // 4) check each decision against the hard rules, then simulate it
     for (const d of decisions) {
       const pair = String(d.pair || ""), px = cs[pair] ? price(pair) : 0, act = String(d.action || "hold"); let ok = false, why = "";
@@ -141,6 +144,6 @@ Deno.serve(async (req) => {
     // 5) equity snapshot and status
     acc = account(still); await rest("ttm_engine_equity", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({equity: acc.equity, cash: acc.cash, unrealised: unreal(still)})});
   } catch (e) { err = String(e).slice(0, 300); }
-  await rest("ttm_engine_config?id=eq.1", {method: "PATCH", body: JSON.stringify({last_tick: new Date().toISOString(), last_error: err || null})});
+  await rest("ttm_engine_config?id=eq.1", {method: "PATCH", body: JSON.stringify({last_tick: new Date().toISOString(), last_error: err || warn || null})});
   return out({ok: !err, error: err || undefined, log});
 });

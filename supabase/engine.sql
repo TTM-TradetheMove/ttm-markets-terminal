@@ -4,7 +4,7 @@
 create table if not exists public.ttm_engine_config (
   id int primary key default 1 check (id = 1),
   enabled boolean not null default false,            -- the kill switch
-  pairs text[] not null default '{BTCUSDT,ETHUSDT,SOLUSDT}',
+  pairs text[] not null default '{BTCUSDT,ETHUSDT,SOLUSDT,FETUSDT,BIOUSDT,AVAXUSDT,ICPUSDT,APTUSDT,SEIUSDT,XLMUSDT}',
   start_balance numeric not null default 10000,
   risk_pct numeric not null default 1,               -- max % of equity risked on one trade
   max_open int not null default 3,
