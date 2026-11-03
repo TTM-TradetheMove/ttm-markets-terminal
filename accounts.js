@@ -154,7 +154,7 @@ function upsell(key){
   track('lock', TERM + '|feat:' + key);
   const label = (CAT.find(c => c[0] === key) || [0, key, 0])[1].replace(/^(Crypto|TradFi) · /, '');
   if(SET.wall && !USER){ openAuth('<p>Sign in to continue. It is free and takes a minute.</p>' + signInForm()); return; }
-  openAuth(USER ? `<p><b>${e(label)}</b> is included with the <b>${e(needText(key))}</b> plan. You are on <b>${e(pname(PROF.plan))}</b>. Paid plans are not open for self-sign-up yet; ask TTM on Telegram.</p><div class="row"><button class="ttm-btn ghost" id="authClose">Close</button></div>`
+  openAuth(USER ? `<p><b>${e(label)}</b> is included with the <b>${e(needText(key))}</b> plan. You are on <b>${e(pname(PROF.plan))}</b>. Paid plans are not open for self-sign-up yet. Send TTM a direct message to ask.</p><div class="row"><button class="ttm-btn" id="lockDm">Direct Message TTM</button><button class="ttm-btn ghost" id="authClose">Close</button></div>`
     : `<p><b>${e(label)}</b> is included with the <b>${e(needText(key))}</b> plan. Sign in to continue.</p>` + signInForm());
 }
 window.ttmMyPush = async (key, title, body) => { if(!USER) return false; const r = await api('/rest/v1/ttm_my_alerts?on_conflict=user_id,ukey', {method: 'POST', headers: {Prefer: 'resolution=ignore-duplicates,return=minimal'}, body: JSON.stringify({user_id: USER.id, ukey: key, title, body})}); return r.ok; };
@@ -208,6 +208,7 @@ const closeAuth = () => modal.classList.remove('open');
 document.addEventListener('click', async ev => {
   const t = ev.target; if(!t || !t.id && !t.closest) return;
   if(t.id === 'acctBtn'){ if(!USER) openAuth(); else if(TERM === 'home'){ const a = $('account'); if(a) a.scrollIntoView({behavior: 'smooth'}); } else location.href = BASE + 'index.html#account'; }
+  else if(t.id === 'lockDm'){ closeAuth(); const cb = $('ttmChatBtn'); if(cb) cb.click(); }
   else if(t.id === 'authClose' || t === modal) closeAuth();
   else if(t.id === 'memSignIn' || t.id === 'lockSignIn' || t.id === 'wallSignIn') openAuth();
   else if(t.id === 'ttmChatBtn' || t.closest && t.closest('#ttmChatBtn')){ chatToggle(!CH.open); }
@@ -323,7 +324,7 @@ function applyGates(){
     if(lock){ const title = (sec.querySelector('h2') || {}).textContent || 'This section';
       if(!lp){ lp = document.createElement('div'); lp.className = 'lock-panel'; wrap.insertBefore(lp, wrap.firstChild); }
       lp.innerHTML = SET.wall && !USER ? `<h3>Sign in to continue</h3><p>Create a free TTM account, or sign in, to open the terminal.</p><button class="ttm-btn" id="lockSignIn">Sign in / create free account</button>`
-        : `<h3>🔒 ${e(title)}</h3><p>This section is included with the <b>${e(needText(key))}</b> plan.${USER ? ` You are on <b>${e(pname(PROF.plan))}</b>. Paid plans are not open for self-sign-up yet; ask TTM on Telegram.` : ' Sign in to see what your plan includes.'}</p>${USER ? '' : '<button class="ttm-btn" id="lockSignIn">Sign in / create free account</button>'}`; }
+        : `<h3>🔒 ${e(title)}</h3><p>This section is included with the <b>${e(needText(key))}</b> plan.${USER ? ` You are on <b>${e(pname(PROF.plan))}</b>. Paid plans are not open for self-sign-up yet.` : ' Sign in to see what your plan includes.'}</p>${USER ? '<button class="ttm-btn" id="lockDm">Direct Message TTM</button>' : '<button class="ttm-btn" id="lockSignIn">Sign in / create free account</button>'}`; }
     else if(lp) lp.remove();
     betaMark(sec, key, wrap, !lock && betaKey(key));
     const offAll = lock && (SET.access[key] || []).filter(x => x !== 'beta').length === 0; document.querySelectorAll(`a[href="#${sec.id}"]`).forEach(a => { if(lock) a.setAttribute('data-lk', '1'); else a.removeAttribute('data-lk'); if(offAll) a.setAttribute('data-hid', '1'); else a.removeAttribute('data-hid'); });
@@ -731,7 +732,7 @@ document.addEventListener('click', async ev => {
   if(r.ok){ SET.charging = ch; SET.wall = wall; SET.track = $('admTrack').checked; SET.access = acc; $('admNote').textContent = 'Saved.'; ui(); } else $('admNote').textContent = 'Could not save (are you an admin?).'; });
 window.addEventListener('hashchange', () => { setTimeout(() => { adminUi(); insUi(); ui(); }, 80); });
 
-// ---------- Message TTM (Pro, private) and live sessions ----------
+// ---------- Message TTM (every signed-in member, private) and live sessions ----------
 const css2 = document.createElement('style');
 css2.textContent = `#ttmChatBtn{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:2600;background:var(--gold,#dba118);color:#111;border:0;border-radius:999px;padding:11px 16px;font:inherit;font-weight:800;font-size:13.5px;cursor:pointer;box-shadow:0 6px 22px rgba(0,0,0,.5)}#ttmChatBtn i{font-style:normal;background:#e0554d;color:#fff;border-radius:999px;padding:1px 7px;margin-left:8px;font-size:12px}
 #ttmChat{position:fixed;right:16px;bottom:calc(70px + env(safe-area-inset-bottom,0px));z-index:2700;width:360px;max-width:calc(100vw - 24px);height:480px;max-height:calc(100vh - 110px);background:var(--card,#16161a);border:1px solid var(--gold,#dba118);border-radius:14px;display:none;flex-direction:column;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.65);color:var(--text,#e8e6e1)}#ttmChat.open{display:flex}
@@ -742,7 +743,7 @@ css2.textContent = `#ttmChatBtn{position:fixed;right:16px;bottom:calc(16px + env
 #ttmLive{background:linear-gradient(90deg,rgba(219,161,24,.22),rgba(219,161,24,.1));border-bottom:1px solid var(--gold,#dba118);padding:9px 16px;display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;font-size:14px;color:var(--text,#e8e6e1);position:relative;z-index:50}#ttmLive b{color:var(--gold2,#f2c14e);letter-spacing:.06em;font-size:12px}#ttmLive a{background:var(--gold,#dba118);color:#111;border-radius:999px;padding:5px 14px;font-weight:800;text-decoration:none}`;
 document.head.appendChild(css2);
 const CH = {open: false, msgs: [], sel: null, who: {}, t: null, ready: false};
-const isAdm = () => !!(PROF && PROF.is_admin), chatOK = () => on() && !!USER && (isAdm() || isPro());
+const isAdm = () => !!(PROF && PROF.is_admin), chatOK = () => on() && !!USER;
 const chUnread = () => CH.msgs.filter(m => !m.seen && (isAdm() ? !m.from_admin : m.from_admin)).length;
 function chatUi(){
   let b = $('ttmChatBtn');
