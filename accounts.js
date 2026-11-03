@@ -905,9 +905,14 @@ function rmBuild(){
     <p class="calendar-note" id="rmNote" style="margin:8px 0 0">Be respectful. TTM can remove messages and mute members. Nothing here is financial advice.</p>`;
   $('rmIn').addEventListener('keydown', ev => { if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); rmSend(); } });
   $('rmIn').addEventListener('paste', ev => { const it = Array.from((ev.clipboardData || {}).items || []).find(x => x.type && x.type.indexOf('image/') === 0); if(it){ ev.preventDefault(); rmPick1(it.getAsFile()); } });
-  const rmApp = $('rmApp'); ['dragenter', 'dragover'].forEach(e => rmApp.addEventListener(e, ev => { ev.preventDefault(); rmApp.style.outline = '2px dashed var(--accent,#4da3ff)'; }));
-  ['dragleave', 'drop'].forEach(e => rmApp.addEventListener(e, ev => { ev.preventDefault(); rmApp.style.outline = ''; }));
-  rmApp.addEventListener('drop', ev => { const f = Array.from((ev.dataTransfer || {}).files || []).find(x => /^image\/(png|jpeg|gif|webp)$/.test(x.type)); if(f) rmPick1(f); else { const n = $('rmNote'); if(n) n.textContent = 'Drop a PNG, JPG, GIF or WebP image.'; } });
+  if(!window.__rmDD){ window.__rmDD = 1;
+    const live = () => $('rmApp') && location.hash === '#community';
+    ['dragenter', 'dragover'].forEach(e => document.addEventListener(e, ev => { if(!live()) return; ev.preventDefault(); if(ev.dataTransfer) ev.dataTransfer.dropEffect = 'copy'; $('rmApp').style.outline = '2px dashed var(--accent,#4da3ff)'; }));
+    document.addEventListener('dragleave', ev => { if(live() && !ev.relatedTarget) $('rmApp').style.outline = ''; });
+    document.addEventListener('drop', ev => { if(!live()) return; ev.preventDefault(); $('rmApp').style.outline = ''; const n = $('rmNote'), fl = Array.from((ev.dataTransfer || {}).files || []);
+      const f = fl.find(x => /^image\/(png|jpeg|gif|webp)$/.test(x.type) || /\.(png|jpe?g|gif|webp)$/i.test(x.name));
+      if(f) rmPick1(f.type ? f : new File([f], f.name, {type: /gif$/i.test(f.name) ? 'image/gif' : /png$/i.test(f.name) ? 'image/png' : /webp$/i.test(f.name) ? 'image/webp' : 'image/jpeg'}));
+      else if(n) n.textContent = fl.length ? 'Drop a PNG, JPG, GIF or WebP image from your computer.' : 'That drop was a link, not a file. Save the GIF to your computer first, or paste its link in the message box.'; }); }
   $('rmFile').addEventListener('change', ev => { const f = ev.target.files && ev.target.files[0]; ev.target.value = ''; if(f) rmPick1(f); });
   RM.built = true; presBeat().then(presLoad); return true;
 }
