@@ -1,6 +1,7 @@
 // TTM Automated Trading Engine (paper trading). Single file for the Supabase dashboard editor. Keep Verify JWT OFF.
 // Secrets: ANTHROPIC_API_KEY and ENGINE_KEY.
 // Pure trading logic for the TTM engine (paper trading). No network, no database. Tested on its own.
+import webpush from "npm:web-push@3.6.7";
 type Candle = {t: number; o: number; h: number; l: number; c: number};
 type Pos = {id: number; pair: string; side: "long" | "short"; entry: number; units: number; notional: number; lev: number; margin: number; sl: number; tp: number | null; risk_usd: number; opened_at: string};
 type Cfg = {risk_pct: number; max_open: number; max_lev: number; pairs: string[]};
@@ -77,13 +78,19 @@ const out = (o: unknown, s = 200) => new Response(JSON.stringify(o), {status: s,
 const rest = (p: string, o: any = {}) => fetch(URL_ + "/rest/v1/" + p, {...o, headers: {...H, ...(o.headers || {})}});
 const get = async (p: string) => { const r = await rest(p); const j = await r.json(); return Array.isArray(j) ? j : []; };
 const num = (x: unknown) => Number(x);
-// Telegram alert on every open and close. Never lets a failed alert stop the engine.
-async function alertTg(text: string) {
+// Phone alert (web push) to the admin's devices on every open and close. Never lets a failed alert stop the engine.
+let vapidOk = false;
+async function alertTg(title: string, body: string) {
   try {
-    const tok = Deno.env.get("TELEGRAM_BOT_TOKEN"), chat = Deno.env.get("TELEGRAM_CHAT_ID"); if (!tok || !chat) return;
-    const th = Deno.env.get("TELEGRAM_ENGINE_THREAD_ID"); const body: Record<string, unknown> = {chat_id: chat, text};
-    if (th) body.message_thread_id = +th;
-    await fetch(`https://api.telegram.org/bot${tok}/sendMessage`, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+    const pub = Deno.env.get("VAPID_PUBLIC"), priv = Deno.env.get("VAPID_PRIVATE"); if (!pub || !priv) return;
+    if (!vapidOk) { webpush.setVapidDetails("mailto:" + (Deno.env.get("VAPID_SUBJECT") || "tradethemove@icloud.com"), pub, priv); vapidOk = true; }
+    const admins = await get("ttm_profiles?select=id&is_admin=eq.true"); if (!admins.length) return;
+    const subs = await get(`ttm_push_subs?select=*&user_id=in.(${admins.map((a: any) => a.id).join(",")})`);
+    const payload = JSON.stringify({title, body, tag: "engine-" + Date.now(), url: "./engine/index.html"});
+    await Promise.all(subs.map(async (s: any) => {
+      try { await webpush.sendNotification({endpoint: s.endpoint, keys: {p256dh: s.p256dh, auth: s.auth}}, payload, {TTL: 3600, urgency: "high"}); }
+      catch (e: any) { if (e.statusCode === 404 || e.statusCode === 410) await rest("ttm_push_subs?endpoint=eq." + encodeURIComponent(s.endpoint), {method: "DELETE"}); }
+    }));
   } catch (_) { /* ignore */ }
 }
 const sgn = (x: number) => (x >= 0 ? "+" : "") + x.toFixed(2) + "%";
@@ -123,7 +130,7 @@ Deno.serve(async (req) => {
     const open: Pos[] = (await get("ttm_engine_positions?select=*&status=eq.open&order=id.asc")).map((x: any) => ({...x, entry: num(x.entry), units: num(x.units), notional: num(x.notional), lev: num(x.lev), margin: num(x.margin), sl: num(x.sl), tp: x.tp == null ? null : num(x.tp), risk_usd: num(x.risk_usd)}));
     const closeIt = async (p: Pos, px: number, why: string) => { const pnl = pnlOf(p, px);
       await rest(`ttm_engine_positions?id=eq.${p.id}`, {method: "PATCH", body: JSON.stringify({status: "closed", closed_at: new Date().toISOString(), exit_price: px, pnl, close_reason: why})}); log.push(`closed ${p.pair} ${why} ${pnl.toFixed(2)}`);
-      await alertTg(`${pnl >= 0 ? "🟢" : "🔴"} ${p.pair.replace("USDT", "")} ${p.side.toUpperCase()} CLOSED (${why === "ai" ? "agent exit" : why})\n${sgn(pnl / p.margin * 100)} on margin`); };
+      await alertTg(`${pnl >= 0 ? "🟢" : "🔴"} ${p.pair.replace("USDT", "")} ${p.side.toUpperCase()} closed`, `${sgn(pnl / p.margin * 100)} on margin (${why === "ai" ? "agent exit" : why})`); };
     // 1) stops and targets
     let still: Pos[] = [];
     for (const p of open) { const hit = cs[p.pair] ? checkExit(p, cs[p.pair]) : null; if (hit) await closeIt(p, hit.price, hit.reason); else still.push(p); }
@@ -148,7 +155,7 @@ Deno.serve(async (req) => {
       else if (act === "close") { const p = still.find((x) => x.pair === pair); if (p) { await closeIt(p, px, "ai"); still = still.filter((x) => x.id !== p.id); ok = true; } else why = "nothing to close"; }
       else { acc = account(still); const v = validateOpen(d, px, acc.equity, acc.cash, still, cfg);
         if (v.ok) { const ins = await rest("ttm_engine_positions", {method: "POST", headers: {Prefer: "return=representation"}, body: JSON.stringify({pair, ...v.pos, reason: String(d.reason || "").slice(0, 600)})});
-          const row = (await ins.json())[0]; if (row) { still.push({...row, entry: v.pos.entry, units: v.pos.units, notional: v.pos.notional, lev: v.pos.lev, margin: v.pos.margin, sl: v.pos.sl, tp: v.pos.tp, risk_usd: v.pos.risk_usd}); ok = true; log.push(`opened ${act} ${pair}`); await alertTg(`⚡ ${pair.replace("USDT", "")} ${v.pos.side.toUpperCase()} OPENED\nTimeframe: 1hr`); } else why = "could not save"; }
+          const row = (await ins.json())[0]; if (row) { still.push({...row, entry: v.pos.entry, units: v.pos.units, notional: v.pos.notional, lev: v.pos.lev, margin: v.pos.margin, sl: v.pos.sl, tp: v.pos.tp, risk_usd: v.pos.risk_usd}); ok = true; log.push(`opened ${act} ${pair}`); await alertTg(`⚡ ${pair.replace("USDT", "")} ${v.pos.side.toUpperCase()} opened`, "Timeframe: 1hr"); } else why = "could not save"; }
         else why = v.reason; }
       await rest("ttm_engine_decisions", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({pair, action: act, price: px || null, reason: String(d.reason || "").slice(0, 600), accepted: ok, reject_reason: ok ? null : why, raw: d})});
     }
