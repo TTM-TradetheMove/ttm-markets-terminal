@@ -1,4 +1,4 @@
-Run at 2026-11-04T01:45:09.169291+00:00
+Run at 2026-11-04T08:09:19.482340+00:00
 
 page title: 'Calendar | Forex Factory'
 page url after load: 'https://www.forexfactory.com/calendar'
@@ -9,14 +9,14 @@ sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text
 sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='4:00pm\n\tAUD\t\t\nMI Inflation Gauge m/m\n\t\n\t\n\t0.5%\t\t0.3%\t'
 sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='4:30pm\n\tAUD\t\t\nBuilding Approvals m/m\n\t\n\t\n\t5.1%\t1.8%\t\n-5.2%\n\t'
 TARGET ROW: date='Tue Nov 3' currency='NZD' title='Unemployment Rate' actual='5.7%'
-TARGET ROW: date='Wed Nov 4' currency='EUR' title='Spanish Unemployment Change' actual=''
+TARGET ROW: date='Wed Nov 4' currency='EUR' title='Spanish Unemployment Change' actual='43.1K'
 TARGET ROW: date='Thu Nov 5' currency='CHF' title='Unemployment Rate' actual=''
 TARGET ROW: date='Thu Nov 5' currency='USD' title='Unemployment Claims' actual=''
 TARGET ROW: date='Fri Nov 6' currency='CAD' title='Unemployment Rate' actual=''
 TARGET ROW: date='Fri Nov 6' currency='USD' title='Unemployment Rate' actual=''
 TARGET ROW: date='Fri Nov 6' currency='USD' title='Prelim UoM Consumer Sentiment' actual=''
-matched-actuals by date: {'2026-11-01': 7, '2026-11-02': 16, '2026-11-03': 13}
-Scraped 36 live actual values from forexfactory.com
+matched-actuals by date: {'2026-11-01': 7, '2026-11-02': 16, '2026-11-03': 13, '2026-11-04': 2}
+Scraped 38 live actual values from forexfactory.com
 Past events without actual (3): 2026-11-02 USD Loan Officer Survey; 2026-11-03 USD Congressional Elections; 2026-11-03 USD API Weekly Statistical Bulletin
 Scraped GBP keys: [('2026-11-02', 'GBP', 'finalmanufacturingpmi'), ('2026-11-03', 'GBP', '10ybondauction')]
 
