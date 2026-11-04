@@ -7,7 +7,7 @@ alter table public.ttm_room_msgs add constraint ttm_room_has_content check (char
 
 -- public bucket for voice notes: each member can only add files inside their own folder, 8 MB max, audio types only
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('room-voice', 'room-voice', true, 8388608, array['audio/webm','audio/mp4','audio/ogg','audio/mpeg'])
+values ('room-voice', 'room-voice', true, 8388608, array['audio/webm','audio/mp4','audio/ogg','audio/mpeg','audio/x-m4a','audio/aac'])
 on conflict (id) do update set public = true, file_size_limit = 8388608, allowed_mime_types = excluded.allowed_mime_types;
 drop policy if exists p_room_voice_ins on storage.objects;
 create policy p_room_voice_ins on storage.objects for insert to authenticated
