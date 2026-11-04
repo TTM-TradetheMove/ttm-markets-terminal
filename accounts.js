@@ -227,6 +227,10 @@ document.addEventListener('click', async ev => {
   else if(t.id === 'rmSend'){ rmSend(); }
   else if(t.id === 'rmImgBtn'){ const f = $('rmFile'); if(f) f.click(); }
   else if(t.id === 'rmClrImg'){ RM.pend = null; rmPrev(); }
+  else if(t.id === 'rmMicBtn'){ rmMic(); }
+  else if(t.id === 'rmRecStop'){ rmRecStop(); }
+  else if(t.id === 'rmClrVoice'){ rmRecDrop(); }
+  else if(t.id === 'rmToAll'){ document.querySelectorAll('.rmToBox').forEach(c => { c.checked = true; }); }
   else if(t.dataset && t.dataset.rmdel){ if(!armTap(t)) return; if(await delRow('/rest/v1/ttm_room_msgs?id=eq.' + t.dataset.rmdel)) rmLoad(true); else { const n = $('rmNote'); if(n) n.textContent = 'Could not delete this message. Run the community update SQL in Supabase, then try again.'; } }
   else if(t.dataset && t.dataset.rmmute){ if(!armTap(t, 'tap again to mute')) return; await rmMute(t.dataset.rmmute, 'all'); const n = $('rmNote'); if(n) n.textContent = 'Member muted in every room. Unmute them in Admin.'; }
   else if(t.id === 'rmMuteBtn'){ await rmMuteForm(); }
@@ -863,9 +867,10 @@ let ADMB = {};
 const BDG = [['team', 'TTM Team', 'Team'], ['alpha', 'Alpha', 'Alpha'], ['mindset', 'Mindset', 'Mindset'], ['mod', 'Moderator', 'Mod'], ['founding', 'Founding Member', 'Founder']], BDGL = {ttm: 'TTM'}; BDG.forEach(b => { BDGL[b[0]] = b[1]; });
 const bdgHtml = m => { const l = Array.isArray(m.badges) && m.badges.length ? m.badges : (m.badge === 'TTM' ? ['ttm'] : m.badge === 'TTM Team' ? ['team'] : []); return l.filter(k => BDGL[k]).map(k => `<em class="rm-badge ${k}">${BDGL[k]}</em>`).join(''); };
 const RXS = ['👍', '🔥', '🚀', '😂', '❤️', '👀'], EMO = ['😀', '😂', '🤣', '😊', '😍', '😎', '🤔', '😅', '😭', '😡', '👍', '👎', '👏', '🙏', '💪', '🔥', '🚀', '🌙', '💎', '🐂', '🐻', '📈', '📉', '💰', '🎯', '✅', '❌', '⚠️', '👀', '🤝'];
-const RM = {votes: {}, rx: {}, rxpick: null, room: null, sig: '', pend: null, muted: false, timer: null, built: false, busy: false};
+const RM = {votes: {}, rx: {}, rxpick: null, room: null, sig: '', pend: null, muted: false, timer: null, built: false, busy: false, voice: null, rec: null};
 const ROOMS = [['free', 'Free'], ['premium', 'Premium'], ['pro', 'Pro']];
 const rmCan = r => !!USER && can('room:' + r);
+const rmAudOk = u => typeof u === 'string' && CFG.url && u.indexOf(CFG.url + '/storage/v1/object/public/room-voice/') === 0;
 const rmImgOk = u => typeof u === 'string' && CFG.url && u.indexOf(CFG.url + '/storage/v1/object/public/room-images/') === 0;
 function rmFmt(m){
   const gifs = []; (String(m.body || '').match(/https?:\/\/[^\s<]+/g) || []).forEach(u => { let g = null; const gm = u.match(/^https:\/\/giphy\.com\/gifs\/(?:[^\/?#]*-)?([A-Za-z0-9]{8,24})(?:[\/?#]|$)/); if(gm) g = 'https://media.giphy.com/media/' + gm[1] + '/giphy.gif'; else if(/^https:\/\/(?:media\d*\.giphy\.com|i\.giphy\.com|media\.tenor\.com|c\.tenor\.com)\/[^\s?#]+\.(?:gif|webp)(?:\?[^\s]*)?$/.test(u)) g = u; if(g && gifs.indexOf(g) < 0) gifs.push(g); });
@@ -874,6 +879,7 @@ function rmFmt(m){
   imgs.forEach(id => { const src = 'https://s3.tradingview.com/snapshots/' + id[0].toLowerCase() + '/' + id + '.png'; h += `<a href="https://www.tradingview.com/x/${e(id)}/" target="_blank" rel="noopener noreferrer"><img class="rm-img" loading="lazy" referrerpolicy="no-referrer" src="${e(src)}" alt="TradingView chart" onerror="this.style.display='none'"></a>`; });
   gifs.slice(0, 2).forEach(g => { h += `<a href="${e(g)}" target="_blank" rel="noopener noreferrer"><img class="rm-img" loading="lazy" referrerpolicy="no-referrer" src="${e(g)}" alt="GIF" onerror="this.style.display='none'"></a>`; });
   if(m.poll) h = pollHtml(m) + h;
+  if(rmAudOk(m.audio)) h += `<div class="rm-vn">🎤 <audio controls preload="none" src="${e(m.audio)}"></audio>${m.audio_secs ? `<small>${Math.floor(m.audio_secs / 60)}:${String(m.audio_secs % 60).padStart(2, '0')}</small>` : ''}</div>`;
   if(rmImgOk(m.img)) h += `<a href="${e(m.img)}" target="_blank" rel="noopener noreferrer"><img class="rm-img" loading="lazy" src="${e(m.img)}" alt="Screenshot"></a>`;
   return h;
 }
@@ -923,8 +929,9 @@ function rmBuild(){
       <div id="rmPrev" style="display:none;padding:8px 12px;border-top:1px solid var(--line)"></div>
       <div id="rmGifBox" style="display:none;padding:8px 10px;border-top:1px solid var(--line)"></div>
       <div id="rmPollBox" style="display:none;padding:10px;border-top:1px solid var(--line)"></div>
+      ${PROF && PROF.is_admin ? `<div id="rmTo" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:8px 12px;border-top:1px solid var(--line);font-size:13px"><b>Send to:</b>${ROOMS.map(r => `<label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" class="rmToBox" value="${r[0]}"> ${r[1]}</label>`).join('')}<button class="rr-btn ghost sm" id="rmToAll" type="button">All rooms</button></div>` : ''}
       <div id="rmEmoBox" style="display:none;padding:8px 10px;border-top:1px solid var(--line);flex-wrap:wrap;gap:4px">${EMO.map(k => `<button class="rm-rx" data-emo="${k}" style="font-size:18px">${k}</button>`).join('')}</div>
-      <div style="display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);align-items:flex-end"><button class="rr-btn ghost sm" id="rmEmoBtn" title="Emoji">😊</button><button class="rr-btn ghost sm" id="rmGifBtn" title="GIF">GIF</button>${PROF && PROF.is_admin ? '<button class="rr-btn ghost sm" id="rmPollBtn" title="Create a poll">Poll</button>' : ''}<button class="rr-btn ghost sm" id="rmImgBtn" title="Add a screenshot">Image</button><input type="file" id="rmFile" accept="image/*" style="display:none"><textarea id="rmIn" rows="1" maxlength="1000" placeholder="Write a message. Paste a TradingView snapshot link or an image." style="flex:1;resize:none;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 10px;font:inherit;font-size:14px;max-height:120px"></textarea><button class="rr-btn sm" id="rmSend">Send</button></div></div>
+      <div style="display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);align-items:flex-end"><button class="rr-btn ghost sm" id="rmEmoBtn" title="Emoji">😊</button><button class="rr-btn ghost sm" id="rmGifBtn" title="GIF">GIF</button>${PROF && PROF.is_admin ? '<button class="rr-btn ghost sm" id="rmPollBtn" title="Create a poll">Poll</button>' : ''}<button class="rr-btn ghost sm" id="rmMicBtn" title="Record a voice note">🎤 Voice</button><button class="rr-btn ghost sm" id="rmImgBtn" title="Add a screenshot">Image</button><input type="file" id="rmFile" accept="image/*" style="display:none"><textarea id="rmIn" rows="1" maxlength="1000" placeholder="Write a message. Paste a TradingView snapshot link or an image." style="flex:1;resize:none;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 10px;font:inherit;font-size:14px;max-height:120px"></textarea><button class="rr-btn sm" id="rmSend">Send</button></div></div>
     <p class="calendar-note" id="rmNote" style="margin:8px 0 0">Be respectful. TTM can remove messages and mute members. Nothing here is financial advice.</p>`;
   $('rmIn').addEventListener('keydown', ev => { if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); rmSend(); } });
   $('rmIn').addEventListener('paste', ev => { const it = Array.from((ev.clipboardData || {}).items || []).find(x => x.type && x.type.indexOf('image/') === 0); if(it){ ev.preventDefault(); rmPick1(it.getAsFile()); } });
@@ -941,9 +948,9 @@ function rmBuild(){
 }
 function rmFiltPaint(){ document.querySelectorAll('#rmFilt [data-rmf]').forEach(b => b.classList.toggle('active', b.dataset.rmf === (PREFS.rfilter === 'follow' ? 'follow' : 'all'))); }
 function rmTabs(){ rmFiltPaint(); document.querySelectorAll('#rmTabs [data-rmtab]').forEach(b => { const k = b.dataset.rmtab; b.classList.toggle('active', k === RM.room); const lab = (ROOMS.find(r => r[0] === k) || [0, k])[1] + (rmCan(k) ? '' : ' 🔒') + (RMU[k] && k !== RM.room ? ` (${RMU[k]})` : ''); if(b.textContent !== lab) b.textContent = lab; }); }
-function rmPick(r){ if(!rmCan(r)){ const n = $('rmNote'); if(n) n.textContent = 'The ' + (ROOMS.find(x => x[0] === r) || [0, r])[1] + ' room is for ' + needText('room:' + r) + ' members.'; return; } RM.room = r; RM.sig = ''; rmTabs(); const l = $('rmList'); if(l) l.innerHTML = ''; rmLoad(true); }
+function rmPick(r){ if(!rmCan(r)){ const n = $('rmNote'); if(n) n.textContent = 'The ' + (ROOMS.find(x => x[0] === r) || [0, r])[1] + ' room is for ' + needText('room:' + r) + ' members.'; return; } RM.room = r; RM.sig = ''; document.querySelectorAll('.rmToBox').forEach(c => { c.checked = c.value === r; }); rmTabs(); const l = $('rmList'); if(l) l.innerHTML = ''; rmLoad(true); }
 async function rmLoad(force){
-  if(!rmBuild()) return; if(!RM.room){ RM.room = (ROOMS.find(r => rmCan(r[0])) || ['free'])[0]; rmTabs(); }
+  if(!rmBuild()) return; if(!RM.room){ RM.room = (ROOMS.find(r => rmCan(r[0])) || ['free'])[0]; document.querySelectorAll('.rmToBox').forEach(c => { c.checked = c.value === RM.room; }); rmTabs(); }
   if(RM.busy) return; RM.busy = true;
   try{
     const r = await api(`/rest/v1/ttm_room_msgs?select=*&room=eq.${RM.room}&order=id.desc&limit=80`);
@@ -961,7 +968,26 @@ async function rmLoad(force){
     if(first){ const mu = await api('/rest/v1/ttm_room_mutes?select=room&user_id=eq.' + USER.id); RM.muted = !!(mu.ok && Array.isArray(mu.json) && mu.json.length); const i = $('rmIn'); if(i && RM.muted){ i.disabled = true; i.placeholder = 'You have been muted by TTM.'; } }
   } finally { RM.busy = false; }
 }
-function rmPrev(){ const p = $('rmPrev'); if(!p) return; if(!RM.pend){ p.style.display = 'none'; p.innerHTML = ''; return; } p.style.display = 'flex'; p.style.gap = '10px'; p.style.alignItems = 'center'; p.innerHTML = `<img src="${RM.pend.url}" alt="" style="height:54px;border-radius:6px"><small style="color:var(--mute)">${Math.round(RM.pend.blob.size / 1024)} KB</small><button class="rr-btn ghost sm" id="rmClrImg">Remove</button>`; }
+function rmPrev(){ const p = $('rmPrev'); if(!p) return; if(RM.rec){ p.style.display = 'flex'; p.style.gap = '10px'; p.style.alignItems = 'center'; p.innerHTML = `<span style="color:#ff5a5a">● Recording</span><b id="rmRecT">0:00</b><button class="rr-btn sm" id="rmRecStop">Stop</button><button class="rr-btn ghost sm" id="rmClrVoice">Cancel</button>`; return; } if(RM.voice){ p.style.display = 'flex'; p.style.gap = '10px'; p.style.alignItems = 'center'; p.innerHTML = `🎤 <audio controls src="${RM.voice.url}" style="height:34px;max-width:230px"></audio><small style="color:var(--mute)">${RM.voice.secs}s</small><button class="rr-btn ghost sm" id="rmClrVoice">Remove</button>`; return; } if(!RM.pend){ p.style.display = 'none'; p.innerHTML = ''; return; } p.style.display = 'flex'; p.style.gap = '10px'; p.style.alignItems = 'center'; p.innerHTML = `<img src="${RM.pend.url}" alt="" style="height:54px;border-radius:6px"><small style="color:var(--mute)">${Math.round(RM.pend.blob.size / 1024)} KB</small><button class="rr-btn ghost sm" id="rmClrImg">Remove</button>`; }
+const REC_MAX = 120;
+async function rmMic(){
+  const n = $('rmNote'); if(RM.rec || RM.voice) return; if(RM.muted) return;
+  if(!navigator.mediaDevices || !window.MediaRecorder){ if(n) n.textContent = 'This browser cannot record audio. Try Chrome, Edge, Firefox or Safari 14.3 or newer.'; return; }
+  let st; try{ st = await navigator.mediaDevices.getUserMedia({audio: true}); }catch(err){ if(n) n.textContent = 'Microphone is blocked. Allow the microphone for this site in your browser settings, then try again.'; return; }
+  const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'], mt = types.find(x => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(x)) || '';
+  let mr; try{ mr = mt ? new MediaRecorder(st, {mimeType: mt}) : new MediaRecorder(st); }catch(err){ st.getTracks().forEach(x => x.stop()); if(n) n.textContent = 'Could not start the recorder.'; return; }
+  const chunks = [], t0 = Date.now(); RM.rec = {mr, st, t0, cancel: false, tick: null};
+  mr.ondataavailable = ev => { if(ev.data && ev.data.size) chunks.push(ev.data); };
+  mr.onstop = () => { const rc = RM.rec; clearInterval(rc && rc.tick); st.getTracks().forEach(x => x.stop()); const cancel = rc && rc.cancel; RM.rec = null;
+    if(cancel || !chunks.length){ rmPrev(); return; }
+    const type = (mr.mimeType || mt || 'audio/webm').split(';')[0], blob = new Blob(chunks, {type}), secs = Math.max(1, Math.round((Date.now() - t0) / 1000));
+    if(blob.size > 3.5e6){ if(n) n.textContent = 'That voice note is too long. Keep it under 2 minutes.'; rmPrev(); return; }
+    RM.voice = {blob, url: URL.createObjectURL(blob), secs, type}; rmPrev(); };
+  mr.start(); RM.rec.tick = setInterval(() => { const s = Math.floor((Date.now() - t0) / 1000), el = $('rmRecT'); if(el) el.textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); if(s >= REC_MAX) rmRecStop(); }, 250);
+  if(n) n.textContent = ''; rmPrev();
+}
+function rmRecStop(){ if(RM.rec && RM.rec.mr.state !== 'inactive') RM.rec.mr.stop(); }
+function rmRecDrop(){ if(RM.rec){ RM.rec.cancel = true; if(RM.rec.mr.state !== 'inactive') RM.rec.mr.stop(); else RM.rec = null; return; } RM.voice = null; rmPrev(); }
 async function rmPick1(file){
   const n = $('rmNote'); if(!file || file.type.indexOf('image/') !== 0){ if(n) n.textContent = 'Pick an image file.'; return; }
   if(file.type === 'image/gif'){ if(file.size > 2e6){ if(n) n.textContent = 'That GIF is over 2 MB. Try a shorter one, or paste a Giphy or Tenor link instead.'; return; } RM.pend = {blob: file, url: URL.createObjectURL(file)}; rmPrev(); return; }
@@ -971,10 +997,14 @@ async function rmPick1(file){
     RM.pend = {blob, url: URL.createObjectURL(blob)}; rmPrev(); }catch(err){ if(n) n.textContent = 'Could not read that image.'; }
 }
 async function rmSend(){
-  if(RM.sending || RM.muted) return; const i = $('rmIn'), n = $('rmNote'), body = (i.value || '').trim(); if(!body && !RM.pend) return; if(!RM.room) return;
-  RM.sending = true; n.textContent = RM.pend ? 'Uploading…' : 'Sending…';
+  if(RM.sending || RM.muted) return; const i = $('rmIn'), n = $('rmNote'), body = (i.value || '').trim(); if(!body && !RM.pend && !RM.voice) return; if(!RM.room || RM.rec) return;
+  RM.sending = true; n.textContent = RM.pend || RM.voice ? 'Uploading…' : 'Sending…';
   try{
-    let img = null;
+    let img = null, audio = null, audio_secs = null;
+    if(RM.voice){ const t = await token(), ext = RM.voice.type === 'audio/mp4' ? 'm4a' : RM.voice.type === 'audio/ogg' ? 'ogg' : 'webm', path = USER.id + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
+      const up = await fetch(CFG.url + '/storage/v1/object/room-voice/' + path, {method: 'POST', headers: {apikey: CFG.key, Authorization: 'Bearer ' + t, 'Content-Type': RM.voice.type}, body: RM.voice.blob});
+      if(!up.ok){ n.textContent = 'Could not upload the voice note. The voice database step may not be set up yet.'; return; }
+      audio = CFG.url + '/storage/v1/object/public/room-voice/' + path; audio_secs = RM.voice.secs; }
     if(RM.pend){ const t = await token(), mime = RM.pend.blob.type === 'image/gif' ? 'image/gif' : 'image/jpeg', path = USER.id + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + (mime === 'image/gif' ? '.gif' : '.jpg');
       const up = await fetch(CFG.url + '/storage/v1/object/room-pending/' + path, {method: 'POST', headers: {apikey: CFG.key, Authorization: 'Bearer ' + t, 'Content-Type': mime}, body: RM.pend.blob});
       if(!up.ok){ n.textContent = 'Could not upload the image. The scan step may not be set up yet, or it is over 2 MB.'; return; }
@@ -982,9 +1012,10 @@ async function rmSend(){
       let sc = null; try{ const r = await fetch(CFG.url + '/functions/v1/scan-image', {method: 'POST', headers: {apikey: CFG.key, Authorization: 'Bearer ' + t, 'Content-Type': 'application/json'}, body: JSON.stringify({path, type: mime})}); sc = await r.json(); }catch(e){}
       if(!sc || !sc.ok){ n.textContent = sc && sc.reason ? 'Image blocked: ' + sc.reason + '.' : 'Could not scan the image, so it was not sent. Try again.'; RM.pend = null; rmPrev(); return; }
       img = sc.url; }
-    const r = await api('/rest/v1/ttm_room_msgs', {method: 'POST', headers: {Prefer: 'return=minimal'}, body: JSON.stringify({room: RM.room, body, img})});
+    let rooms = [RM.room]; if(PROF && PROF.is_admin){ const ck = Array.from(document.querySelectorAll('.rmToBox:checked')).map(c => c.value); if(ck.length) rooms = ck; }
+    const r = await api('/rest/v1/ttm_room_msgs', {method: 'POST', headers: {Prefer: 'return=minimal'}, body: JSON.stringify(rooms.map(rm => ({room: rm, body, img, audio, audio_secs})))});
     if(!r.ok){ const m = JSON.stringify(r.json || ''); n.textContent = /Slow down/i.test(m) ? 'Slow down a little, one message every few seconds.' : 'You cannot post in this room (muted, or not included in your plan).'; return; }
-    i.value = ''; RM.pend = null; rmPrev(); n.textContent = ''; await rmLoad(true); const l = $('rmList'); if(l) l.scrollTop = l.scrollHeight;
+    i.value = ''; RM.pend = null; RM.voice = null; rmPrev(); n.textContent = rooms.length > 1 ? 'Sent to ' + rooms.length + ' rooms.' : ''; await rmLoad(true); const l = $('rmList'); if(l) l.scrollTop = l.scrollHeight;
   } finally { RM.sending = false; }
 }
 function rmStart(){ if(!$('rmApp')) return; clearInterval(RM.timer); RM.timer = setInterval(() => { if(!document.hidden && location.hash === '#community') rmLoad(false); }, 4000); }
@@ -1007,6 +1038,7 @@ async function rmMutesLoad(){
 }
 const css3 = document.createElement('style');
 css3.textContent = `.rm-badge{font-style:normal;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:1px;white-space:nowrap}.rm-badge.ttm{background:var(--gold,#dba118);color:#111}.rm-badge.team{background:rgba(77,163,255,.18);color:#6db4ff;border:1px solid rgba(77,163,255,.5)}.rm-badge.alpha{background:rgba(224,85,77,.18);color:#ff8a82;border:1px solid rgba(224,85,77,.55)}.rm-badge.mindset{background:rgba(160,110,255,.18);color:#c3a2ff;border:1px solid rgba(160,110,255,.55)}.rm-badge.mod{background:rgba(63,180,122,.18);color:#6fdba6;border:1px solid rgba(63,180,122,.55)}.rm-badge.founding{background:transparent;color:var(--gold2,#f2c14e);border:1px solid var(--gold,#dba118)}.bdg-chip{background:transparent;border:1px solid var(--line);color:var(--mute);border-radius:999px;padding:2px 8px;font:inherit;font-size:11px;cursor:pointer;margin:1px}.bdg-chip.on{background:var(--gold,#dba118);border-color:var(--gold,#dba118);color:#111;font-weight:700}.rm-m{max-width:88%;align-self:flex-start;background:rgba(255,255,255,.06);border-radius:12px;padding:8px 11px;font-size:14px;line-height:1.45;word-break:break-word}.rm-m.me{align-self:flex-end;background:rgba(219,161,24,.18)}.rm-h{display:flex;gap:8px;align-items:baseline;margin-bottom:2px;font-size:12px;color:var(--mute,#9a978f)}.rm-h b{color:var(--gold2,#f2c14e);font-size:13px}.rm-h u{cursor:pointer;text-decoration:none;color:var(--text,#e8e6e1);font-size:11px;border:1px solid var(--line,#2a2a2e);border-radius:6px;padding:1px 7px;margin-left:auto}.rm-h u+u{margin-left:0}.rm-h u:hover{color:#e0554d}.rm-img{display:block;max-width:100%;max-height:340px;border-radius:8px;margin-top:6px}.rm-m a{color:var(--gold2,#f2c14e)}.rm-poll{margin:4px 0 2px;min-width:230px}.rm-pq{font-weight:700;margin-bottom:2px}.rm-pm{font-size:12px;color:var(--mute,#9a978f);margin-bottom:6px}.rm-po{position:relative;display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;background:rgba(255,255,255,.05);border:1px solid var(--line,#2a2a2e);color:var(--text,#e8e6e1);border-radius:8px;padding:7px 10px;margin:0 0 5px;font:inherit;font-size:13.5px;cursor:pointer;overflow:hidden}.rm-po.me{border-color:var(--gold,#dba118)}.rm-pb{position:absolute;left:0;top:0;bottom:0;background:rgba(219,161,24,.22);z-index:0}.rm-pt,.rm-pn{position:relative;z-index:1}.rm-pn{color:var(--mute,#9a978f);font-size:12px;white-space:nowrap}.rm-rxw{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.rm-rx{background:rgba(255,255,255,.06);border:1px solid var(--line,#2a2a2e);color:var(--text,#e8e6e1);border-radius:999px;padding:1px 9px;font:inherit;font-size:13px;cursor:pointer;line-height:1.6}.rm-rx.me{border-color:var(--gold,#dba118);background:rgba(219,161,24,.2)}.rm-rx.add{opacity:.6;font-size:12px}.rm-rx:hover{border-color:var(--gold,#dba118)}.rm-at{color:var(--gold2,#f2c14e);background:rgba(219,161,24,.15);border-radius:4px;padding:0 3px}.rm-h b[data-rmat]{cursor:pointer}`;
+css3.textContent += `.rm-vn{display:flex;align-items:center;gap:8px;margin-top:6px}.rm-vn audio{height:36px;max-width:260px;width:100%}.rm-vn small{color:var(--mute)}`;
 document.head.appendChild(css3);
 window.addEventListener('hashchange', () => { if(location.hash === '#community'){ RM.built = false; setTimeout(() => { rmLoad(true); }, 120); } });
 setTimeout(() => { rmStart(); if(location.hash === '#community') rmLoad(true); }, 1500);
