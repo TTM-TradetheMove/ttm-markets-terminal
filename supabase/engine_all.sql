@@ -1,8 +1,5 @@
--- TTM engine: ALL setup steps in one go (time frame + strategies, agent review, approval mode, auto scan, balance change). Safe to run more than once.
--- Supabase > SQL Editor > New query > paste everything > Run. Run engine.sql first if you have never set the engine up.
-
--- ===== engine2 =====
 -- TTM Automated Trading Engine: time frame choice, strategies, trailing stops, 5 minute schedule.
+-- Run once in the Supabase SQL editor AFTER engine.sql. Safe to run again. Run this BEFORE redeploying engine-tick.
 alter table public.ttm_engine_config add column if not exists timeframe text not null default '1H';
 alter table public.ttm_engine_config add column if not exists strategies text[] not null default '{trend,breakout,sweep,momentum}';
 alter table public.ttm_engine_config add column if not exists last_agent timestamptz;
@@ -28,9 +25,8 @@ do $$ begin
   perform cron.alter_job((select jobid from cron.job where jobname = 'ttm-engine-tick'), schedule := '*/5 * * * *');
 exception when others then raise notice 'Could not change the schedule: %', sqlerrm; end $$;
 select jobname, schedule from cron.job where jobname = 'ttm-engine-tick';
-
--- ===== engine3 =====
 -- TTM Agent Review: the agent reviews its own closed trades and suggests improvements. Run once in the Supabase SQL editor AFTER engine2.sql.
+-- Safe to run again. Run this BEFORE redeploying engine-tick.
 create table if not exists public.ttm_engine_reviews (
   id bigserial primary key,
   ts timestamptz not null default now(),
@@ -73,9 +69,8 @@ begin
   delete from public.ttm_engine_suggestions; delete from public.ttm_engine_reviews;
 end $$;
 grant execute on function public.ttm_engine_reset() to authenticated;
-
--- ===== engine4 =====
 -- TTM Agent: "go ahead" or "needs my approval" mode. Run once in the Supabase SQL editor AFTER engine2.sql and engine3.sql.
+-- Safe to run again. Run this BEFORE redeploying engine-tick.
 alter table public.ttm_engine_config add column if not exists mode text not null default 'auto';
 alter table public.ttm_engine_config drop constraint if exists ttm_engine_mode_chk;
 alter table public.ttm_engine_config add constraint ttm_engine_mode_chk check (mode in ('auto','approval'));
@@ -121,9 +116,8 @@ alter table public.ttm_engine_config add column if not exists scan_pick int not 
 alter table public.ttm_engine_config drop constraint if exists ttm_engine_pairmode_chk;
 alter table public.ttm_engine_config add constraint ttm_engine_pairmode_chk check (pair_mode in ('list','auto'));
 grant update (pair_mode, scan_top, scan_pick) on public.ttm_engine_config to authenticated;
-
--- ===== engine5 =====
 -- Changing the starting balance now shifts the whole equity history, so Equity moves and the Result (profit or loss) stays the same.
+-- Run once in the Supabase SQL editor. Safe to run again.
 create or replace function public.ttm_engine_set_balance(new_balance numeric) returns void
 language plpgsql security definer set search_path = public as $$
 declare old numeric;
@@ -135,4 +129,10 @@ begin
   update public.ttm_engine_equity set equity = equity + (new_balance - old), cash = cash + (new_balance - old);
 end $$;
 grant execute on function public.ttm_engine_set_balance(numeric) to authenticated;
-
+-- Auto time frame: the agent can move to a better time frame when the current one is not working (and sends you an alert).
+-- Run once in the Supabase SQL editor. Safe to run again.
+alter table public.ttm_engine_config add column if not exists auto_tf boolean not null default false;
+alter table public.ttm_engine_config add column if not exists tf_allowed text[] not null default '{15m,30m,1H,2H,4H,8H,12H}';
+alter table public.ttm_engine_config add column if not exists tf_changed_at timestamptz;
+alter table public.ttm_engine_positions add column if not exists timeframe text;
+grant update (auto_tf, tf_allowed) on public.ttm_engine_config to authenticated;

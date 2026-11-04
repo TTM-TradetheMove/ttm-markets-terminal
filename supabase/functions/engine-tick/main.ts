@@ -2,7 +2,7 @@ import webpush from "npm:web-push@3.6.7";
 // TTM Automated Trading Engine, version 1: paper trading only. No exchange keys, no real orders.
 // Runs every 5 minutes. Every run manages open positions (stops, targets, trailing stops). When a new candle of the chosen time frame has closed it also asks the TTM agent what to do, checks it against the hard risk rules and records simulated fills.
 // Secrets needed: ANTHROPIC_API_KEY, ENGINE_KEY. Keep "Verify JWT" OFF (the function checks ENGINE_KEY or an admin sign-in itself).
-import {Candle, Pos, Cfg, HOUR, MIN, TFS, STRATS, stratName, aggregateTime, isDue, snapshot, atr, checkExit, trailStop, pnlOf, validateOpen, parseDecisions, buildSystem, REVIEW_SYSTEM, sanitizeReview, rankMovers} from "./logic.ts";
+import {Candle, Pos, Cfg, HOUR, MIN, TFS, STRATS, stratName, aggregateTime, isDue, snapshot, atr, checkExit, trailStop, pnlOf, validateOpen, parseDecisions, buildSystem, REVIEW_SYSTEM, sanitizeReview, rankMovers, pickTimeframe} from "./logic.ts";
 
 const URL_ = Deno.env.get("SUPABASE_URL")!, KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const H = {apikey: KEY, Authorization: "Bearer " + KEY, "Content-Type": "application/json"};
@@ -72,7 +72,7 @@ async function approveProposal(cfgRow: any, id: number): Promise<{ok: boolean; e
   if (drift > 0.25 * stopDist) { const m = "Price moved " + (drift * 100).toFixed(2) + "% since the proposal, too far from the planned entry. Not opened."; await mark("rejected", m); return {ok: false, error: m}; }
   const d = {pair: pr.pair, action: pr.side === "long" ? "open_long" : "open_short", sl: num(pr.sl), tp: pr.tp == null ? null : num(pr.tp), lev: pr.lev == null ? 1 : num(pr.lev), strategy: pr.strategy || "", trail_atr: pr.trail_atr == null ? null : num(pr.trail_atr)};
   const v = validateOpen(d, price, equity, cash, open, cfg); if (!v.ok) { await mark("rejected", v.reason); return {ok: false, error: "Not opened: " + v.reason + "."}; }
-  const ins = await rest("ttm_engine_positions", {method: "POST", headers: {Prefer: "return=representation"}, body: JSON.stringify({pair: pr.pair, ...v.pos, reason: String(pr.reason || "").slice(0, 600)})});
+  const ins = await rest("ttm_engine_positions", {method: "POST", headers: {Prefer: "return=representation"}, body: JSON.stringify({pair: pr.pair, ...v.pos, timeframe: pr.timeframe || null, reason: String(pr.reason || "").slice(0, 600)})});
   if (!(await ins.json())[0]) return {ok: false, error: "Could not save the position."};
   await mark("approved", "Opened at " + price);
   await rest("ttm_engine_decisions", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({pair: pr.pair, action: d.action, price, reason: "Approved by TTM. " + String(pr.reason || "").slice(0, 500), accepted: true, strategy: pr.strategy || null, timeframe: pr.timeframe || null, raw: d})});
@@ -162,12 +162,18 @@ Deno.serve(async (req) => {
             else { const exp = new Date(Date.now() + Math.min(Math.max(2 * T.ms, 30 * MIN), 48 * HOUR)).toISOString();
               const pi = await rest("ttm_engine_proposals", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({expires_at: exp, pair, side: v.pos.side, strategy: v.pos.strategy, timeframe: T.label, price: px, sl: v.pos.sl, tp: v.pos.tp, lev: v.pos.lev, trail_atr: v.pos.trail_atr, reason: String(d.reason || "").slice(0, 600)})});
               if (pi.ok) { why = "awaiting your approval"; log.push(`proposed ${act} ${pair} (${v.pos.strategy})`); await alertTg("TTM Agent needs approval", `${pair.replace("USDT", "")} ${v.pos.side.toUpperCase()} \u00B7 ${stratName(v.pos.strategy)} \u00B7 ${T.label}. Open the engine to approve or reject.`); } else why = "could not save the proposal (run engine4.sql)"; } }
-          else if (v.ok) { const ins = await rest("ttm_engine_positions", {method: "POST", headers: {Prefer: "return=representation"}, body: JSON.stringify({pair, ...v.pos, reason: String(d.reason || "").slice(0, 600)})});
+          else if (v.ok) { const ins = await rest("ttm_engine_positions", {method: "POST", headers: {Prefer: "return=representation"}, body: JSON.stringify({pair, ...v.pos, timeframe: T.label, reason: String(d.reason || "").slice(0, 600)})});
             const row = (await ins.json())[0]; if (row) { still.push({...row, entry: v.pos.entry, units: v.pos.units, notional: v.pos.notional, lev: v.pos.lev, margin: v.pos.margin, sl: v.pos.sl, tp: v.pos.tp, risk_usd: v.pos.risk_usd, trail_atr: v.pos.trail_atr}); ok = true; log.push(`opened ${act} ${pair} (${v.pos.strategy})`); await alertTg(`\u26A1 ${pair.replace("USDT", "")} ${v.pos.side.toUpperCase()} opened`, `Timeframe: ${T.label} \u00B7 ${stratName(v.pos.strategy)}`); } else why = "could not save"; }
           else why = v.reason; }
         await rest("ttm_engine_decisions", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({pair, action: act, price: px || null, reason: String(d.reason || "").slice(0, 600), accepted: ok, reject_reason: ok ? null : why, strategy: d.strategy || null, timeframe: T.label, raw: d})});
       }
     }
+    // auto time frame: move to a better one when the current one is clearly not working, and tell TTM
+    if (due && !err && cfgRow.auto_tf) { const ct = (await get("ttm_engine_positions?select=timeframe,pnl,risk_usd,closed_at&status=eq.closed&order=closed_at.desc&limit=200")).map((x: any) => ({timeframe: x.timeframe, pnl: num(x.pnl || 0), risk_usd: num(x.risk_usd || 0), closed_at: x.closed_at}));
+      const ch = pickTimeframe(tfKey, cfgRow.tf_allowed || [], ct, cfgRow.tf_changed_at, Date.now());
+      if (ch) { const nowIso = new Date().toISOString(); await rest("ttm_engine_config?id=eq.1", {method: "PATCH", body: JSON.stringify({timeframe: ch.to, tf_changed_at: nowIso})});
+        await rest("ttm_engine_decisions", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({pair: null, action: "timeframe_change", reason: `Switched from ${T.label} to ${TFS[ch.to].label}. ${ch.why}`, accepted: true, timeframe: TFS[ch.to].label, raw: ch})});
+        log.push(`time frame ${T.label} -> ${TFS[ch.to].label}`); await alertTg("TTM Agent changed its time frame", `${T.label} to ${TFS[ch.to].label}. ${ch.why}`); } }
     // weekly self review (needs at least 10 closed trades the first time, 5 new ones after that)
     if (due && !err) { const lr = (await get("ttm_engine_reviews?select=ts&order=ts.desc&limit=1"))[0];
       if (!lr || Date.now() - new Date(lr.ts).getTime() > 7 * 86400000) { const since = (await get("ttm_engine_positions?select=id&status=eq.closed" + (lr ? "&closed_at=gt." + encodeURIComponent(lr.ts) : "") + "&limit=10")).length;

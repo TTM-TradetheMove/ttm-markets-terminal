@@ -175,6 +175,26 @@ function rankMovers(rows: TickerRow[], top: number, pick: number): string[] {
   const score = (x: TickerRow) => Math.abs(x.ch) * 100 + (x.hi - x.lo) / x.px * 50;
   return uni.sort((a, b) => score(b) - score(a)).slice(0, Math.max(1, pick)).map((x) => x.s);
 }
+
+// Auto time frame: when the last 8+ trades on the current time frame lost money with a poor win rate or negative average R,
+// move to another allowed time frame that has a proven record, otherwise step one allowed time frame slower. At most one change every 3 days.
+type ClosedT = {timeframe?: string | null; pnl: number; risk_usd: number; closed_at: string};
+const tfStat = (a: ClosedT[]) => { const n = a.length, w = a.filter((x) => x.pnl > 0).length, pnl = a.reduce((t, x) => t + x.pnl, 0), rs = a.filter((x) => x.risk_usd > 0).map((x) => x.pnl / x.risk_usd);
+  return {n, w, pnl, wr: n ? w / n : 0, avgR: rs.length ? rs.reduce((t, x) => t + x, 0) / rs.length : null as number | null}; };
+function pickTimeframe(cur: string, allowed: string[], closed: ClosedT[], lastChange: string | null | undefined, now: number): {to: string; why: string} | null {
+  const T0 = TFS[cur]; if (!T0) return null;
+  if (lastChange && now - new Date(lastChange).getTime() < 3 * 86400000) return null;
+  const since = lastChange ? new Date(lastChange).getTime() : 0, mine = closed.filter((x) => x.timeframe === T0.label && new Date(x.closed_at).getTime() > since).sort((a, b) => +new Date(b.closed_at) - +new Date(a.closed_at));
+  if (mine.length < 8) return null;
+  const m = tfStat(mine.slice(0, 12)); if (!(m.pnl < 0 && (m.wr < 0.4 || (m.avgR != null && m.avgR < -0.15)))) return null;
+  const opts = allowed.filter((k) => TFS[k] && k !== cur), money = (x: number) => (x < 0 ? "-$" : "+$") + Math.abs(Math.round(x)).toLocaleString("en-US");
+  let best: {k: string; s: ReturnType<typeof tfStat>} | null = null;
+  for (const k of opts) { const a = closed.filter((x) => x.timeframe === TFS[k].label); if (a.length >= 5) { const s = tfStat(a); if (s.pnl > 0 && (s.avgR ?? 0) > 0 && (!best || (s.avgR ?? 0) > (best.s.avgR ?? 0))) best = {k, s}; } }
+  const lead = `The last ${Math.min(mine.length, 12)} trades on ${T0.label}: ${m.w} won, ${money(m.pnl)}.`;
+  if (best) return {to: best.k, why: `${lead} ${TFS[best.k].label} has done better before (${best.s.w} of ${best.s.n} won, ${money(best.s.pnl)}).`};
+  const slower = opts.filter((k) => TFS[k].ms > T0.ms).sort((a, b) => TFS[a].ms - TFS[b].ms)[0];
+  return slower ? {to: slower, why: `${lead} Slower time frames trade less and are less noisy, so trying ${TFS[slower].label}.`} : null;
+}
 // TTM Automated Trading Engine, version 1: paper trading only. No exchange keys, no real orders.
 // Runs every 5 minutes. Every run manages open positions (stops, targets, trailing stops). When a new candle of the chosen time frame has closed it also asks the TTM agent what to do, checks it against the hard risk rules and records simulated fills.
 // Secrets needed: ANTHROPIC_API_KEY, ENGINE_KEY. Keep "Verify JWT" OFF (the function checks ENGINE_KEY or an admin sign-in itself).
@@ -247,7 +267,7 @@ async function approveProposal(cfgRow: any, id: number): Promise<{ok: boolean; e
   if (drift > 0.25 * stopDist) { const m = "Price moved " + (drift * 100).toFixed(2) + "% since the proposal, too far from the planned entry. Not opened."; await mark("rejected", m); return {ok: false, error: m}; }
   const d = {pair: pr.pair, action: pr.side === "long" ? "open_long" : "open_short", sl: num(pr.sl), tp: pr.tp == null ? null : num(pr.tp), lev: pr.lev == null ? 1 : num(pr.lev), strategy: pr.strategy || "", trail_atr: pr.trail_atr == null ? null : num(pr.trail_atr)};
   const v = validateOpen(d, price, equity, cash, open, cfg); if (!v.ok) { await mark("rejected", v.reason); return {ok: false, error: "Not opened: " + v.reason + "."}; }
-  const ins = await rest("ttm_engine_positions", {method: "POST", headers: {Prefer: "return=representation"}, body: JSON.stringify({pair: pr.pair, ...v.pos, reason: String(pr.reason || "").slice(0, 600)})});
+  const ins = await rest("ttm_engine_positions", {method: "POST", headers: {Prefer: "return=representation"}, body: JSON.stringify({pair: pr.pair, ...v.pos, timeframe: pr.timeframe || null, reason: String(pr.reason || "").slice(0, 600)})});
   if (!(await ins.json())[0]) return {ok: false, error: "Could not save the position."};
   await mark("approved", "Opened at " + price);
   await rest("ttm_engine_decisions", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({pair: pr.pair, action: d.action, price, reason: "Approved by TTM. " + String(pr.reason || "").slice(0, 500), accepted: true, strategy: pr.strategy || null, timeframe: pr.timeframe || null, raw: d})});
@@ -337,12 +357,18 @@ Deno.serve(async (req) => {
             else { const exp = new Date(Date.now() + Math.min(Math.max(2 * T.ms, 30 * MIN), 48 * HOUR)).toISOString();
               const pi = await rest("ttm_engine_proposals", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({expires_at: exp, pair, side: v.pos.side, strategy: v.pos.strategy, timeframe: T.label, price: px, sl: v.pos.sl, tp: v.pos.tp, lev: v.pos.lev, trail_atr: v.pos.trail_atr, reason: String(d.reason || "").slice(0, 600)})});
               if (pi.ok) { why = "awaiting your approval"; log.push(`proposed ${act} ${pair} (${v.pos.strategy})`); await alertTg("TTM Agent needs approval", `${pair.replace("USDT", "")} ${v.pos.side.toUpperCase()} \u00B7 ${stratName(v.pos.strategy)} \u00B7 ${T.label}. Open the engine to approve or reject.`); } else why = "could not save the proposal (run engine4.sql)"; } }
-          else if (v.ok) { const ins = await rest("ttm_engine_positions", {method: "POST", headers: {Prefer: "return=representation"}, body: JSON.stringify({pair, ...v.pos, reason: String(d.reason || "").slice(0, 600)})});
+          else if (v.ok) { const ins = await rest("ttm_engine_positions", {method: "POST", headers: {Prefer: "return=representation"}, body: JSON.stringify({pair, ...v.pos, timeframe: T.label, reason: String(d.reason || "").slice(0, 600)})});
             const row = (await ins.json())[0]; if (row) { still.push({...row, entry: v.pos.entry, units: v.pos.units, notional: v.pos.notional, lev: v.pos.lev, margin: v.pos.margin, sl: v.pos.sl, tp: v.pos.tp, risk_usd: v.pos.risk_usd, trail_atr: v.pos.trail_atr}); ok = true; log.push(`opened ${act} ${pair} (${v.pos.strategy})`); await alertTg(`\u26A1 ${pair.replace("USDT", "")} ${v.pos.side.toUpperCase()} opened`, `Timeframe: ${T.label} \u00B7 ${stratName(v.pos.strategy)}`); } else why = "could not save"; }
           else why = v.reason; }
         await rest("ttm_engine_decisions", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({pair, action: act, price: px || null, reason: String(d.reason || "").slice(0, 600), accepted: ok, reject_reason: ok ? null : why, strategy: d.strategy || null, timeframe: T.label, raw: d})});
       }
     }
+    // auto time frame: move to a better one when the current one is clearly not working, and tell TTM
+    if (due && !err && cfgRow.auto_tf) { const ct = (await get("ttm_engine_positions?select=timeframe,pnl,risk_usd,closed_at&status=eq.closed&order=closed_at.desc&limit=200")).map((x: any) => ({timeframe: x.timeframe, pnl: num(x.pnl || 0), risk_usd: num(x.risk_usd || 0), closed_at: x.closed_at}));
+      const ch = pickTimeframe(tfKey, cfgRow.tf_allowed || [], ct, cfgRow.tf_changed_at, Date.now());
+      if (ch) { const nowIso = new Date().toISOString(); await rest("ttm_engine_config?id=eq.1", {method: "PATCH", body: JSON.stringify({timeframe: ch.to, tf_changed_at: nowIso})});
+        await rest("ttm_engine_decisions", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({pair: null, action: "timeframe_change", reason: `Switched from ${T.label} to ${TFS[ch.to].label}. ${ch.why}`, accepted: true, timeframe: TFS[ch.to].label, raw: ch})});
+        log.push(`time frame ${T.label} -> ${TFS[ch.to].label}`); await alertTg("TTM Agent changed its time frame", `${T.label} to ${TFS[ch.to].label}. ${ch.why}`); } }
     // weekly self review (needs at least 10 closed trades the first time, 5 new ones after that)
     if (due && !err) { const lr = (await get("ttm_engine_reviews?select=ts&order=ts.desc&limit=1"))[0];
       if (!lr || Date.now() - new Date(lr.ts).getTime() > 7 * 86400000) { const since = (await get("ttm_engine_positions?select=id&status=eq.closed" + (lr ? "&closed_at=gt." + encodeURIComponent(lr.ts) : "") + "&limit=10")).length;

@@ -172,3 +172,23 @@ export function rankMovers(rows: TickerRow[], top: number, pick: number): string
   const score = (x: TickerRow) => Math.abs(x.ch) * 100 + (x.hi - x.lo) / x.px * 50;
   return uni.sort((a, b) => score(b) - score(a)).slice(0, Math.max(1, pick)).map((x) => x.s);
 }
+
+// Auto time frame: when the last 8+ trades on the current time frame lost money with a poor win rate or negative average R,
+// move to another allowed time frame that has a proven record, otherwise step one allowed time frame slower. At most one change every 3 days.
+export type ClosedT = {timeframe?: string | null; pnl: number; risk_usd: number; closed_at: string};
+const tfStat = (a: ClosedT[]) => { const n = a.length, w = a.filter((x) => x.pnl > 0).length, pnl = a.reduce((t, x) => t + x.pnl, 0), rs = a.filter((x) => x.risk_usd > 0).map((x) => x.pnl / x.risk_usd);
+  return {n, w, pnl, wr: n ? w / n : 0, avgR: rs.length ? rs.reduce((t, x) => t + x, 0) / rs.length : null as number | null}; };
+export function pickTimeframe(cur: string, allowed: string[], closed: ClosedT[], lastChange: string | null | undefined, now: number): {to: string; why: string} | null {
+  const T0 = TFS[cur]; if (!T0) return null;
+  if (lastChange && now - new Date(lastChange).getTime() < 3 * 86400000) return null;
+  const since = lastChange ? new Date(lastChange).getTime() : 0, mine = closed.filter((x) => x.timeframe === T0.label && new Date(x.closed_at).getTime() > since).sort((a, b) => +new Date(b.closed_at) - +new Date(a.closed_at));
+  if (mine.length < 8) return null;
+  const m = tfStat(mine.slice(0, 12)); if (!(m.pnl < 0 && (m.wr < 0.4 || (m.avgR != null && m.avgR < -0.15)))) return null;
+  const opts = allowed.filter((k) => TFS[k] && k !== cur), money = (x: number) => (x < 0 ? "-$" : "+$") + Math.abs(Math.round(x)).toLocaleString("en-US");
+  let best: {k: string; s: ReturnType<typeof tfStat>} | null = null;
+  for (const k of opts) { const a = closed.filter((x) => x.timeframe === TFS[k].label); if (a.length >= 5) { const s = tfStat(a); if (s.pnl > 0 && (s.avgR ?? 0) > 0 && (!best || (s.avgR ?? 0) > (best.s.avgR ?? 0))) best = {k, s}; } }
+  const lead = `The last ${Math.min(mine.length, 12)} trades on ${T0.label}: ${m.w} won, ${money(m.pnl)}.`;
+  if (best) return {to: best.k, why: `${lead} ${TFS[best.k].label} has done better before (${best.s.w} of ${best.s.n} won, ${money(best.s.pnl)}).`};
+  const slower = opts.filter((k) => TFS[k].ms > T0.ms).sort((a, b) => TFS[a].ms - TFS[b].ms)[0];
+  return slower ? {to: slower, why: `${lead} Slower time frames trade less and are less noisy, so trying ${TFS[slower].label}.`} : null;
+}
