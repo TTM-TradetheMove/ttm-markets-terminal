@@ -2,7 +2,7 @@ import webpush from "npm:web-push@3.6.7";
 // TTM Automated Trading Engine, version 1: paper trading only. No exchange keys, no real orders.
 // Runs every 5 minutes. Every run manages open positions (stops, targets, trailing stops). When a new candle of the chosen time frame has closed it also asks the TTM agent what to do, checks it against the hard risk rules and records simulated fills.
 // Secrets needed: ANTHROPIC_API_KEY, ENGINE_KEY. Keep "Verify JWT" OFF (the function checks ENGINE_KEY or an admin sign-in itself).
-import {Candle, Pos, Cfg, HOUR, MIN, TFS, STRATS, stratName, aggregateTime, isDue, snapshot, atr, checkExit, trailStop, pnlOf, validateOpen, parseDecisions, buildSystem, REVIEW_SYSTEM, sanitizeReview} from "./logic.ts";
+import {Candle, Pos, Cfg, HOUR, MIN, TFS, STRATS, stratName, aggregateTime, isDue, snapshot, atr, checkExit, trailStop, pnlOf, validateOpen, parseDecisions, buildSystem, REVIEW_SYSTEM, sanitizeReview, rankMovers} from "./logic.ts";
 
 const URL_ = Deno.env.get("SUPABASE_URL")!, KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const H = {apikey: KEY, Authorization: "Bearer " + KEY, "Content-Type": "application/json"};
@@ -27,6 +27,7 @@ async function alertTg(title: string, body: string) {
     }));
   } catch (_) { /* ignore */ }
 }
+const mapPos = (x: any): Pos => ({...x, entry: num(x.entry), units: num(x.units), notional: num(x.notional), lev: num(x.lev), margin: num(x.margin), sl: num(x.sl), tp: x.tp == null ? null : num(x.tp), risk_usd: num(x.risk_usd), trail_atr: x.trail_atr == null ? null : num(x.trail_atr)});
 const sgn = (x: number) => (x >= 0 ? "+" : "") + x.toFixed(2) + "%";
 
 async function adminCall(req: Request): Promise<"key" | "admin" | null> {
@@ -46,6 +47,37 @@ async function ask(model: string, system: string, content: string, maxTokens = 3
     body: JSON.stringify({model, max_tokens: maxTokens, system, messages: [{role: "user", content}]})});
   const j = await r.json(); if (!r.ok) throw new Error("Agent: " + (j.error?.message || r.status));
   return (j.content || []).filter((b: any) => b.type === "text").map((b: any) => b.text).join("");
+}
+
+async function scanPairs(top: number, pick: number): Promise<string[]> {
+  const r = await fetch("https://api.bitget.com/api/v2/mix/market/tickers?productType=USDT-FUTURES"), j = await r.json();
+  if (j.code !== "00000" || !Array.isArray(j.data)) throw new Error("Bitget tickers: " + (j.msg || r.status));
+  return rankMovers(j.data.map((x: any) => ({s: String(x.symbol), vol: num(x.usdtVolume || x.quoteVolume), ch: num(x.change24h), hi: num(x.high24h), lo: num(x.low24h), px: num(x.lastPr)})), top, pick);
+}
+
+// Approval mode: TTM presses Approve on the dashboard, and the trade is opened at the current price after the same hard rule checks.
+async function approveProposal(cfgRow: any, id: number): Promise<{ok: boolean; error?: string}> {
+  const pr = (await get(`ttm_engine_proposals?select=*&id=eq.${id}&status=eq.pending`))[0];
+  if (!pr) return {ok: false, error: "That proposal is no longer waiting (it was approved, rejected or expired)."};
+  const mark = (status: string, result: string) => rest(`ttm_engine_proposals?id=eq.${id}`, {method: "PATCH", body: JSON.stringify({status, decided_at: new Date().toISOString(), result})});
+  if (new Date(pr.expires_at).getTime() < Date.now()) { await mark("expired", "Expired before approval"); return {ok: false, error: "That proposal has expired. The agent will propose again if the setup is still there."}; }
+  if (!cfgRow.enabled) return {ok: false, error: "The engine is switched off."};
+  const cfg: Cfg = {risk_pct: num(cfgRow.risk_pct), max_open: num(cfgRow.max_open), max_lev: num(cfgRow.max_lev), pairs: cfgRow.pairs || [], strategies: (cfgRow.strategies || []).filter((k: string) => STRATS[k])};
+  const open = (await get("ttm_engine_positions?select=*&status=eq.open&order=id.asc")).map(mapPos), closed = await get("ttm_engine_positions?select=pnl&status=eq.closed");
+  const last = async (p: string) => { const c = await candles(p, "5m", 30); return c[c.length - 1].c; };
+  let price = 0; const pxs: Record<string, number> = {};
+  try { price = await last(pr.pair); for (const p of new Set(open.map((x) => x.pair))) pxs[p] = p === pr.pair ? price : await last(p); } catch (e) { return {ok: false, error: "Could not get the current price: " + String(e).slice(0, 120)}; }
+  const start = num(cfgRow.start_balance), realised = closed.reduce((t: number, x: any) => t + num(x.pnl || 0), 0), unreal = open.reduce((t, p) => t + pnlOf(p, pxs[p.pair] || p.entry), 0);
+  const equity = start + realised + unreal, cash = start + realised - open.reduce((t, p) => t + p.margin, 0), stopDist = Math.abs(num(pr.price) - num(pr.sl)) / num(pr.price), drift = Math.abs(price - num(pr.price)) / num(pr.price);
+  if (drift > 0.25 * stopDist) { const m = "Price moved " + (drift * 100).toFixed(2) + "% since the proposal, too far from the planned entry. Not opened."; await mark("rejected", m); return {ok: false, error: m}; }
+  const d = {pair: pr.pair, action: pr.side === "long" ? "open_long" : "open_short", sl: num(pr.sl), tp: pr.tp == null ? null : num(pr.tp), lev: pr.lev == null ? 1 : num(pr.lev), strategy: pr.strategy || "", trail_atr: pr.trail_atr == null ? null : num(pr.trail_atr)};
+  const v = validateOpen(d, price, equity, cash, open, cfg); if (!v.ok) { await mark("rejected", v.reason); return {ok: false, error: "Not opened: " + v.reason + "."}; }
+  const ins = await rest("ttm_engine_positions", {method: "POST", headers: {Prefer: "return=representation"}, body: JSON.stringify({pair: pr.pair, ...v.pos, reason: String(pr.reason || "").slice(0, 600)})});
+  if (!(await ins.json())[0]) return {ok: false, error: "Could not save the position."};
+  await mark("approved", "Opened at " + price);
+  await rest("ttm_engine_decisions", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({pair: pr.pair, action: d.action, price, reason: "Approved by TTM. " + String(pr.reason || "").slice(0, 500), accepted: true, strategy: pr.strategy || null, timeframe: pr.timeframe || null, raw: d})});
+  await alertTg(`\u26A1 ${pr.pair.replace("USDT", "")} ${pr.side.toUpperCase()} opened`, `Approved \u00B7 Timeframe: ${pr.timeframe || ""} \u00B7 ${stratName(pr.strategy)}`);
+  return {ok: true};
 }
 
 // Agent Review: the agent studies its own closed trades and writes a summary plus suggestions. TTM approves or dismisses each one on the dashboard.
@@ -74,14 +106,18 @@ Deno.serve(async (req) => {
   const who = await adminCall(req); if (!who) return out({ok: false, reason: "not allowed"}, 401);
   const cfgRow = (await get("ttm_engine_config?select=*&id=eq.1"))[0]; if (!cfgRow) return out({ok: false, reason: "run engine.sql first"}, 500);
   let reqBody: any = {}; try { reqBody = await req.json(); } catch (_) { /* no body */ }
+  if (reqBody && reqBody.action === "approve") return out(await approveProposal(cfgRow, num(reqBody.id)));
   if (reqBody && reqBody.action === "review") { const rv = await runReview(cfgRow); return out({ok: rv.ok, error: rv.error, suggestions: rv.n}); }
   if (!cfgRow.enabled) return out({ok: true, skipped: "engine is switched off"});
   const tfKey = TFS[cfgRow.timeframe] ? cfgRow.timeframe : "1H", T = TFS[tfKey];
   const cfg: Cfg = {risk_pct: num(cfgRow.risk_pct), max_open: num(cfgRow.max_open), max_lev: num(cfgRow.max_lev), pairs: cfgRow.pairs || [], strategies: (cfgRow.strategies || []).filter((k: string) => STRATS[k])};
   const log: string[] = []; let err = "", warn = "", asked = false, agentReplied = false;
+  const mode = cfgRow.mode === "approval" ? "approval" : "auto";
   const due = who === "admin" || isDue(T.ms, cfgRow.last_agent, Date.now());   // "Check now" always asks the agent
+  await rest("ttm_engine_proposals?status=eq.pending&expires_at=lt." + encodeURIComponent(new Date().toISOString()), {method: "PATCH", headers: {Prefer: "return=minimal"}, body: JSON.stringify({status: "expired", decided_at: new Date().toISOString(), result: "Expired before approval"})}).catch(() => {});
   try {
-    const open: Pos[] = (await get("ttm_engine_positions?select=*&status=eq.open&order=id.asc")).map((x: any) => ({...x, entry: num(x.entry), units: num(x.units), notional: num(x.notional), lev: num(x.lev), margin: num(x.margin), sl: num(x.sl), tp: x.tp == null ? null : num(x.tp), risk_usd: num(x.risk_usd), trail_atr: x.trail_atr == null ? null : num(x.trail_atr)}));
+    const open: Pos[] = (await get("ttm_engine_positions?select=*&status=eq.open&order=id.asc")).map(mapPos);
+    if (due && cfgRow.pair_mode === "auto") { try { const picked = await scanPairs(Math.min(Math.max(num(cfgRow.scan_top) || 50, 10), 200), Math.min(Math.max(num(cfgRow.scan_pick) || 8, 3), 15)); if (picked.length) { cfg.pairs = picked; log.push("scanned: " + picked.join(",")); } } catch (e) { warn = "Auto scan failed, using your list: " + String(e).slice(0, 120); } }
     const openPairs = [...new Set(open.map((p) => p.pair))], want = due ? [...new Set([...cfg.pairs, ...openPairs])] : openPairs;
     if (!due && !open.length) { await rest("ttm_engine_config?id=eq.1", {method: "PATCH", body: JSON.stringify({last_tick: new Date().toISOString()})}); return out({ok: true, skipped: "waiting for the next " + T.label + " candle"}); }
     // candles on the chosen time frame (2hr and 8hr are built from 1hr), and 5 minute candles for the open positions' stops
@@ -120,7 +156,13 @@ Deno.serve(async (req) => {
         else if (act === "hold") ok = true;
         else if (act === "close") { const p = still.find((x) => x.pair === pair); if (p) { await closeIt(p, px, "ai"); still = still.filter((x) => x.id !== p.id); ok = true; closedNow++; } else why = "nothing to close"; }
         else { acc = account(still); const v = validateOpen(d, px, acc.equity, acc.cash, still, cfg);
-          if (v.ok) { const ins = await rest("ttm_engine_positions", {method: "POST", headers: {Prefer: "return=representation"}, body: JSON.stringify({pair, ...v.pos, reason: String(d.reason || "").slice(0, 600)})});
+          if (v.ok && mode === "approval") {
+            const dup = (await get(`ttm_engine_proposals?select=id&status=eq.pending&pair=eq.${pair}&side=eq.${v.pos.side}&limit=1`)).length;
+            if (dup) why = "already waiting for your approval";
+            else { const exp = new Date(Date.now() + Math.min(Math.max(2 * T.ms, 30 * MIN), 48 * HOUR)).toISOString();
+              const pi = await rest("ttm_engine_proposals", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({expires_at: exp, pair, side: v.pos.side, strategy: v.pos.strategy, timeframe: T.label, price: px, sl: v.pos.sl, tp: v.pos.tp, lev: v.pos.lev, trail_atr: v.pos.trail_atr, reason: String(d.reason || "").slice(0, 600)})});
+              if (pi.ok) { why = "awaiting your approval"; log.push(`proposed ${act} ${pair} (${v.pos.strategy})`); await alertTg("TTM Agent needs approval", `${pair.replace("USDT", "")} ${v.pos.side.toUpperCase()} \u00B7 ${stratName(v.pos.strategy)} \u00B7 ${T.label}. Open the engine to approve or reject.`); } else why = "could not save the proposal (run engine4.sql)"; } }
+          else if (v.ok) { const ins = await rest("ttm_engine_positions", {method: "POST", headers: {Prefer: "return=representation"}, body: JSON.stringify({pair, ...v.pos, reason: String(d.reason || "").slice(0, 600)})});
             const row = (await ins.json())[0]; if (row) { still.push({...row, entry: v.pos.entry, units: v.pos.units, notional: v.pos.notional, lev: v.pos.lev, margin: v.pos.margin, sl: v.pos.sl, tp: v.pos.tp, risk_usd: v.pos.risk_usd, trail_atr: v.pos.trail_atr}); ok = true; log.push(`opened ${act} ${pair} (${v.pos.strategy})`); await alertTg(`\u26A1 ${pair.replace("USDT", "")} ${v.pos.side.toUpperCase()} opened`, `Timeframe: ${T.label} \u00B7 ${stratName(v.pos.strategy)}`); } else why = "could not save"; }
           else why = v.reason; }
         await rest("ttm_engine_decisions", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({pair, action: act, price: px || null, reason: String(d.reason || "").slice(0, 600), accepted: ok, reject_reason: ok ? null : why, strategy: d.strategy || null, timeframe: T.label, raw: d})});

@@ -163,3 +163,12 @@ export function sanitizeReview(text: string, cfg: ReviewCfg): {summary: string; 
   }
   const summary = str(j.summary, 900); if (!summary && !out.length) return null; return {summary, suggestions: out};
 }
+
+// Auto scan: from Bitget's ticker list keep the busiest `top` markets by 24h turnover, then hand the agent the `pick` that are moving most.
+export type TickerRow = {s: string; vol: number; ch: number; hi: number; lo: number; px: number};
+export function rankMovers(rows: TickerRow[], top: number, pick: number): string[] {
+  const ok = rows.filter((x) => /^[A-Z0-9]{2,20}USDT$/.test(x.s) && x.px > 0 && x.vol > 0 && isFinite(x.ch) && isFinite(x.hi) && isFinite(x.lo));
+  const uni = ok.sort((a, b) => b.vol - a.vol).slice(0, Math.max(5, top));
+  const score = (x: TickerRow) => Math.abs(x.ch) * 100 + (x.hi - x.lo) / x.px * 50;
+  return uni.sort((a, b) => score(b) - score(a)).slice(0, Math.max(1, pick)).map((x) => x.s);
+}
