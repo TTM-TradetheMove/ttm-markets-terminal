@@ -129,6 +129,37 @@ Rules you must follow (the engine rejects anything that breaks them):
 - Leverage ("lev") between 1 and the stated maximum. The engine sizes the position from the risk limit, so do not give a size. "trail_atr" (0.5 to 6) is optional and makes the stop trail the best price.
 - Never open a pair that is already held. Use "close" to exit a held pair early when the idea is no longer valid.
 - Most checks the right answer is "hold". Only trade a clear setup that matches a strategy above with a defined invalidation level. Do not chase moves or add to losers.
-Reply with JSON only, no other text: {"decisions":[{"pair":"BTCUSDT","action":"hold","reason":"one short sentence"}]}
+The input may include "approved_lessons": notes TTM approved after reviewing your past trades. Follow them.\nReply with JSON only, no other text: {"decisions":[{"pair":"BTCUSDT","action":"hold","reason":"one short sentence"}]}
 For an open include "strategy", "sl", "tp" (or null), "lev" and optionally "trail_atr". Keep every reason to one short sentence.`;
+}
+
+// ---- Agent Review: the agent reads its own closed trades and proposes improvements. Nothing changes until TTM approves. ----
+export const REVIEW_SYSTEM = `You are the TTM trading agent reviewing your own paper trading record for TTM, the person who runs you. Be honest and specific.
+You get the current settings, results grouped by strategy and by pair, how trades ended, and your most recent closed trades (with R = result divided by the amount risked).
+Write a short plain-English review and up to 5 concrete suggestions. Rules:
+- Base every suggestion on the numbers given. Say clearly when the sample is small (fewer than about 10 trades for a group) and do not recommend a change from 1 or 2 trades.
+- A suggestion is either kind "change" (a settings change TTM can approve with one click) or kind "lesson" (a note you will follow in future decisions, for example "do not buy breakouts into the 24h high without volume").
+- A "change" object may use only these keys: strategies_off (list of strategy keys), strategies_on (list), pairs_remove (list of pair names), pairs_add (list of USDT pair names), risk_pct (only LOWER than now), max_lev (only LOWER than now), timeframe (one of 5m,15m,30m,1H,2H,4H,8H,12H,1D,3D,1W).
+- Never suggest taking more risk or more leverage. Never promise results. Paper results do not predict real results.
+Reply with JSON only: {"summary":"3 to 5 sentences","suggestions":[{"title":"short","detail":"1 to 3 sentences with the evidence","kind":"change","change":{"strategies_off":["breakout"]}},{"title":"short","detail":"...","kind":"lesson","change":null}]}`;
+export type ReviewCfg = {risk_pct: number; max_lev: number; strategies: string[]; pairs: string[]};
+export function sanitizeReview(text: string, cfg: ReviewCfg): {summary: string; suggestions: {title: string; detail: string; kind: "change" | "lesson"; change: Record<string, unknown> | null}[]} | null {
+  const a = text.indexOf("{"), b = text.lastIndexOf("}"); if (a < 0 || b <= a) return null; let j: any; try { j = JSON.parse(text.slice(a, b + 1)); } catch (_) { return null; }
+  const str = (x: unknown, n: number) => String(x == null ? "" : x).replace(/\s+/g, " ").trim().slice(0, n), pairRe = /^[A-Z0-9]{2,20}USDT$/;
+  const list = (x: unknown) => Array.isArray(x) ? x.map((v) => String(v)) : [];
+  const out: {title: string; detail: string; kind: "change" | "lesson"; change: Record<string, unknown> | null}[] = [];
+  for (const s of (Array.isArray(j.suggestions) ? j.suggestions : []).slice(0, 5)) {
+    const title = str(s && s.title, 120), detail = str(s && s.detail, 500); if (!title) continue; const ch: Record<string, unknown> = {}, c = (s && s.change) || {};
+    if (s && s.kind === "change" && c && typeof c === "object") {
+      const off = list(c.strategies_off).filter((k) => STRATS[k] && cfg.strategies.includes(k)); if (off.length) ch.strategies_off = off;
+      const on = list(c.strategies_on).filter((k) => STRATS[k] && !cfg.strategies.includes(k)); if (on.length) ch.strategies_on = on;
+      const rm = list(c.pairs_remove).map((p) => p.toUpperCase()).filter((p) => cfg.pairs.includes(p)); if (rm.length) ch.pairs_remove = rm;
+      const ad = list(c.pairs_add).map((p) => p.toUpperCase()).filter((p) => pairRe.test(p) && !cfg.pairs.includes(p)).slice(0, 5); if (ad.length) ch.pairs_add = ad;
+      const rp = Number(c.risk_pct); if (isFinite(rp) && rp >= 0.1 && rp < cfg.risk_pct) ch.risk_pct = rp;
+      const ml = Number(c.max_lev); if (isFinite(ml) && ml >= 1 && ml < cfg.max_lev) ch.max_lev = ml;
+      if (typeof c.timeframe === "string" && TFS[c.timeframe]) ch.timeframe = c.timeframe;
+    }
+    const has = Object.keys(ch).length > 0; out.push({title, detail, kind: has ? "change" : "lesson", change: has ? ch : null});
+  }
+  const summary = str(j.summary, 900); if (!summary && !out.length) return null; return {summary, suggestions: out};
 }

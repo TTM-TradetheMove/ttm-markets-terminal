@@ -2,7 +2,7 @@ import webpush from "npm:web-push@3.6.7";
 // TTM Automated Trading Engine, version 1: paper trading only. No exchange keys, no real orders.
 // Runs every 5 minutes. Every run manages open positions (stops, targets, trailing stops). When a new candle of the chosen time frame has closed it also asks the TTM agent what to do, checks it against the hard risk rules and records simulated fills.
 // Secrets needed: ANTHROPIC_API_KEY, ENGINE_KEY. Keep "Verify JWT" OFF (the function checks ENGINE_KEY or an admin sign-in itself).
-import {Candle, Pos, Cfg, HOUR, MIN, TFS, STRATS, stratName, aggregateTime, isDue, snapshot, atr, checkExit, trailStop, pnlOf, validateOpen, parseDecisions, buildSystem} from "./logic.ts";
+import {Candle, Pos, Cfg, HOUR, MIN, TFS, STRATS, stratName, aggregateTime, isDue, snapshot, atr, checkExit, trailStop, pnlOf, validateOpen, parseDecisions, buildSystem, REVIEW_SYSTEM, sanitizeReview} from "./logic.ts";
 
 const URL_ = Deno.env.get("SUPABASE_URL")!, KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const H = {apikey: KEY, Authorization: "Bearer " + KEY, "Content-Type": "application/json"};
@@ -11,6 +11,7 @@ const out = (o: unknown, s = 200) => new Response(JSON.stringify(o), {status: s,
 const rest = (p: string, o: any = {}) => fetch(URL_ + "/rest/v1/" + p, {...o, headers: {...H, ...(o.headers || {})}});
 const get = async (p: string) => { const r = await rest(p); const j = await r.json(); return Array.isArray(j) ? j : []; };
 const num = (x: unknown) => Number(x);
+type ReviewCfgT = {risk_pct: number; max_lev: number; strategies: string[]; pairs: string[]};
 // Phone alert (web push) to the admin's devices on every open and close. Never lets a failed alert stop the engine.
 let vapidOk = false;
 async function alertTg(title: string, body: string) {
@@ -39,18 +40,41 @@ async function candles(pair: string, gran: string, limit: number): Promise<Candl
   const j = await r.json(); if (j.code !== "00000" || !Array.isArray(j.data)) throw new Error("Bitget " + pair + ": " + (j.msg || r.status));
   return j.data.map((x: string[]) => ({t: num(x[0]), o: num(x[1]), h: num(x[2]), l: num(x[3]), c: num(x[4]), v: num(x[5])})).sort((a: Candle, b: Candle) => a.t - b.t);
 }
-async function ask(model: string, system: string, content: string): Promise<string> {
+async function ask(model: string, system: string, content: string, maxTokens = 3000): Promise<string> {
   const k = Deno.env.get("ANTHROPIC_API_KEY"); if (!k) throw new Error("ANTHROPIC_API_KEY secret is missing");
   const r = await fetch("https://api.anthropic.com/v1/messages", {method: "POST", headers: {"x-api-key": k, "anthropic-version": "2023-06-01", "content-type": "application/json"},
-    body: JSON.stringify({model, max_tokens: 3000, system, messages: [{role: "user", content}]})});
+    body: JSON.stringify({model, max_tokens: maxTokens, system, messages: [{role: "user", content}]})});
   const j = await r.json(); if (!r.ok) throw new Error("Agent: " + (j.error?.message || r.status));
   return (j.content || []).filter((b: any) => b.type === "text").map((b: any) => b.text).join("");
+}
+
+// Agent Review: the agent studies its own closed trades and writes a summary plus suggestions. TTM approves or dismisses each one on the dashboard.
+async function runReview(cfgRow: any): Promise<{ok: boolean; n?: number; error?: string}> {
+  const closed = await get("ttm_engine_positions?select=pair,side,strategy,pnl,risk_usd,close_reason,reason,opened_at,closed_at,lev&status=eq.closed&order=closed_at.desc&limit=100");
+  if (closed.length < 3) return {ok: false, error: "Need at least 3 closed trades before a review is useful (have " + closed.length + ")."};
+  const grp = (f: (x: any) => string) => { const m: Record<string, any[]> = {}; closed.forEach((x: any) => { (m[f(x)] = m[f(x)] || []).push(x); });
+    return Object.keys(m).map((k) => { const a = m[k], w = a.filter((x: any) => num(x.pnl) > 0).length, rs = a.filter((x: any) => num(x.risk_usd) > 0).map((x: any) => num(x.pnl) / num(x.risk_usd));
+      return {group: k, trades: a.length, won: w, win_rate_pct: Math.round(w / a.length * 100), total_pnl_usd: +a.reduce((t: number, x: any) => t + num(x.pnl), 0).toFixed(2), avg_R: rs.length ? +(rs.reduce((t: number, x: number) => t + x, 0) / rs.length).toFixed(2) : null}; }); };
+  const rejected = await get("ttm_engine_decisions?select=reject_reason&accepted=eq.false&action=neq.hold&order=ts.desc&limit=100"), rc: Record<string, number> = {}; rejected.forEach((x: any) => { const k = String(x.reject_reason || "?"); rc[k] = (rc[k] || 0) + 1; });
+  const lessons = await get("ttm_engine_suggestions?select=title&kind=eq.lesson&status=eq.approved&order=decided_at.desc&limit=10");
+  const cfg: ReviewCfgT = {risk_pct: num(cfgRow.risk_pct), max_lev: num(cfgRow.max_lev), strategies: (cfgRow.strategies || []).filter((k: string) => STRATS[k]), pairs: cfgRow.pairs || []};
+  const content = JSON.stringify({settings: {time_frame: cfgRow.timeframe || "1H", strategies_on: cfg.strategies, pairs: cfg.pairs, risk_per_trade_pct: cfg.risk_pct, max_leverage: cfg.max_lev, start_balance: num(cfgRow.start_balance)},
+    by_strategy: grp((x) => x.strategy || "none"), by_pair: grp((x) => x.pair || "?"), how_trades_ended: grp((x) => x.close_reason || "?").map((g) => ({how: g.group, trades: g.trades, total_pnl_usd: g.total_pnl_usd})), rejected_trade_reasons: rc, already_approved_lessons: lessons.map((l: any) => l.title),
+    recent_trades: closed.slice(0, 60).map((x: any) => ({pair: x.pair, side: x.side, strategy: x.strategy || null, lev: num(x.lev), pnl_usd: +num(x.pnl).toFixed(2), R: num(x.risk_usd) > 0 ? +(num(x.pnl) / num(x.risk_usd)).toFixed(2) : null, ended: x.close_reason, held_hours: x.opened_at && x.closed_at ? +((new Date(x.closed_at).getTime() - new Date(x.opened_at).getTime()) / 3600000).toFixed(1) : null, why_opened: String(x.reason || "").slice(0, 140)}))});
+  let raw = ""; try { raw = await ask(Deno.env.get("REVIEW_MODEL") || cfgRow.model || "claude-sonnet-5-5", REVIEW_SYSTEM, content, 2500); } catch (e) { return {ok: false, error: String(e).slice(0, 300)}; }
+  const rv = sanitizeReview(raw, cfg); if (!rv) return {ok: false, error: "The review reply could not be read"};
+  const ins = await rest("ttm_engine_reviews", {method: "POST", headers: {Prefer: "return=representation"}, body: JSON.stringify({trades_reviewed: closed.length, summary: rv.summary, model: cfgRow.model || null})});
+  const row = (await ins.json())[0]; if (!row) return {ok: false, error: "Could not save the review (run engine3.sql first)"};
+  if (rv.suggestions.length) await rest("ttm_engine_suggestions", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify(rv.suggestions.map((s) => ({review_id: row.id, title: s.title, detail: s.detail, kind: s.kind, change: s.change})))});
+  return {ok: true, n: rv.suggestions.length};
 }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", {headers: CORS});
   const who = await adminCall(req); if (!who) return out({ok: false, reason: "not allowed"}, 401);
   const cfgRow = (await get("ttm_engine_config?select=*&id=eq.1"))[0]; if (!cfgRow) return out({ok: false, reason: "run engine.sql first"}, 500);
+  let reqBody: any = {}; try { reqBody = await req.json(); } catch (_) { /* no body */ }
+  if (reqBody && reqBody.action === "review") { const rv = await runReview(cfgRow); return out({ok: rv.ok, error: rv.error, suggestions: rv.n}); }
   if (!cfgRow.enabled) return out({ok: true, skipped: "engine is switched off"});
   const tfKey = TFS[cfgRow.timeframe] ? cfgRow.timeframe : "1H", T = TFS[tfKey];
   const cfg: Cfg = {risk_pct: num(cfgRow.risk_pct), max_open: num(cfgRow.max_open), max_lev: num(cfgRow.max_lev), pairs: cfgRow.pairs || [], strategies: (cfgRow.strategies || []).filter((k: string) => STRATS[k])};
@@ -83,10 +107,10 @@ Deno.serve(async (req) => {
     let acc = account(still);
     if (due) {
       // 3) ask the agent
-      asked = true; cfg.pairs = tradePairs; const now = Date.now(), snaps = cfg.pairs.map((p) => snapshot(p, cs[p], T.ms, now));
+      asked = true; cfg.pairs = tradePairs; const lessons = (await get("ttm_engine_suggestions?select=title,detail&kind=eq.lesson&status=eq.approved&order=decided_at.desc&limit=10")).map((l: any) => l.title + (l.detail ? ": " + l.detail : "")); const now = Date.now(), snaps = cfg.pairs.map((p) => snapshot(p, cs[p], T.ms, now));
       const content = JSON.stringify({time_frame: T.label, strategies_switched_on: cfg.strategies.map((k) => k + " = " + STRATS[k].name), account: {equity: +acc.equity.toFixed(2), free_cash: +acc.cash.toFixed(2), risk_per_trade_pct: cfg.risk_pct, max_open_positions: cfg.max_open, max_leverage: cfg.max_lev},
         open_positions: still.map((p) => ({pair: p.pair, side: p.side, strategy: p.strategy || null, entry: p.entry, sl: p.sl, tp: p.tp, trailing_atr: p.trail_atr || null, unrealised_usd: +pnlOf(p, price(p.pair)).toFixed(2), opened: p.opened_at})),
-        recent_closed: closed.slice(0, 5).map((x: any) => ({pair: x.pair, side: x.side, strategy: x.strategy || null, pnl: +num(x.pnl).toFixed(2), how: x.close_reason})), market: snaps, time_utc: new Date().toISOString()});
+        recent_closed: closed.slice(0, 5).map((x: any) => ({pair: x.pair, side: x.side, strategy: x.strategy || null, pnl: +num(x.pnl).toFixed(2), how: x.close_reason})), approved_lessons: lessons, market: snaps, time_utc: new Date().toISOString()});
       let raw = ""; try { raw = await ask(cfgRow.model || "claude-sonnet-5-5", buildSystem(cfg.strategies, T.label), content); } catch (e) { err = String(e).slice(0, 300); }
       agentReplied = !!raw; const decisions = parseDecisions(raw); if (raw && !decisions.length) err = "The agent reply could not be read";
       // 4) check each decision against the hard rules, then simulate it
@@ -102,6 +126,10 @@ Deno.serve(async (req) => {
         await rest("ttm_engine_decisions", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({pair, action: act, price: px || null, reason: String(d.reason || "").slice(0, 600), accepted: ok, reject_reason: ok ? null : why, strategy: d.strategy || null, timeframe: T.label, raw: d})});
       }
     }
+    // weekly self review (needs at least 10 closed trades the first time, 5 new ones after that)
+    if (due && !err) { const lr = (await get("ttm_engine_reviews?select=ts&order=ts.desc&limit=1"))[0];
+      if (!lr || Date.now() - new Date(lr.ts).getTime() > 7 * 86400000) { const since = (await get("ttm_engine_positions?select=id&status=eq.closed" + (lr ? "&closed_at=gt." + encodeURIComponent(lr.ts) : "") + "&limit=10")).length;
+        if (since >= (lr ? 5 : 10)) { const rv = await runReview(cfgRow); log.push(rv.ok ? "review written: " + rv.n + " suggestions" : "review skipped: " + rv.error); } } }
     // 5) equity snapshot (when the agent was asked or a trade closed)
     if (due || closedNow) { acc = account(still); await rest("ttm_engine_equity", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({equity: acc.equity, cash: acc.cash, unrealised: unreal(still)})}); }
   } catch (e) { err = String(e).slice(0, 300); }
