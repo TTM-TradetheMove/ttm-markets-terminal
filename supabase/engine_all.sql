@@ -1,0 +1,124 @@
+-- TTM engine: ALL setup steps in one go (time frame + strategies, agent review, approval mode, auto scan). Safe to run more than once.
+-- Supabase > SQL Editor > New query > paste everything > Run. Run engine.sql first if you have never set the engine up.
+
+-- ===== engine2 =====
+-- TTM Automated Trading Engine: time frame choice, strategies, trailing stops, 5 minute schedule.
+alter table public.ttm_engine_config add column if not exists timeframe text not null default '1H';
+alter table public.ttm_engine_config add column if not exists strategies text[] not null default '{trend,breakout,sweep,momentum}';
+alter table public.ttm_engine_config add column if not exists last_agent timestamptz;
+alter table public.ttm_engine_config drop constraint if exists ttm_engine_tf_chk;
+alter table public.ttm_engine_config add constraint ttm_engine_tf_chk check (timeframe in ('5m','15m','30m','1H','2H','4H','8H','12H','1D','3D','1W'));
+alter table public.ttm_engine_positions add column if not exists strategy text;
+alter table public.ttm_engine_positions add column if not exists trail_atr numeric;
+alter table public.ttm_engine_decisions add column if not exists strategy text;
+alter table public.ttm_engine_decisions add column if not exists timeframe text;
+grant update (timeframe, strategies) on public.ttm_engine_config to authenticated;
+
+create or replace function public.ttm_engine_reset() returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not public.ttm_is_admin() then raise exception 'admin only'; end if;
+  update public.ttm_engine_config set enabled = false, last_error = null, last_agent = null, updated_at = now() where id = 1;
+  delete from public.ttm_engine_positions; delete from public.ttm_engine_decisions; delete from public.ttm_engine_equity;
+end $$;
+grant execute on function public.ttm_engine_reset() to authenticated;
+
+-- the schedule now runs every 5 minutes (it only asks the AI when a new candle of your time frame has closed)
+do $$ begin
+  perform cron.alter_job((select jobid from cron.job where jobname = 'ttm-engine-tick'), schedule := '*/5 * * * *');
+exception when others then raise notice 'Could not change the schedule: %', sqlerrm; end $$;
+select jobname, schedule from cron.job where jobname = 'ttm-engine-tick';
+
+-- ===== engine3 =====
+-- TTM Agent Review: the agent reviews its own closed trades and suggests improvements. Run once in the Supabase SQL editor AFTER engine2.sql.
+create table if not exists public.ttm_engine_reviews (
+  id bigserial primary key,
+  ts timestamptz not null default now(),
+  trades_reviewed int not null default 0,
+  summary text,
+  model text
+);
+create table if not exists public.ttm_engine_suggestions (
+  id bigserial primary key,
+  review_id bigint references public.ttm_engine_reviews(id) on delete cascade,
+  ts timestamptz not null default now(),
+  title text not null,
+  detail text,
+  kind text not null default 'lesson' check (kind in ('change','lesson')),
+  change jsonb,
+  status text not null default 'new' check (status in ('new','approved','dismissed')),
+  decided_at timestamptz
+);
+create index if not exists ttm_engine_sug_idx on public.ttm_engine_suggestions (status, ts desc);
+alter table public.ttm_engine_reviews enable row level security;
+alter table public.ttm_engine_suggestions enable row level security;
+drop policy if exists p_eng_rev_sel on public.ttm_engine_reviews;
+create policy p_eng_rev_sel on public.ttm_engine_reviews for select using (public.ttm_is_tester());
+drop policy if exists p_eng_sug_sel on public.ttm_engine_suggestions;
+create policy p_eng_sug_sel on public.ttm_engine_suggestions for select using (public.ttm_is_tester());
+drop policy if exists p_eng_sug_upd on public.ttm_engine_suggestions;
+create policy p_eng_sug_upd on public.ttm_engine_suggestions for update using (public.ttm_is_admin()) with check (public.ttm_is_admin());
+revoke all on public.ttm_engine_reviews, public.ttm_engine_suggestions from anon, authenticated;
+grant select on public.ttm_engine_reviews, public.ttm_engine_suggestions to authenticated;
+grant update (status, decided_at) on public.ttm_engine_suggestions to authenticated;
+grant usage, select on all sequences in schema public to service_role;
+
+-- Reset also clears the reviews and suggestions
+create or replace function public.ttm_engine_reset() returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not public.ttm_is_admin() then raise exception 'admin only'; end if;
+  update public.ttm_engine_config set enabled = false, last_error = null, last_agent = null, updated_at = now() where id = 1;
+  delete from public.ttm_engine_positions; delete from public.ttm_engine_decisions; delete from public.ttm_engine_equity;
+  delete from public.ttm_engine_suggestions; delete from public.ttm_engine_reviews;
+end $$;
+grant execute on function public.ttm_engine_reset() to authenticated;
+
+-- ===== engine4 =====
+-- TTM Agent: "go ahead" or "needs my approval" mode. Run once in the Supabase SQL editor AFTER engine2.sql and engine3.sql.
+alter table public.ttm_engine_config add column if not exists mode text not null default 'auto';
+alter table public.ttm_engine_config drop constraint if exists ttm_engine_mode_chk;
+alter table public.ttm_engine_config add constraint ttm_engine_mode_chk check (mode in ('auto','approval'));
+grant update (mode) on public.ttm_engine_config to authenticated;
+
+create table if not exists public.ttm_engine_proposals (
+  id bigserial primary key,
+  ts timestamptz not null default now(),
+  expires_at timestamptz not null,
+  pair text not null,
+  side text not null check (side in ('long','short')),
+  strategy text, timeframe text,
+  price numeric not null, sl numeric not null, tp numeric, lev numeric, trail_atr numeric,
+  reason text,
+  status text not null default 'pending' check (status in ('pending','approved','rejected','expired')),
+  decided_at timestamptz, result text
+);
+create index if not exists ttm_engine_prop_idx on public.ttm_engine_proposals (status, ts desc);
+alter table public.ttm_engine_proposals enable row level security;
+drop policy if exists p_eng_prop_sel on public.ttm_engine_proposals;
+create policy p_eng_prop_sel on public.ttm_engine_proposals for select using (public.ttm_is_tester());
+drop policy if exists p_eng_prop_upd on public.ttm_engine_proposals;
+create policy p_eng_prop_upd on public.ttm_engine_proposals for update using (public.ttm_is_admin()) with check (public.ttm_is_admin());
+revoke all on public.ttm_engine_proposals from anon, authenticated;
+grant select on public.ttm_engine_proposals to authenticated;
+grant update (status, decided_at, result) on public.ttm_engine_proposals to authenticated;
+grant usage, select on all sequences in schema public to service_role;
+
+create or replace function public.ttm_engine_reset() returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not public.ttm_is_admin() then raise exception 'admin only'; end if;
+  update public.ttm_engine_config set enabled = false, last_error = null, last_agent = null, updated_at = now() where id = 1;
+  delete from public.ttm_engine_positions; delete from public.ttm_engine_decisions; delete from public.ttm_engine_equity;
+  delete from public.ttm_engine_suggestions; delete from public.ttm_engine_reviews; delete from public.ttm_engine_proposals;
+end $$;
+grant execute on function public.ttm_engine_reset() to authenticated;
+
+-- Pairs: "my list" or "auto scan the busiest Bitget markets and trade what is moving"
+alter table public.ttm_engine_config add column if not exists pair_mode text not null default 'list';
+alter table public.ttm_engine_config add column if not exists scan_top int not null default 50;
+alter table public.ttm_engine_config add column if not exists scan_pick int not null default 8;
+alter table public.ttm_engine_config drop constraint if exists ttm_engine_pairmode_chk;
+alter table public.ttm_engine_config add constraint ttm_engine_pairmode_chk check (pair_mode in ('list','auto'));
+grant update (pair_mode, scan_top, scan_pick) on public.ttm_engine_config to authenticated;
+
