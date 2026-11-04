@@ -880,7 +880,7 @@ function rmFmt(m){
   imgs.forEach(id => { const src = 'https://s3.tradingview.com/snapshots/' + id[0].toLowerCase() + '/' + id + '.png'; h += `<a href="https://www.tradingview.com/x/${e(id)}/" target="_blank" rel="noopener noreferrer"><img class="rm-img" loading="lazy" referrerpolicy="no-referrer" src="${e(src)}" alt="TradingView chart" onerror="this.style.display='none'"></a>`; });
   gifs.slice(0, 2).forEach(g => { h += `<a href="${e(g)}" target="_blank" rel="noopener noreferrer"><img class="rm-img" loading="lazy" referrerpolicy="no-referrer" src="${e(g)}" alt="GIF" onerror="this.style.display='none'"></a>`; });
   if(m.poll) h = pollHtml(m) + h;
-  if(rmAudOk(m.audio)) h += `<div class="rm-vn">🎤 <audio controls preload="none" src="${e(m.audio)}"></audio>${m.audio_secs ? `<small>${Math.floor(m.audio_secs / 60)}:${String(m.audio_secs % 60).padStart(2, '0')}</small>` : ''}</div>`;
+  if(rmAudOk(m.audio)) h += `<div class="rm-vn">🎤 <audio controls preload="metadata" src="${e(m.audio)}" onerror="if(!this.dataset.x){this.dataset.x=1;this.insertAdjacentHTML('afterend',' <a href=&quot;'+this.src+'&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;>Open</a> <small>(this phone cannot play it here)</small>')}"></audio>${m.audio_secs ? `<small>${Math.floor(m.audio_secs / 60)}:${String(m.audio_secs % 60).padStart(2, '0')}</small>` : ''}</div>`;
   if(rmImgOk(m.img)) h += `<a href="${e(m.img)}" target="_blank" rel="noopener noreferrer"><img class="rm-img" loading="lazy" src="${e(m.img)}" alt="Screenshot"></a>`;
   return h;
 }
@@ -970,19 +970,19 @@ async function rmLoad(force){
   } finally { RM.busy = false; }
 }
 function rmPrev(){ const p = $('rmPrev'); if(!p) return; if(RM.rec){ p.style.display = 'flex'; p.style.gap = '10px'; p.style.alignItems = 'center'; p.innerHTML = `<span style="color:#ff5a5a">● Recording</span><b id="rmRecT">0:00</b><button class="rr-btn sm" id="rmRecStop">Stop</button><button class="rr-btn ghost sm" id="rmClrVoice">Cancel</button>`; return; } if(RM.voice){ p.style.display = 'flex'; p.style.gap = '10px'; p.style.alignItems = 'center'; p.innerHTML = `🎤 <audio controls src="${RM.voice.url}" style="height:34px;max-width:230px"></audio><small style="color:var(--mute)">${RM.voice.secs}s</small><button class="rr-btn ghost sm" id="rmClrVoice">Remove</button>`; return; } if(!RM.pend){ p.style.display = 'none'; p.innerHTML = ''; return; } p.style.display = 'flex'; p.style.gap = '10px'; p.style.alignItems = 'center'; p.innerHTML = `<img src="${RM.pend.url}" alt="" style="height:54px;border-radius:6px"><small style="color:var(--mute)">${Math.round(RM.pend.blob.size / 1024)} KB</small><button class="rr-btn ghost sm" id="rmClrImg">Remove</button>`; }
-const REC_MAX = 120;
+const REC_MAX = 600;
 async function rmMic(){
   const n = $('rmNote'); if(RM.rec || RM.voice) return; if(RM.muted) return;
   if(!navigator.mediaDevices || !window.MediaRecorder){ if(n) n.textContent = 'This browser cannot record audio. Try Chrome, Edge, Firefox or Safari 14.3 or newer.'; return; }
   let st; try{ st = await navigator.mediaDevices.getUserMedia({audio: true}); }catch(err){ if(n) n.textContent = 'Microphone is blocked. Allow the microphone for this site in your browser settings, then try again.'; return; }
-  const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'], mt = types.find(x => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(x)) || '';
-  let mr; try{ mr = mt ? new MediaRecorder(st, {mimeType: mt}) : new MediaRecorder(st); }catch(err){ st.getTracks().forEach(x => x.stop()); if(n) n.textContent = 'Could not start the recorder.'; return; }
+  const types = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus'], mt = types.find(x => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(x)) || '';
+  let mr; try{ try{ mr = mt ? new MediaRecorder(st, {mimeType: mt, audioBitsPerSecond: 48000}) : new MediaRecorder(st, {audioBitsPerSecond: 48000}); }catch(e2){ mr = mt ? new MediaRecorder(st, {mimeType: mt}) : new MediaRecorder(st); } }catch(err){ st.getTracks().forEach(x => x.stop()); if(n) n.textContent = 'Could not start the recorder.'; return; }
   const chunks = [], t0 = Date.now(); RM.rec = {mr, st, t0, cancel: false, tick: null};
   mr.ondataavailable = ev => { if(ev.data && ev.data.size) chunks.push(ev.data); };
   mr.onstop = () => { const rc = RM.rec; clearInterval(rc && rc.tick); st.getTracks().forEach(x => x.stop()); const cancel = rc && rc.cancel; RM.rec = null;
     if(cancel || !chunks.length){ rmPrev(); return; }
     const type = (mr.mimeType || mt || 'audio/webm').split(';')[0], blob = new Blob(chunks, {type}), secs = Math.max(1, Math.round((Date.now() - t0) / 1000));
-    if(blob.size > 3.5e6){ if(n) n.textContent = 'That voice note is too long. Keep it under 2 minutes.'; rmPrev(); return; }
+    if(blob.size > 8e6){ if(n) n.textContent = 'That voice note is too long. Keep it under 10 minutes.'; rmPrev(); return; }
     RM.voice = {blob, url: URL.createObjectURL(blob), secs, type}; rmPrev(); };
   mr.start(); RM.rec.tick = setInterval(() => { const s = Math.floor((Date.now() - t0) / 1000), el = $('rmRecT'); if(el) el.textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); if(s >= REC_MAX) rmRecStop(); }, 250);
   if(n) n.textContent = ''; rmPrev();
