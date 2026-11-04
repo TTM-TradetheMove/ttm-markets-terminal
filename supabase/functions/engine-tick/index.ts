@@ -271,7 +271,6 @@ async function approveProposal(cfgRow: any, id: number): Promise<{ok: boolean; e
   if (!(await ins.json())[0]) return {ok: false, error: "Could not save the position."};
   await mark("approved", "Opened at " + price);
   await rest("ttm_engine_decisions", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({pair: pr.pair, action: d.action, price, reason: "Approved by TTM. " + String(pr.reason || "").slice(0, 500), accepted: true, strategy: pr.strategy || null, timeframe: pr.timeframe || null, raw: d})});
-  await alertTg(`\u26A1 ${pr.pair.replace("USDT", "")} ${pr.side.toUpperCase()} opened`, `Approved \u00B7 Timeframe: ${pr.timeframe || ""} \u00B7 ${stratName(pr.strategy)}`);
   return {ok: true};
 }
 
@@ -323,8 +322,7 @@ Deno.serve(async (req) => {
     const fskip = skipped.filter((p) => cfg.pairs.includes(p)); if (due && fskip.length) warn = "Skipped (no Bitget futures data): " + fskip.join(", ");
     const price = (p: string): number => { const a = cs[p] || fc[p]; return a && a.length ? a[a.length - 1].c : 0; };
     const closeIt = async (p: Pos, px: number, why: string) => { const pnl = pnlOf(p, px);
-      await rest(`ttm_engine_positions?id=eq.${p.id}`, {method: "PATCH", body: JSON.stringify({status: "closed", closed_at: new Date().toISOString(), exit_price: px, pnl, close_reason: why})}); log.push(`closed ${p.pair} ${why} ${pnl.toFixed(2)}`);
-      await alertTg(`${pnl >= 0 ? "\u{1F7E2}" : "\u{1F534}"} ${p.pair.replace("USDT", "")} ${p.side.toUpperCase()} closed`, `${sgn(pnl / p.margin * 100)} on margin (${why === "ai" ? "agent exit" : why})`); };
+      await rest(`ttm_engine_positions?id=eq.${p.id}`, {method: "PATCH", body: JSON.stringify({status: "closed", closed_at: new Date().toISOString(), exit_price: px, pnl, close_reason: why})}); log.push(`closed ${p.pair} ${why} ${pnl.toFixed(2)}`); };
     // 1) stops and targets (5 minute candles first, then the chosen time frame), then trailing stops
     let still: Pos[] = [], closedNow = 0;
     for (const p of open) { const hit = (fc[p.pair] ? checkExit(p, fc[p.pair], 5 * MIN) : null) || (cs[p.pair] ? checkExit(p, cs[p.pair], T.ms) : null); if (hit) { await closeIt(p, hit.price, hit.reason); closedNow++; } else still.push(p); }

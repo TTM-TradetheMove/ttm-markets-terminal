@@ -160,7 +160,7 @@ Deno.serve(async (req) => {
     const row = rec.id && await claim("ttm_spot_feed", rec.id, "pushed"); if (!row) return new Response("skip");
     const dir = /Short/.test(row.title) ? "Short" : "Long";
     const short: Record<string, string> = {buy: dir + " position opened", fill: dir + " limit order collected", tp: dir + " TP hit", part: "partial profit taken", sell: dir + " position closed", add: dir + " position added to"};
-    const title = row.asset && short[row.kind] ? row.asset + " (Spot) " + short[row.kind] : row.title;
+    const title = row.asset && short[row.kind] ? row.asset + (row.market === "tradfi" ? " (TradFi Spot) " : " (Spot) ") + short[row.kind] : row.title;
     const pros = await get(`ttm_profiles?select=id&or=(is_admin.eq.true,and(plan.eq.pro,or(plan_until.is.null,plan_until.gt.${new Date().toISOString()})))`);
     const n = await send(await subsFor(idsOf(pros)), {title, body: row.body || "TTM Spot portfolio", tag: "ttm-" + row.id, url: "./crypto/index.html"}, "spot");
     return new Response("spot " + n);

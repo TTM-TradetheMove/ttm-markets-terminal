@@ -835,6 +835,9 @@ function snapshot(){
     pending: pl.sort((a, b) => b.m - a.m).map(o => ({a: o.a, pct: r1(o.m / tot * 100), p: o.p.slice(0, 5)})),
     sold: closed.map(x => ({a: x.snap.asset, bought: x.opened || x.t, sold: x.res.closed || x.t, pct: x.snap.margin ? r1(x.res.pnl / x.snap.margin * 100) : 0, part: /% closed\)$/.test(x.name)})).sort((a, b) => b.sold - a.sold).slice(0, 15)};
 }
+function tfEv(kind, x, ukey, pct){ try{ if(!window.ttmFeedPost || !x || !x.snap || x.snap.mkt !== 'spot') return; const A = x.snap.asset,
+  T = {buy: ['TTM opened a TradFi Spot Long position on ' + A, ''], fill: ['TTM TradFi Spot Long limit order on ' + A + ' has been collected', ''], part: ['TTM took partial profit on ' + A, pct != null ? pct + '% of the position sold' : ''], sell: ['TTM closed its TradFi Spot Long position on ' + A, '']}[kind];
+  if(T) ttmFeedPost({ukey, kind, asset: A, title: T[0], body: T[1], pct: null, market: 'tradfi'}); }catch(e){} }
 let T = 0;
 async function publish(){ if(!(window.ttmPublishHoldings)) return; await ttmPublishHoldings({tradfi: snapshot()}); }
 function draw(){
@@ -853,15 +856,16 @@ document.addEventListener('click', async e => { const t = e.target.closest('butt
     if(!a || !(amt > 0) || !(p > 0)){ n.style.color = '#e0554d'; n.textContent = 'Enter the ticker, the amount and the price.'; return; }
     const dt = $('hdD').value ? new Date($('hdD').value + 'T12:00:00').getTime() : Date.now(), lo = $('hdT').value === 'lo';
     all.unshift({id: uid(), name: a + ' investment', t: dt, opened: dt, s: {asset: a, acc: ACC, mkt: 'spot', dir: 'long'}, status: 'open', fill: lo ? 'pending' : 'filled', side: lo ? 1 : undefined, snap: {asset: a, acc: ACC, tf: 'd1', long: true, mkt: 'spot', lev: 1, E: p, SL: 0, noSL: true, units: amt / p, notional: amt, margin: amt, riskUsd: amt, fee: 0, tps: [], manualPx: now > 0 ? now : null}});
+    if(!lo) tfEv('buy', all[0], 'tfopen:' + all[0].id);
     wr(SK, all); n.style.color = ''; n.textContent = a + (lo ? ' limit order lodged.' : ' lodged.'); }
   else if(t.id === 'hdSS'){ const b = rd(BK, {}); b[ACC] = num($('hdS').value) || 0; wr(BK, b); }
   else if(t.dataset.h){ const i = all.findIndex(x => x.id === t.dataset.id), x = all[i]; if(!x) return;
     if(t.dataset.h === 'px'){ const v = num(prompt('Current price of ' + x.snap.asset + ':', curPx(x))); if(!(v > 0)) return; x.snap.manualPx = v; }
-    else if(t.dataset.h === 'fill'){ x.fill = 'filled'; x.opened = Date.now(); }
+    else if(t.dataset.h === 'fill'){ x.fill = 'filled'; x.opened = Date.now(); tfEv('fill', x, 'tffill:' + x.id); }
     else if(t.dataset.h === 'del'){ if(!confirm('Remove this entry? Your balance changes back.')) return; all.splice(i, 1); }
     else if(t.dataset.h === 'sell'){ const v = num(prompt('Sell price for ' + x.snap.asset + ':', curPx(x))); if(!(v > 0)) return; const pct = num(prompt('How much of the position is sold, in %?', '100')); if(!(pct > 0) || pct > 100) return; const f = pct / 100, sn = x.snap, pnl = sn.units * f * (v - sn.E) * (sn.long === false ? -1 : 1);
-      if(f >= 1){ x.status = 'closed'; x.res = {pnl: Math.round(pnl * 100) / 100, r: pnl / sn.margin, how: 'Sold at ' + px(v), closed: Date.now()}; }
-      else { const part = JSON.parse(JSON.stringify(x)); part.id = uid(); part.name = x.name + ' (' + Math.round(f * 1000) / 10 + '% closed)'; part.status = 'closed'; ['units', 'notional', 'margin', 'riskUsd'].forEach(k => { part.snap[k] = sn[k] * f; sn[k] = sn[k] * (1 - f); }); part.res = {pnl: Math.round(pnl * 100) / 100, r: pnl / part.snap.margin, how: 'Part sold at ' + px(v), closed: Date.now()}; all.splice(i + 1, 0, part); x.booked = Math.round(((x.booked || 0) + pnl) * 100) / 100; } }
+      if(f >= 1){ x.status = 'closed'; x.res = {pnl: Math.round(pnl * 100) / 100, r: pnl / sn.margin, how: 'Sold at ' + px(v), closed: Date.now()}; tfEv('sell', x, 'tfsell:' + x.id + ':' + x.res.closed); }
+      else { const part = JSON.parse(JSON.stringify(x)); part.id = uid(); part.name = x.name + ' (' + Math.round(f * 1000) / 10 + '% closed)'; part.status = 'closed'; ['units', 'notional', 'margin', 'riskUsd'].forEach(k => { part.snap[k] = sn[k] * f; sn[k] = sn[k] * (1 - f); }); part.res = {pnl: Math.round(pnl * 100) / 100, r: pnl / part.snap.margin, how: 'Part sold at ' + px(v), closed: Date.now()}; all.splice(i + 1, 0, part); x.booked = Math.round(((x.booked || 0) + pnl) * 100) / 100; tfEv('part', x, 'tfpart:' + part.id, Math.round(f * 1000) / 10); } }
     wr(SK, all); }
   else return;
   draw(); T = 0; await publish(); const hb = $('hdBody'); if(window.dispatchEvent) window.dispatchEvent(new HashChangeEvent('hashchange')); });
@@ -2173,7 +2177,7 @@ setInterval(() => {
   function plans(){ const b = $('txPlans'), l = rdP(), adm = window.ttmIsAdmin && ttmIsAdmin(); b.innerHTML = l.length ? l.map((p, i) => '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--line)"><b style="flex:1;min-width:120px">' + esc(p.name) + '</b><button class="rr-btn ghost sm" data-pl="load" data-i="' + i + '">Load</button>' + (adm ? '<button class="rr-btn sm" data-pl="open" data-i="' + i + '">Open trade</button>' : '') + '<button class="rr-btn ghost sm" data-pl="del" data-i="' + i + '">Delete</button></div>').join('') : '<p class="calendar-note" style="margin:0">No saved plans yet. Fill in the calculator, name it and press Save plan.</p>'; $('txOpenBox').style.display = adm ? '' : 'none'; }
   function openTrade(P, lo){ const T = window.tfPanelRefresh; if(!P || !P.sym){ return 'Add a symbol first (the box next to Market).'; } const lev = P.lev > 1 ? P.lev : 1, all = (() => { try{ return JSON.parse(localStorage.getItem('ttm_rr_saved_v1') || '[]'); }catch(e){ return []; } })(), id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     all.unshift({id, name: P.sym + ' ' + (P.long ? 'long' : 'short'), t: Date.now(), opened: Date.now(), s: {asset: P.sym, acc: 'tradfi', mkt: lev > 1 ? 'fut' : 'spot', dir: P.long ? 'long' : 'short'}, status: 'open', fill: lo ? 'pending' : 'filled', side: lo ? 1 : undefined, snap: {asset: P.sym, acc: 'tradfi', tf: 'd1', long: P.long, mkt: lev > 1 ? 'fut' : 'spot', lev, E: P.E, SL: P.SL, units: P.units, notional: P.notional, margin: P.margin, riskUsd: P.risk, fee: 0, tps: P.tps}});
-    try{ localStorage.setItem('ttm_rr_saved_v1', JSON.stringify(all)); }catch(e){} if(window.ttmSync) ttmSync.dirty(); if(T) T(); return ''; }
+    try{ localStorage.setItem('ttm_rr_saved_v1', JSON.stringify(all)); }catch(e){} if(window.ttmSync) ttmSync.dirty(); if(!lo && lev <= 1 && window.ttmIsAdmin && ttmIsAdmin() && window.ttmFeedPost){ const it = all[0]; try{ ttmFeedPost({ukey: 'tfopen:' + it.id, kind: 'buy', asset: P.sym, title: 'TTM opened a TradFi Spot ' + (P.long ? 'Long' : 'Short') + ' position on ' + P.sym, body: '', pct: null, market: 'tradfi'}); }catch(e){} } if(T) T(); return ''; }
   function calc(){
     const bal = n('txBal'), lev = Math.max(1, n('txLev') || 1), E = n('txE'), SL = n('txSL'), fee = n('txFee') || 0, cs = n('txCS') || 1;
     const rk = n('txRisk'), risk = $('txRiskMode').value === 'pct' ? bal * rk / 100 : rk;
