@@ -1,24 +1,22 @@
-Run at 2026-11-04T03:22:02.426213+00:00
+Run at 2026-11-04T18:45:04.585566+00:00
 
 OKX: 540 swap contract sizes loaded
 Binance: connected (wss://fstream.binance.com/market/ws/!forceOrder@arr)
 OKX: connected + subscribed
-OKX: raw message #1: {"event":"notice","msg":"WebSocket port 8443 will be retired soon. Please migrate to port 443.","code":"64010","connId":"f76bbf41"}
+OKX: raw message #1: {"event":"notice","msg":"WebSocket port 8443 will be retired soon. Please migrate to port 443.","code":"64010","connId":"1763162d"}
+OKX: raw message #2: {"event":"subscribe","arg":{"channel":"liquidation-orders","instType":"SWAP"},"connId":"1763162d"}
 Bybit: connected
-OKX: raw message #2: {"event":"subscribe","arg":{"channel":"liquidation-orders","instType":"SWAP"},"connId":"f76bbf41"}
-Binance: first raw message sample: {"e":"forceOrder","E":1793762242162,"o":{"s":"IDOLUSDT","S":"BUY","o":"LIMIT","f":"IOC","q":"185104","p":"0.0219300","ap":"0.0214603","X":"FILLED","l":"1733","z":"185104","T":1793762241210,"ps":"IDOLUSDT","st":1}}
-HTX: connected + subscribed
-Bybit: raw message #1 sample: {"success":true,"ret_msg":"","conn_id":"db293ipjdenpli48l2e0-96zbu","req_id":"","op":"subscribe"}
+Bybit: raw message #1 sample: {"success":true,"ret_msg":"","conn_id":"db293ioue4vd4q1qg390-9ezfz","req_id":"","op":"subscribe"}
 Bybit: subscribe ack -- success=True ret_msg=
-Bybit: raw message #2 sample: {"success":true,"ret_msg":"","conn_id":"db293ipjdenpli48l2e0-96zbu","req_id":"","op":"subscribe"}
+Bybit: raw message #2 sample: {"success":true,"ret_msg":"","conn_id":"db293ioue4vd4q1qg390-9ezfz","req_id":"","op":"subscribe"}
 Bybit: subscribe ack -- success=True ret_msg=
-Bybit: raw message #3 sample: {"success":true,"ret_msg":"","conn_id":"db293ipjdenpli48l2e0-96zbu","req_id":"","op":"subscribe"}
+Bybit: raw message #3 sample: {"success":true,"ret_msg":"","conn_id":"db293ioue4vd4q1qg390-9ezfz","req_id":"","op":"subscribe"}
 Bybit: subscribe ack -- success=True ret_msg=
-Bybit: raw message #4 sample: {"success":true,"ret_msg":"","conn_id":"db293ipjdenpli48l2e0-96zbu","req_id":"","op":"subscribe"}
+Bybit: raw message #4 sample: {"success":true,"ret_msg":"","conn_id":"db293ioue4vd4q1qg390-9ezfz","req_id":"","op":"subscribe"}
 Bybit: subscribe ack -- success=True ret_msg=
-Bybit: raw message #5 sample: {"success":true,"ret_msg":"","conn_id":"db293ipjdenpli48l2e0-96zbu","req_id":"","op":"subscribe"}
+Bybit: raw message #5 sample: {"success":true,"ret_msg":"","conn_id":"db293ioue4vd4q1qg390-9ezfz","req_id":"","op":"subscribe"}
 Bybit: subscribe ack -- success=True ret_msg=
-Bybit: raw message #6 sample: {"success":true,"ret_msg":"","conn_id":"db293ipjdenpli48l2e0-96zbu","req_id":"","op":"subscribe"}
+Bybit: raw message #6 sample: {"success":true,"ret_msg":"","conn_id":"db293ioue4vd4q1qg390-9ezfz","req_id":"","op":"subscribe"}
 Bybit: subscribe ack -- success=True ret_msg=
 Bybit: subscribe ack -- success=True ret_msg=
 Bybit: subscribe ack -- success=True ret_msg=
@@ -44,16 +42,18 @@ Bybit: subscribe ack -- success=True ret_msg=
 Bybit: subscribe ack -- success=True ret_msg=
 Bybit: subscribe ack -- success=True ret_msg=
 Bybit: subscribe ack -- success=True ret_msg=
-HTX: message #1: {"status":"error","ts":1793762242465,"id":"ttm","err-code":"bad-request","err-msg":"invalid topic public.*.liquidation_orders"}
-OKX: raw message #3: {"arg":{"channel":"liquidation-orders","instType":"SWAP"},"data":[{"details":[{"bkLoss":"0","bkPx":"0.00358","ccy":"","posSide":"long","side":"sell","sz":"1340","ts":"1793760311544"}],"instFamily":"AKE-USDT","instId":"AKE-USDT-SWAP","instType":"SWAP","uly":"AKE-USDT"}]}
-OKX: capture window closed, 9 raw messages, 7 liquidations parsed
-Bybit: capture window closed, 31 raw messages received, 1 events parsed
+Binance: first raw message sample: {"e":"forceOrder","E":1793817624162,"o":{"s":"AINUSDT","S":"BUY","o":"LIMIT","f":"IOC","q":"57","p":"0.3069200","ap":"0.2931700","X":"FILLED","l":"57","z":"57","T":1793817623224,"ps":"AINUSDT","st":1}}
+HTX: connected + subscribed
+HTX: message #1: {"status":"error","ts":1793817624553,"id":"ttm","err-code":"bad-request","err-msg":"invalid topic public.*.liquidation_orders"}
+OKX: raw message #3: {"arg":{"channel":"liquidation-orders","instType":"SWAP"},"data":[{"details":[{"bkLoss":"0","bkPx":"1035.8","ccy":"","posSide":"long","side":"sell","sz":"1.713","ts":"1793814439293"}],"instFamily":"SNDK-USDT","instId":"SNDK-USDT-SWAP","instType":"SWAP","uly":"SNDK-USDT"}]}
+OKX: capture window closed, 33 raw messages, 31 liquidations parsed
+Bybit: capture window closed, 45 raw messages received, 8 events parsed
 HTX: capture window closed, 55 raw messages, 0 liquidations parsed
-Binance: capture window closed, 60 raw messages received, 1 events parsed
-Gate: 1000 rows returned, 1000 new liquidations counted
+Binance: capture window closed, 204 raw messages received, 7 events parsed
+Gate: 219 rows returned, 219 new liquidations counted
 Deribit: 12000 trades scanned, 0 liquidation entries counted
-Totals: 1068 liquidations seen this run across 242 symbols; 111 5-min buckets kept
-Captured 2 new liquidation events this run
-Rolling log: 29 existing + 2 new -> 31 after dedupe/trim
-Mark prices: {'BTCUSDT': 75843.03, 'ETHUSDT': 2231.63}
-Price history points: BTC=5 ETH=5
+Totals: 469 liquidations seen this run across 116 symbols; 72 5-min buckets kept
+Captured 15 new liquidation events this run
+Rolling log: 31 existing + 15 new -> 22 after dedupe/trim
+Mark prices: {'BTCUSDT': 80450.67, 'ETHUSDT': 2429.83}
+Price history points: BTC=3 ETH=3
