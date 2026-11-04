@@ -1,8 +1,8 @@
 import webpush from "npm:web-push@3.6.7";
 // TTM Automated Trading Engine, version 1: paper trading only. No exchange keys, no real orders.
-// Each hour: manage open positions (stops and targets), ask the TTM agent what to do, check it against the hard risk rules, record simulated fills.
+// Runs every 5 minutes. Every run manages open positions (stops, targets, trailing stops). When a new candle of the chosen time frame has closed it also asks the TTM agent what to do, checks it against the hard risk rules and records simulated fills.
 // Secrets needed: ANTHROPIC_API_KEY, ENGINE_KEY. Keep "Verify JWT" OFF (the function checks ENGINE_KEY or an admin sign-in itself).
-import {Candle, Pos, Cfg, HOUR, SYSTEM, snapshot, checkExit, pnlOf, validateOpen, parseDecisions} from "./logic.ts";
+import {Candle, Pos, Cfg, HOUR, MIN, TFS, STRATS, stratName, aggregateTime, isDue, snapshot, atr, checkExit, trailStop, pnlOf, validateOpen, parseDecisions, buildSystem} from "./logic.ts";
 
 const URL_ = Deno.env.get("SUPABASE_URL")!, KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const H = {apikey: KEY, Authorization: "Bearer " + KEY, "Content-Type": "application/json"};
@@ -28,73 +28,86 @@ async function alertTg(title: string, body: string) {
 }
 const sgn = (x: number) => (x >= 0 ? "+" : "") + x.toFixed(2) + "%";
 
-async function isAdminCall(req: Request): Promise<boolean> {
-  const secret = Deno.env.get("ENGINE_KEY"); if (secret && req.headers.get("x-engine-key") === secret) return true;
-  const t = (req.headers.get("authorization") || "").replace(/^Bearer /i, ""); if (!t) return false;
-  const u = await fetch(URL_ + "/auth/v1/user", {headers: {apikey: KEY, Authorization: "Bearer " + t}}); if (!u.ok) return false;
-  const id = (await u.json()).id; const p = await get(`ttm_profiles?select=is_admin&id=eq.${id}`); return !!(p[0] && p[0].is_admin);
+async function adminCall(req: Request): Promise<"key" | "admin" | null> {
+  const secret = Deno.env.get("ENGINE_KEY"); if (secret && req.headers.get("x-engine-key") === secret) return "key";
+  const t = (req.headers.get("authorization") || "").replace(/^Bearer /i, ""); if (!t) return null;
+  const u = await fetch(URL_ + "/auth/v1/user", {headers: {apikey: KEY, Authorization: "Bearer " + t}}); if (!u.ok) return null;
+  const id = (await u.json()).id; const p = await get(`ttm_profiles?select=is_admin&id=eq.${id}`); return p[0] && p[0].is_admin ? "admin" : null;
 }
-async function candles(pair: string): Promise<Candle[]> {
-  const r = await fetch(`https://api.bitget.com/api/v2/mix/market/candles?symbol=${pair}&productType=USDT-FUTURES&granularity=1H&limit=120`);
+async function candles(pair: string, gran: string, limit: number): Promise<Candle[]> {
+  const r = await fetch(`https://api.bitget.com/api/v2/mix/market/candles?symbol=${pair}&productType=USDT-FUTURES&granularity=${gran}&limit=${limit}`);
   const j = await r.json(); if (j.code !== "00000" || !Array.isArray(j.data)) throw new Error("Bitget " + pair + ": " + (j.msg || r.status));
-  return j.data.map((x: string[]) => ({t: num(x[0]), o: num(x[1]), h: num(x[2]), l: num(x[3]), c: num(x[4])})).sort((a: Candle, b: Candle) => a.t - b.t);
+  return j.data.map((x: string[]) => ({t: num(x[0]), o: num(x[1]), h: num(x[2]), l: num(x[3]), c: num(x[4]), v: num(x[5])})).sort((a: Candle, b: Candle) => a.t - b.t);
 }
-async function ask(model: string, content: string): Promise<string> {
+async function ask(model: string, system: string, content: string): Promise<string> {
   const k = Deno.env.get("ANTHROPIC_API_KEY"); if (!k) throw new Error("ANTHROPIC_API_KEY secret is missing");
   const r = await fetch("https://api.anthropic.com/v1/messages", {method: "POST", headers: {"x-api-key": k, "anthropic-version": "2023-06-01", "content-type": "application/json"},
-    body: JSON.stringify({model, max_tokens: 1200, system: SYSTEM, messages: [{role: "user", content}]})});
+    body: JSON.stringify({model, max_tokens: 3000, system, messages: [{role: "user", content}]})});
   const j = await r.json(); if (!r.ok) throw new Error("Agent: " + (j.error?.message || r.status));
   return (j.content || []).filter((b: any) => b.type === "text").map((b: any) => b.text).join("");
 }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", {headers: CORS});
-  if (!(await isAdminCall(req))) return out({ok: false, reason: "not allowed"}, 401);
+  const who = await adminCall(req); if (!who) return out({ok: false, reason: "not allowed"}, 401);
   const cfgRow = (await get("ttm_engine_config?select=*&id=eq.1"))[0]; if (!cfgRow) return out({ok: false, reason: "run engine.sql first"}, 500);
   if (!cfgRow.enabled) return out({ok: true, skipped: "engine is switched off"});
-  const cfg: Cfg = {risk_pct: num(cfgRow.risk_pct), max_open: num(cfgRow.max_open), max_lev: num(cfgRow.max_lev), pairs: cfgRow.pairs || []};
-  const log: string[] = []; let err = "", warn = "";
+  const tfKey = TFS[cfgRow.timeframe] ? cfgRow.timeframe : "1H", T = TFS[tfKey];
+  const cfg: Cfg = {risk_pct: num(cfgRow.risk_pct), max_open: num(cfgRow.max_open), max_lev: num(cfgRow.max_lev), pairs: cfgRow.pairs || [], strategies: (cfgRow.strategies || []).filter((k: string) => STRATS[k])};
+  const log: string[] = []; let err = "", warn = "", asked = false, agentReplied = false;
+  const due = who === "admin" || isDue(T.ms, cfgRow.last_agent, Date.now());   // "Check now" always asks the agent
   try {
-    const cs: Record<string, Candle[]> = {}, skipped: string[] = [];
-    for (const p of cfg.pairs) { try { cs[p] = await candles(p); if (cs[p].length < 30) throw new Error("too little data"); } catch (_) { delete cs[p]; skipped.push(p); } }
-    cfg.pairs = cfg.pairs.filter((p) => cs[p]); if (!cfg.pairs.length) throw new Error("No pair returned Bitget data. Skipped: " + skipped.join(", "));
-    if (skipped.length) warn = "Skipped (no Bitget futures data): " + skipped.join(", ");
-    const price = (p: string) => cs[p][cs[p].length - 1].c;
-    const open: Pos[] = (await get("ttm_engine_positions?select=*&status=eq.open&order=id.asc")).map((x: any) => ({...x, entry: num(x.entry), units: num(x.units), notional: num(x.notional), lev: num(x.lev), margin: num(x.margin), sl: num(x.sl), tp: x.tp == null ? null : num(x.tp), risk_usd: num(x.risk_usd)}));
+    const open: Pos[] = (await get("ttm_engine_positions?select=*&status=eq.open&order=id.asc")).map((x: any) => ({...x, entry: num(x.entry), units: num(x.units), notional: num(x.notional), lev: num(x.lev), margin: num(x.margin), sl: num(x.sl), tp: x.tp == null ? null : num(x.tp), risk_usd: num(x.risk_usd), trail_atr: x.trail_atr == null ? null : num(x.trail_atr)}));
+    const openPairs = [...new Set(open.map((p) => p.pair))], want = due ? [...new Set([...cfg.pairs, ...openPairs])] : openPairs;
+    if (!due && !open.length) { await rest("ttm_engine_config?id=eq.1", {method: "PATCH", body: JSON.stringify({last_tick: new Date().toISOString()})}); return out({ok: true, skipped: "waiting for the next " + T.label + " candle"}); }
+    // candles on the chosen time frame (2hr and 8hr are built from 1hr), and 5 minute candles for the open positions' stops
+    const cs: Record<string, Candle[]> = {}, fc: Record<string, Candle[]> = {}, skipped: string[] = [];
+    await Promise.all(want.map(async (p) => { try { const raw = await candles(p, T.gran, T.agg > 1 ? 1000 : 300); cs[p] = T.agg > 1 ? aggregateTime(raw, T.agg, HOUR) : raw; if (cs[p].length < 30) throw new Error("too little data"); } catch (_) { delete cs[p]; skipped.push(p); } }));
+    await Promise.all(openPairs.map(async (p) => { if (T.gran === "5m" && T.agg === 1) { if (cs[p]) fc[p] = cs[p]; return; } try { fc[p] = await candles(p, "5m", 300); } catch (_) { /* fall back to the time frame candles */ } }));
+    const tradePairs = cfg.pairs.filter((p) => cs[p]); if (due && !tradePairs.length) throw new Error("No pair returned Bitget data. Skipped: " + skipped.join(", "));
+    const fskip = skipped.filter((p) => cfg.pairs.includes(p)); if (due && fskip.length) warn = "Skipped (no Bitget futures data): " + fskip.join(", ");
+    const price = (p: string): number => { const a = cs[p] || fc[p]; return a && a.length ? a[a.length - 1].c : 0; };
     const closeIt = async (p: Pos, px: number, why: string) => { const pnl = pnlOf(p, px);
       await rest(`ttm_engine_positions?id=eq.${p.id}`, {method: "PATCH", body: JSON.stringify({status: "closed", closed_at: new Date().toISOString(), exit_price: px, pnl, close_reason: why})}); log.push(`closed ${p.pair} ${why} ${pnl.toFixed(2)}`);
-      await alertTg(`${pnl >= 0 ? "🟢" : "🔴"} ${p.pair.replace("USDT", "")} ${p.side.toUpperCase()} closed`, `${sgn(pnl / p.margin * 100)} on margin (${why === "ai" ? "agent exit" : why})`); };
-    // 1) stops and targets
-    let still: Pos[] = [];
-    for (const p of open) { const hit = cs[p.pair] ? checkExit(p, cs[p.pair]) : null; if (hit) await closeIt(p, hit.price, hit.reason); else still.push(p); }
+      await alertTg(`${pnl >= 0 ? "\u{1F7E2}" : "\u{1F534}"} ${p.pair.replace("USDT", "")} ${p.side.toUpperCase()} closed`, `${sgn(pnl / p.margin * 100)} on margin (${why === "ai" ? "agent exit" : why})`); };
+    // 1) stops and targets (5 minute candles first, then the chosen time frame), then trailing stops
+    let still: Pos[] = [], closedNow = 0;
+    for (const p of open) { const hit = (fc[p.pair] ? checkExit(p, fc[p.pair], 5 * MIN) : null) || (cs[p.pair] ? checkExit(p, cs[p.pair], T.ms) : null); if (hit) { await closeIt(p, hit.price, hit.reason); closedNow++; } else still.push(p); }
+    for (const p of still) { if (!p.trail_atr || !cs[p.pair]) continue; const ns = trailStop(p, fc[p.pair] || cs[p.pair], atr(cs[p.pair]), fc[p.pair] ? 5 * MIN : T.ms), px = price(p.pair);
+      if (ns != null && px > 0 && (p.side === "long" ? ns < px : ns > px)) { await rest(`ttm_engine_positions?id=eq.${p.id}`, {method: "PATCH", body: JSON.stringify({sl: ns})}); p.sl = ns; log.push(`trailed ${p.pair} stop to ${ns}`); } }
     // 2) account
-    const closed = await get("ttm_engine_positions?select=pnl,pair,side,entry,exit_price,close_reason,closed_at&status=eq.closed&order=closed_at.desc&limit=200");
+    const closed = await get("ttm_engine_positions?select=pnl,pair,side,entry,exit_price,close_reason,closed_at,strategy&status=eq.closed&order=closed_at.desc&limit=200");
     const realised = closed.reduce((t: number, x: any) => t + num(x.pnl || 0), 0), start = num(cfgRow.start_balance);
-    const unreal = (ps: Pos[]) => ps.reduce((t, p) => t + (cs[p.pair] ? pnlOf(p, price(p.pair)) : 0), 0);
+    const unreal = (ps: Pos[]) => ps.reduce((t, p) => t + (price(p.pair) ? pnlOf(p, price(p.pair)) : 0), 0);
     const account = (ps: Pos[]) => { const eq = start + realised + unreal(ps), cash = start + realised - ps.reduce((t, p) => t + p.margin, 0); return {equity: eq, cash}; };
-    // 3) ask the agent
     let acc = account(still);
-    const snaps = cfg.pairs.map((p) => snapshot(p, cs[p]));
-    const content = JSON.stringify({account: {equity: +acc.equity.toFixed(2), free_cash: +acc.cash.toFixed(2), risk_per_trade_pct: cfg.risk_pct, max_open_positions: cfg.max_open, max_leverage: cfg.max_lev},
-      open_positions: still.map((p) => ({pair: p.pair, side: p.side, entry: p.entry, sl: p.sl, tp: p.tp, unrealised_usd: +pnlOf(p, price(p.pair)).toFixed(2), opened: p.opened_at})),
-      recent_closed: closed.slice(0, 5).map((x: any) => ({pair: x.pair, side: x.side, pnl: +num(x.pnl).toFixed(2), how: x.close_reason})), market: snaps, time_utc: new Date().toISOString()});
-    let raw = ""; try { raw = await ask(cfgRow.model || "claude-sonnet-5-5", content); } catch (e) { err = String(e).slice(0, 300); }
-    const decisions = parseDecisions(raw); if (raw && !decisions.length) err = "The agent reply could not be read";
-    // 4) check each decision against the hard rules, then simulate it
-    for (const d of decisions) {
-      const pair = String(d.pair || ""), px = cs[pair] ? price(pair) : 0, act = String(d.action || "hold"); let ok = false, why = "";
-      if (!cs[pair]) why = "unknown pair";
-      else if (act === "hold") ok = true;
-      else if (act === "close") { const p = still.find((x) => x.pair === pair); if (p) { await closeIt(p, px, "ai"); still = still.filter((x) => x.id !== p.id); ok = true; } else why = "nothing to close"; }
-      else { acc = account(still); const v = validateOpen(d, px, acc.equity, acc.cash, still, cfg);
-        if (v.ok) { const ins = await rest("ttm_engine_positions", {method: "POST", headers: {Prefer: "return=representation"}, body: JSON.stringify({pair, ...v.pos, reason: String(d.reason || "").slice(0, 600)})});
-          const row = (await ins.json())[0]; if (row) { still.push({...row, entry: v.pos.entry, units: v.pos.units, notional: v.pos.notional, lev: v.pos.lev, margin: v.pos.margin, sl: v.pos.sl, tp: v.pos.tp, risk_usd: v.pos.risk_usd}); ok = true; log.push(`opened ${act} ${pair}`); await alertTg(`⚡ ${pair.replace("USDT", "")} ${v.pos.side.toUpperCase()} opened`, "Timeframe: 1hr"); } else why = "could not save"; }
-        else why = v.reason; }
-      await rest("ttm_engine_decisions", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({pair, action: act, price: px || null, reason: String(d.reason || "").slice(0, 600), accepted: ok, reject_reason: ok ? null : why, raw: d})});
+    if (due) {
+      // 3) ask the agent
+      asked = true; cfg.pairs = tradePairs; const now = Date.now(), snaps = cfg.pairs.map((p) => snapshot(p, cs[p], T.ms, now));
+      const content = JSON.stringify({time_frame: T.label, strategies_switched_on: cfg.strategies.map((k) => k + " = " + STRATS[k].name), account: {equity: +acc.equity.toFixed(2), free_cash: +acc.cash.toFixed(2), risk_per_trade_pct: cfg.risk_pct, max_open_positions: cfg.max_open, max_leverage: cfg.max_lev},
+        open_positions: still.map((p) => ({pair: p.pair, side: p.side, strategy: p.strategy || null, entry: p.entry, sl: p.sl, tp: p.tp, trailing_atr: p.trail_atr || null, unrealised_usd: +pnlOf(p, price(p.pair)).toFixed(2), opened: p.opened_at})),
+        recent_closed: closed.slice(0, 5).map((x: any) => ({pair: x.pair, side: x.side, strategy: x.strategy || null, pnl: +num(x.pnl).toFixed(2), how: x.close_reason})), market: snaps, time_utc: new Date().toISOString()});
+      let raw = ""; try { raw = await ask(cfgRow.model || "claude-sonnet-5-5", buildSystem(cfg.strategies, T.label), content); } catch (e) { err = String(e).slice(0, 300); }
+      agentReplied = !!raw; const decisions = parseDecisions(raw); if (raw && !decisions.length) err = "The agent reply could not be read";
+      // 4) check each decision against the hard rules, then simulate it
+      for (const d of decisions) {
+        const pair = String(d.pair || ""), px = cs[pair] ? price(pair) : 0, act = String(d.action || "hold"); let ok = false, why = "";
+        if (!cs[pair]) why = "unknown pair";
+        else if (act === "hold") ok = true;
+        else if (act === "close") { const p = still.find((x) => x.pair === pair); if (p) { await closeIt(p, px, "ai"); still = still.filter((x) => x.id !== p.id); ok = true; closedNow++; } else why = "nothing to close"; }
+        else { acc = account(still); const v = validateOpen(d, px, acc.equity, acc.cash, still, cfg);
+          if (v.ok) { const ins = await rest("ttm_engine_positions", {method: "POST", headers: {Prefer: "return=representation"}, body: JSON.stringify({pair, ...v.pos, reason: String(d.reason || "").slice(0, 600)})});
+            const row = (await ins.json())[0]; if (row) { still.push({...row, entry: v.pos.entry, units: v.pos.units, notional: v.pos.notional, lev: v.pos.lev, margin: v.pos.margin, sl: v.pos.sl, tp: v.pos.tp, risk_usd: v.pos.risk_usd, trail_atr: v.pos.trail_atr}); ok = true; log.push(`opened ${act} ${pair} (${v.pos.strategy})`); await alertTg(`\u26A1 ${pair.replace("USDT", "")} ${v.pos.side.toUpperCase()} opened`, `Timeframe: ${T.label} \u00B7 ${stratName(v.pos.strategy)}`); } else why = "could not save"; }
+          else why = v.reason; }
+        await rest("ttm_engine_decisions", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({pair, action: act, price: px || null, reason: String(d.reason || "").slice(0, 600), accepted: ok, reject_reason: ok ? null : why, strategy: d.strategy || null, timeframe: T.label, raw: d})});
+      }
     }
-    // 5) equity snapshot and status
-    acc = account(still); await rest("ttm_engine_equity", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({equity: acc.equity, cash: acc.cash, unrealised: unreal(still)})});
+    // 5) equity snapshot (when the agent was asked or a trade closed)
+    if (due || closedNow) { acc = account(still); await rest("ttm_engine_equity", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({equity: acc.equity, cash: acc.cash, unrealised: unreal(still)})}); }
   } catch (e) { err = String(e).slice(0, 300); }
-  await rest("ttm_engine_config?id=eq.1", {method: "PATCH", body: JSON.stringify({last_tick: new Date().toISOString(), last_error: err || warn || null})});
-  return out({ok: !err, error: err || undefined, log});
+  const patch: Record<string, unknown> = {last_tick: new Date().toISOString()};
+  if (asked || err) patch.last_error = err || warn || null;
+  if (asked && (agentReplied || !err)) patch.last_agent = new Date().toISOString();
+  await rest("ttm_engine_config?id=eq.1", {method: "PATCH", body: JSON.stringify(patch)});
+  return out({ok: !err, error: err || undefined, time_frame: T.label, asked_agent: asked, log});
 });

@@ -1,8 +1,8 @@
 // Pure trading logic for the TTM engine (paper trading). No network, no database. Tested on its own.
-export type Candle = {t: number; o: number; h: number; l: number; c: number};
-export type Pos = {id: number; pair: string; side: "long" | "short"; entry: number; units: number; notional: number; lev: number; margin: number; sl: number; tp: number | null; risk_usd: number; opened_at: string};
-export type Cfg = {risk_pct: number; max_open: number; max_lev: number; pairs: string[]};
-export type Decision = {pair?: string; action?: string; sl?: number; tp?: number | null; lev?: number; reason?: string};
+export type Candle = {t: number; o: number; h: number; l: number; c: number; v?: number};
+export type Pos = {id: number; pair: string; side: "long" | "short"; entry: number; units: number; notional: number; lev: number; margin: number; sl: number; tp: number | null; risk_usd: number; opened_at: string; strategy?: string | null; trail_atr?: number | null};
+export type Cfg = {risk_pct: number; max_open: number; max_lev: number; pairs: string[]; strategies: string[]};
+export type Decision = {strategy?: string; trail_atr?: number | null; pair?: string; action?: string; sl?: number; tp?: number | null; lev?: number; reason?: string};
 export const FEE = 0.0006;           // taker fee per side
 export const HOUR = 3600000;
 
@@ -18,11 +18,61 @@ export function atr(c: Candle[], n = 14): number | null {
   let a = 0; for (let i = 1; i <= n; i++) a += tr(i); a /= n; for (let i = n + 1; i < c.length; i++) a = (a * (n - 1) + tr(i)) / n; return a;
 }
 const r = (x: number | null, d = 2) => x == null || !isFinite(x) ? null : Math.round(x * 10 ** d) / 10 ** d;
-export function snapshot(pair: string, c: Candle[]) {
-  const cl = c.map((x) => x.c), p = cl[cl.length - 1], at = (n: number) => cl.length > n ? (p / cl[cl.length - 1 - n] - 1) * 100 : null, last24 = c.slice(-24), a = atr(c);
-  const sig = (x: number) => x >= 100 ? 2 : x >= 1 ? 4 : 6;
-  return {pair, price: r(p, sig(p)), change_1h_pct: r(at(1)), change_4h_pct: r(at(4)), change_24h_pct: r(at(24)), rsi14: r(rsi(cl), 1), ema20: r(ema(cl.slice(-60), 20), sig(p)), ema50: r(ema(cl.slice(-100), 50), sig(p)),
-    atr14: r(a, sig(p)), atr_pct: a == null ? null : r(a / p * 100), high_24h: r(Math.max(...last24.map((x) => x.h)), sig(p)), low_24h: r(Math.min(...last24.map((x) => x.l)), sig(p)), last_12_closes: cl.slice(-12).map((x) => r(x, sig(p)))};
+export const MIN = 60000;
+// time frames you can pick. "gran" is what Bitget serves; 2H and 8H are built from 1H candles ("agg" of them).
+export const TFS: Record<string, {label: string; ms: number; gran: string; agg: number}> = {
+  "5m": {label: "5min", ms: 5 * MIN, gran: "5m", agg: 1}, "15m": {label: "15min", ms: 15 * MIN, gran: "15m", agg: 1}, "30m": {label: "30min", ms: 30 * MIN, gran: "30m", agg: 1},
+  "1H": {label: "1hr", ms: HOUR, gran: "1H", agg: 1}, "2H": {label: "2hr", ms: 2 * HOUR, gran: "1H", agg: 2}, "4H": {label: "4hr", ms: 4 * HOUR, gran: "4H", agg: 1},
+  "8H": {label: "8hr", ms: 8 * HOUR, gran: "1H", agg: 8}, "12H": {label: "12hr", ms: 12 * HOUR, gran: "12H", agg: 1}, "1D": {label: "daily", ms: 24 * HOUR, gran: "1D", agg: 1},
+  "3D": {label: "3day", ms: 72 * HOUR, gran: "3D", agg: 1}, "1W": {label: "weekly", ms: 168 * HOUR, gran: "1W", agg: 1},
+};
+export const STRATS: Record<string, {name: string; text: string}> = {
+  trend: {name: "Trend continuation", text: "Trend continuation: find an established bullish or bearish trend (price against the 20 and 50 averages, and the higher time frame direction in htf). Enter on a pullback once it is confirmed. Long in uptrends, short in downtrends. Use the higher time frame direction as a filter: never trade against htf.trend."},
+  breakout: {name: "Breakout and retest", text: "Breakout and retest: find important support and resistance (swing_highs, swing_lows, range_high_50, range_low_50). Wait for a confirmed breakout (a close beyond the level, ideally with higher volume), then wait for a retest of that level before entering. Trade both bullish and bearish breakouts."},
+  sweep: {name: "Liquidity sweep and reversal", text: "Liquidity sweep and reversal (HIGH PRIORITY, prefer this one when several setups are valid): price moves beyond a significant swing high or low (a sweep), then rejects and closes back inside the range. Confirm with volume, structure and momentum. Enter the reversal and target the move back into the trading range."},
+  momentum: {name: "Momentum expansion", text: "Momentum expansion: volume and volatility are increasing (volume_ratio, atr) and price is making strong directional candles. Enter once the momentum is confirmed. Use a trailing exit: include \"trail_atr\" (for example 2 = the stop trails the best price by 2 x ATR) to ride extended moves."},
+};
+export const stratName = (k?: string | null) => (k && STRATS[k] ? STRATS[k].name : "");
+// join smaller candles into bigger ones on the clock (used for 2hr and 8hr)
+export function aggregateTime(c: Candle[], n: number, base: number): Candle[] {
+  const per = n * base, m = new Map<number, Candle>();
+  for (const x of c) { const k = Math.floor(x.t / per) * per, g = m.get(k);
+    if (!g) m.set(k, {t: k, o: x.o, h: x.h, l: x.l, c: x.c, v: x.v || 0}); else { g.h = Math.max(g.h, x.h); g.l = Math.min(g.l, x.l); g.c = x.c; g.v = (g.v || 0) + (x.v || 0); } }
+  return [...m.values()].sort((a, b) => a.t - b.t);
+}
+// groups of n from the newest candle backwards, so the last group always ends on the latest candle (used for the higher time frame)
+export function aggregateTail(c: Candle[], n: number): Candle[] {
+  const out: Candle[] = []; for (let end = c.length; end - n >= 0; end -= n) { const g = c.slice(end - n, end);
+    out.unshift({t: g[0].t, o: g[0].o, h: Math.max(...g.map((x) => x.h)), l: Math.min(...g.map((x) => x.l)), c: g[g.length - 1].c, v: g.reduce((t, x) => t + (x.v || 0), 0)}); }
+  return out;
+}
+export function isDue(ms: number, last: string | null | undefined, now: number): boolean {
+  if (!last) return true; const l = new Date(last).getTime(); return !isFinite(l) || Math.floor(now / ms) > Math.floor(l / ms);
+}
+function swings(c: Candle[], k = 2, look = 120) {
+  const hi: {price: number; bars_ago: number}[] = [], lo: {price: number; bars_ago: number}[] = [], n = c.length;
+  for (let i = Math.max(k, n - look); i < n - k; i++) {
+    let h = true, l = true; for (let j = 1; j <= k; j++) { if (!(c[i].h > c[i - j].h && c[i].h > c[i + j].h)) h = false; if (!(c[i].l < c[i - j].l && c[i].l < c[i + j].l)) l = false; }
+    if (h) hi.push({price: c[i].h, bars_ago: n - 1 - i}); if (l) lo.push({price: c[i].l, bars_ago: n - 1 - i});
+  }
+  return {hi: hi.slice(-3), lo: lo.slice(-3)};
+}
+const trendOf = (p: number, e20: number | null, e50: number | null) => e20 == null || e50 == null ? null : p > e20 && e20 > e50 ? "up" : p < e20 && e20 < e50 ? "down" : "mixed";
+export function snapshot(pair: string, c: Candle[], ms = HOUR, now = Date.now()) {
+  const cl = c.map((x) => x.c), p = cl[cl.length - 1], at = (n: number) => cl.length > n ? (p / cl[cl.length - 1 - n] - 1) * 100 : null, a = atr(c);
+  const sig = (x: number) => x >= 100 ? 2 : x >= 1 ? 4 : 6, last24 = c.slice(-24), last50 = c.slice(-50), vols = c.map((x) => x.v || 0);
+  const avgV = (end: number) => { const s = vols.slice(Math.max(0, end - 20), end); return s.length ? s.reduce((t, x) => t + x, 0) / s.length : 0; };
+  const e20 = ema(cl.slice(-60), 20), e50 = cl.length >= 50 ? ema(cl.slice(-100), 50) : null;
+  const htfC = aggregateTail(c, 4), hc = htfC.map((x) => x.c), hp = hc[hc.length - 1];
+  const h20 = hc.length >= 20 ? ema(hc.slice(-60), 20) : null, h50 = hc.length >= 50 ? ema(hc.slice(-100), 50) : null, sw = swings(c);
+  const last = c[c.length - 1], prog = Math.max(0, Math.min(100, (now - last.t) / ms * 100));
+  return {pair, price: r(p, sig(p)), candle_progress_pct: Math.round(prog), change_1_bars_pct: r(at(1)), change_4_bars_pct: r(at(4)), change_24_bars_pct: r(at(24)),
+    rsi14: r(rsi(cl), 1), ema20: r(e20, sig(p)), ema50: r(e50, sig(p)), trend: trendOf(p, e20, e50), atr14: r(a, sig(p)), atr_pct: a == null ? null : r(a / p * 100),
+    htf: {note: "4 x the chosen time frame", trend: hc.length ? trendOf(hp, h20, h50) : null, rsi14: r(rsi(hc), 1), ema20: r(h20, sig(p)), ema50: r(h50, sig(p))},
+    volume_ratio_prev_closed: avgV(c.length - 1) ? r((vols[vols.length - 2] || 0) / avgV(c.length - 2), 2) : null, volume_ratio_forming: avgV(c.length - 1) ? r(vols[vols.length - 1] / avgV(c.length - 1), 2) : null,
+    high_24_bars: r(Math.max(...last24.map((x) => x.h)), sig(p)), low_24_bars: r(Math.min(...last24.map((x) => x.l)), sig(p)), range_high_50: r(Math.max(...last50.map((x) => x.h)), sig(p)), range_low_50: r(Math.min(...last50.map((x) => x.l)), sig(p)),
+    swing_highs: sw.hi.map((s) => ({price: r(s.price, sig(p)), bars_ago: s.bars_ago})), swing_lows: sw.lo.map((s) => ({price: r(s.price, sig(p)), bars_ago: s.bars_ago})),
+    last_5_candles: c.slice(-5).map((x) => ({o: r(x.o, sig(p)), h: r(x.h, sig(p)), l: r(x.l, sig(p)), c: r(x.c, sig(p)), v: Math.round(x.v || 0)}))};
 }
 export function pnlOf(p: Pos, exit: number): number { const gross = (p.side === "long" ? exit - p.entry : p.entry - exit) * p.units; return gross - (p.notional + exit * p.units) * FEE; }
 // did the stop or target trade since the position opened? stop wins when both sit in one candle (the careful assumption)
@@ -35,10 +85,19 @@ export function checkExit(p: Pos, candles: Candle[], period = HOUR): {price: num
   }
   return null;
 }
+// move the stop of a trailing position toward the best price reached since it opened (never loosens it)
+export function trailStop(p: Pos, candles: Candle[], a: number | null, period: number): number | null {
+  if (!p.trail_atr || !a) return null; const opened = new Date(p.opened_at).getTime(); let best: number | null = null;
+  for (const c of candles) { if (c.t + period <= opened) continue; const x = p.side === "long" ? c.h : c.l; best = best == null ? x : p.side === "long" ? Math.max(best, x) : Math.min(best, x); }
+  if (best == null) return null; const ns = p.side === "long" ? best - p.trail_atr * a : best + p.trail_atr * a;
+  return (p.side === "long" ? ns > p.sl : ns < p.sl) ? ns : null;
+}
+
 export function validateOpen(d: Decision, price: number, equity: number, cash: number, open: Pos[], cfg: Cfg):
-  {ok: true; pos: {side: "long" | "short"; entry: number; units: number; notional: number; lev: number; margin: number; sl: number; tp: number | null; risk_usd: number}} | {ok: false; reason: string} {
+  {ok: true; pos: {strategy: string; trail_atr: number | null; side: "long" | "short"; entry: number; units: number; notional: number; lev: number; margin: number; sl: number; tp: number | null; risk_usd: number}} | {ok: false; reason: string} {
   const side = d.action === "open_long" ? "long" : d.action === "open_short" ? "short" : null; if (!side) return {ok: false, reason: "not an open action"};
   if (!d.pair || !cfg.pairs.includes(d.pair)) return {ok: false, reason: "pair not allowed"};
+  const strat = String(d.strategy || ""); if (!strat) return {ok: false, reason: "strategy missing"}; if (!cfg.strategies.includes(strat)) return {ok: false, reason: "strategy not switched on"};
   if (!(price > 0)) return {ok: false, reason: "no price"};
   if (open.some((p) => p.pair === d.pair)) return {ok: false, reason: "already holding this pair"};
   if (open.length >= cfg.max_open) return {ok: false, reason: "max open positions reached"};
@@ -52,18 +111,24 @@ export function validateOpen(d: Decision, price: number, equity: number, cash: n
   units = Math.min(units, equity * lev / price);                 // never bigger than the leverage allows
   units = Math.min(units, Math.max(0, cash) * lev * 0.98 / price); // nor than the free cash
   const notional = units * price; if (notional < 50) return {ok: false, reason: "position too small or no free cash"};
-  return {ok: true, pos: {side, entry: price, units, notional, lev, margin: notional / lev, sl, tp, risk_usd: units * Math.abs(price - sl)}};
+  const ta = Number(d.trail_atr), trail = isFinite(ta) && ta > 0 ? Math.min(Math.max(ta, 0.5), 6) : null;
+  return {ok: true, pos: {strategy: strat, trail_atr: trail, side, entry: price, units, notional, lev, margin: notional / lev, sl, tp, risk_usd: units * Math.abs(price - sl)}};
 }
 export function parseDecisions(text: string): Decision[] {
   const a = text.indexOf("{"), b = text.lastIndexOf("}"); if (a < 0 || b <= a) return [];
-  try { const j = JSON.parse(text.slice(a, b + 1)); return Array.isArray(j.decisions) ? j.decisions.slice(0, 10) : []; } catch (_) { return []; }
+  try { const j = JSON.parse(text.slice(a, b + 1)); return Array.isArray(j.decisions) ? j.decisions.slice(0, 20) : []; } catch (_) { return []; }
 }
-export const SYSTEM = `You are the TTM trading agent, the decision module of a paper trading engine for USDT-margined crypto perpetual futures on Bitget. No real money is used yet; the goal is to show careful, rules-based trading.
-You get a market snapshot for each allowed pair, the open positions and the account. Decide, per pair, one of: open_long, open_short, close, hold.
+export function buildSystem(strategies: string[], tf: string): string {
+  const list = strategies.filter((k) => STRATS[k]).map((k, i) => (i + 1) + ". " + STRATS[k].text).join("\n");
+  return `You are the TTM trading agent, the decision module of a paper trading engine for USDT-margined crypto perpetual futures on Bitget. No real money is used yet; the goal is to show careful, rules-based trading.
+You are working on the ${tf} time frame. You get a market snapshot per allowed pair (the last candle is still forming: candle_progress_pct says how far through it is, so judge confirmation on the previous closed candles), the open positions and the account. Decide, per pair, one of: open_long, open_short, close, hold.
+You may only trade with these strategies (each open must say which one in "strategy", using the key names ${strategies.filter((k) => STRATS[k]).join(", ") || "none"}):
+${list || "No strategy is switched on, so do not open anything: reply hold or close only."}
 Rules you must follow (the engine rejects anything that breaks them):
-- Every open needs a stop loss ("sl") on the correct side, between 0.4% and 12% from the current price. A take profit ("tp") is optional but must be at least 1.2 times the stop distance away.
-- Leverage ("lev") between 1 and the stated maximum. The engine sizes the position from the risk limit, so do not give a size.
+- Every open needs a "strategy", a stop loss ("sl") on the correct side, between 0.4% and 12% from the current price. A take profit ("tp") is optional but must be at least 1.2 times the stop distance away.
+- Leverage ("lev") between 1 and the stated maximum. The engine sizes the position from the risk limit, so do not give a size. "trail_atr" (0.5 to 6) is optional and makes the stop trail the best price.
 - Never open a pair that is already held. Use "close" to exit a held pair early when the idea is no longer valid.
-- Most hours the right answer is "hold". Only trade a clear setup with a defined invalidation level. Do not chase moves or add to losers.
-Reply with JSON only, no other text: {"decisions":[{"pair":"BTCUSDT","action":"hold","reason":"one or two plain sentences"}]}
-For an open include "sl", "tp" (or null) and "lev". Include a short plain reason for every decision.`;
+- Most checks the right answer is "hold". Only trade a clear setup that matches a strategy above with a defined invalidation level. Do not chase moves or add to losers.
+Reply with JSON only, no other text: {"decisions":[{"pair":"BTCUSDT","action":"hold","reason":"one short sentence"}]}
+For an open include "strategy", "sl", "tp" (or null), "lev" and optionally "trail_atr". Keep every reason to one short sentence.`;
+}

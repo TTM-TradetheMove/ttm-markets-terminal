@@ -76,7 +76,7 @@ begin
 end $$;
 grant execute on function public.ttm_engine_reset() to authenticated;
 
--- Hourly tick. Replace PASTE_ENGINE_KEY below with the same text you save as the ENGINE_KEY secret, then run.
+-- Tick (engine2.sql changes this to every 5 minutes). Replace PASTE_ENGINE_KEY below with the same text you save as the ENGINE_KEY secret, then run.
 create extension if not exists pg_cron with schema pg_catalog;
 create extension if not exists pg_net;
 do $$ begin perform cron.unschedule('ttm-engine-tick'); exception when others then null; end $$;
