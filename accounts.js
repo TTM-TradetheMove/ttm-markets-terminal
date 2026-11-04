@@ -869,7 +869,7 @@ const bdgHtml = m => { const l = Array.isArray(m.badges) && m.badges.length ? m.
 const RXS = ['👍', '🔥', '🚀', '😂', '❤️', '👀'], EMO = ['😀', '😂', '🤣', '😊', '😍', '😎', '🤔', '😅', '😭', '😡', '👍', '👎', '👏', '🙏', '💪', '🔥', '🚀', '🌙', '💎', '🐂', '🐻', '📈', '📉', '💰', '🎯', '✅', '❌', '⚠️', '👀', '🤝'];
 const RM = {votes: {}, rx: {}, rxpick: null, room: null, sig: '', pend: null, muted: false, timer: null, built: false, busy: false, voice: null, rec: null};
 const ROOMS = [['free', 'Free'], ['premium', 'Premium'], ['pro', 'Pro']];
-const rmTag = () => !!(PROF && (PROF.is_admin || (Array.isArray(PROF.badges) && (PROF.badges.indexOf('team') >= 0 || PROF.badges.indexOf('mod') >= 0))));
+const rmTag = () => !!(PROF && (PROF.is_admin || (Array.isArray(PROF.badges) && PROF.badges.length > 0)));
 const rmCan = r => !!USER && (can('room:' + r) || rmTag());
 const rmAudOk = u => typeof u === 'string' && CFG.url && u.indexOf(CFG.url + '/storage/v1/object/public/room-voice/') === 0;
 const rmImgOk = u => typeof u === 'string' && CFG.url && u.indexOf(CFG.url + '/storage/v1/object/public/room-images/') === 0;

@@ -1,5 +1,5 @@
 -- Members choose which chat rooms a message goes to, limited to the rooms their plan can use.
--- People you give the TTM Team or Moderator tag (Admin > member chips) can use every room.
+-- People you give any tag (TTM Team, Alpha, Mindset, Moderator, Founding Member) can use every room.
 -- Run once in the Supabase SQL editor. Safe to run again. Run badges2.sql and voice.sql first.
 create or replace function public.ttm_room_ok(rm text) returns boolean
 language sql stable security definer set search_path = public as $$
@@ -10,7 +10,7 @@ language sql stable security definer set search_path = public as $$
   acc as (
     select coalesce((select value from public.ttm_settings where key = 'access') -> ('room:' || rm),
       case rm when 'free' then '["free","premium","pro"]'::jsonb when 'premium' then '["premium","pro"]'::jsonb else '["pro"]'::jsonb end) as a)
-  select coalesce((select me.is_admin or ('team' = any(me.badges)) or ('mod' = any(me.badges)) or (acc.a ? 'free')
+  select coalesce((select me.is_admin or (cardinality(me.badges) > 0) or (acc.a ? 'free')
       or (acc.a ? (case when me.plan <> 'free' and me.plan_until is not null and me.plan_until < now() then 'free' else me.plan end))
       or (me.beta and (acc.a ? 'beta')) from me, acc), false)
 $$;
