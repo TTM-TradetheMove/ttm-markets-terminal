@@ -2,7 +2,7 @@ import webpush from "npm:web-push@3.6.7";
 // TTM Automated Trading Engine, version 1: paper trading only. No exchange keys, no real orders.
 // Runs every 5 minutes. Every run manages open positions (stops, targets, trailing stops). When a new candle of the chosen time frame has closed it also asks the TTM agent what to do, checks it against the hard risk rules and records simulated fills.
 // Secrets needed: ANTHROPIC_API_KEY, ENGINE_KEY. Keep "Verify JWT" OFF (the function checks ENGINE_KEY or an admin sign-in itself).
-import {Candle, Pos, Cfg, HOUR, MIN, TFS, STRATS, stratName, aggregateTime, isDue, snapshot, atr, checkExit, trailStop, pnlOf, validateOpen, parseDecisions, buildSystem, REVIEW_SYSTEM, sanitizeReview, rankMovers, pickTimeframe} from "./logic.ts";
+import {Candle, Pos, Cfg, HOUR, MIN, TFS, STRATS, stratName, aggregateTime, isDue, snapshot, atr, checkExit, trailStop, pnlOf, validateOpen, parseDecisions, buildSystem, REVIEW_SYSTEM, sanitizeReview, rankMovers, pickTimeframe, isTradfi, tradfiWeekend, weekendGuard} from "./logic.ts";
 
 const URL_ = Deno.env.get("SUPABASE_URL")!, KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const H = {apikey: KEY, Authorization: "Bearer " + KEY, "Content-Type": "application/json"};
@@ -49,10 +49,10 @@ async function ask(model: string, system: string, content: string, maxTokens = 3
   return (j.content || []).filter((b: any) => b.type === "text").map((b: any) => b.text).join("");
 }
 
-async function scanPairs(top: number, pick: number): Promise<string[]> {
+async function scanPairs(top: number, pick: number, cryptoOnly = false): Promise<string[]> {
   const r = await fetch("https://api.bitget.com/api/v2/mix/market/tickers?productType=USDT-FUTURES"), j = await r.json();
   if (j.code !== "00000" || !Array.isArray(j.data)) throw new Error("Bitget tickers: " + (j.msg || r.status));
-  return rankMovers(j.data.map((x: any) => ({s: String(x.symbol), vol: num(x.usdtVolume || x.quoteVolume), ch: num(x.change24h), hi: num(x.high24h), lo: num(x.low24h), px: num(x.lastPr)})), top, pick);
+  return rankMovers(j.data.filter((x: any) => !(cryptoOnly && isTradfi(String(x.symbol)))).map((x: any) => ({s: String(x.symbol), vol: num(x.usdtVolume || x.quoteVolume), ch: num(x.change24h), hi: num(x.high24h), lo: num(x.low24h), px: num(x.lastPr)})), top, pick);
 }
 
 // Approval mode: TTM presses Approve on the dashboard, and the trade is opened at the current price after the same hard rule checks.
@@ -117,14 +117,14 @@ Deno.serve(async (req) => {
   await rest("ttm_engine_proposals?status=eq.pending&expires_at=lt." + encodeURIComponent(new Date().toISOString()), {method: "PATCH", headers: {Prefer: "return=minimal"}, body: JSON.stringify({status: "expired", decided_at: new Date().toISOString(), result: "Expired before approval"})}).catch(() => {});
   try {
     const open: Pos[] = (await get("ttm_engine_positions?select=*&status=eq.open&order=id.asc")).map(mapPos);
-    if (due && cfgRow.pair_mode === "auto") { try { const picked = await scanPairs(Math.min(Math.max(num(cfgRow.scan_top) || 50, 10), 200), Math.min(Math.max(num(cfgRow.scan_pick) || 8, 3), 15)); if (picked.length) { cfg.pairs = picked; log.push("scanned: " + picked.join(",")); } } catch (e) { warn = "Auto scan failed, using your list: " + String(e).slice(0, 120); } }
+    if (due && cfgRow.pair_mode === "auto") { try { const picked = await scanPairs(Math.min(Math.max(num(cfgRow.scan_top) || 50, 10), 200), Math.min(Math.max(num(cfgRow.scan_pick) || 8, 3), 15), tradfiWeekend(Date.now(), 90)); if (picked.length) { cfg.pairs = picked; log.push("scanned: " + picked.join(",")); } } catch (e) { warn = "Auto scan failed, using your list: " + String(e).slice(0, 120); } }
     const openPairs = [...new Set(open.map((p) => p.pair))], want = due ? [...new Set([...cfg.pairs, ...openPairs])] : openPairs;
     if (!due && !open.length) { await rest("ttm_engine_config?id=eq.1", {method: "PATCH", body: JSON.stringify({last_tick: new Date().toISOString()})}); return out({ok: true, skipped: "waiting for the next " + T.label + " candle"}); }
     // candles on the chosen time frame (2hr and 8hr are built from 1hr), and 5 minute candles for the open positions' stops
     const cs: Record<string, Candle[]> = {}, fc: Record<string, Candle[]> = {}, skipped: string[] = [];
     await Promise.all(want.map(async (p) => { try { const raw = await candles(p, T.gran, T.agg > 1 ? 1000 : 300); cs[p] = T.agg > 1 ? aggregateTime(raw, T.agg, HOUR) : raw; if (cs[p].length < 30) throw new Error("too little data"); } catch (_) { delete cs[p]; skipped.push(p); } }));
     await Promise.all(openPairs.map(async (p) => { if (T.gran === "5m" && T.agg === 1) { if (cs[p]) fc[p] = cs[p]; return; } try { fc[p] = await candles(p, "5m", 300); } catch (_) { /* fall back to the time frame candles */ } }));
-    const tradePairs = cfg.pairs.filter((p) => cs[p]); if (due && !tradePairs.length) throw new Error("No pair returned Bitget data. Skipped: " + skipped.join(", "));
+    const wkd = tradfiWeekend(Date.now(), 90), tradePairs = cfg.pairs.filter((p) => cs[p] && !(wkd && isTradfi(p))); if (due && !tradePairs.length) throw new Error("No pair returned Bitget data. Skipped: " + skipped.join(", "));
     const fskip = skipped.filter((p) => cfg.pairs.includes(p)); if (due && fskip.length) warn = "Skipped (no Bitget futures data): " + fskip.join(", ");
     const price = (p: string): number => { const a = cs[p] || fc[p]; return a && a.length ? a[a.length - 1].c : 0; };
     const closeIt = async (p: Pos, px: number, why: string) => { const pnl = pnlOf(p, px);
@@ -133,6 +133,10 @@ Deno.serve(async (req) => {
     // 1) stops and targets (5 minute candles first, then the chosen time frame), then trailing stops
     let still: Pos[] = [], closedNow = 0;
     for (const p of open) { const hit = (fc[p.pair] ? checkExit(p, fc[p.pair], 5 * MIN) : null) || (cs[p.pair] ? checkExit(p, cs[p.pair], T.ms) : null); if (hit) { await closeIt(p, hit.price, hit.reason); closedNow++; } else still.push(p); }
+    // weekend rule for TradFi trades: stop into profit before the close, or flat if it is not in profit
+    for (const p of [...still]) { const g = weekendGuard(p, price(p.pair), Date.now()); if (!g) continue;
+      if (g.action === "lock") { await rest(`ttm_engine_positions?id=eq.${p.id}`, {method: "PATCH", body: JSON.stringify({sl: g.sl})}); p.sl = g.sl; log.push(`weekend: ${p.pair} stop moved into profit at ${g.sl}`); await alertTg(`\u{1F512} ${p.pair.replace("USDT", "")} stop moved into profit`, "TradFi weekend rule: the stop now locks in part of the gain until the market reopens."); }
+      else { await closeIt(p, price(p.pair), "weekend"); still = still.filter((x) => x.id !== p.id); closedNow++; } }
     for (const p of still) { if (!p.trail_atr || !cs[p.pair]) continue; const ns = trailStop(p, fc[p.pair] || cs[p.pair], atr(cs[p.pair]), fc[p.pair] ? 5 * MIN : T.ms), px = price(p.pair);
       if (ns != null && px > 0 && (p.side === "long" ? ns < px : ns > px)) { await rest(`ttm_engine_positions?id=eq.${p.id}`, {method: "PATCH", body: JSON.stringify({sl: ns})}); p.sl = ns; log.push(`trailed ${p.pair} stop to ${ns}`); } }
     // 2) account
@@ -155,7 +159,7 @@ Deno.serve(async (req) => {
         for (const p of cfg.pairs) for (const [name, g, agg] of ladder) { const raw = fetched[p + "|" + g]; if (raw && raw.length) tops[p][name] = agg > 1 ? aggregateTime(raw, agg, 4 * HOUR) : raw; }
       }
       const snaps = cfg.pairs.map((p) => snapshot(p, cs[p], T.ms, now, {stack: cfg.strategies.includes("mastack"), tops: cfg.strategies.includes("topdown") ? tops[p] : undefined}));
-      const content = JSON.stringify({time_frame: T.label, strategies_switched_on: cfg.strategies.map((k) => k + " = " + STRATS[k].name), account: {equity: +acc.equity.toFixed(2), free_cash: +acc.cash.toFixed(2), risk_per_trade_pct: cfg.risk_pct, max_open_positions: cfg.max_open, max_leverage: cfg.max_lev},
+      const content = JSON.stringify({time_frame: T.label, tradfi_weekend: wkd, strategies_switched_on: cfg.strategies.map((k) => k + " = " + STRATS[k].name), account: {equity: +acc.equity.toFixed(2), free_cash: +acc.cash.toFixed(2), risk_per_trade_pct: cfg.risk_pct, max_open_positions: cfg.max_open, max_leverage: cfg.max_lev},
         open_positions: still.map((p) => ({pair: p.pair, side: p.side, strategy: p.strategy || null, entry: p.entry, sl: p.sl, tp: p.tp, trailing_atr: p.trail_atr || null, unrealised_usd: +pnlOf(p, price(p.pair)).toFixed(2), opened: p.opened_at})),
         recent_closed: closed.slice(0, 5).map((x: any) => ({pair: x.pair, side: x.side, strategy: x.strategy || null, pnl: +num(x.pnl).toFixed(2), how: x.close_reason})), approved_lessons: lessons, market: snaps, time_utc: new Date().toISOString()});
       let raw = ""; try { raw = await ask(cfgRow.model || "claude-sonnet-5-5", buildSystem(cfg.strategies, T.label), content); } catch (e) { err = String(e).slice(0, 300); }

@@ -118,10 +118,29 @@ function trailStop(p: Pos, candles: Candle[], a: number | null, period: number):
   return (p.side === "long" ? ns > p.sl : ns < p.sl) ? ns : null;
 }
 
-function validateOpen(d: Decision, price: number, equity: number, cash: number, open: Pos[], cfg: Cfg):
+// ---- TradFi (stock, index, commodity and FX contracts) and the weekend
+// Bitget lists these next to crypto. Only names that are clearly not crypto tokens are listed (so a token like SPX is never mistaken for one).
+const TRADFI = new Set(["TSLA", "NVDA", "AAPL", "MSFT", "AMZN", "GOOGL", "GOOG", "NFLX", "AMD", "INTC", "MSTR", "PLTR", "HOOD", "NKE", "MCD", "DIS", "BABA", "UBER", "CRCL", "JPM", "KO", "PEP", "WMT", "SPY", "QQQ", "IWM", "GLD", "SLV", "TSM", "ORCL", "ADBE", "CRM", "PYPL", "AVGO", "QCOM", "MU", "SBUX", "COST", "NASDAQ", "NAS100", "SP500", "US500", "US100", "US30", "DJI", "DXY", "XAU", "XAG", "XPT", "WTI", "BRENT", "EURUSD", "GBPUSD", "USDJPY", "AUDUSD"]);
+const isTradfi = (pair: string) => TRADFI.has(String(pair || "").toUpperCase().replace(/(USDT|USDC|PERP)$/, ""));
+// Weekend for TradFi: Friday 20:00 UTC until Sunday 22:00 UTC. leadMin starts the window earlier (to protect trades before the close).
+function tradfiWeekend(now: number, leadMin = 0): boolean {
+  const d = new Date(now), wm = ((d.getUTCDay() + 6) % 7) * 1440 + d.getUTCHours() * 60 + d.getUTCMinutes(); return wm >= 4 * 1440 + 1200 - leadMin && wm < 6 * 1440 + 1320;
+}
+// Open TradFi trades must not sit through the weekend unprotected: from 90 minutes before the close the stop is moved into profit
+// (keeping 40% of the open gain, only once the trade is at least 0.5% up); a trade that is not in profit by 30 minutes before the close is closed.
+function weekendGuard(p: Pos, px: number, now: number): {action: "lock"; sl: number} | {action: "close"} | null {
+  if (!isTradfi(p.pair) || !(px > 0) || !tradfiWeekend(now, 90)) return null;
+  const long = p.side === "long", gain = long ? (px - p.entry) / p.entry : (p.entry - px) / p.entry;
+  if (long ? p.sl > p.entry : p.sl < p.entry) return null;          // stop already in profit
+  if (gain >= 0.005) { const sl = long ? p.entry + 0.4 * (px - p.entry) : p.entry - 0.4 * (p.entry - px); return {action: "lock", sl}; }
+  return tradfiWeekend(now, 30) ? {action: "close"} : null;
+}
+
+function validateOpen(d: Decision, price: number, equity: number, cash: number, open: Pos[], cfg: Cfg, now = Date.now()):
   {ok: true; pos: {strategy: string; trail_atr: number | null; side: "long" | "short"; entry: number; units: number; notional: number; lev: number; margin: number; sl: number; tp: number | null; risk_usd: number}} | {ok: false; reason: string} {
   const side = d.action === "open_long" ? "long" : d.action === "open_short" ? "short" : null; if (!side) return {ok: false, reason: "not an open action"};
   if (!d.pair || !cfg.pairs.includes(d.pair)) return {ok: false, reason: "pair not allowed"};
+  if (isTradfi(d.pair) && tradfiWeekend(now, 90)) return {ok: false, reason: "TradFi markets are closed for the weekend, crypto only"};
   const strat = String(d.strategy || ""); if (!strat) return {ok: false, reason: "strategy missing"}; if (!cfg.strategies.includes(strat)) return {ok: false, reason: "strategy not switched on"};
   if (!(price > 0)) return {ok: false, reason: "no price"};
   if (open.some((p) => p.pair === d.pair)) return {ok: false, reason: "already holding this pair"};
@@ -152,6 +171,7 @@ ${list || "No strategy is switched on, so do not open anything: reply hold or cl
 Rules you must follow (the engine rejects anything that breaks them):
 - Every open needs a "strategy", a stop loss ("sl") on the correct side, between 0.4% and 12% from the current price. A take profit ("tp") is optional but must be at least 1.2 times the stop distance away.
 - Leverage ("lev") between 1 and the stated maximum. The engine sizes the position from the risk limit, so do not give a size. "trail_atr" (0.5 to 6) is optional and makes the stop trail the best price.
+- At the weekend (tradfi_weekend is true) only crypto can be opened; TradFi (stock, index, commodity) pairs are closed to new trades.
 - Never open a pair that is already held. Use "close" to exit a held pair early when the idea is no longer valid.
 - Most checks the right answer is "hold". Only trade a clear setup that matches a strategy above with a defined invalidation level. Do not chase moves or add to losers.
 The input may include "approved_lessons": notes TTM approved after reviewing your past trades. Follow them.\nReply with JSON only, no other text: {"decisions":[{"pair":"BTCUSDT","action":"hold","reason":"one short sentence"}]}
@@ -266,10 +286,10 @@ async function ask(model: string, system: string, content: string, maxTokens = 3
   return (j.content || []).filter((b: any) => b.type === "text").map((b: any) => b.text).join("");
 }
 
-async function scanPairs(top: number, pick: number): Promise<string[]> {
+async function scanPairs(top: number, pick: number, cryptoOnly = false): Promise<string[]> {
   const r = await fetch("https://api.bitget.com/api/v2/mix/market/tickers?productType=USDT-FUTURES"), j = await r.json();
   if (j.code !== "00000" || !Array.isArray(j.data)) throw new Error("Bitget tickers: " + (j.msg || r.status));
-  return rankMovers(j.data.map((x: any) => ({s: String(x.symbol), vol: num(x.usdtVolume || x.quoteVolume), ch: num(x.change24h), hi: num(x.high24h), lo: num(x.low24h), px: num(x.lastPr)})), top, pick);
+  return rankMovers(j.data.filter((x: any) => !(cryptoOnly && isTradfi(String(x.symbol)))).map((x: any) => ({s: String(x.symbol), vol: num(x.usdtVolume || x.quoteVolume), ch: num(x.change24h), hi: num(x.high24h), lo: num(x.low24h), px: num(x.lastPr)})), top, pick);
 }
 
 // Approval mode: TTM presses Approve on the dashboard, and the trade is opened at the current price after the same hard rule checks.
@@ -334,14 +354,14 @@ Deno.serve(async (req) => {
   await rest("ttm_engine_proposals?status=eq.pending&expires_at=lt." + encodeURIComponent(new Date().toISOString()), {method: "PATCH", headers: {Prefer: "return=minimal"}, body: JSON.stringify({status: "expired", decided_at: new Date().toISOString(), result: "Expired before approval"})}).catch(() => {});
   try {
     const open: Pos[] = (await get("ttm_engine_positions?select=*&status=eq.open&order=id.asc")).map(mapPos);
-    if (due && cfgRow.pair_mode === "auto") { try { const picked = await scanPairs(Math.min(Math.max(num(cfgRow.scan_top) || 50, 10), 200), Math.min(Math.max(num(cfgRow.scan_pick) || 8, 3), 15)); if (picked.length) { cfg.pairs = picked; log.push("scanned: " + picked.join(",")); } } catch (e) { warn = "Auto scan failed, using your list: " + String(e).slice(0, 120); } }
+    if (due && cfgRow.pair_mode === "auto") { try { const picked = await scanPairs(Math.min(Math.max(num(cfgRow.scan_top) || 50, 10), 200), Math.min(Math.max(num(cfgRow.scan_pick) || 8, 3), 15), tradfiWeekend(Date.now(), 90)); if (picked.length) { cfg.pairs = picked; log.push("scanned: " + picked.join(",")); } } catch (e) { warn = "Auto scan failed, using your list: " + String(e).slice(0, 120); } }
     const openPairs = [...new Set(open.map((p) => p.pair))], want = due ? [...new Set([...cfg.pairs, ...openPairs])] : openPairs;
     if (!due && !open.length) { await rest("ttm_engine_config?id=eq.1", {method: "PATCH", body: JSON.stringify({last_tick: new Date().toISOString()})}); return out({ok: true, skipped: "waiting for the next " + T.label + " candle"}); }
     // candles on the chosen time frame (2hr and 8hr are built from 1hr), and 5 minute candles for the open positions' stops
     const cs: Record<string, Candle[]> = {}, fc: Record<string, Candle[]> = {}, skipped: string[] = [];
     await Promise.all(want.map(async (p) => { try { const raw = await candles(p, T.gran, T.agg > 1 ? 1000 : 300); cs[p] = T.agg > 1 ? aggregateTime(raw, T.agg, HOUR) : raw; if (cs[p].length < 30) throw new Error("too little data"); } catch (_) { delete cs[p]; skipped.push(p); } }));
     await Promise.all(openPairs.map(async (p) => { if (T.gran === "5m" && T.agg === 1) { if (cs[p]) fc[p] = cs[p]; return; } try { fc[p] = await candles(p, "5m", 300); } catch (_) { /* fall back to the time frame candles */ } }));
-    const tradePairs = cfg.pairs.filter((p) => cs[p]); if (due && !tradePairs.length) throw new Error("No pair returned Bitget data. Skipped: " + skipped.join(", "));
+    const wkd = tradfiWeekend(Date.now(), 90), tradePairs = cfg.pairs.filter((p) => cs[p] && !(wkd && isTradfi(p))); if (due && !tradePairs.length) throw new Error("No pair returned Bitget data. Skipped: " + skipped.join(", "));
     const fskip = skipped.filter((p) => cfg.pairs.includes(p)); if (due && fskip.length) warn = "Skipped (no Bitget futures data): " + fskip.join(", ");
     const price = (p: string): number => { const a = cs[p] || fc[p]; return a && a.length ? a[a.length - 1].c : 0; };
     const closeIt = async (p: Pos, px: number, why: string) => { const pnl = pnlOf(p, px);
@@ -350,6 +370,10 @@ Deno.serve(async (req) => {
     // 1) stops and targets (5 minute candles first, then the chosen time frame), then trailing stops
     let still: Pos[] = [], closedNow = 0;
     for (const p of open) { const hit = (fc[p.pair] ? checkExit(p, fc[p.pair], 5 * MIN) : null) || (cs[p.pair] ? checkExit(p, cs[p.pair], T.ms) : null); if (hit) { await closeIt(p, hit.price, hit.reason); closedNow++; } else still.push(p); }
+    // weekend rule for TradFi trades: stop into profit before the close, or flat if it is not in profit
+    for (const p of [...still]) { const g = weekendGuard(p, price(p.pair), Date.now()); if (!g) continue;
+      if (g.action === "lock") { await rest(`ttm_engine_positions?id=eq.${p.id}`, {method: "PATCH", body: JSON.stringify({sl: g.sl})}); p.sl = g.sl; log.push(`weekend: ${p.pair} stop moved into profit at ${g.sl}`); await alertTg(`\u{1F512} ${p.pair.replace("USDT", "")} stop moved into profit`, "TradFi weekend rule: the stop now locks in part of the gain until the market reopens."); }
+      else { await closeIt(p, price(p.pair), "weekend"); still = still.filter((x) => x.id !== p.id); closedNow++; } }
     for (const p of still) { if (!p.trail_atr || !cs[p.pair]) continue; const ns = trailStop(p, fc[p.pair] || cs[p.pair], atr(cs[p.pair]), fc[p.pair] ? 5 * MIN : T.ms), px = price(p.pair);
       if (ns != null && px > 0 && (p.side === "long" ? ns < px : ns > px)) { await rest(`ttm_engine_positions?id=eq.${p.id}`, {method: "PATCH", body: JSON.stringify({sl: ns})}); p.sl = ns; log.push(`trailed ${p.pair} stop to ${ns}`); } }
     // 2) account
@@ -372,7 +396,7 @@ Deno.serve(async (req) => {
         for (const p of cfg.pairs) for (const [name, g, agg] of ladder) { const raw = fetched[p + "|" + g]; if (raw && raw.length) tops[p][name] = agg > 1 ? aggregateTime(raw, agg, 4 * HOUR) : raw; }
       }
       const snaps = cfg.pairs.map((p) => snapshot(p, cs[p], T.ms, now, {stack: cfg.strategies.includes("mastack"), tops: cfg.strategies.includes("topdown") ? tops[p] : undefined}));
-      const content = JSON.stringify({time_frame: T.label, strategies_switched_on: cfg.strategies.map((k) => k + " = " + STRATS[k].name), account: {equity: +acc.equity.toFixed(2), free_cash: +acc.cash.toFixed(2), risk_per_trade_pct: cfg.risk_pct, max_open_positions: cfg.max_open, max_leverage: cfg.max_lev},
+      const content = JSON.stringify({time_frame: T.label, tradfi_weekend: wkd, strategies_switched_on: cfg.strategies.map((k) => k + " = " + STRATS[k].name), account: {equity: +acc.equity.toFixed(2), free_cash: +acc.cash.toFixed(2), risk_per_trade_pct: cfg.risk_pct, max_open_positions: cfg.max_open, max_leverage: cfg.max_lev},
         open_positions: still.map((p) => ({pair: p.pair, side: p.side, strategy: p.strategy || null, entry: p.entry, sl: p.sl, tp: p.tp, trailing_atr: p.trail_atr || null, unrealised_usd: +pnlOf(p, price(p.pair)).toFixed(2), opened: p.opened_at})),
         recent_closed: closed.slice(0, 5).map((x: any) => ({pair: x.pair, side: x.side, strategy: x.strategy || null, pnl: +num(x.pnl).toFixed(2), how: x.close_reason})), approved_lessons: lessons, market: snaps, time_utc: new Date().toISOString()});
       let raw = ""; try { raw = await ask(cfgRow.model || "claude-sonnet-5-5", buildSystem(cfg.strategies, T.label), content); } catch (e) { err = String(e).slice(0, 300); }

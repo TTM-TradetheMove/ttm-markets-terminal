@@ -115,10 +115,29 @@ export function trailStop(p: Pos, candles: Candle[], a: number | null, period: n
   return (p.side === "long" ? ns > p.sl : ns < p.sl) ? ns : null;
 }
 
-export function validateOpen(d: Decision, price: number, equity: number, cash: number, open: Pos[], cfg: Cfg):
+// ---- TradFi (stock, index, commodity and FX contracts) and the weekend
+// Bitget lists these next to crypto. Only names that are clearly not crypto tokens are listed (so a token like SPX is never mistaken for one).
+export const TRADFI = new Set(["TSLA", "NVDA", "AAPL", "MSFT", "AMZN", "GOOGL", "GOOG", "NFLX", "AMD", "INTC", "MSTR", "PLTR", "HOOD", "NKE", "MCD", "DIS", "BABA", "UBER", "CRCL", "JPM", "KO", "PEP", "WMT", "SPY", "QQQ", "IWM", "GLD", "SLV", "TSM", "ORCL", "ADBE", "CRM", "PYPL", "AVGO", "QCOM", "MU", "SBUX", "COST", "NASDAQ", "NAS100", "SP500", "US500", "US100", "US30", "DJI", "DXY", "XAU", "XAG", "XPT", "WTI", "BRENT", "EURUSD", "GBPUSD", "USDJPY", "AUDUSD"]);
+export const isTradfi = (pair: string) => TRADFI.has(String(pair || "").toUpperCase().replace(/(USDT|USDC|PERP)$/, ""));
+// Weekend for TradFi: Friday 20:00 UTC until Sunday 22:00 UTC. leadMin starts the window earlier (to protect trades before the close).
+export function tradfiWeekend(now: number, leadMin = 0): boolean {
+  const d = new Date(now), wm = ((d.getUTCDay() + 6) % 7) * 1440 + d.getUTCHours() * 60 + d.getUTCMinutes(); return wm >= 4 * 1440 + 1200 - leadMin && wm < 6 * 1440 + 1320;
+}
+// Open TradFi trades must not sit through the weekend unprotected: from 90 minutes before the close the stop is moved into profit
+// (keeping 40% of the open gain, only once the trade is at least 0.5% up); a trade that is not in profit by 30 minutes before the close is closed.
+export function weekendGuard(p: Pos, px: number, now: number): {action: "lock"; sl: number} | {action: "close"} | null {
+  if (!isTradfi(p.pair) || !(px > 0) || !tradfiWeekend(now, 90)) return null;
+  const long = p.side === "long", gain = long ? (px - p.entry) / p.entry : (p.entry - px) / p.entry;
+  if (long ? p.sl > p.entry : p.sl < p.entry) return null;          // stop already in profit
+  if (gain >= 0.005) { const sl = long ? p.entry + 0.4 * (px - p.entry) : p.entry - 0.4 * (p.entry - px); return {action: "lock", sl}; }
+  return tradfiWeekend(now, 30) ? {action: "close"} : null;
+}
+
+export function validateOpen(d: Decision, price: number, equity: number, cash: number, open: Pos[], cfg: Cfg, now = Date.now()):
   {ok: true; pos: {strategy: string; trail_atr: number | null; side: "long" | "short"; entry: number; units: number; notional: number; lev: number; margin: number; sl: number; tp: number | null; risk_usd: number}} | {ok: false; reason: string} {
   const side = d.action === "open_long" ? "long" : d.action === "open_short" ? "short" : null; if (!side) return {ok: false, reason: "not an open action"};
   if (!d.pair || !cfg.pairs.includes(d.pair)) return {ok: false, reason: "pair not allowed"};
+  if (isTradfi(d.pair) && tradfiWeekend(now, 90)) return {ok: false, reason: "TradFi markets are closed for the weekend, crypto only"};
   const strat = String(d.strategy || ""); if (!strat) return {ok: false, reason: "strategy missing"}; if (!cfg.strategies.includes(strat)) return {ok: false, reason: "strategy not switched on"};
   if (!(price > 0)) return {ok: false, reason: "no price"};
   if (open.some((p) => p.pair === d.pair)) return {ok: false, reason: "already holding this pair"};
@@ -149,6 +168,7 @@ ${list || "No strategy is switched on, so do not open anything: reply hold or cl
 Rules you must follow (the engine rejects anything that breaks them):
 - Every open needs a "strategy", a stop loss ("sl") on the correct side, between 0.4% and 12% from the current price. A take profit ("tp") is optional but must be at least 1.2 times the stop distance away.
 - Leverage ("lev") between 1 and the stated maximum. The engine sizes the position from the risk limit, so do not give a size. "trail_atr" (0.5 to 6) is optional and makes the stop trail the best price.
+- At the weekend (tradfi_weekend is true) only crypto can be opened; TradFi (stock, index, commodity) pairs are closed to new trades.
 - Never open a pair that is already held. Use "close" to exit a held pair early when the idea is no longer valid.
 - Most checks the right answer is "hold". Only trade a clear setup that matches a strategy above with a defined invalidation level. Do not chase moves or add to losers.
 The input may include "approved_lessons": notes TTM approved after reviewing your past trades. Follow them.\nReply with JSON only, no other text: {"decisions":[{"pair":"BTCUSDT","action":"hold","reason":"one short sentence"}]}
