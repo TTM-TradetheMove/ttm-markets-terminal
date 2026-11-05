@@ -4365,6 +4365,16 @@ function trackHits(){
       if(cfg.on) tgSend(`🛑 <b>Part stop hit</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nPrice ${pr(p)} touched your part stop ${pr(sn.psl.P)}. Close ${sn.psl.share}% of the trade on your exchange and book it in your tracker. The rest stays on the main stop ${pr(sn.SL)}.\n<i>${esc(x.name)} · TTM Trade Tracker</i>`); }
     const stopped = sn.long ? p <= sn.SL : p >= sn.SL;
     if(stopped && !x.sent.sl){ x.sent.sl = true; changed = true; myPush(x, 'sl:' + x.id, 'SL hit', 'Price touched your stop at ' + pr(sn.SL)); if(cfg.on) tgSend(`🛑 <b>Stop level reached</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nPrice ${pr(p)} touched your stop ${pr(sn.SL)}. Check your exchange and close the trade in your tracker.\n<i>${esc(x.name)} · TTM Trade Tracker</i>`); }
+    // auto-close: a stop that stays hit (two checks in a row) or every target in closes the trade in the tracker, at the planned level
+    const nTp = sn.tps.length, sh = sn.tps.reduce((t, q) => t + q.share, 0), nHit = x.hit.filter(Boolean).length;
+    const autoClose = (pnl, how, title, body, tg) => { x.status = 'closed'; x.res = {pnl: Math.round(pnl * 100) / 100, r: pnl / (sn.riskUsd || 1), how, closed: Date.now(), auto: true}; x.slSeen = 0; changed = true;
+      spotEv(x, 'sell', 'sell:' + x.id + ':' + x.res.closed); myPush(x, 'sell:' + x.id, title, body); if(cfg.on) tgSend(tg); };
+    if(!sn.noSL && stopped){ x.slSeen = (x.slSeen || 0) + 1; changed = true;
+      if(x.slSeen >= 2){ const pnl = settle(sn, x.hit, sn.SL), how = nHit ? 'TP' + x.hit.map((h, k) => h ? k + 1 : 0).filter(Boolean).join(' + TP') + ' hit; rest stopped at the stop (closed automatically)' : 'Stopped out at the stop (closed automatically)';
+        autoClose(pnl, how, 'SL hit, trade closed', (pnl >= 0 ? '+' : '') + (pnl / (sn.riskUsd || 1)).toFixed(1) + 'R at ' + pr(sn.SL) + ' · closed in your tracker', `🛑 <b>Stop hit, trade closed</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nStop ${pr(sn.SL)} reached (live ${pr(p)}). Result ${pnl >= 0 ? '+' : ''}${usd(pnl)}. Closed in your tracker.\n<i>${esc(x.name)} · TTM Trade Tracker</i>`); return; } }
+    else if(x.slSeen){ x.slSeen = 0; changed = true; }
+    if(nTp && nHit === nTp && sh >= 99.9 && !stopped){ const pnl = settle(sn, x.hit.map(() => true), sn.E);
+      autoClose(pnl, 'All ' + nTp + ' target' + (nTp > 1 ? 's' : '') + ' hit (closed automatically)', 'Full TP hit, trade closed', (pnl >= 0 ? '+' : '') + (pnl / (sn.riskUsd || 1)).toFixed(1) + 'R · closed in your tracker', `🎯 <b>All targets hit, trade closed</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nResult ${pnl >= 0 ? '+' : ''}${usd(pnl)}. Closed in your tracker.\n<i>${esc(x.name)} · TTM Trade Tracker</i>`); return; }
     if(!stopped && x.sent.sl){ x.sent.sl = false; changed = true; } });
   if(changed) saveAll(list);
 }
