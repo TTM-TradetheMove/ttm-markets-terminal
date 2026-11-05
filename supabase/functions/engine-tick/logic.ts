@@ -30,6 +30,8 @@ export const STRATS: Record<string, {name: string; text: string}> = {
   trend: {name: "Trend continuation", text: "Trend continuation: find an established bullish or bearish trend (price against the 20 and 50 averages, and the higher time frame direction in htf). Enter on a pullback once it is confirmed. Long in uptrends, short in downtrends. Use the higher time frame direction as a filter: never trade against htf.trend."},
   breakout: {name: "Breakout and retest", text: "Breakout and retest: find important support and resistance (swing_highs, swing_lows, range_high_50, range_low_50). Wait for a confirmed breakout (a close beyond the level, ideally with higher volume), then wait for a retest of that level before entering. Trade both bullish and bearish breakouts."},
   sweep: {name: "Liquidity sweep and reversal", text: "Liquidity sweep and reversal (HIGH PRIORITY, prefer this one when several setups are valid): price moves beyond a significant swing high or low (a sweep), then rejects and closes back inside the range. Confirm with volume, structure and momentum. Enter the reversal and target the move back into the trading range."},
+  topdown: {name: "Top-down trend change", text: "Top-down trend change: read top_down from the weekly down to the 4hr (each shows trend, how long it has held, support, resistance, rsi; closed candles only). Look for a trend that has just turned (a low trend_since_bars on a lower frame, e.g. 4hr or 8hr, turning up or down) while the weekly and daily do not oppose it (at least the daily agrees, ideally the weekly too). Take the entry on the current trading time frame (the one you are working on) once price confirms the turn and pulls back or breaks structure, long for a turn up, short for a turn down. Put the stop beyond the trend support the idea depends on (the nearest swing low for a long, swing high for a short, at most 12% away; skip the trade if that is further). Do NOT set a take profit and do not use a tight trail: hold the trade while the trend holds. On every check of an open top-down trade, use close when the support has clearly broken (price closed beyond it, or the 4hr or 8hr trend has flipped against the trade). Never trade against the weekly and daily when both agree against you."},
+  mastack: {name: "MA stack pullback", text: "MA stack pullback: read ma_stack (ema13, ema21, ema50, ema100, ema200 on the trading time frame). A bullish stack is price above ema13 and ema21 with ema13 > ema21 > ema50 > ema100 > ema200 (bearish is the mirror). When the stack is in order and price pulls back to retest the ema21 and bounces (a recent candle touched or dipped through ema21 and closed back on the trend side, see touched_ema21_bars_ago), enter with the trend: long in a bullish stack, short in a bearish one. Stop just beyond the ema21 or the pullback low. A sensible first target is the next average up the stack (ema50, then ema100, then ema200); a tp is optional. Skip when ma_stack.stack is mixed or not available."},
   momentum: {name: "Momentum expansion", text: "Momentum expansion: volume and volatility are increasing (volume_ratio, atr) and price is making strong directional candles. Enter once the momentum is confirmed. Use a trailing exit: include \"trail_atr\" (for example 2 = the stop trails the best price by 2 x ATR) to ride extended moves."},
 };
 export const stratName = (k?: string | null) => (k && STRATS[k] ? STRATS[k].name : "");
@@ -58,7 +60,25 @@ function swings(c: Candle[], k = 2, look = 120) {
   return {hi: hi.slice(-3), lo: lo.slice(-3)};
 }
 const trendOf = (p: number, e20: number | null, e50: number | null) => e20 == null || e50 == null ? null : p > e20 && e20 > e50 ? "up" : p < e20 && e20 < e50 ? "down" : "mixed";
-export function snapshot(pair: string, c: Candle[], ms = HOUR, now = Date.now()) {
+export function emaSeries(v: number[], n: number): number[] { const k = 2 / (n + 1), out: number[] = []; let e = v[0]; for (let i = 0; i < v.length; i++) { e = i === 0 ? v[0] : v[i] * k + e * (1 - k); out.push(e); } return out; }
+// one line of the top-down view: trend on closed candles, how long it has held, nearest support and resistance
+export function tfSummary(raw: Candle[]) {
+  const c = raw.slice(0, -1); if (c.length < 30) return null;
+  const cl = c.map((x) => x.c), n = cl.length - 1, p = cl[n], e21 = emaSeries(cl, 21), e50 = c.length >= 60 ? emaSeries(cl, 50) : null, sig = (x: number) => x >= 100 ? 2 : x >= 1 ? 4 : 6;
+  const tr = (i: number) => e50 ? trendOf(cl[i], e21[i], e50[i]) : (cl[i] > e21[i] ? "up" : "down"), now = tr(n); let since = 0; for (let i = n - 1; i >= Math.max(0, n - 60) && tr(i) === now; i--) since++;
+  const sw = swings(c), sup = sw.lo.filter((s) => s.price < p).sort((a, b) => b.price - a.price)[0], res = sw.hi.filter((s) => s.price > p).sort((a, b) => a.price - b.price)[0];
+  return {trend: now, trend_since_bars: since >= 60 ? "60+" : since, price_vs_ema21_pct: r((p / e21[n] - 1) * 100, 2), ema21: r(e21[n], sig(p)), ema50: e50 ? r(e50[n], sig(p)) : null, rsi14: r(rsi(cl), 1), support: sup ? r(sup.price, sig(p)) : null, resistance: res ? r(res.price, sig(p)) : null, last_close: r(p, sig(p))};
+}
+function maStack(c: Candle[]) {
+  const cl = c.map((x) => x.c), p = cl[cl.length - 1], sig = (x: number) => x >= 100 ? 2 : x >= 1 ? 4 : 6;
+  if (c.length < 205) return {stack: "not available (needs 200+ candles of history)"};
+  const E = [13, 21, 50, 100, 200].map((n) => emaSeries(cl, n)), L = cl.length - 1, v = E.map((e) => e[L]), e21 = E[1];
+  const bull = p > v[0] && p > v[1] && v[0] > v[1] && v[1] > v[2] && v[2] > v[3] && v[3] > v[4], bear = p < v[0] && p < v[1] && v[0] < v[1] && v[1] < v[2] && v[2] < v[3] && v[3] < v[4];
+  let touched: number | null = null; for (let i = 1; i <= 8 && i <= L; i++) { const j = L - i, hit = c[j].l <= e21[j] * 1.001 && c[j].h >= e21[j] * 0.999; if (hit) { touched = i; break; } }
+  return {ema13: r(v[0], sig(p)), ema21: r(v[1], sig(p)), ema50: r(v[2], sig(p)), ema100: r(v[3], sig(p)), ema200: r(v[4], sig(p)), stack: bull ? "bullish (13>21>50>100>200, price above 13 and 21)" : bear ? "bearish (13<21<50<100<200, price below 13 and 21)" : "mixed", touched_ema21_bars_ago: touched, price_vs_ema21_pct: r((p / v[1] - 1) * 100, 2)};
+}
+export type SnapOpts = {stack?: boolean; tops?: Record<string, Candle[]>};
+export function snapshot(pair: string, c: Candle[], ms = HOUR, now = Date.now(), opts: SnapOpts = {}) {
   const cl = c.map((x) => x.c), p = cl[cl.length - 1], at = (n: number) => cl.length > n ? (p / cl[cl.length - 1 - n] - 1) * 100 : null, a = atr(c);
   const sig = (x: number) => x >= 100 ? 2 : x >= 1 ? 4 : 6, last24 = c.slice(-24), last50 = c.slice(-50), vols = c.map((x) => x.v || 0);
   const avgV = (end: number) => { const s = vols.slice(Math.max(0, end - 20), end); return s.length ? s.reduce((t, x) => t + x, 0) / s.length : 0; };
@@ -72,7 +92,9 @@ export function snapshot(pair: string, c: Candle[], ms = HOUR, now = Date.now())
     volume_ratio_prev_closed: avgV(c.length - 1) ? r((vols[vols.length - 2] || 0) / avgV(c.length - 2), 2) : null, volume_ratio_forming: avgV(c.length - 1) ? r(vols[vols.length - 1] / avgV(c.length - 1), 2) : null,
     high_24_bars: r(Math.max(...last24.map((x) => x.h)), sig(p)), low_24_bars: r(Math.min(...last24.map((x) => x.l)), sig(p)), range_high_50: r(Math.max(...last50.map((x) => x.h)), sig(p)), range_low_50: r(Math.min(...last50.map((x) => x.l)), sig(p)),
     swing_highs: sw.hi.map((s) => ({price: r(s.price, sig(p)), bars_ago: s.bars_ago})), swing_lows: sw.lo.map((s) => ({price: r(s.price, sig(p)), bars_ago: s.bars_ago})),
-    last_5_candles: c.slice(-5).map((x) => ({o: r(x.o, sig(p)), h: r(x.h, sig(p)), l: r(x.l, sig(p)), c: r(x.c, sig(p)), v: Math.round(x.v || 0)}))};
+    last_5_candles: c.slice(-5).map((x) => ({o: r(x.o, sig(p)), h: r(x.h, sig(p)), l: r(x.l, sig(p)), c: r(x.c, sig(p)), v: Math.round(x.v || 0)})),
+    ...(opts.stack ? {ma_stack: maStack(c)} : {}),
+    ...(opts.tops ? {top_down: Object.fromEntries(Object.entries(opts.tops).map(([k, v]) => [k, tfSummary(v)]))} : {})};
 }
 export function pnlOf(p: Pos, exit: number): number { const gross = (p.side === "long" ? exit - p.entry : p.entry - exit) * p.units; return gross - (p.notional + exit * p.units) * FEE; }
 // did the stop or target trade since the position opened? stop wins when both sit in one candle (the careful assumption)

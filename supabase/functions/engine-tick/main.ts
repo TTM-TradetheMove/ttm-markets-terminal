@@ -143,7 +143,18 @@ Deno.serve(async (req) => {
     let acc = account(still);
     if (due) {
       // 3) ask the agent
-      asked = true; cfg.pairs = tradePairs; const lessons = (await get("ttm_engine_suggestions?select=title,detail&kind=eq.lesson&status=eq.approved&order=decided_at.desc&limit=10")).map((l: any) => l.title + (l.detail ? ": " + l.detail : "")); const now = Date.now(), snaps = cfg.pairs.map((p) => snapshot(p, cs[p], T.ms, now));
+      asked = true; cfg.pairs = tradePairs; const lessons = (await get("ttm_engine_suggestions?select=title,detail&kind=eq.lesson&status=eq.approved&order=decided_at.desc&limit=10")).map((l: any) => l.title + (l.detail ? ": " + l.detail : "")); const now = Date.now();
+      // top-down view (weekly to 4hr) is fetched only when that strategy is switched on
+      const tops: Record<string, Record<string, Candle[]>> = {};
+      if (cfg.strategies.includes("topdown")) {
+        const ladder: [string, string, number][] = [["weekly", "1W", 1], ["daily", "1D", 1], ["12hr", "12H", 1], ["8hr", "4H", 2], ["4hr", "4H", 1]];
+        for (const p of cfg.pairs) tops[p] = {};
+        const fetched: Record<string, Candle[]> = {};
+        const need = [...new Set(ladder.map((l) => l[1]))];
+        for (let i = 0; i < cfg.pairs.length; i += 6) await Promise.all(cfg.pairs.slice(i, i + 6).flatMap((p) => need.map(async (g) => { try { fetched[p + "|" + g] = await candles(p, g, 300); } catch (_) { /* leave that frame out */ } })));
+        for (const p of cfg.pairs) for (const [name, g, agg] of ladder) { const raw = fetched[p + "|" + g]; if (raw && raw.length) tops[p][name] = agg > 1 ? aggregateTime(raw, agg, 4 * HOUR) : raw; }
+      }
+      const snaps = cfg.pairs.map((p) => snapshot(p, cs[p], T.ms, now, {stack: cfg.strategies.includes("mastack"), tops: cfg.strategies.includes("topdown") ? tops[p] : undefined}));
       const content = JSON.stringify({time_frame: T.label, strategies_switched_on: cfg.strategies.map((k) => k + " = " + STRATS[k].name), account: {equity: +acc.equity.toFixed(2), free_cash: +acc.cash.toFixed(2), risk_per_trade_pct: cfg.risk_pct, max_open_positions: cfg.max_open, max_leverage: cfg.max_lev},
         open_positions: still.map((p) => ({pair: p.pair, side: p.side, strategy: p.strategy || null, entry: p.entry, sl: p.sl, tp: p.tp, trailing_atr: p.trail_atr || null, unrealised_usd: +pnlOf(p, price(p.pair)).toFixed(2), opened: p.opened_at})),
         recent_closed: closed.slice(0, 5).map((x: any) => ({pair: x.pair, side: x.side, strategy: x.strategy || null, pnl: +num(x.pnl).toFixed(2), how: x.close_reason})), approved_lessons: lessons, market: snaps, time_utc: new Date().toISOString()});
