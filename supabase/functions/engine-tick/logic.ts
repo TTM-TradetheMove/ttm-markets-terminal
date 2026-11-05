@@ -1,8 +1,8 @@
 // Pure trading logic for the TTM engine (paper trading). No network, no database. Tested on its own.
 export type Candle = {t: number; o: number; h: number; l: number; c: number; v?: number};
 export type Pos = {id: number; pair: string; side: "long" | "short"; entry: number; units: number; notional: number; lev: number; margin: number; sl: number; tp: number | null; risk_usd: number; opened_at: string; strategy?: string | null; trail_atr?: number | null};
-export type Cfg = {risk_pct: number; max_open: number; max_lev: number; pairs: string[]; strategies: string[]};
-export type Decision = {strategy?: string; trail_atr?: number | null; pair?: string; action?: string; sl?: number; tp?: number | null; lev?: number; reason?: string};
+export type Cfg = {risk_pct: number; max_open: number; max_lev: number; pairs: string[]; strategies: string[]; crypto_only?: boolean; tfs?: string[]};
+export type Decision = {timeframe?: string; strategy?: string; trail_atr?: number | null; pair?: string; action?: string; sl?: number; tp?: number | null; lev?: number; reason?: string};
 export const FEE = 0.0006;           // taker fee per side
 export const HOUR = 3600000;
 
@@ -77,7 +77,7 @@ function maStack(c: Candle[]) {
   let touched: number | null = null; for (let i = 1; i <= 8 && i <= L; i++) { const j = L - i, hit = c[j].l <= e21[j] * 1.001 && c[j].h >= e21[j] * 0.999; if (hit) { touched = i; break; } }
   return {ema13: r(v[0], sig(p)), ema21: r(v[1], sig(p)), ema50: r(v[2], sig(p)), ema100: r(v[3], sig(p)), ema200: r(v[4], sig(p)), stack: bull ? "bullish (13>21>50>100>200, price above 13 and 21)" : bear ? "bearish (13<21<50<100<200, price below 13 and 21)" : "mixed", touched_ema21_bars_ago: touched, price_vs_ema21_pct: r((p / v[1] - 1) * 100, 2)};
 }
-export type SnapOpts = {stack?: boolean; tops?: Record<string, Candle[]>};
+export type SnapOpts = {stack?: boolean; tops?: Record<string, Candle[]>; views?: Record<string, Candle[]>};
 export function snapshot(pair: string, c: Candle[], ms = HOUR, now = Date.now(), opts: SnapOpts = {}) {
   const cl = c.map((x) => x.c), p = cl[cl.length - 1], at = (n: number) => cl.length > n ? (p / cl[cl.length - 1 - n] - 1) * 100 : null, a = atr(c);
   const sig = (x: number) => x >= 100 ? 2 : x >= 1 ? 4 : 6, last24 = c.slice(-24), last50 = c.slice(-50), vols = c.map((x) => x.v || 0);
@@ -94,6 +94,7 @@ export function snapshot(pair: string, c: Candle[], ms = HOUR, now = Date.now(),
     swing_highs: sw.hi.map((s) => ({price: r(s.price, sig(p)), bars_ago: s.bars_ago})), swing_lows: sw.lo.map((s) => ({price: r(s.price, sig(p)), bars_ago: s.bars_ago})),
     last_5_candles: c.slice(-5).map((x) => ({o: r(x.o, sig(p)), h: r(x.h, sig(p)), l: r(x.l, sig(p)), c: r(x.c, sig(p)), v: Math.round(x.v || 0)})),
     ...(opts.stack ? {ma_stack: maStack(c)} : {}),
+    ...(opts.views ? {tf_views: Object.fromEntries(Object.entries(opts.views).map(([k, v]) => [k, tfSummary(v)]))} : {}),
     ...(opts.tops ? {top_down: Object.fromEntries(Object.entries(opts.tops).map(([k, v]) => [k, tfSummary(v)]))} : {})};
 }
 export function pnlOf(p: Pos, exit: number): number { const gross = (p.side === "long" ? exit - p.entry : p.entry - exit) * p.units; return gross - (p.notional + exit * p.units) * FEE; }
@@ -148,6 +149,8 @@ export function validateOpen(d: Decision, price: number, equity: number, cash: n
   if (!d.pair || !cfg.pairs.includes(d.pair)) return {ok: false, reason: "pair not allowed"};
   if (memeSkipped(d.pair)) return {ok: false, reason: "meme coins are not traded (only WIF and CASHCAT, long only)"};
   if (memeShortBlocked(d.pair, side)) return {ok: false, reason: "WIF and CASHCAT are long only"};
+  if (cfg.crypto_only && isTradfi(d.pair)) return {ok: false, reason: "crypto only mode is on"};
+  if (cfg.tfs && cfg.tfs.length && !cfg.tfs.includes(String(d.timeframe || ""))) return {ok: false, reason: "time frame missing or not one of the allowed ones (" + cfg.tfs.join(", ") + ")"};
   if (isTradfi(d.pair) && tradfiWeekend(now, 90)) return {ok: false, reason: "TradFi markets are closed for the weekend, crypto only"};
   const strat = String(d.strategy || ""); if (!strat) return {ok: false, reason: "strategy missing"}; if (!cfg.strategies.includes(strat)) return {ok: false, reason: "strategy not switched on"};
   if (!(price > 0)) return {ok: false, reason: "no price"};
@@ -170,10 +173,10 @@ export function parseDecisions(text: string): Decision[] {
   const a = text.indexOf("{"), b = text.lastIndexOf("}"); if (a < 0 || b <= a) return [];
   try { const j = JSON.parse(text.slice(a, b + 1)); return Array.isArray(j.decisions) ? j.decisions.slice(0, 20) : []; } catch (_) { return []; }
 }
-export function buildSystem(strategies: string[], tf: string): string {
+export function buildSystem(strategies: string[], tf: string, perTrade: string[] | null = null): string {
   const list = strategies.filter((k) => STRATS[k]).map((k, i) => (i + 1) + ". " + STRATS[k].text).join("\n");
   return `You are the TTM trading agent, the decision module of a paper trading engine for USDT-margined crypto perpetual futures on Bitget. No real money is used yet; the goal is to show careful, rules-based trading.
-You are working on the ${tf} time frame. You get a market snapshot per allowed pair (the last candle is still forming: candle_progress_pct says how far through it is, so judge confirmation on the previous closed candles), the open positions and the account. Decide, per pair, one of: open_long, open_short, close, hold.
+You are working on the ${tf} time frame${perTrade ? " (the smallest allowed one, which sets how often you are asked)" : ""}. You get a market snapshot per allowed pair (the last candle is still forming: candle_progress_pct says how far through it is, so judge confirmation on the previous closed candles), the open positions and the account. Decide, per pair, one of: open_long, open_short, close, hold.
 You may only trade with these strategies (each open must say which one in "strategy", using the key names ${strategies.filter((k) => STRATS[k]).join(", ") || "none"}):
 ${list || "No strategy is switched on, so do not open anything: reply hold or close only."}
 Rules you must follow (the engine rejects anything that breaks them):
@@ -181,7 +184,8 @@ Rules you must follow (the engine rejects anything that breaks them):
 - Leverage ("lev") between 1 and the stated maximum. The engine sizes the position from the risk limit, so do not give a size. "trail_atr" (0.5 to 6) is optional and makes the stop trail the best price.
 - Meme coins are not traded. The only exceptions are WIF and CASHCAT, and those may only be opened long (never short).
 - At the weekend (tradfi_weekend is true) only crypto can be opened; TradFi (stock, index, commodity) pairs are closed to new trades.
-- Never open a pair that is already held. Use "close" to exit a held pair early when the idea is no longer valid.
+${perTrade ? `- TIME FRAME PER TRADE: every open must also say "timeframe", one of ${perTrade.join(", ")}: the time frame this trade is planned on. Use tf_views (trend, how long it has held, support, resistance on each allowed time frame) and pick the one where the setup is clearest and the stop is most logical. Size the stop and target for that time frame (a wider stop and bigger target on a slower time frame). Keep that time frame in mind when you review the trade later: a 4hr trade should not be closed because of a 15min wobble.
+` : ""}- Never open a pair that is already held. Use "close" to exit a held pair early when the idea is no longer valid.
 - Most checks the right answer is "hold". Only trade a clear setup that matches a strategy above with a defined invalidation level. Do not chase moves or add to losers.
 The input may include "approved_lessons": notes TTM approved after reviewing your past trades. Follow them.\nReply with JSON only, no other text: {"decisions":[{"pair":"BTCUSDT","action":"hold","reason":"one short sentence"}]}
 For an open include "strategy", "sl", "tp" (or null), "lev" and optionally "trail_atr". Keep every reason to one short sentence.`;

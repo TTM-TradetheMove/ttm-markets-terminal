@@ -62,7 +62,7 @@ async function approveProposal(cfgRow: any, id: number): Promise<{ok: boolean; e
   const mark = (status: string, result: string) => rest(`ttm_engine_proposals?id=eq.${id}`, {method: "PATCH", body: JSON.stringify({status, decided_at: new Date().toISOString(), result})});
   if (new Date(pr.expires_at).getTime() < Date.now()) { await mark("expired", "Expired before approval"); return {ok: false, error: "That proposal has expired. The agent will propose again if the setup is still there."}; }
   if (!cfgRow.enabled) return {ok: false, error: "The engine is switched off."};
-  const cfg: Cfg = {risk_pct: num(cfgRow.risk_pct), max_open: num(cfgRow.max_open), max_lev: num(cfgRow.max_lev), pairs: cfgRow.pairs || [], strategies: (cfgRow.strategies || []).filter((k: string) => STRATS[k])};
+  const cfg: Cfg = {risk_pct: num(cfgRow.risk_pct), max_open: num(cfgRow.max_open), max_lev: num(cfgRow.max_lev), pairs: cfgRow.pairs || [], strategies: (cfgRow.strategies || []).filter((k: string) => STRATS[k]), crypto_only: !!cfgRow.crypto_only};
   const open = (await get("ttm_engine_positions?select=*&status=eq.open&order=id.asc")).map(mapPos), closed = await get("ttm_engine_positions?select=pnl&status=eq.closed");
   const last = async (p: string) => { const c = await candles(p, "5m", 30); return c[c.length - 1].c; };
   let price = 0; const pxs: Record<string, number> = {};
@@ -109,22 +109,25 @@ Deno.serve(async (req) => {
   if (reqBody && reqBody.action === "approve") return out(await approveProposal(cfgRow, num(reqBody.id)));
   if (reqBody && reqBody.action === "review") { const rv = await runReview(cfgRow); return out({ok: rv.ok, error: rv.error, suggestions: rv.n}); }
   if (!cfgRow.enabled) return out({ok: true, skipped: "engine is switched off"});
-  const tfKey = TFS[cfgRow.timeframe] ? cfgRow.timeframe : "1H", T = TFS[tfKey];
-  const cfg: Cfg = {risk_pct: num(cfgRow.risk_pct), max_open: num(cfgRow.max_open), max_lev: num(cfgRow.max_lev), pairs: cfgRow.pairs || [], strategies: (cfgRow.strategies || []).filter((k: string) => STRATS[k])};
+  const tfMode = cfgRow.tf_mode || (cfgRow.auto_tf ? "agent" : "manual");
+  const allowedKeys = ((cfgRow.tf_allowed || []) as string[]).filter((k) => TFS[k]).sort((a, b) => TFS[a].ms - TFS[b].ms), perTrade = tfMode === "pertrade" && allowedKeys.length >= 1, viewKeys = perTrade ? allowedKeys.slice(0, 5) : [];
+  const tfKey = perTrade ? allowedKeys[0] : (TFS[cfgRow.timeframe] ? cfgRow.timeframe : "1H"), T = TFS[tfKey];   // per-trade mode runs on the smallest allowed time frame
+  const cfg: Cfg = {risk_pct: num(cfgRow.risk_pct), max_open: num(cfgRow.max_open), max_lev: num(cfgRow.max_lev), pairs: cfgRow.pairs || [], strategies: (cfgRow.strategies || []).filter((k: string) => STRATS[k]), crypto_only: !!cfgRow.crypto_only};
+  const tfl = (d: any) => perTrade && d && d.timeframe ? String(d.timeframe) : T.label; if (perTrade) cfg.tfs = viewKeys.map((k) => TFS[k].label);
   const log: string[] = []; let err = "", warn = "", asked = false, agentReplied = false;
   const mode = cfgRow.mode === "approval" ? "approval" : "auto";
   const due = who === "admin" || isDue(T.ms, cfgRow.last_agent, Date.now());   // "Check now" always asks the agent
   await rest("ttm_engine_proposals?status=eq.pending&expires_at=lt." + encodeURIComponent(new Date().toISOString()), {method: "PATCH", headers: {Prefer: "return=minimal"}, body: JSON.stringify({status: "expired", decided_at: new Date().toISOString(), result: "Expired before approval"})}).catch(() => {});
   try {
     const open: Pos[] = (await get("ttm_engine_positions?select=*&status=eq.open&order=id.asc")).map(mapPos);
-    if (due && cfgRow.pair_mode === "auto") { try { const picked = await scanPairs(Math.min(Math.max(num(cfgRow.scan_top) || 50, 10), 200), Math.min(Math.max(num(cfgRow.scan_pick) || 8, 3), 15), tradfiWeekend(Date.now(), 90)); if (picked.length) { cfg.pairs = picked; log.push("scanned: " + picked.join(",")); } } catch (e) { warn = "Auto scan failed, using your list: " + String(e).slice(0, 120); } }
+    if (due && cfgRow.pair_mode === "auto") { try { const picked = await scanPairs(Math.min(Math.max(num(cfgRow.scan_top) || 50, 10), 200), Math.min(Math.max(num(cfgRow.scan_pick) || 8, 3), 15), tradfiWeekend(Date.now(), 90) || !!cfg.crypto_only); if (picked.length) { cfg.pairs = picked; log.push("scanned: " + picked.join(",")); } } catch (e) { warn = "Auto scan failed, using your list: " + String(e).slice(0, 120); } }
     const openPairs = [...new Set(open.map((p) => p.pair))], want = due ? [...new Set([...cfg.pairs, ...openPairs])] : openPairs;
     if (!due && !open.length) { await rest("ttm_engine_config?id=eq.1", {method: "PATCH", body: JSON.stringify({last_tick: new Date().toISOString()})}); return out({ok: true, skipped: "waiting for the next " + T.label + " candle"}); }
     // candles on the chosen time frame (2hr and 8hr are built from 1hr), and 5 minute candles for the open positions' stops
     const cs: Record<string, Candle[]> = {}, fc: Record<string, Candle[]> = {}, skipped: string[] = [];
     await Promise.all(want.map(async (p) => { try { const raw = await candles(p, T.gran, T.agg > 1 ? 1000 : 300); cs[p] = T.agg > 1 ? aggregateTime(raw, T.agg, HOUR) : raw; if (cs[p].length < 30) throw new Error("too little data"); } catch (_) { delete cs[p]; skipped.push(p); } }));
     await Promise.all(openPairs.map(async (p) => { if (T.gran === "5m" && T.agg === 1) { if (cs[p]) fc[p] = cs[p]; return; } try { fc[p] = await candles(p, "5m", 300); } catch (_) { /* fall back to the time frame candles */ } }));
-    const wkd = tradfiWeekend(Date.now(), 90), tradePairs = cfg.pairs.filter((p) => cs[p] && !memeSkipped(p) && !(wkd && isTradfi(p))); if (due && !tradePairs.length) throw new Error("No pair returned Bitget data. Skipped: " + skipped.join(", "));
+    const wkd = tradfiWeekend(Date.now(), 90), tradePairs = cfg.pairs.filter((p) => cs[p] && !memeSkipped(p) && !(wkd && isTradfi(p)) && !(cfg.crypto_only && isTradfi(p))); if (due && !tradePairs.length) throw new Error("No pair returned Bitget data. Skipped: " + skipped.join(", "));
     const fskip = skipped.filter((p) => cfg.pairs.includes(p)); if (due && fskip.length) warn = "Skipped (no Bitget futures data): " + fskip.join(", ");
     const price = (p: string): number => { const a = cs[p] || fc[p]; return a && a.length ? a[a.length - 1].c : 0; };
     const closeIt = async (p: Pos, px: number, why: string) => { const pnl = pnlOf(p, px);
@@ -136,6 +139,8 @@ Deno.serve(async (req) => {
     // weekend rule for TradFi trades: stop into profit before the close (a trade not in profit stays open)
     for (const p of [...still]) { const g = weekendGuard(p, price(p.pair), Date.now()); if (!g) continue;
       if (g.action === "lock") { await rest(`ttm_engine_positions?id=eq.${p.id}`, {method: "PATCH", body: JSON.stringify({sl: g.sl})}); p.sl = g.sl; log.push(`weekend: ${p.pair} stop moved into profit at ${g.sl}`); await alertTg(`\u{1F512} ${p.pair.replace("USDT", "")} stop moved into profit`, "TradFi weekend rule: the stop now locks in part of the gain until the market reopens."); } }
+    // keep the latest price on each open trade so the dashboard can show live profit
+    await Promise.all(still.map(async (p) => { const lp = price(p.pair); if (lp > 0) await rest(`ttm_engine_positions?id=eq.${p.id}`, {method: "PATCH", headers: {Prefer: "return=minimal"}, body: JSON.stringify({last_price: lp, last_price_at: new Date().toISOString()})}).catch(() => {}); }));
     for (const p of still) { if (!p.trail_atr || !cs[p.pair]) continue; const ns = trailStop(p, fc[p.pair] || cs[p.pair], atr(cs[p.pair]), fc[p.pair] ? 5 * MIN : T.ms), px = price(p.pair);
       if (ns != null && px > 0 && (p.side === "long" ? ns < px : ns > px)) { await rest(`ttm_engine_positions?id=eq.${p.id}`, {method: "PATCH", body: JSON.stringify({sl: ns})}); p.sl = ns; log.push(`trailed ${p.pair} stop to ${ns}`); } }
     // 2) account
@@ -157,11 +162,16 @@ Deno.serve(async (req) => {
         for (let i = 0; i < cfg.pairs.length; i += 6) await Promise.all(cfg.pairs.slice(i, i + 6).flatMap((p) => need.map(async (g) => { try { fetched[p + "|" + g] = await candles(p, g, 300); } catch (_) { /* leave that frame out */ } })));
         for (const p of cfg.pairs) for (const [name, g, agg] of ladder) { const raw = fetched[p + "|" + g]; if (raw && raw.length) tops[p][name] = agg > 1 ? aggregateTime(raw, agg, 4 * HOUR) : raw; }
       }
-      const snaps = cfg.pairs.map((p) => snapshot(p, cs[p], T.ms, now, {stack: cfg.strategies.includes("mastack"), tops: cfg.strategies.includes("topdown") ? tops[p] : undefined}));
-      const content = JSON.stringify({time_frame: T.label, tradfi_weekend: wkd, strategies_switched_on: cfg.strategies.map((k) => k + " = " + STRATS[k].name), account: {equity: +acc.equity.toFixed(2), free_cash: +acc.cash.toFixed(2), risk_per_trade_pct: cfg.risk_pct, max_open_positions: cfg.max_open, max_leverage: cfg.max_lev},
+      // per-trade time frame mode: a compact view of every allowed time frame per pair
+      const views: Record<string, Record<string, Candle[]>> = {};
+      if (perTrade) { for (const p of cfg.pairs) views[p] = {}; const jobs = viewKeys.filter((k) => k !== tfKey);
+        for (let i = 0; i < cfg.pairs.length; i += 5) await Promise.all(cfg.pairs.slice(i, i + 5).flatMap((p) => jobs.map(async (k) => { try { const t = TFS[k], raw = await candles(p, t.gran, t.agg > 1 ? 1000 : 300); views[p][t.label] = t.agg > 1 ? aggregateTime(raw, t.agg, HOUR) : raw; } catch (_) { /* leave that frame out */ } })));
+        for (const p of cfg.pairs) views[p][T.label] = cs[p]; }
+      const snaps = cfg.pairs.map((p) => snapshot(p, cs[p], T.ms, now, {views: perTrade ? views[p] : undefined, stack: cfg.strategies.includes("mastack"), tops: cfg.strategies.includes("topdown") ? tops[p] : undefined}));
+      const content = JSON.stringify({time_frame: T.label, allowed_time_frames: perTrade ? cfg.tfs : undefined, crypto_only: !!cfg.crypto_only, tradfi_weekend: wkd, strategies_switched_on: cfg.strategies.map((k) => k + " = " + STRATS[k].name), account: {equity: +acc.equity.toFixed(2), free_cash: +acc.cash.toFixed(2), risk_per_trade_pct: cfg.risk_pct, max_open_positions: cfg.max_open, max_leverage: cfg.max_lev},
         open_positions: still.map((p) => ({pair: p.pair, side: p.side, strategy: p.strategy || null, entry: p.entry, sl: p.sl, tp: p.tp, trailing_atr: p.trail_atr || null, unrealised_usd: +pnlOf(p, price(p.pair)).toFixed(2), opened: p.opened_at})),
         recent_closed: closed.slice(0, 5).map((x: any) => ({pair: x.pair, side: x.side, strategy: x.strategy || null, pnl: +num(x.pnl).toFixed(2), how: x.close_reason})), approved_lessons: lessons, market: snaps, time_utc: new Date().toISOString()});
-      let raw = ""; try { raw = await ask(cfgRow.model || "claude-sonnet-5-5", buildSystem(cfg.strategies, T.label), content); } catch (e) { err = String(e).slice(0, 300); }
+      let raw = ""; try { raw = await ask(cfgRow.model || "claude-sonnet-5-5", buildSystem(cfg.strategies, T.label, perTrade ? cfg.tfs! : null), content); } catch (e) { err = String(e).slice(0, 300); }
       agentReplied = !!raw; const decisions = parseDecisions(raw); if (raw && !decisions.length) err = "The agent reply could not be read";
       // 4) check each decision against the hard rules, then simulate it
       for (const d of decisions) {
@@ -174,16 +184,16 @@ Deno.serve(async (req) => {
             const dup = (await get(`ttm_engine_proposals?select=id&status=eq.pending&pair=eq.${pair}&side=eq.${v.pos.side}&limit=1`)).length;
             if (dup) why = "already waiting for your approval";
             else { const exp = new Date(Date.now() + Math.min(Math.max(2 * T.ms, 30 * MIN), 48 * HOUR)).toISOString();
-              const pi = await rest("ttm_engine_proposals", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({expires_at: exp, pair, side: v.pos.side, strategy: v.pos.strategy, timeframe: T.label, price: px, sl: v.pos.sl, tp: v.pos.tp, lev: v.pos.lev, trail_atr: v.pos.trail_atr, reason: String(d.reason || "").slice(0, 600)})});
+              const pi = await rest("ttm_engine_proposals", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({expires_at: exp, pair, side: v.pos.side, strategy: v.pos.strategy, timeframe: tfl(d), price: px, sl: v.pos.sl, tp: v.pos.tp, lev: v.pos.lev, trail_atr: v.pos.trail_atr, reason: String(d.reason || "").slice(0, 600)})});
               if (pi.ok) { why = "awaiting your approval"; log.push(`proposed ${act} ${pair} (${v.pos.strategy})`); await alertTg("TTM Agent needs approval", `${pair.replace("USDT", "")} ${v.pos.side.toUpperCase()} \u00B7 ${stratName(v.pos.strategy)} \u00B7 ${T.label}. Open the engine to approve or reject.`); } else why = "could not save the proposal (run engine4.sql)"; } }
-          else if (v.ok) { const ins = await rest("ttm_engine_positions", {method: "POST", headers: {Prefer: "return=representation"}, body: JSON.stringify({pair, ...v.pos, timeframe: T.label, reason: String(d.reason || "").slice(0, 600)})});
+          else if (v.ok) { const ins = await rest("ttm_engine_positions", {method: "POST", headers: {Prefer: "return=representation"}, body: JSON.stringify({pair, ...v.pos, timeframe: tfl(d), reason: String(d.reason || "").slice(0, 600)})});
             const row = (await ins.json())[0]; if (row) { still.push({...row, entry: v.pos.entry, units: v.pos.units, notional: v.pos.notional, lev: v.pos.lev, margin: v.pos.margin, sl: v.pos.sl, tp: v.pos.tp, risk_usd: v.pos.risk_usd, trail_atr: v.pos.trail_atr}); ok = true; log.push(`opened ${act} ${pair} (${v.pos.strategy})`); await alertTg(`\u26A1 ${pair.replace("USDT", "")} ${v.pos.side.toUpperCase()} opened`, `Timeframe: ${T.label} \u00B7 ${stratName(v.pos.strategy)}`); } else why = "could not save"; }
           else why = v.reason; }
-        await rest("ttm_engine_decisions", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({pair, action: act, price: px || null, reason: String(d.reason || "").slice(0, 600), accepted: ok, reject_reason: ok ? null : why, strategy: d.strategy || null, timeframe: T.label, raw: d})});
+        await rest("ttm_engine_decisions", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({pair, action: act, price: px || null, reason: String(d.reason || "").slice(0, 600), accepted: ok, reject_reason: ok ? null : why, strategy: d.strategy || null, timeframe: tfl(d), raw: d})});
       }
     }
     // auto time frame: move to a better one when the current one is clearly not working, and tell TTM
-    if (due && !err && cfgRow.auto_tf) { const ct = (await get("ttm_engine_positions?select=timeframe,pnl,risk_usd,closed_at&status=eq.closed&order=closed_at.desc&limit=200")).map((x: any) => ({timeframe: x.timeframe, pnl: num(x.pnl || 0), risk_usd: num(x.risk_usd || 0), closed_at: x.closed_at}));
+    if (due && !err && tfMode === "agent") { const ct = (await get("ttm_engine_positions?select=timeframe,pnl,risk_usd,closed_at&status=eq.closed&order=closed_at.desc&limit=200")).map((x: any) => ({timeframe: x.timeframe, pnl: num(x.pnl || 0), risk_usd: num(x.risk_usd || 0), closed_at: x.closed_at}));
       const ch = pickTimeframe(tfKey, cfgRow.tf_allowed || [], ct, cfgRow.tf_changed_at, Date.now());
       if (ch) { const nowIso = new Date().toISOString(); await rest("ttm_engine_config?id=eq.1", {method: "PATCH", body: JSON.stringify({timeframe: ch.to, tf_changed_at: nowIso})});
         await rest("ttm_engine_decisions", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({pair: null, action: "timeframe_change", reason: `Switched from ${T.label} to ${TFS[ch.to].label}. ${ch.why}`, accepted: true, timeframe: TFS[ch.to].label, raw: ch})});
