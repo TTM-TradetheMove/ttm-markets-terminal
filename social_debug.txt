@@ -1,12 +1,23 @@
-social run 2026-11-05T17:41:02.026275+00:00
+social run 2026-11-05T22:52:14.792217+00:00
+  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/elonmusk?showReplies=fals -> HTTPError: HTTP Error 429: Too Many Requests
+  rate limited (429) - waiting 25s then one retry
 truth: 80 posts seen, 12 key (crypto/market) kept
-news The Block: 20 items
 news Decrypt: 37 items
-news CryptoSlate: 10 items
 news Cointelegraph: 30 items
+news CryptoSlate: 10 items
+news The Block: 20 items
 news CoinDesk: 25 items
 news Bitcoin Magazine: 10 items
-x @elonmusk: via syndication, 99 fetched, 0 key, 0 kept
+  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/elonmusk?showReplies=fals -> HTTPError: HTTP Error 429: Too Many Requests
+  GET fail https://cdn.syndication.twimg.com/srv/timeline-profile/screen-name/elonmusk?showReplies=fa -> HTTPError: HTTP Error 429: Too Many Requests
+  rate limited (429) - waiting 25s then one retry
+  GET fail https://cdn.syndication.twimg.com/srv/timeline-profile/screen-name/elonmusk?showReplies=fa -> HTTPError: HTTP Error 429: Too Many Requests
+x @elonmusk: via None, 0 fetched, 0 key, 0 kept
+  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/saylor?showReplies=false -> HTTPError: HTTP Error 429: Too Many Requests
+  rate limited (429) - waiting 25s then one retry
+  GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/saylor?showReplies=false -> HTTPError: HTTP Error 429: Too Many Requests
+  GET fail https://cdn.syndication.twimg.com/srv/timeline-profile/screen-name/saylor?showReplies=fals -> HTTPError: HTTP Error 429: Too Many Requests
+  rate limited (429) - waiting 25s then one retry
 x @saylor: via syndication, 99 fetched, 76 key, 8 kept
 x @VitalikButerin: via syndication, 90 fetched, 31 key, 8 kept
 x @cz_binance: via syndication, 98 fetched, 47 key, 8 kept
@@ -15,4 +26,4 @@ x @CryptoHayes: via syndication, 99 fetched, 65 key, 8 kept
 x @RaoulGMI: via syndication, 95 fetched, 59 key, 8 kept
 x @SECGov: via syndication, 17 fetched, 7 key, 8 kept
 x @federalreserve: via syndication, 20 fetched, 8 key, 8 kept
-wrote social_data.json: truth=12, x accounts with posts=9/9; 53s
+wrote social_data.json: truth=12, x accounts with posts=8/9; 153s
