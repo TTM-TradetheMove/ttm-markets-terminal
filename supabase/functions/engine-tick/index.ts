@@ -118,6 +118,15 @@ function trailStop(p: Pos, candles: Candle[], a: number | null, period: number):
   return (p.side === "long" ? ns > p.sl : ns < p.sl) ? ns : null;
 }
 
+// ---- Meme coins: not traded, except WIF and CASHCAT, which may only be opened long
+const MEMES = new Set(["DOGE", "SHIB", "PEPE", "BONK", "FLOKI", "WIF", "MEME", "TURBO", "POPCAT", "MEW", "BRETT", "NEIRO", "PNUT", "GOAT", "FARTCOIN", "MOODENG", "TRUMP", "MELANIA", "BOME", "DOGS", "HMSTR", "CHILLGUY", "PENGU", "GIGA", "CASHCAT", "SPX", "MOG", "BABYDOGE", "WEN", "SLERF", "MYRO", "ACT", "TOSHI", "MUBARAK", "BANANAS31", "TST", "SIREN", "USELESS", "FWOG", "AI16Z", "ZEREBRO", "LADYS", "BOBO", "APU", "ANDY", "HIPPO", "SUNDOG", "PONKE", "SATS", "COQ", "CAT", "CATI", "VINE", "MANEKI", "BAN"]);
+const MEME_LONG_ONLY = new Set(["WIF", "CASHCAT"]);
+const memeBase = (pair: string) => String(pair || "").toUpperCase().replace(/(USDT|USDC|PERP)$/, "").replace(/^(1000000|10000|1000)/, "");
+const isMeme = (pair: string) => MEMES.has(memeBase(pair));
+// can the agent even look at this pair? (memes are skipped, apart from the two long-only exceptions)
+const memeSkipped = (pair: string) => isMeme(pair) && !MEME_LONG_ONLY.has(memeBase(pair));
+const memeShortBlocked = (pair: string, side: string) => side === "short" && MEME_LONG_ONLY.has(memeBase(pair));
+
 // ---- TradFi (stock, index, commodity and FX contracts) and the weekend
 // Bitget lists these next to crypto. Only names that are clearly not crypto tokens are listed (so a token like SPX is never mistaken for one).
 const TRADFI = new Set(["TSLA", "NVDA", "AAPL", "MSFT", "AMZN", "GOOGL", "GOOG", "NFLX", "AMD", "INTC", "MSTR", "PLTR", "HOOD", "NKE", "MCD", "DIS", "BABA", "UBER", "CRCL", "JPM", "KO", "PEP", "WMT", "SPY", "QQQ", "IWM", "GLD", "SLV", "TSM", "ORCL", "ADBE", "CRM", "PYPL", "AVGO", "QCOM", "MU", "SBUX", "COST", "NASDAQ", "NAS100", "SP500", "US500", "US100", "US30", "DJI", "DXY", "XAU", "XAG", "XPT", "WTI", "BRENT", "EURUSD", "GBPUSD", "USDJPY", "AUDUSD"]);
@@ -140,6 +149,8 @@ function validateOpen(d: Decision, price: number, equity: number, cash: number, 
   {ok: true; pos: {strategy: string; trail_atr: number | null; side: "long" | "short"; entry: number; units: number; notional: number; lev: number; margin: number; sl: number; tp: number | null; risk_usd: number}} | {ok: false; reason: string} {
   const side = d.action === "open_long" ? "long" : d.action === "open_short" ? "short" : null; if (!side) return {ok: false, reason: "not an open action"};
   if (!d.pair || !cfg.pairs.includes(d.pair)) return {ok: false, reason: "pair not allowed"};
+  if (memeSkipped(d.pair)) return {ok: false, reason: "meme coins are not traded (only WIF and CASHCAT, long only)"};
+  if (memeShortBlocked(d.pair, side)) return {ok: false, reason: "WIF and CASHCAT are long only"};
   if (isTradfi(d.pair) && tradfiWeekend(now, 90)) return {ok: false, reason: "TradFi markets are closed for the weekend, crypto only"};
   const strat = String(d.strategy || ""); if (!strat) return {ok: false, reason: "strategy missing"}; if (!cfg.strategies.includes(strat)) return {ok: false, reason: "strategy not switched on"};
   if (!(price > 0)) return {ok: false, reason: "no price"};
@@ -171,6 +182,7 @@ ${list || "No strategy is switched on, so do not open anything: reply hold or cl
 Rules you must follow (the engine rejects anything that breaks them):
 - Every open needs a "strategy", a stop loss ("sl") on the correct side, between 0.4% and 12% from the current price. A take profit ("tp") is optional but must be at least 1.2 times the stop distance away.
 - Leverage ("lev") between 1 and the stated maximum. The engine sizes the position from the risk limit, so do not give a size. "trail_atr" (0.5 to 6) is optional and makes the stop trail the best price.
+- Meme coins are not traded. The only exceptions are WIF and CASHCAT, and those may only be opened long (never short).
 - At the weekend (tradfi_weekend is true) only crypto can be opened; TradFi (stock, index, commodity) pairs are closed to new trades.
 - Never open a pair that is already held. Use "close" to exit a held pair early when the idea is no longer valid.
 - Most checks the right answer is "hold". Only trade a clear setup that matches a strategy above with a defined invalidation level. Do not chase moves or add to losers.
@@ -289,7 +301,7 @@ async function ask(model: string, system: string, content: string, maxTokens = 3
 async function scanPairs(top: number, pick: number, cryptoOnly = false): Promise<string[]> {
   const r = await fetch("https://api.bitget.com/api/v2/mix/market/tickers?productType=USDT-FUTURES"), j = await r.json();
   if (j.code !== "00000" || !Array.isArray(j.data)) throw new Error("Bitget tickers: " + (j.msg || r.status));
-  return rankMovers(j.data.filter((x: any) => !(cryptoOnly && isTradfi(String(x.symbol)))).map((x: any) => ({s: String(x.symbol), vol: num(x.usdtVolume || x.quoteVolume), ch: num(x.change24h), hi: num(x.high24h), lo: num(x.low24h), px: num(x.lastPr)})), top, pick);
+  return rankMovers(j.data.filter((x: any) => !(cryptoOnly && isTradfi(String(x.symbol))) && !memeSkipped(String(x.symbol))).map((x: any) => ({s: String(x.symbol), vol: num(x.usdtVolume || x.quoteVolume), ch: num(x.change24h), hi: num(x.high24h), lo: num(x.low24h), px: num(x.lastPr)})), top, pick);
 }
 
 // Approval mode: TTM presses Approve on the dashboard, and the trade is opened at the current price after the same hard rule checks.
@@ -361,7 +373,7 @@ Deno.serve(async (req) => {
     const cs: Record<string, Candle[]> = {}, fc: Record<string, Candle[]> = {}, skipped: string[] = [];
     await Promise.all(want.map(async (p) => { try { const raw = await candles(p, T.gran, T.agg > 1 ? 1000 : 300); cs[p] = T.agg > 1 ? aggregateTime(raw, T.agg, HOUR) : raw; if (cs[p].length < 30) throw new Error("too little data"); } catch (_) { delete cs[p]; skipped.push(p); } }));
     await Promise.all(openPairs.map(async (p) => { if (T.gran === "5m" && T.agg === 1) { if (cs[p]) fc[p] = cs[p]; return; } try { fc[p] = await candles(p, "5m", 300); } catch (_) { /* fall back to the time frame candles */ } }));
-    const wkd = tradfiWeekend(Date.now(), 90), tradePairs = cfg.pairs.filter((p) => cs[p] && !(wkd && isTradfi(p))); if (due && !tradePairs.length) throw new Error("No pair returned Bitget data. Skipped: " + skipped.join(", "));
+    const wkd = tradfiWeekend(Date.now(), 90), tradePairs = cfg.pairs.filter((p) => cs[p] && !memeSkipped(p) && !(wkd && isTradfi(p))); if (due && !tradePairs.length) throw new Error("No pair returned Bitget data. Skipped: " + skipped.join(", "));
     const fskip = skipped.filter((p) => cfg.pairs.includes(p)); if (due && fskip.length) warn = "Skipped (no Bitget futures data): " + fskip.join(", ");
     const price = (p: string): number => { const a = cs[p] || fc[p]; return a && a.length ? a[a.length - 1].c : 0; };
     const closeIt = async (p: Pos, px: number, why: string) => { const pnl = pnlOf(p, px);
