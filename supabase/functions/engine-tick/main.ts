@@ -133,10 +133,9 @@ Deno.serve(async (req) => {
     // 1) stops and targets (5 minute candles first, then the chosen time frame), then trailing stops
     let still: Pos[] = [], closedNow = 0;
     for (const p of open) { const hit = (fc[p.pair] ? checkExit(p, fc[p.pair], 5 * MIN) : null) || (cs[p.pair] ? checkExit(p, cs[p.pair], T.ms) : null); if (hit) { await closeIt(p, hit.price, hit.reason); closedNow++; } else still.push(p); }
-    // weekend rule for TradFi trades: stop into profit before the close, or flat if it is not in profit
+    // weekend rule for TradFi trades: stop into profit before the close (a trade not in profit stays open)
     for (const p of [...still]) { const g = weekendGuard(p, price(p.pair), Date.now()); if (!g) continue;
-      if (g.action === "lock") { await rest(`ttm_engine_positions?id=eq.${p.id}`, {method: "PATCH", body: JSON.stringify({sl: g.sl})}); p.sl = g.sl; log.push(`weekend: ${p.pair} stop moved into profit at ${g.sl}`); await alertTg(`\u{1F512} ${p.pair.replace("USDT", "")} stop moved into profit`, "TradFi weekend rule: the stop now locks in part of the gain until the market reopens."); }
-      else { await closeIt(p, price(p.pair), "weekend"); still = still.filter((x) => x.id !== p.id); closedNow++; } }
+      if (g.action === "lock") { await rest(`ttm_engine_positions?id=eq.${p.id}`, {method: "PATCH", body: JSON.stringify({sl: g.sl})}); p.sl = g.sl; log.push(`weekend: ${p.pair} stop moved into profit at ${g.sl}`); await alertTg(`\u{1F512} ${p.pair.replace("USDT", "")} stop moved into profit`, "TradFi weekend rule: the stop now locks in part of the gain until the market reopens."); } }
     for (const p of still) { if (!p.trail_atr || !cs[p.pair]) continue; const ns = trailStop(p, fc[p.pair] || cs[p.pair], atr(cs[p.pair]), fc[p.pair] ? 5 * MIN : T.ms), px = price(p.pair);
       if (ns != null && px > 0 && (p.side === "long" ? ns < px : ns > px)) { await rest(`ttm_engine_positions?id=eq.${p.id}`, {method: "PATCH", body: JSON.stringify({sl: ns})}); p.sl = ns; log.push(`trailed ${p.pair} stop to ${ns}`); } }
     // 2) account

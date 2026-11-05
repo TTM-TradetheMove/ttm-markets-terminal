@@ -127,13 +127,13 @@ function tradfiWeekend(now: number, leadMin = 0): boolean {
   const d = new Date(now), wm = ((d.getUTCDay() + 6) % 7) * 1440 + d.getUTCHours() * 60 + d.getUTCMinutes(); return wm >= 4 * 1440 + 1200 - leadMin && wm < 6 * 1440 + 1320;
 }
 // Open TradFi trades must not sit through the weekend unprotected: from 90 minutes before the close the stop is moved into profit
-// (keeping 40% of the open gain, only once the trade is at least 0.5% up); a trade that is not in profit by 30 minutes before the close is closed.
-function weekendGuard(p: Pos, px: number, now: number): {action: "lock"; sl: number} | {action: "close"} | null {
+// (keeping 40% of the open gain, once the trade is at least 0.5% up). A trade that is not in profit stays open with its original stop.
+function weekendGuard(p: Pos, px: number, now: number): {action: "lock"; sl: number} | null {
   if (!isTradfi(p.pair) || !(px > 0) || !tradfiWeekend(now, 90)) return null;
   const long = p.side === "long", gain = long ? (px - p.entry) / p.entry : (p.entry - px) / p.entry;
   if (long ? p.sl > p.entry : p.sl < p.entry) return null;          // stop already in profit
   if (gain >= 0.005) { const sl = long ? p.entry + 0.4 * (px - p.entry) : p.entry - 0.4 * (p.entry - px); return {action: "lock", sl}; }
-  return tradfiWeekend(now, 30) ? {action: "close"} : null;
+  return null;                                                     // not in profit: stays open with its original stop
 }
 
 function validateOpen(d: Decision, price: number, equity: number, cash: number, open: Pos[], cfg: Cfg, now = Date.now()):
@@ -370,10 +370,9 @@ Deno.serve(async (req) => {
     // 1) stops and targets (5 minute candles first, then the chosen time frame), then trailing stops
     let still: Pos[] = [], closedNow = 0;
     for (const p of open) { const hit = (fc[p.pair] ? checkExit(p, fc[p.pair], 5 * MIN) : null) || (cs[p.pair] ? checkExit(p, cs[p.pair], T.ms) : null); if (hit) { await closeIt(p, hit.price, hit.reason); closedNow++; } else still.push(p); }
-    // weekend rule for TradFi trades: stop into profit before the close, or flat if it is not in profit
+    // weekend rule for TradFi trades: stop into profit before the close (a trade not in profit stays open)
     for (const p of [...still]) { const g = weekendGuard(p, price(p.pair), Date.now()); if (!g) continue;
-      if (g.action === "lock") { await rest(`ttm_engine_positions?id=eq.${p.id}`, {method: "PATCH", body: JSON.stringify({sl: g.sl})}); p.sl = g.sl; log.push(`weekend: ${p.pair} stop moved into profit at ${g.sl}`); await alertTg(`\u{1F512} ${p.pair.replace("USDT", "")} stop moved into profit`, "TradFi weekend rule: the stop now locks in part of the gain until the market reopens."); }
-      else { await closeIt(p, price(p.pair), "weekend"); still = still.filter((x) => x.id !== p.id); closedNow++; } }
+      if (g.action === "lock") { await rest(`ttm_engine_positions?id=eq.${p.id}`, {method: "PATCH", body: JSON.stringify({sl: g.sl})}); p.sl = g.sl; log.push(`weekend: ${p.pair} stop moved into profit at ${g.sl}`); await alertTg(`\u{1F512} ${p.pair.replace("USDT", "")} stop moved into profit`, "TradFi weekend rule: the stop now locks in part of the gain until the market reopens."); } }
     for (const p of still) { if (!p.trail_atr || !cs[p.pair]) continue; const ns = trailStop(p, fc[p.pair] || cs[p.pair], atr(cs[p.pair]), fc[p.pair] ? 5 * MIN : T.ms), px = price(p.pair);
       if (ns != null && px > 0 && (p.side === "long" ? ns < px : ns > px)) { await rest(`ttm_engine_positions?id=eq.${p.id}`, {method: "PATCH", body: JSON.stringify({sl: ns})}); p.sl = ns; log.push(`trailed ${p.pair} stop to ${ns}`); } }
     // 2) account

@@ -124,13 +124,13 @@ export function tradfiWeekend(now: number, leadMin = 0): boolean {
   const d = new Date(now), wm = ((d.getUTCDay() + 6) % 7) * 1440 + d.getUTCHours() * 60 + d.getUTCMinutes(); return wm >= 4 * 1440 + 1200 - leadMin && wm < 6 * 1440 + 1320;
 }
 // Open TradFi trades must not sit through the weekend unprotected: from 90 minutes before the close the stop is moved into profit
-// (keeping 40% of the open gain, only once the trade is at least 0.5% up); a trade that is not in profit by 30 minutes before the close is closed.
-export function weekendGuard(p: Pos, px: number, now: number): {action: "lock"; sl: number} | {action: "close"} | null {
+// (keeping 40% of the open gain, once the trade is at least 0.5% up). A trade that is not in profit stays open with its original stop.
+export function weekendGuard(p: Pos, px: number, now: number): {action: "lock"; sl: number} | null {
   if (!isTradfi(p.pair) || !(px > 0) || !tradfiWeekend(now, 90)) return null;
   const long = p.side === "long", gain = long ? (px - p.entry) / p.entry : (p.entry - px) / p.entry;
   if (long ? p.sl > p.entry : p.sl < p.entry) return null;          // stop already in profit
   if (gain >= 0.005) { const sl = long ? p.entry + 0.4 * (px - p.entry) : p.entry - 0.4 * (p.entry - px); return {action: "lock", sl}; }
-  return tradfiWeekend(now, 30) ? {action: "close"} : null;
+  return null;                                                     // not in profit: stays open with its original stop
 }
 
 export function validateOpen(d: Decision, price: number, equity: number, cash: number, open: Pos[], cfg: Cfg, now = Date.now()):
