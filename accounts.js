@@ -10,7 +10,7 @@ const normPlan = p => (p === 'crypto' || p === 'tradfi') ? 'premium' : p;   // o
 const pname = id => (PLANS.find(p => p[0] === id) || [0, id])[1];
 // what can be locked: key, label, plans that get it by default (Pro always gets everything)
 const CAT = [
-  ['c:holdings', 'Crypto · TTM Holdings (spot portfolio, % only)', ['free']], ['t:holdings', 'TradFi · TTM Holdings (invested, % only)', ['free']],
+  ['c:holdings', 'Crypto · TTM Spot (spot portfolio, % only)', ['free']], ['c:pension', 'Crypto · TTM Pension / Super (long-term portfolio, % only)', ['beta'], 'off'], ['c:chartpro', 'Crypto · Chart popup with drawing tools and post-to-chat (limit orders list)', ['beta'], 'off'], ['t:holdings', 'TradFi · TTM Spot (invested, % only)', ['free']],
   ['c:calendar', 'Crypto · Macro Watch', ['free']], ['c:tradinghours', 'Crypto · Trading Hours', ['free']], ['c:fomo', 'Crypto · FOMO Finder & RSI Chart', ['free']],
   ['c:btcmonthly', 'Crypto · BTC Monthly (with cycle tops)', ['free']], ['c:tokenevents', 'Crypto · Token Events', []], ['c:library', 'Crypto · Reports library', []], ['c:transparency', 'Crypto · Transparency Watch', ['free']],
   ['c:marketpulse', 'Crypto · Market Pulse (liquidations, funding, open interest)', ['premium']], ['c:rsimap', 'Crypto · RSI Heatmap', ['premium']], ['c:community', 'Crypto · Community chat rooms (section)', ['free']], ['room:free', 'Chat room · Free (read and write)', ['free', 'premium']], ['room:premium', 'Chat room · Premium (read and write)', ['premium']], ['room:pro', 'Chat room · Pro (read and write)', []],
@@ -1026,11 +1026,24 @@ async function rmSend(){
       if(!sc || !sc.ok){ n.textContent = sc && sc.reason ? 'Image blocked: ' + sc.reason + '.' : 'Could not scan the image, so it was not sent. Try again.'; RM.pend = null; rmPrev(); return; }
       img = sc.url; }
     let rooms = [RM.room]; { const ck = Array.from(document.querySelectorAll('.rmToBox:checked')).map(c => c.value).filter(rmCan); if(ck.length) rooms = ck; }
-    const r = await api('/rest/v1/ttm_room_msgs', {method: 'POST', headers: {Prefer: 'return=minimal'}, body: JSON.stringify(rooms.map(rm => ({room: rm, body, img, audio, audio_secs})))});
-    if(!r.ok){ const m = JSON.stringify(r.json || ''); n.textContent = /Slow down/i.test(m) ? 'Slow down a little, one message every few seconds.' : 'You cannot post in this room (muted, or not included in your plan).'; return; }
+    const ORD = {pro: 0, premium: 1, free: 2}; rooms = rooms.slice().sort((x, y) => (ORD[x] == null ? 9 : ORD[x]) - (ORD[y] == null ? 9 : ORD[y]));
+    let r = null, done = 0;
+    for(let k = 0; k < rooms.length; k++){
+      if(k > 0){ n.textContent = 'Sent to ' + rooms[k - 1] + '. Next: ' + rooms[k] + '…'; await new Promise(z => setTimeout(z, 3500)); }
+      r = await api('/rest/v1/ttm_room_msgs', {method: 'POST', headers: {Prefer: 'return=minimal'}, body: JSON.stringify([{room: rooms[k], body, img, audio, audio_secs}])});
+      if(!r.ok) break; done++;
+    }
+    if(!r.ok){ const m = JSON.stringify(r.json || ''); n.textContent = (done ? 'Sent to ' + done + ' of ' + rooms.length + ' rooms. ' : '') + (/Slow down/i.test(m) ? 'Slow down a little, one message every few seconds.' : 'You cannot post in one of these rooms (muted, or not included in your plan).'); if(done){ i.value = ''; RM.pend = null; RM.voice = null; rmPrev(); await rmLoad(true); } return; }
     i.value = ''; RM.pend = null; RM.voice = null; rmPrev(); n.textContent = rooms.length > 1 ? 'Sent to ' + rooms.length + ' rooms.' : ''; await rmLoad(true); const l = $('rmList'); if(l) l.scrollTop = l.scrollHeight;
   } finally { RM.sending = false; }
 }
+window.ttmPostImage = async function(blob, text){
+  if(!chatOK || !rmCan('free') && !rmCan('premium') && !rmCan('pro')){ alert('Sign in to post in the chat rooms.'); return; }
+  location.hash = '#community'; for(let k = 0; k < 20 && !$('rmIn'); k++) await new Promise(z => setTimeout(z, 250));
+  const i = $('rmIn'); if(!i){ alert('The chat rooms did not open. Use the Download image button and add it by hand.'); return; }
+  await rmPick1(new File([blob], 'chart.png', {type: 'image/png'})); if(!i.value) i.value = text || '';
+  const n = $('rmNote'); if(n) n.textContent = 'Chart added. Tick the rooms under "Send to" (Pro goes out first, then Premium, then Free), then press Send.';
+};
 function rmStart(){ if(!$('rmApp')) return; clearInterval(RM.timer); RM.timer = setInterval(() => { if(!document.hidden && location.hash === '#community') rmLoad(false); }, 4000); }
 function rmAdminHtml(){ return `<div class="rr-card"><h3>Chat room mutes</h3><p class="calendar-note" style="margin:0 0 10px">Who can read and write each room is set in the access table above (rows "Chat room"). Muted members can still read but cannot post. Mute someone below, or press <b>mute</b> on any of their messages in the room. Delete any message with <b>delete</b> (tap twice).</p>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px"><input id="rmMuteWho" placeholder="@telegram name or email" autocomplete="off" style="flex:1;min-width:180px"><select id="rmMuteRoom"><option value="all">All rooms</option><option value="free">Free room</option><option value="premium">Premium room</option><option value="pro">Pro room</option></select><button class="rr-btn sm" id="rmMuteBtn">Mute</button></div><p class="calendar-note" id="rmMuteNote" style="margin:0 0 8px"></p><div id="rmMutes"></div></div>`; }
