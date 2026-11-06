@@ -222,5 +222,15 @@ Deno.serve(async (req) => {
     const day = new Intl.DateTimeFormat("en-AU", {timeZone: "Australia/Melbourne", weekday: "short", day: "numeric", month: "short", year: "numeric"}).format(new Date(s.starts_at));
     await send(await subsFor(idsOf(people)), {title: (s.color === "green" ? "🟢 " : "🔴 ") + s.name, body: "Starts in 7 days · " + day, tag: "luna-" + s.id, url: "./crypto/index.html#lunacycles"}, "luna");
   }
+  // one-off announcements: insert a row in ttm_announce (see supabase/announce.sql); it goes out within a minute, once
+  try {
+    for (const an of await get("ttm_announce?select=*&sent=eq.false&order=id.asc&limit=5")) {
+      if (!(await claim("ttm_announce", an.id, "sent"))) continue;
+      const aud = String(an.audience || "beta");
+      const people = aud === "all" ? null : await get(aud === "admin" ? "ttm_profiles?select=id&is_admin=eq.true" : "ttm_profiles?select=id&or=(is_admin.eq.true,beta.eq.true)");
+      const n = await send(await subsFor(people === null ? null : idsOf(people)), {title: an.title, body: an.body || "", tag: "ann-" + an.id, url: an.url || "./index.html"});
+      await rest(`ttm_announce?id=eq.${an.id}`, {method: "PATCH", body: JSON.stringify({sent_to: n || 0})});
+    }
+  } catch (e) { console.log("announce failed:", String(e)); }
   return new Response("tick");
 });

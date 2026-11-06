@@ -2295,7 +2295,7 @@ document.addEventListener('click', e => { const b = e.target.closest && e.target
 let loaded = false;
 async function load(){ if(loaded) return; loaded = true;
   try{ const r = await fetch('../property_cycles.json?t=' + Date.now()); if(!r.ok) throw 0; D = await r.json(); if(!D.series || !Object.keys(D.series).length) throw 0; }catch(e){ loaded = false; $('pcUpd').textContent = 'The property data has not been built yet. In GitHub, open Actions, pick "Update property cycle data" and press Run workflow, then refresh in a minute.'; return; }
-  $('pcUpd').textContent = 'Source: ' + D.source + '. Updated ' + String(D.updated).slice(0, 10) + ', refreshed weekly.'; paint(); }
+  $('pcUpd').style.display = 'none'; paint(); }
 window.addEventListener('hashchange', () => { if(location.hash === '#propertycycle') load(); }); if(location.hash === '#propertycycle') load();
 })();
 </script>
