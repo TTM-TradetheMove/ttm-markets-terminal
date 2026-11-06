@@ -1361,13 +1361,14 @@ button.tkr{background:none;border:0;padding:0;margin:0;color:var(--gold2);font:i
   <div class="wrap">
     <div class="section-head">
       <span class="tag">Luna Cycles</span>
-      <h2>Bitcoin and the eclipse cycles</h2>
+      <h2>Eclipse cycles: Bitcoin and the top 20 tokens</h2>
       <p>Bitcoin's market cycles have lined up with a repeating run of eclipses. Four lunar eclipses make a red <b>Lunar cycle</b>. The last one starts the green <b>Solar cycle</b>, which runs through three solar eclipses until the next total lunar eclipse starts a new red band.</p>
     </div>
     <div id="lcNow"></div>
+    <div class="filter-row" id="lcSym" style="margin:14px 0 0;flex-wrap:wrap" aria-label="Token"></div>
     <div class="filter-row" id="lcTf" style="margin:14px 0 6px"><button class="filter-chip" data-t="4h">4h</button><button class="filter-chip" data-t="8h">8h</button><button class="filter-chip" data-t="12h">12h</button><button class="filter-chip" data-t="1d">1D</button><button class="filter-chip active" data-t="1w">1W</button><button class="filter-chip" data-t="1M">1M</button></div>
     <div class="filter-row" id="lcRange" style="margin-bottom:6px"><button class="filter-chip" data-r="1">1Y</button><button class="filter-chip" data-r="2">2Y</button><button class="filter-chip" data-r="4">4Y</button><button class="filter-chip" data-r="8">8Y</button><button class="filter-chip active" data-r="0">All</button><button class="filter-chip active" id="lcLog" data-l="1">Log scale</button></div>
-    <p class="calendar-note" id="lcSt" style="margin:0 0 10px">Loading Bitcoin candles…</p>
+    <p class="calendar-note" id="lcSt" style="margin:0 0 10px">Loading candles…</p>
     <div class="rr-card" style="padding:8px"><div id="lcWrap" style="position:relative"><canvas id="lcCv" style="width:100%;display:block;touch-action:pan-y"></canvas><div id="lcTip" style="position:absolute;display:none;pointer-events:none;background:rgba(17,17,19,.94);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:12px;line-height:1.45;white-space:nowrap;z-index:2"></div></div></div>
     <p class="calendar-note" style="margin:6px 0 14px"><span style="color:#e0554d">&#9632;</span> Lunar cycle (red) &nbsp; <span style="color:#3fb47a">&#9632;</span> Solar cycle (green). Lines mark the numbered eclipses. The shaded area on the right is the projected schedule.</p>
     <div id="lcTable"></div>
@@ -5194,28 +5195,38 @@ function phaseNow(now){
   return {c, lunar, list, passed, nxt, a, b, pct: Math.max(0, Math.min(100, (now - a) / (b - a) * 100))};
 }
 // ---- candles ----
-const cache = {}; let TF = '1w', RG = 0, LOG = true, DATA = null;
+const cache = {}; let TF = '1w', RG = 0, LOG = true, DATA = null, SYM = 'BTC';
+const ck = k => SYM + '|' + k, NAMES = {BTC: 'Bitcoin'}, nm = () => NAMES[SYM] || SYM;
 const getJ = async u => { const r = await fetch(u); if(!r.ok) throw new Error('http'); return r.json(); };
-async function binance(iv, pages){
-  let end = Date.now(), out = [];
-  for(let p = 0; p < pages; p++){ const d = await getJ(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${iv}&limit=1000&endTime=${end}`); if(!d.length) break; out = d.map(x => ({t: +x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4]})).concat(out); end = +d[0][0] - 1; if(d.length < 1000) break; }
+async function binance(iv, pages, sym){
+  sym = sym || SYM; let end = Date.now(), out = [];
+  for(let p = 0; p < pages; p++){ const d = await getJ(`https://api.binance.com/api/v3/klines?symbol=${sym}USDT&interval=${iv}&limit=1000&endTime=${end}`); if(!d.length) break; out = d.map(x => ({t: +x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4]})).concat(out); end = +d[0][0] - 1; if(d.length < 1000) break; }
   return out;
 }
+// daily history for any token: Binance first, then MEXC, then Bybit (each one a different list of coins)
+async function tokDaily(sym){
+  const bn = async () => { let end = Date.now(), out = []; for(let p = 0; p < 6; p++){ const d = await getJ(`https://api.binance.com/api/v3/klines?symbol=${sym}USDT&interval=1d&limit=1000&endTime=${end}`); if(!d.length) break; out = d.map(x => ({t: +x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4]})).concat(out); end = +d[0][0] - 1; if(d.length < 1000) break; } return out; };
+  const mx = async () => { let end = Date.now(), out = []; for(let p = 0; p < 10; p++){ const d = await getJ(`https://api.mexc.com/api/v3/klines?symbol=${sym}USDT&interval=1d&limit=500&endTime=${end}`); if(!d.length) break; out = d.map(x => ({t: +x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4]})).concat(out); end = +d[0][0] - 1; if(d.length < 500) break; } return out; };
+  const by = async () => { let end = Date.now(), out = []; for(let p = 0; p < 6; p++){ const j = await getJ(`https://api.bybit.com/v5/market/kline?category=spot&symbol=${sym}USDT&interval=D&limit=1000&end=${end}`), d = (j.result && j.result.list) || []; if(!d.length) break; const rows = d.map(x => ({t: +x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4]})).reverse(); out = rows.concat(out); end = rows[0].t - 1; if(d.length < 1000) break; } return out; };
+  for(const f of [bn, mx, by]){ try{ const r = await f(); if(r.length > 30) return r; }catch(e){} }
+  return [];
+}
 async function daily(){
-  if(cache.d) return cache.d;
+  if(cache[ck('d')]) return cache[ck('d')];
   let rows = [];
+  if(SYM !== 'BTC'){ rows = await tokDaily(SYM); if(rows.length) cache[ck('d')] = rows; return rows; }
   try{ let st = Date.UTC(2013, 0, 1) / 1000; for(let p = 0; p < 8; p++){ const d = await getJ(`https://www.bitstamp.net/api/v2/ohlc/btcusd/?step=86400&limit=1000&start=${st}`); const o = (d.data && d.data.ohlc) || []; if(!o.length) break; rows = rows.concat(o.map(x => ({t: +x.timestamp * 1000, o: +x.open, h: +x.high, l: +x.low, c: +x.close}))); st = +o[o.length - 1].timestamp + 86400; if(st * 1000 > Date.now()) break; } }catch(e){ rows = []; }
   if(rows.length < 500){ try{ rows = await binance('1d', 4); }catch(e){ rows = []; } }
-  if(rows.length) cache.d = rows; return rows;
+  if(rows.length) cache[ck('d')] = rows; return rows;
 }
 function agg(rows, keyf){ const g = new Map(); rows.forEach(r => { const k = keyf(r.t), b = g.get(k); if(!b) g.set(k, {t: k, o: r.o, h: r.h, l: r.l, c: r.c}); else { b.h = Math.max(b.h, r.h); b.l = Math.min(b.l, r.l); b.c = r.c; } }); return [...g.values()]; }
 const wk = t => (Math.floor((t / DAY + 3) / 7) * 7 - 3) * DAY, mo = t => { const d = new Date(t); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1); };
 async function load(tf){
-  if(cache[tf]) return cache[tf];
+  if(cache[ck(tf)]) return cache[ck(tf)];
   let rows;
   if(tf === '4h') rows = await binance('4h', 6); else if(tf === '8h') rows = await binance('8h', 6); else if(tf === '12h') rows = await binance('12h', 7);
   else { const d = await daily(); rows = tf === '1d' ? d : tf === '1w' ? agg(d, wk) : agg(d, mo); }
-  rows = rows.filter(r => r.c > 0 && r.h >= r.l); if(rows.length) cache[tf] = rows; return rows;
+  rows = rows.filter(r => r.c > 0 && r.h >= r.l); if(rows.length) cache[ck(tf)] = rows; return rows;
 }
 // ---- chart ----
 const px = v => v >= 1000 ? Math.round(v).toLocaleString('en-AU') : v >= 10 ? v.toFixed(0) : v.toFixed(2);
@@ -5276,22 +5287,29 @@ function cards(){
     <div style="overflow-x:auto;margin-top:12px"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="text-align:left;color:var(--mute)"><th>Marker</th><th>Date</th><th>Type</th><th>When</th></tr></thead><tbody>${evs}${nxRows}</tbody></table></div></div>`;
 }
 function history(){
-  const d = cache.d; if(!d || !d.length) { $('lcTable').innerHTML = ''; return; }
+  const d = cache[ck('d')]; if(!d || !d.length) { $('lcTable').innerHTML = ''; return; }
   const near = t => { let b = null; for(const r of d){ if(r.t >= t){ b = r; break; } } return b ? b.c : d[d.length - 1].c; }, now = Date.now(), pc = (a, b) => { const v = (b / a - 1) * 100; return `<span style="color:${v >= 0 ? '#3fb47a' : '#e0554d'}">${v >= 0 ? '+' : ''}${v.toFixed(0)}%</span>`; };
   const rows = CY.filter(c => c.lun[0].t < now).map((c, i) => { const e = c.end && c.end < now ? c.end : now, m = c.lun[3].t < now ? c.lun[3].t : now;
     return `<tr><td>${fd(c.lun[0].t)}</td><td>${pc(near(c.lun[0].t), near(m))}</td><td>${fd(Math.min(c.lun[3].t, now))}</td><td>${c.lun[3].t < now ? pc(near(c.lun[3].t), near(e)) : '—'}</td><td>${c.end && c.end < now ? fd(c.end) : 'Now'}</td></tr>`; }).join('');
-  $('lcTable').innerHTML = `<div class="rr-card"><h3 style="margin:0 0 6px">Bitcoin through each phase</h3><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="text-align:left;color:var(--mute)"><th>Lunar cycle starts</th><th>Bitcoin in red</th><th>Solar cycle starts</th><th>Bitcoin in green</th><th>Ends</th></tr></thead><tbody>${rows}</tbody></table></div><p class="calendar-note" style="margin:6px 0 0">Daily closing price change from the start of each phase to its end.</p></div>`;
+  $('lcTable').innerHTML = `<div class="rr-card"><h3 style="margin:0 0 6px">${nm()} through each phase</h3>${(() => { const a = {r: [], g: []}; for(let i = 1; i < d.length; i++){ const t = d[i].t, z = BANDS.find(z => z.a <= t && t < z.b); if(!z || t > now) continue; a[z.c].push(Math.log(d[i].c / d[i - 1].c)); } const m = x => x.length ? x.reduce((s, v) => s + v, 0) / x.length * 100 : null, f = v => v == null ? '—' : `<b style="color:${v >= 0 ? '#3fb47a' : '#e0554d'}">${v >= 0 ? '+' : ''}${v.toFixed(2)}%</b>`; return `<p class="calendar-note" style="margin:0 0 10px">Average day since ${fd(d[0].t)}: ${f(m(a.g))} in green (${a.g.length} days), ${f(m(a.r))} in red (${a.r.length} days). Only a few full cycles exist, so treat this as a pattern, not a signal.</p>`; })()}<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="text-align:left;color:var(--mute)"><th>Lunar cycle starts</th><th>${nm()} in red</th><th>Solar cycle starts</th><th>${nm()} in green</th><th>Ends</th></tr></thead><tbody>${rows}</tbody></table></div><p class="calendar-note" style="margin:6px 0 0">Daily closing price change from the start of each phase to its end.</p></div>`;
 }
 async function run(){
-  $('lcSt').textContent = 'Loading Bitcoin ' + TF.toUpperCase() + ' candles…';
+  $('lcSt').textContent = 'Loading ' + nm() + ' ' + TF.toUpperCase() + ' candles…';
   let rows = []; try{ rows = await load(TF); }catch(e){ rows = []; }
-  if(!rows.length){ $('lcSt').textContent = 'Could not load Bitcoin candles for this time frame. Try another, or refresh in a moment.'; DATA = null; cards(); return; }
+  if(!rows.length){ $('lcSt').textContent = SYM === 'BTC' ? 'Could not load Bitcoin candles for this time frame. Try another, or refresh in a moment.' : 'Could not load ' + SYM + ' candles for this time frame (Binance, MEXC and Bybit gave nothing). Try daily or weekly, another token, or refresh.'; DATA = null; $('lcTable').innerHTML = ''; cards(); return; }
   DATA = rows; const l = rows[rows.length - 1];
-  $('lcSt').textContent = `BTC/USD · ${TF.toUpperCase()} · ${rows.length} candles from ${fd(rows[0].t)} · last ${px(l.c)}${['4h', '8h', '12h'].includes(TF) ? ' · intraday history is shorter than daily' : ''}`;
+  $('lcSt').textContent = `${SYM}/USD · ${TF.toUpperCase()} · ${rows.length} candles from ${fd(rows[0].t)} · last ${px(l.c)}${['4h', '8h', '12h'].includes(TF) ? ' · intraday history is shorter than daily' : ''}`;
   cards(); draw(); daily().then(history).catch(() => {});
 }
 const chips = (id, fn) => $(id).addEventListener('click', e => { const b = e.target.closest('.filter-chip'); if(b) fn(b); });
 chips('lcTf', b => { document.querySelectorAll('#lcTf .filter-chip').forEach(x => x.classList.remove('active')); b.classList.add('active'); TF = b.dataset.t; const d = {'4h': 1, '8h': 2, '12h': 4, '1d': 4, '1w': 0, '1M': 0}[TF]; RG = d; document.querySelectorAll('#lcRange [data-r]').forEach(x => x.classList.toggle('active', +x.dataset.r === RG)); run(); });
+chips('lcSym', b => { if(!b.dataset.s || b.dataset.s === SYM) return; document.querySelectorAll('#lcSym .filter-chip').forEach(x => x.classList.remove('active')); b.classList.add('active'); SYM = b.dataset.s; DATA = null; run(); });
+const STABLEX = /USD|EUR|GBP|BUIDL|XAUT|PAXG|HELOC|^W?ST?ETH$|^WBTC$|^CBBTC$|^WBETH$|^WEETH$|^JITOSOL$|^BNSOL$/i;
+function buildSyms(list){ const out = []; (list || []).forEach(c => { if(out.length < 20 && c && c.s && !STABLEX.test(c.s) && !out.some(o => o.s === c.s)) out.push({s: c.s, n: c.n || c.s}); }); if(!out.length) out.push({s: 'BTC', n: 'Bitcoin'}); out.forEach(o => { NAMES[o.s] = o.n; }); NAMES.BTC = 'Bitcoin';
+  $('lcSym').innerHTML = out.map(o => `<button class="filter-chip ${o.s === SYM ? 'active' : ''}" data-s="${o.s}" title="${esc2(o.n)}">${o.s}</button>`).join(''); }
+const esc2 = t => String(t).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'})[c]);
+buildSyms(['BTC', 'ETH', 'BNB', 'XRP', 'SOL', 'TRX', 'DOGE', 'ADA', 'LINK', 'XLM', 'BCH', 'LTC', 'AVAX', 'SUI', 'HBAR', 'UNI', 'NEAR', 'TON', 'DOT', 'HYPE'].map(x => ({s: x})));
+fetch('../top_coins.json?t=' + Date.now()).then(r => r.ok ? r.json() : null).catch(() => null).then(d => { if(d && d.coins && d.coins.length > 20) buildSyms(d.coins); });
 chips('lcRange', b => { if(b.dataset.l){ LOG = !LOG; b.classList.toggle('active', LOG); } else { document.querySelectorAll('#lcRange [data-r]').forEach(x => x.classList.remove('active')); b.classList.add('active'); RG = +b.dataset.r; } draw(); });
 const cv = $('lcCv'); ['mousemove', 'touchmove', 'touchstart'].forEach(n => cv.addEventListener(n, tip, {passive: true})); ['mouseleave', 'touchend'].forEach(n => cv.addEventListener(n, () => { $('lcTip').style.display = 'none'; }));
 let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(draw, 150); });
