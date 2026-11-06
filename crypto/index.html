@@ -710,6 +710,7 @@ button.tkr{background:none;border:0;padding:0;margin:0;color:var(--gold2);font:i
       <a href="#portfolio">Portfolio Forecast</a>
       <a href="#holdings">TTM Spot</a>
       <a href="#pension">TTM Pension / Super</a>
+      <a href="#ttmcharts">TTM Charts</a>
       <a href="#members">TradingView Indicators</a>
       <a href="#admin" id="navAdmin" style="display:none">Admin</a>
       <a href="#socialpulse">Social Pulse</a>
@@ -758,7 +759,7 @@ button.tkr{background:none;border:0;padding:0;margin:0;color:var(--gold2);font:i
   </div>
 </div>
 
-<div id="menuHome"><div class="wrap"><h2>TTM Investments</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#holdings"><b>TTM Spot</b><span>What TTM holds on spot, as % of the portfolio, plus cash</span></a><a class="menu-tile" href="#pension"><b>TTM Pension / Super</b><span>What TTM holds long term in super / retirement, as % of the portfolio, plus cash</span></a></div><h2>Trading tools</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#riskreward"><b>Risk / Reward Tooling</b><span>Size a trade by risk % , risk $ or investment, with live candles, leverage and liquidation</span></a><a class="menu-tile" href="#tradejournal"><b>Trade Tracker &amp; Win Ratio</b><span>Open and closed trades by account and time frame, win rate, equity curve, Excel export</span></a><a class="menu-tile" href="#pnlcal"><b>P&amp;L Calendar</b><span>Daily and monthly profit and loss, with a running total</span></a><a class="menu-tile eng-tile" data-engine data-href="../engine/index.html" href="#"><b>TTM Automated Trading Engine <i class="eng-badge">Locked</i></b><span>Automated trading on your own exchange account. Early access only.</span></a><a class="menu-tile" href="#portfolio"><b>Portfolio Forecast</b><span>Spot, leverage and super / retirement: forecast vs actual at live prices</span></a><a class="menu-tile" href="#members"><b>TradingView Indicators</b><span>TTM indicators for TradingView (coming soon)</span></a></div><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#marketpulse"><b>Market Pulse</b><span>Fear & Greed, funding, liquidations</span></a><a class="menu-tile" href="#btcmonthly"><b>BTC Monthly</b><span>Bitcoin returns month by month</span></a><a class="menu-tile" href="#fomo"><b>FOMO Finder &amp; RSI Chart</b><span>Sentiment gauge plus price and RSI</span></a><a class="menu-tile" href="#rsimap"><b>RSI Heatmap</b><span>Overbought / oversold across ~125 coins</span></a><a class="menu-tile" href="#painzones"><b>Pain Zones</b><span>Average holder cost, support / resistance and RSI for any coin</span></a><a class="menu-tile" href="#lunacycles"><b>Luna Cycles</b><span>Bitcoin against the eclipse cycles, with the phase we are in now</span></a><a class="menu-tile" href="#maxpain"><b>Max Pain</b><span>Options max pain by token, with RSI confluence</span></a><a class="menu-tile" href="#volume"><b>Volume Heatmap</b><span>Surging and drying-up volume by coin</span></a><a class="menu-tile" href="#socialpulse"><b>Social Pulse</b><span>Truth Social and crypto news feed</span></a><a class="menu-tile" href="#tokenevents"><b>Token Events</b><span>Unlocks, listings and airdrops</span></a><a class="menu-tile" href="#library"><b>Reports</b><span>Asset reviews and deep dives</span></a><a class="menu-tile" href="#transparency"><b>Transparency Watch</b><span>Congress and insider trading watch</span></a></div></div></div>
+<div id="menuHome"><div class="wrap"><h2>TTM Investments</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#holdings"><b>TTM Spot</b><span>What TTM holds on spot, as % of the portfolio, plus cash</span></a><a class="menu-tile" href="#ttmcharts"><b>TTM Charts <small style="background:var(--gold);color:#111;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:800">BETA</small></b><span>Full-screen live charts with drawing tools, indicators and replay</span></a><a class="menu-tile" href="#pension"><b>TTM Pension / Super</b><span>What TTM holds long term in super / retirement, as % of the portfolio, plus cash</span></a></div><h2>Trading tools</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#riskreward"><b>Risk / Reward Tooling</b><span>Size a trade by risk % , risk $ or investment, with live candles, leverage and liquidation</span></a><a class="menu-tile" href="#tradejournal"><b>Trade Tracker &amp; Win Ratio</b><span>Open and closed trades by account and time frame, win rate, equity curve, Excel export</span></a><a class="menu-tile" href="#pnlcal"><b>P&amp;L Calendar</b><span>Daily and monthly profit and loss, with a running total</span></a><a class="menu-tile eng-tile" data-engine data-href="../engine/index.html" href="#"><b>TTM Automated Trading Engine <i class="eng-badge">Locked</i></b><span>Automated trading on your own exchange account. Early access only.</span></a><a class="menu-tile" href="#portfolio"><b>Portfolio Forecast</b><span>Spot, leverage and super / retirement: forecast vs actual at live prices</span></a><a class="menu-tile" href="#members"><b>TradingView Indicators</b><span>TTM indicators for TradingView (coming soon)</span></a></div><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#marketpulse"><b>Market Pulse</b><span>Fear & Greed, funding, liquidations</span></a><a class="menu-tile" href="#btcmonthly"><b>BTC Monthly</b><span>Bitcoin returns month by month</span></a><a class="menu-tile" href="#fomo"><b>FOMO Finder &amp; RSI Chart</b><span>Sentiment gauge plus price and RSI</span></a><a class="menu-tile" href="#rsimap"><b>RSI Heatmap</b><span>Overbought / oversold across ~125 coins</span></a><a class="menu-tile" href="#painzones"><b>Pain Zones</b><span>Average holder cost, support / resistance and RSI for any coin</span></a><a class="menu-tile" href="#lunacycles"><b>Luna Cycles</b><span>Bitcoin against the eclipse cycles, with the phase we are in now</span></a><a class="menu-tile" href="#maxpain"><b>Max Pain</b><span>Options max pain by token, with RSI confluence</span></a><a class="menu-tile" href="#volume"><b>Volume Heatmap</b><span>Surging and drying-up volume by coin</span></a><a class="menu-tile" href="#socialpulse"><b>Social Pulse</b><span>Truth Social and crypto news feed</span></a><a class="menu-tile" href="#tokenevents"><b>Token Events</b><span>Unlocks, listings and airdrops</span></a><a class="menu-tile" href="#library"><b>Reports</b><span>Asset reviews and deep dives</span></a><a class="menu-tile" href="#transparency"><b>Transparency Watch</b><span>Congress and insider trading watch</span></a></div></div></div>
 <button id="backFab" type="button">&larr; Menu</button>
 <div id="backBar"><div class="wrap"><button id="backBtn" type="button">&larr; Back to menu</button><span id="backTitle"></span></div></div>
 <section id="calendar">
@@ -1390,6 +1391,17 @@ button.tkr{background:none;border:0;padding:0;margin:0;color:var(--gold2);font:i
   </div>
 </section>
 
+<section id="ttmcharts">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">TTM Charts <span style="background:var(--gold);color:#111;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:800;margin-left:4px">BETA</span></span>
+      <h2>TTM Charts</h2>
+      <p>A full-screen chart for every coin on Bybit, Binance and Bitget (spot and perp), with live candles, drawing tools (trend line, ray, Fib, box, path, measure), indicators, and replay: pick a candle, press play and watch the chart unfold.</p>
+      <p style="margin-top:14px"><button type="button" class="btn" id="ttcOpen" style="padding:12px 22px;font-size:15px;font-weight:800;background:var(--gold);color:#111;border:0;border-radius:10px;cursor:pointer">Open TTM Charts</button></p>
+    </div>
+  </div>
+</section>
+
 <section id="pension">
   <div class="wrap">
     <div class="section-head">
@@ -1442,6 +1454,7 @@ function draw(D, feed){
 }
 async function load(){ if(!window.ttmHoldings) return; const [d, f] = await Promise.all([ttmHoldings(), window.ttmFeedList ? window.ttmFeedList(40) : []]); draw(d, f); }
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('.hdtk'); if(b && window.ttmChartOpen) ttmChartOpen({sym: b.dataset.hc, orders: b.dataset.hp.split(',').map(Number), title: 'Limit orders'}); });
+document.addEventListener('click', e => { if(e.target && e.target.id === 'ttcOpen' && window.ttmChartsOpen) ttmChartsOpen(); });
 const isH = () => location.hash === '#holdings' || location.hash === '#pension';
 window.addEventListener('hashchange', () => { if(isH()) load(); }); if(isH()) setTimeout(load, 700); setInterval(() => { if(isH()) load(); }, 120000);
 })();
@@ -5000,6 +5013,7 @@ fill(); paint();
 })();
 </script>
 <script src="../chartpro.js?v=2"></script>
+<script src="../ttmcharts.js?v=1"></script>
 <script src="../accounts.js?v=1793794965"></script>
 <script>
 (function(){

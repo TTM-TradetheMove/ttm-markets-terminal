@@ -1,0 +1,219 @@
+/* TTM Charts (BETA, admin only for now): full-screen chart with live candles from Bybit / Binance / Bitget (spot + perp),
+   symbol search, drawing tools, indicators, replay, TTM branding. Open with ttmChartsOpen({sym:'BTC', ex:'bybit_perp', tf:'1h'}).
+   Add your own indicators by pushing to window.TTM_INDICATORS (see the bottom of this file for the format). */
+(function(){
+const BASE = (document.currentScript && document.currentScript.src) ? new URL('.', document.currentScript.src).href : './';
+const TFS = ['1m', '5m', '15m', '30m', '1h', '4h', '1d', '1w'], TFMS = {'1m': 6e4, '5m': 3e5, '15m': 9e5, '30m': 18e5, '1h': 36e5, '4h': 144e5, '1d': 864e5, '1w': 6048e5};
+const kl = a => a.map(x => ({t: +x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4], v: +x[5] || 0})).filter(x => x.c > 0);
+async function gj(u){ const r = await fetch(u); if(!r.ok) throw new Error('http ' + r.status); return r.json(); }
+const BY = {'1m': '1', '5m': '5', '15m': '15', '30m': '30', '1h': '60', '4h': '240', '1d': 'D', '1w': 'W'}, BGS = {'1m': '1min', '5m': '5min', '15m': '15min', '30m': '30min', '1h': '1h', '4h': '4h', '1d': '1day', '1w': '1week'}, BGM = {'1m': '1m', '5m': '5m', '15m': '15m', '30m': '30m', '1h': '1H', '4h': '4H', '1d': '1D', '1w': '1W'};
+// every exchange: list() gives [{s: 'BTC', vol, chg, px}], candles(sym, tf, n, end) gives oldest-first rows
+const EX = {
+  bybit_perp: {n: 'Bybit Perp', list: async () => (await gj('https://api.bybit.com/v5/market/tickers?category=linear')).result.list.filter(t => /USDT$/.test(t.symbol)).map(t => ({s: t.symbol.slice(0, -4), vol: +t.turnover24h, chg: +t.price24hPcnt * 100, px: +t.lastPrice})),
+    candles: async (s, tf, n, end) => kl((await gj(`https://api.bybit.com/v5/market/kline?category=linear&symbol=${s}USDT&interval=${BY[tf]}&limit=${n}${end ? '&end=' + end : ''}`)).result.list).sort((a, b) => a.t - b.t)},
+  bybit_spot: {n: 'Bybit Spot', list: async () => (await gj('https://api.bybit.com/v5/market/tickers?category=spot')).result.list.filter(t => /USDT$/.test(t.symbol)).map(t => ({s: t.symbol.slice(0, -4), vol: +t.turnover24h, chg: +t.price24hPcnt * 100, px: +t.lastPrice})),
+    candles: async (s, tf, n, end) => kl((await gj(`https://api.bybit.com/v5/market/kline?category=spot&symbol=${s}USDT&interval=${BY[tf]}&limit=${n}${end ? '&end=' + end : ''}`)).result.list).sort((a, b) => a.t - b.t)},
+  binance_perp: {n: 'Binance Perp', list: async () => (await gj('https://fapi.binance.com/fapi/v1/ticker/24hr')).filter(t => /USDT$/.test(t.symbol)).map(t => ({s: t.symbol.slice(0, -4), vol: +t.quoteVolume, chg: +t.priceChangePercent, px: +t.lastPrice})),
+    candles: async (s, tf, n, end) => kl(await gj(`https://fapi.binance.com/fapi/v1/klines?symbol=${s}USDT&interval=${tf}&limit=${n}${end ? '&endTime=' + end : ''}`))},
+  binance_spot: {n: 'Binance Spot', list: async () => (await gj('https://api.binance.com/api/v3/ticker/24hr')).filter(t => /USDT$/.test(t.symbol)).map(t => ({s: t.symbol.slice(0, -4), vol: +t.quoteVolume, chg: +t.priceChangePercent, px: +t.lastPrice})),
+    candles: async (s, tf, n, end) => kl(await gj(`https://api.binance.com/api/v3/klines?symbol=${s}USDT&interval=${tf}&limit=${n}${end ? '&endTime=' + end : ''}`))},
+  bitget_perp: {n: 'Bitget Perp', list: async () => (await gj('https://api.bitget.com/api/v2/mix/market/tickers?productType=USDT-FUTURES')).data.filter(t => /USDT$/.test(t.symbol)).map(t => ({s: t.symbol.slice(0, -4), vol: +t.usdtVolume, chg: +t.change24h * 100, px: +t.lastPr})),
+    candles: async (s, tf, n, end) => kl((await gj(`https://api.bitget.com/api/v2/mix/market/candles?symbol=${s}USDT&productType=USDT-FUTURES&granularity=${BGM[tf]}&limit=${n}${end ? '&endTime=' + end : ''}`)).data).sort((a, b) => a.t - b.t)},
+  bitget_spot: {n: 'Bitget Spot', list: async () => (await gj('https://api.bitget.com/api/v2/spot/market/tickers')).data.filter(t => /USDT$/.test(t.symbol)).map(t => ({s: t.symbol.slice(0, -4), vol: +t.usdtVolume, chg: +t.change24h * 100, px: +t.lastPr})),
+    candles: async (s, tf, n, end) => kl((await gj(`https://api.bitget.com/api/v2/spot/market/candles?symbol=${s}USDT&granularity=${BGS[tf]}&limit=${n}${end ? '&endTime=' + end : ''}`)).data).sort((a, b) => a.t - b.t)}
+};
+// built-in indicators + the TTM slot. calc(rows) -> arrays aligned to rows (null where not ready)
+const ema = (rows, n) => { const k = 2 / (n + 1), out = []; let e = null; rows.forEach((r, i) => { e = i === 0 ? r.c : r.c * k + e * (1 - k); out.push(i >= n - 1 ? e : null); }); return out; };
+const sma = (rows, n) => rows.map((r, i) => i < n - 1 ? null : rows.slice(i - n + 1, i + 1).reduce((s, x) => s + x.c, 0) / n);
+const rsi = (rows, n) => { const out = rows.map(() => null); let g = 0, l = 0; for(let i = 1; i < rows.length; i++){ const d = rows[i].c - rows[i - 1].c; if(i <= n){ g += Math.max(d, 0); l += Math.max(-d, 0); if(i === n){ g /= n; l /= n; out[i] = 100 - 100 / (1 + (l ? g / l : 1e9)); } } else { g = (g * (n - 1) + Math.max(d, 0)) / n; l = (l * (n - 1) + Math.max(-d, 0)) / n; out[i] = 100 - 100 / (1 + (l ? g / l : 1e9)); } } return out; };
+const IND = [
+  {id: 'ema13', name: 'EMA 13', pane: 'price', color: '#4fd1c5', calc: r => ema(r, 13)}, {id: 'ema21', name: 'EMA 21', pane: 'price', color: '#4f8cff', calc: r => ema(r, 21)},
+  {id: 'ema50', name: 'EMA 50', pane: 'price', color: '#ffb020', calc: r => ema(r, 50)}, {id: 'ema100', name: 'EMA 100', pane: 'price', color: '#ff9f68', calc: r => ema(r, 100)}, {id: 'ema200', name: 'EMA 200', pane: 'price', color: '#e0554d', calc: r => ema(r, 200)},
+  {id: 'sma20', name: 'SMA 20', pane: 'price', color: '#b18cff', calc: r => sma(r, 20)},
+  {id: 'vol', name: 'Volume', pane: 'volume'}, {id: 'rsi', name: 'RSI 14', pane: 'sub', color: '#b18cff', range: [0, 100], lines: [30, 70], calc: r => rsi(r, 14)}
+];
+window.TTM_INDICATORS = window.TTM_INDICATORS || [];   // push {id, name, pane: 'price'|'sub', color, calc(rows) -> array, range?: [lo, hi], lines?: [..]} here for TTM's own indicators
+const allInd = () => IND.concat(window.TTM_INDICATORS);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'})[c]);
+const fx = v => v == null || !isFinite(v) ? '—' : Math.abs(v) >= 1000 ? v.toLocaleString(undefined, {maximumFractionDigits: 1}) : Math.abs(v) >= 1 ? v.toFixed(3) : Math.abs(v) >= .01 ? v.toFixed(5) : v.toPrecision(3);
+const css = `#ttc{position:fixed;inset:0;z-index:6000;background:#0b0b0e;color:#e8e8ea;display:flex;flex-direction:column;font-family:inherit}
+#ttc *{box-sizing:border-box}#ttc .tb{display:flex;align-items:center;gap:6px;padding:6px 8px;border-bottom:1px solid #23232a;flex-wrap:wrap;background:#121216}
+#ttc button,#ttc select,#ttc input{background:#1b1b21;border:1px solid #2a2a31;color:#e8e8ea;border-radius:7px;padding:5px 9px;font-size:12px;cursor:pointer;font-family:inherit}
+#ttc button.on{background:#dba118;color:#111;border-color:transparent;font-weight:800}#ttc .bt{font-size:9px;font-weight:800;background:#dba118;color:#111;border-radius:4px;padding:2px 6px}
+#ttc .sp{flex:1}#ttc .mn{display:flex;flex:1;min-height:0}#ttc .lt{display:flex;flex-direction:column;gap:5px;padding:6px;border-right:1px solid #23232a;background:#121216;overflow:auto}
+#ttc .lt button{width:38px;height:34px;padding:0;font-size:15px}#ttc .cw{position:relative;flex:1;min-width:0}#ttc canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
+#ttc .rp{display:none;align-items:center;gap:6px;padding:6px 8px;border-top:1px solid #23232a;background:#121216;flex-wrap:wrap}#ttc .rp.on{display:flex}
+#ttc .pop{position:absolute;z-index:5;background:#16161b;border:1px solid #2a2a31;border-radius:12px;padding:10px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+#ttc .sym{top:48px;left:8px;width:min(380px,94vw);max-height:70vh;display:flex;flex-direction:column;gap:6px}#ttc .sl{overflow:auto;flex:1}
+#ttc .sl div{display:flex;justify-content:space-between;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px}#ttc .sl div:hover{background:#23232a}
+#ttc .ind{top:48px;right:8px;width:230px}#ttc .ind label{display:flex;gap:7px;align-items:center;padding:4px 2px;font-size:13px}
+#ttc .st{position:absolute;left:8px;bottom:8px;font-size:12px;color:#8b8f9a;pointer-events:none}
+@media(max-width:700px){#ttc .lt{flex-direction:row;border-right:0;border-bottom:1px solid #23232a;overflow-x:auto}#ttc .mn{flex-direction:column}}`;
+let S = null, timer = null, cv, cx, dpr = 1, logo = new Image();
+const SK = k => 'ttm_charts_' + k;
+const ls = (k, d) => { try{ const v = localStorage.getItem(SK(k)); return v == null ? d : JSON.parse(v); }catch(e){ return d; } };
+const lsSet = (k, v) => { try{ localStorage.setItem(SK(k), JSON.stringify(v)); }catch(e){} };
+function open(o){
+  close(); o = o || {};
+  const exk = o.ex && EX[o.ex] ? o.ex : ls('ex', 'bybit_perp'), sym = String(o.sym || ls('sym', 'BTC')).toUpperCase().replace(/USDT$/, ''), tf = TFS.includes(o.tf) ? o.tf : ls('tf', '1h');
+  S = {ex: exk, sym, tf, data: [], v0: 0, vn: 90, pv: null, tool: null, pts: [], mv: null, cross: null, draw: ls('draw_' + sym, []), inds: ls('inds', {ema21: 1, ema50: 1, vol: 1}), rp: {on: false, pick: false, idx: 0, play: false, speed: 1}, tok: 0, done: false, loading: false, list: {}, orders: o.orders || []};
+  if(!document.getElementById('ttcCss')){ const st = document.createElement('style'); st.id = 'ttcCss'; st.textContent = css; document.head.appendChild(st); }
+  logo.src = BASE + 'img/logo0.png'; logo.onload = paint;
+  const m = document.createElement('div'); m.id = 'ttc';
+  m.innerHTML = `<div class="tb"><img src="${BASE}img/logo0.png" alt="TTM" style="height:24px"><span class="bt">TTM CHARTS · BETA</span>
+    <button id="tcSym" style="font-weight:800;min-width:96px"></button><select id="tcEx">${Object.keys(EX).map(k => `<option value="${k}">${EX[k].n}</option>`).join('')}</select>
+    ${TFS.map(t => `<button data-tf="${t}">${t}</button>`).join('')}<span class="sp"></span>
+    <button id="tcInd">Indicators</button><button id="tcRp">⏪ Replay</button><button id="tcFit">Fit</button><button id="tcPng">Image</button><button id="tcChat">Post in chat…</button><button id="tcX">✕</button></div>
+  <div class="mn"><div class="lt" id="tcTools">${[['cur', '✥', 'Move'], ['tl', '／', 'Trend line'], ['ray', '↗', 'Ray'], ['hl', '─', 'Horizontal line'], ['vl', '│', 'Vertical line'], ['fib', 'ƒ', 'Fib retracement'], ['rc', '▭', 'Box'], ['pa', '〰', 'Path (double-tap to finish)'], ['ru', '📏', 'Measure']].map(t => `<button data-tool="${t[0]}" title="${t[2]}">${t[1]}</button>`).join('')}<button id="tcUndo" title="Undo">↶</button><button id="tcClr" title="Clear drawings">🗑</button></div>
+  <div class="cw" id="tcCw"><canvas id="tcCv"></canvas><div class="st" id="tcSt">Loading…</div></div></div>
+  <div class="rp" id="tcRpBar"><b style="color:#dba118">REPLAY</b><button id="rpPick">Pick start bar</button><button id="rpBack">⏮ Back</button><button id="rpPlay">▶ Play</button><button id="rpStep">Step ⏭</button>
+    <select id="rpSpd"><option value="1">1×</option><option value="2">2×</option><option value="5">5×</option><option value="10">10×</option><option value="25">25×</option></select><span id="rpInfo" style="color:#8b8f9a;font-size:12px"></span><span class="sp"></span><button id="rpX">Exit replay</button></div>`;
+  document.body.appendChild(m); cv = m.querySelector('#tcCv'); cx = cv.getContext('2d');
+  m.querySelector('#tcEx').value = S.ex; wire(m); syncTf(); syncTools(); syncSym();
+  window.addEventListener('resize', paint); document.addEventListener('keydown', key);
+  loadAll(true); timer = setInterval(poll, 3000);
+}
+function close(){ clearInterval(timer); timer = null; const e = document.getElementById('ttc'); if(e) e.remove(); window.removeEventListener('resize', paint); document.removeEventListener('keydown', key); if(S && S.rp) clearTimeout(S.rp.t); S = null; }
+function key(e){ if(!S) return; if(e.key === 'Escape'){ const p = document.querySelector('#ttc .pop'); if(p) p.remove(); else if(S.tool){ S.tool = null; S.pts = []; syncTools(); paint(); } else close(); } if(e.key === 'Enter' && S.tool === 'pa') finishPath(); if(e.key === ' ' && S.rp.on && !/INPUT|SELECT/.test((e.target.tagName))){ e.preventDefault(); rpToggle(); } if(e.key === 'ArrowRight' && S.rp.on) rpStep(1); }
+const $ = id => document.getElementById(id);
+function syncTf(){ document.querySelectorAll('#ttc [data-tf]').forEach(b => b.classList.toggle('on', b.dataset.tf === S.tf)); }
+function syncTools(){ document.querySelectorAll('#ttc [data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === (S.tool || 'cur'))); }
+function syncSym(){ $('tcSym').textContent = S.sym + '/USDT ▾'; }
+function setStatus(t){ const e = $('tcSt'); if(e) e.textContent = t; }
+const vd = () => S.rp.on ? S.data.slice(0, S.rp.idx + 1) : S.data;
+async function loadAll(first){
+  const tok = ++S.tok; S.loading = true; S.done = false; setStatus('Loading ' + S.sym + ' ' + S.tf + '…'); stopReplay(true);
+  try{ const d = await EX[S.ex].candles(S.sym, S.tf, 500); if(!S || tok !== S.tok) return; if(d.length < 5) throw new Error('empty'); S.data = d; S.loading = false; fit(); setStatus(''); }
+  catch(e){ if(!S || tok !== S.tok) return; S.loading = false; S.data = []; setStatus(S.sym + ' is not listed on ' + EX[S.ex].n + ' (or the feed is unreachable). Pick another symbol or exchange.'); }
+  paint();
+}
+async function more(){ if(S.loading || S.done || !S.data.length || S.rp.on) return; S.loading = true; const tok = S.tok, first = S.data[0].t;
+  try{ const d = (await EX[S.ex].candles(S.sym, S.tf, 500, first - 1)).filter(x => x.t < first); if(!S || tok !== S.tok) return; if(!d.length) S.done = true; else { S.data = d.concat(S.data); S.v0 += d.length; } }catch(e){ if(S) S.done = true; }
+  if(S) S.loading = false; paint(); }
+async function poll(){ if(!S || S.rp.on || !S.data.length || document.hidden) return; const tok = S.tok; try{ const d = await EX[S.ex].candles(S.sym, S.tf, 3); if(!S || tok !== S.tok || S.rp.on) return;
+  d.forEach(c => { const L = S.data[S.data.length - 1]; if(c.t === L.t) S.data[S.data.length - 1] = c; else if(c.t > L.t) S.data.push(c); }); paint(); }catch(e){} }
+function fit(){ const n = vd().length; S.vn = Math.min(Math.max(n, 20), 90); S.v0 = n - S.vn + 4; S.pv = null; }
+function clampV(){ const n = vd().length; S.v0 = Math.max(-S.vn * .6, Math.min(n - S.vn * .3, S.v0)); }
+function zoom(f, cxr){ const n = vd().length, a = S.v0 + S.vn * (cxr == null ? 1 : cxr); S.vn = Math.max(12, Math.min(Math.max(n + 20, 60), S.vn * f)); S.v0 = a - S.vn * (cxr == null ? 1 : cxr); clampV(); if(S.v0 < 15) more(); }
+/* ---------- geometry ---------- */
+const P = {R: 68, T: 46, B: 22};
+function geo(){ const r = cv.getBoundingClientRect(); dpr = window.devicePixelRatio || 1; const W = Math.round(r.width), H = Math.round(r.height); if(cv.width !== W * dpr || cv.height !== H * dpr){ cv.width = W * dpr; cv.height = H * dpr; }
+  const subs = allInd().filter(i => S.inds[i.id] && i.pane === 'sub'), sh = subs.length ? Math.round((H - P.T - P.B) * .2) : 0, total = H - P.T - P.B - subs.length * (sh + 6);
+  S.g = {W, H, pw: W - P.R, mT: P.T, mB: P.T + total, subs, sh, w: (W - P.R) / S.vn}; }
+const X = i => (i - S.v0 + .5) * S.g.w;
+function idxOfT(t){ const d = S.data; if(!d.length) return 0; const step = TFMS[S.tf]; if(t <= d[0].t) return (t - d[0].t) / step; if(t >= d[d.length - 1].t) return d.length - 1 + (t - d[d.length - 1].t) / step; let lo = 0, hi = d.length - 1; while(hi - lo > 1){ const m = (lo + hi) >> 1; if(d[m].t <= t) lo = m; else hi = m; } return lo + (t - d[lo].t) / (d[hi].t - d[lo].t); }
+function tOfIdx(i){ const d = S.data, step = TFMS[S.tf], k = Math.max(0, Math.min(d.length - 1, Math.floor(i))); return d[k].t + (i - k) * step; }
+/* ---------- paint ---------- */
+function paint(){
+  if(!S || !cv) return; geo(); const g = S.g, c = cx; c.setTransform(dpr, 0, 0, dpr, 0, 0); c.fillStyle = '#0f0f12'; c.fillRect(0, 0, g.W, g.H);
+  const d = vd(); if(!d.length){ drawBrand(); return; }
+  const i0 = Math.max(0, Math.floor(S.v0) - 1), i1 = Math.min(d.length - 1, Math.ceil(S.v0 + S.vn) + 1), vis = d.slice(i0, i1 + 1);
+  let lo = Math.min.apply(null, vis.map(x => x.l)), hi = Math.max.apply(null, vis.map(x => x.h)); const rg = (hi - lo) || hi * .02;
+  S.orders.forEach(o => { if(o >= lo - rg && o <= hi + rg){ lo = Math.min(lo, o); hi = Math.max(hi, o); } });
+  if(S.pv){ lo = S.pv.lo; hi = S.pv.hi; } else { const pd = (hi - lo) * .08; lo -= pd; hi += pd; if(S.inds.vol) lo -= (hi - lo) * .12; }
+  S.sc = {lo, hi}; const Y = p => g.mT + (g.mB - g.mT) * (1 - (p - lo) / (hi - lo)); S.Y = Y;
+  c.font = '11px system-ui,sans-serif'; c.textBaseline = 'middle';
+  for(let k = 0; k <= 5; k++){ const p = lo + (hi - lo) * k / 5, y = Y(p); c.strokeStyle = '#1b1b21'; c.beginPath(); c.moveTo(0, y); c.lineTo(g.pw, y); c.stroke(); c.fillStyle = '#8b8f9a'; c.textAlign = 'left'; c.fillText(fx(p), g.pw + 6, y); }
+  // time axis
+  const step = TFMS[S.tf], every = Math.max(1, Math.round(110 / g.w)), fmtT = t => { const D = new Date(t); return step >= 864e5 ? D.toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: '2-digit'}) : D.toLocaleString(undefined, {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false}); };
+  c.textAlign = 'center'; for(let i = Math.ceil(S.v0 / every) * every; i < S.v0 + S.vn; i += every){ if(i < 0 || i >= d.length) continue; const x = X(i); c.fillStyle = '#8b8f9a'; c.fillText(fmtT(d[i].t), x, g.H - 10); c.strokeStyle = '#17171c'; c.beginPath(); c.moveTo(x, g.mT); c.lineTo(x, g.mB); c.stroke(); }
+  c.save(); c.beginPath(); c.rect(0, g.mT - 2, g.pw, g.mB - g.mT + 4); c.clip();
+  if(S.inds.vol){ const mv = Math.max.apply(null, vis.map(x => x.v)) || 1, vh = (g.mB - g.mT) * .16; vis.forEach((r, k) => { const i = i0 + k, x = X(i), h = r.v / mv * vh; c.fillStyle = r.c >= r.o ? 'rgba(63,180,122,.35)' : 'rgba(224,85,77,.35)'; c.fillRect(x - Math.max(1, g.w * .31), g.mB - h, Math.max(1, g.w * .62), h); }); }
+  const bw = Math.max(1, g.w * .62);
+  vis.forEach((r, k) => { const i = i0 + k, x = X(i), up = r.c >= r.o, col = up ? '#3fb47a' : '#e0554d'; c.strokeStyle = col; c.fillStyle = col; c.beginPath(); c.moveTo(x, Y(r.h)); c.lineTo(x, Y(r.l)); c.stroke(); const yo = Y(r.o), yc = Y(r.c); c.fillRect(x - bw / 2, Math.min(yo, yc), bw, Math.max(1, Math.abs(yo - yc))); });
+  allInd().filter(i => S.inds[i.id] && i.pane === 'price' && i.calc).forEach(ind => { let s; try{ s = ind.calc(d); }catch(e){ return; } c.strokeStyle = ind.color || '#fff'; c.lineWidth = 1.5; c.beginPath(); let on = false; for(let i = i0; i <= i1; i++){ const v = s[i]; if(v == null){ on = false; continue; } const x = X(i), y = Y(v); if(on) c.lineTo(x, y); else { c.moveTo(x, y); on = true; } } c.stroke(); c.lineWidth = 1; });
+  S.orders.forEach(o => { const y = Y(o); c.strokeStyle = '#dba118'; c.setLineDash([7, 4]); c.beginPath(); c.moveTo(0, y); c.lineTo(g.pw, y); c.stroke(); c.setLineDash([]); });
+  S.draw.forEach(s => shape(s, 1)); if(S.tool && S.pts.length && S.mv) shape(S.tool === 'pa' ? {k: 'pa', pts: S.pts.concat([S.mv])} : {k: S.tool, a: S.pts[0], b: S.mv}, .6);
+  c.restore();
+  // last price
+  const last = d[d.length - 1].c, yl = Y(last), up = last >= d[d.length - 1].o; c.strokeStyle = up ? '#3fb47a' : '#e0554d'; c.setLineDash([2, 3]); c.beginPath(); c.moveTo(0, yl); c.lineTo(g.pw, yl); c.stroke(); c.setLineDash([]);
+  tag(g.pw, yl, fx(last), up ? '#3fb47a' : '#e0554d', '#fff'); S.orders.forEach(o => tag(g.pw, Y(o), fx(o), '#dba118', '#111'));
+  // sub panes
+  g.subs.forEach((ind, n) => { const top = g.mB + 6 + n * (g.sh + 6), bot = top + g.sh; c.fillStyle = '#0c0c0f'; c.fillRect(0, top, g.pw, g.sh); c.strokeStyle = '#23232a'; c.strokeRect(.5, top + .5, g.pw - 1, g.sh - 1);
+    let s = []; try{ s = ind.calc(d); }catch(e){} const vv = s.slice(i0, i1 + 1).filter(v => v != null), rng = ind.range || [Math.min.apply(null, vv), Math.max.apply(null, vv)], yy = v => bot - (v - rng[0]) / ((rng[1] - rng[0]) || 1) * (g.sh - 4) - 2;
+    (ind.lines || []).forEach(L => { c.strokeStyle = '#2d2d36'; c.beginPath(); c.moveTo(0, yy(L)); c.lineTo(g.pw, yy(L)); c.stroke(); c.fillStyle = '#6b6f7a'; c.textAlign = 'left'; c.fillText(String(L), g.pw + 6, yy(L)); });
+    c.save(); c.beginPath(); c.rect(0, top, g.pw, g.sh); c.clip(); c.strokeStyle = ind.color || '#b18cff'; c.lineWidth = 1.5; c.beginPath(); let on = false; for(let i = i0; i <= i1; i++){ const v = s[i]; if(v == null){ on = false; continue; } const x = X(i), y = yy(v); if(on) c.lineTo(x, y); else { c.moveTo(x, y); on = true; } } c.stroke(); c.restore(); c.lineWidth = 1;
+    const lv = s[d.length - 1]; c.fillStyle = '#8b8f9a'; c.textAlign = 'left'; c.fillText(ind.name + (lv != null ? '  ' + lv.toFixed(1) : ''), 6, top + 10); });
+  // crosshair + readout
+  let hi_ = d[d.length - 1];
+  if(S.cross && !S.drag){ const cr = S.cross, i = Math.round(S.v0 + cr.x / g.w - .5), r = d[i]; c.strokeStyle = 'rgba(200,200,210,.35)'; c.setLineDash([3, 3]); c.beginPath(); if(cr.y >= g.mT && cr.y <= g.mB){ c.moveTo(0, cr.y); c.lineTo(g.pw, cr.y); } c.moveTo(cr.x, g.mT); c.lineTo(cr.x, g.H - P.B); c.stroke(); c.setLineDash([]); if(cr.y >= g.mT && cr.y <= g.mB) tag(g.pw, cr.y, fx(lo + (1 - (cr.y - g.mT) / (g.mB - g.mT)) * (hi - lo)), '#3a3a45', '#fff'); if(r){ hi_ = r; c.fillStyle = '#3a3a45'; const tx = fmtT(r.t), tw = c.measureText(tx).width + 12; c.fillRect(Math.max(0, Math.min(cr.x - tw / 2, g.pw - tw)), g.H - P.B + 2, tw, 16); c.fillStyle = '#fff'; c.textAlign = 'center'; c.fillText(tx, Math.max(tw / 2, Math.min(cr.x, g.pw - tw / 2)), g.H - 10); } }
+  drawBrand(hi_, d);
+  if(S.rp.on){ const x = X(S.rp.idx) + g.w / 2; c.strokeStyle = 'rgba(219,161,24,.6)'; c.beginPath(); c.moveTo(x, g.mT); c.lineTo(x, g.mB); c.stroke(); rpInfo(); }
+}
+function tag(x, y, t, bg, fg){ const c = cx; c.fillStyle = bg; c.fillRect(x, y - 9, P.R - 2, 18); c.fillStyle = fg; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(t, x + 4, y); }
+function drawBrand(r, d){ const c = cx, g = S.g; if(logo.complete && logo.naturalWidth){ const h = 24, w = Math.min(70, logo.naturalWidth / logo.naturalHeight * h); c.drawImage(logo, 8, 6, w, h); } c.textAlign = 'left'; c.textBaseline = 'middle'; c.font = '800 14px system-ui,sans-serif'; c.fillStyle = '#e8e8ea'; c.fillText(S.sym + '/USDT · ' + S.tf + ' · ' + EX[S.ex].n, 84, 18);
+  c.font = '11px system-ui,sans-serif'; if(r){ const ch = d && d.length > 1 ? (r.c / (d[Math.max(0, d.indexOf(r) - 1)] || r).c - 1) * 100 : 0; c.fillStyle = r.c >= r.o ? '#3fb47a' : '#e0554d'; c.fillText(`O ${fx(r.o)}  H ${fx(r.h)}  L ${fx(r.l)}  C ${fx(r.c)}  (${ch >= 0 ? '+' : ''}${ch.toFixed(2)}%)  Vol ${r.v >= 1e6 ? (r.v / 1e6).toFixed(2) + 'M' : r.v >= 1e3 ? (r.v / 1e3).toFixed(1) + 'K' : r.v.toFixed(0)}`, 8, 36); }
+  c.fillStyle = 'rgba(219,161,24,.35)'; c.font = '800 10px system-ui,sans-serif'; c.textAlign = 'right'; c.fillText('TTM CHARTS BETA', g.pw - 6, g.mT + 10); c.font = '11px system-ui,sans-serif'; }
+function shape(s, op){ const c = cx, g = S.g, Y = S.Y; c.globalAlpha = op; c.lineWidth = 1.6; const px = z => X(idxOfT(z.t)), a = s.a || s.pts[0], b = s.b || a, xa = px(a), ya = Y(a.p), xb = px(b), yb = Y(b.p);
+  if(s.k === 'tl' || s.k === 'ray'){ c.strokeStyle = '#4fd1c5'; c.beginPath(); c.moveTo(xa, ya); if(s.k === 'ray' && xb !== xa){ const m = (yb - ya) / (xb - xa), xe = xb > xa ? g.pw + 50 : -50; c.lineTo(xe, ya + m * (xe - xa)); } else c.lineTo(xb, yb); c.stroke(); }
+  else if(s.k === 'hl'){ c.strokeStyle = '#4fd1c5'; c.beginPath(); c.moveTo(0, ya); c.lineTo(g.pw, ya); c.stroke(); tag(g.pw, ya, fx(a.p), '#4fd1c5', '#111'); }
+  else if(s.k === 'vl'){ c.strokeStyle = '#4fd1c5'; c.beginPath(); c.moveTo(xa, g.mT); c.lineTo(xa, g.mB); c.stroke(); }
+  else if(s.k === 'rc'){ c.fillStyle = 'rgba(79,209,197,.12)'; c.strokeStyle = '#4fd1c5'; c.fillRect(Math.min(xa, xb), Math.min(ya, yb), Math.abs(xb - xa), Math.abs(yb - ya)); c.strokeRect(Math.min(xa, xb), Math.min(ya, yb), Math.abs(xb - xa), Math.abs(yb - ya)); }
+  else if(s.k === 'fib'){ [0, .236, .382, .5, .618, .786, 1].forEach(f => { const p = a.p + (b.p - a.p) * f, y = Y(p); c.strokeStyle = 'rgba(177,140,255,.8)'; c.beginPath(); c.moveTo(Math.min(xa, xb), y); c.lineTo(Math.max(xa, xb, g.pw - 60), y); c.stroke(); c.fillStyle = '#b18cff'; c.textAlign = 'left'; c.fillText(f + ' · ' + fx(p), Math.min(xa, xb) + 4, y - 7); }); c.setLineDash([3, 3]); c.strokeStyle = '#b18cff'; c.beginPath(); c.moveTo(xa, ya); c.lineTo(xb, yb); c.stroke(); c.setLineDash([]); }
+  else if(s.k === 'pa'){ c.strokeStyle = '#ff9f68'; c.lineWidth = 2.2; c.lineJoin = 'round'; c.beginPath(); s.pts.forEach((z, i) => { const x = px(z), y = Y(z.p); i ? c.lineTo(x, y) : c.moveTo(x, y); }); c.stroke(); c.fillStyle = '#ff9f68'; s.pts.forEach(z => { c.beginPath(); c.arc(px(z), Y(z.p), 3, 0, 7); c.fill(); }); }
+  else if(s.k === 'ru'){ const pc = (b.p / a.p - 1) * 100, bars = Math.round(idxOfT(b.t) - idxOfT(a.t)); c.fillStyle = pc >= 0 ? 'rgba(63,180,122,.15)' : 'rgba(224,85,77,.15)'; c.strokeStyle = pc >= 0 ? '#3fb47a' : '#e0554d'; c.fillRect(Math.min(xa, xb), Math.min(ya, yb), Math.abs(xb - xa), Math.abs(yb - ya)); c.strokeRect(Math.min(xa, xb), Math.min(ya, yb), Math.abs(xb - xa), Math.abs(yb - ya)); const t = `${pc >= 0 ? '+' : ''}${pc.toFixed(2)}%  ·  ${fx(b.p - a.p)}  ·  ${bars} bars`; c.font = '800 12px system-ui,sans-serif'; const w = c.measureText(t).width + 12; c.fillStyle = pc >= 0 ? '#3fb47a' : '#e0554d'; c.fillRect((xa + xb) / 2 - w / 2, Math.min(ya, yb) - 22, w, 18); c.fillStyle = '#fff'; c.textAlign = 'center'; c.fillText(t, (xa + xb) / 2, Math.min(ya, yb) - 13); c.font = '11px system-ui,sans-serif'; }
+  c.lineWidth = 1; c.globalAlpha = 1; }
+/* ---------- pointer ---------- */
+const saveDraw = () => lsSet('draw_' + S.sym, S.draw);
+function finishPath(){ if(S.pts.length > 1){ S.draw.push({k: 'pa', pts: S.pts.slice()}); saveDraw(); } S.pts = []; S.mv = null; paint(); }
+function ptr(e){ const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, g = S.g, i = S.v0 + x / g.w - .5, p = S.sc.lo + (1 - (y - g.mT) / (g.mB - g.mT)) * (S.sc.hi - S.sc.lo); return {x, y, i, t: tOfIdx(Math.max(0, Math.min(S.data.length - 1, i))) + (i > S.data.length - 1 ? (i - (S.data.length - 1)) * TFMS[S.tf] : 0), p}; }
+function wire(m){
+  const q = s => m.querySelector(s);
+  q('#tcX').onclick = close; q('#tcFit').onclick = () => { fit(); paint(); };
+  m.querySelectorAll('[data-tf]').forEach(b => b.onclick = () => { S.tf = b.dataset.tf; lsSet('tf', S.tf); syncTf(); loadAll(); });
+  q('#tcEx').onchange = e => { S.ex = e.target.value; lsSet('ex', S.ex); S.list = {}; loadAll(); };
+  m.querySelectorAll('[data-tool]').forEach(b => b.onclick = () => { S.tool = b.dataset.tool === 'cur' ? null : (S.tool === b.dataset.tool ? null : b.dataset.tool); S.pts = []; S.mv = null; syncTools(); paint(); });
+  q('#tcUndo').onclick = () => { S.draw.pop(); saveDraw(); paint(); }; q('#tcClr').onclick = () => { if(S.draw.length && confirm('Remove all drawings for ' + S.sym + '?')){ S.draw = []; saveDraw(); paint(); } };
+  q('#tcPng').onclick = () => cv.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `TTM-${S.sym}-${S.tf}.png`; a.click(); });
+  q('#tcChat').onclick = () => { if(!window.ttmPostImage) return alert('Chat is not available on this page.'); cv.toBlob(b => { const t = S.sym + ' ' + S.tf + ' chart'; close(); window.ttmPostImage(b, t); }, 'image/png'); };
+  q('#tcSym').onclick = symPop; q('#tcInd').onclick = indPop;
+  q('#tcRp').onclick = () => S.rp.on ? stopReplay() : startReplay(); q('#rpX').onclick = () => stopReplay(); q('#rpPick').onclick = () => { S.rp.pick = true; setStatus('Tap a candle to start the replay from there.'); };
+  q('#rpPlay').onclick = rpToggle; q('#rpStep').onclick = () => rpStep(1); q('#rpBack').onclick = () => rpStep(-1); q('#rpSpd').onchange = e => { S.rp.speed = +e.target.value; if(S.rp.play){ clearTimeout(S.rp.t); rpLoop(); } };
+  let drag = null, last = {t: 0, x: 0, y: 0}, ptrs = {}, pinch = null;
+  cv.addEventListener('pointerdown', e => { if(!S.data.length) return; e.preventDefault(); ptrs[e.pointerId] = {x: e.clientX, y: e.clientY}; const np = Object.keys(ptrs).length;
+    if(np === 2){ const k = Object.values(ptrs); pinch = {d: Math.hypot(k[0].x - k[1].x, k[0].y - k[1].y), vn: S.vn, v0: S.v0}; drag = null; return; }
+    const p = ptr(e);
+    if(S.rp.pick){ const i = Math.max(1, Math.min(S.data.length - 1, Math.round(p.i))); S.rp.pick = false; S.rp.idx = i; setStatus(''); fit(); paint(); return; }
+    if(S.tool){ const dbl = Date.now() - last.t < 400 && Math.abs(e.clientX - last.x) < 14 && Math.abs(e.clientY - last.y) < 14; last = {t: dbl ? 0 : Date.now(), x: e.clientX, y: e.clientY};
+      if(S.tool === 'pa'){ if(dbl){ S.pts.pop(); finishPath(); } else { S.pts.push({t: p.t, p: p.p}); paint(); } return; }
+      S.pts.push({t: p.t, p: p.p}); const one = S.tool === 'hl' || S.tool === 'vl';
+      if(one || S.pts.length === 2){ S.draw = S.draw.filter(z => z.k !== 'ru'); S.draw.push({k: S.tool, a: S.pts[0], b: S.pts[1] || S.pts[0]}); S.pts = []; S.mv = null; if(S.tool !== 'ru') saveDraw(); } paint(); return; }
+    const dbl = Date.now() - last.t < 400 && Math.abs(e.clientX - last.x) < 12; last = {t: dbl ? 0 : Date.now(), x: e.clientX, y: e.clientY}; if(dbl){ fit(); paint(); return; }
+    drag = {x: e.clientX, y: e.clientY, axis: p.x > S.g.pw, v0: S.v0, lo: S.sc.lo, hi: S.sc.hi}; S.drag = true; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointermove', e => { if(ptrs[e.pointerId]) ptrs[e.pointerId] = {x: e.clientX, y: e.clientY};
+    if(pinch && Object.keys(ptrs).length === 2){ const k = Object.values(ptrs), d = Math.hypot(k[0].x - k[1].x, k[0].y - k[1].y); S.vn = Math.max(12, Math.min(Math.max(vd().length + 20, 60), pinch.vn * pinch.d / d)); S.v0 = pinch.v0 + (pinch.vn - S.vn) / 2; clampV(); paint(); return; }
+    const r = cv.getBoundingClientRect(); S.cross = {x: e.clientX - r.left, y: e.clientY - r.top};
+    if(drag){ const dx = e.clientX - drag.x, dy = e.clientY - drag.y, ph = S.g.mB - S.g.mT;
+      if(drag.axis){ const c0 = (drag.hi + drag.lo) / 2, h = (drag.hi - drag.lo) / 2 * Math.exp(dy / 160); S.pv = {lo: c0 - h, hi: c0 + h}; } else { S.v0 = drag.v0 - dx / S.g.w; const sh = dy / ph * (drag.hi - drag.lo); S.pv = {lo: drag.lo + sh, hi: drag.hi + sh}; clampV(); if(S.v0 < 15) more(); }
+      paint(); return; }
+    if(S.tool && S.pts.length){ const p = ptr(e); S.mv = {t: p.t, p: p.p}; } paint(); });
+  const up = e => { delete ptrs[e.pointerId]; if(Object.keys(ptrs).length < 2) pinch = null; drag = null; S.drag = false; };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); cv.addEventListener('pointerleave', () => { S.cross = null; paint(); });
+  cv.addEventListener('wheel', e => { e.preventDefault(); const r = cv.getBoundingClientRect(); zoom(e.deltaY > 0 ? 1.12 : .89, Math.max(0, Math.min(1, (e.clientX - r.left) / S.g.pw))); paint(); }, {passive: false});
+  new ResizeObserver(paint).observe(q('#tcCw'));
+}
+/* ---------- popups ---------- */
+function popClose(){ document.querySelectorAll('#ttc .pop').forEach(p => p.remove()); }
+async function symPop(){
+  if(document.querySelector('#ttc .sym')){ popClose(); return; } popClose();
+  const p = document.createElement('div'); p.className = 'pop sym'; p.innerHTML = `<input id="tcQ" placeholder="Search ${EX[S.ex].n} (e.g. SOL)" autocomplete="off"><div class="sl" id="tcSl"><div>Loading…</div></div>`; $('ttc').appendChild(p);
+  let L = S.list[S.ex]; try{ if(!L){ L = (await EX[S.ex].list()).sort((a, b) => b.vol - a.vol); S.list[S.ex] = L; } }catch(e){ $('tcSl').innerHTML = '<div>Could not load the list from ' + EX[S.ex].n + '.</div>'; return; }
+  const draw = () => { const q = $('tcQ').value.trim().toUpperCase(); $('tcSl').innerHTML = L.filter(x => !q || x.s.includes(q)).slice(0, 80).map(x => `<div data-s="${esc(x.s)}"><b>${esc(x.s)}</b><span style="color:${x.chg >= 0 ? '#3fb47a' : '#e0554d'}">${fx(x.px)} · ${x.chg >= 0 ? '+' : ''}${x.chg.toFixed(1)}%</span></div>`).join('') || '<div>No match</div>'; };
+  draw(); $('tcQ').oninput = draw; $('tcQ').focus();
+  $('tcSl').onclick = e => { const d = e.target.closest('[data-s]'); if(!d) return; S.sym = d.dataset.s; lsSet('sym', S.sym); S.draw = ls('draw_' + S.sym, []); syncSym(); popClose(); loadAll(); };
+}
+function indPop(){
+  if(document.querySelector('#ttc .ind')){ popClose(); return; } popClose();
+  const p = document.createElement('div'); p.className = 'pop ind'; p.innerHTML = `<b style="font-size:13px">Indicators</b>` + allInd().map(i => `<label><input type="checkbox" data-i="${i.id}" ${S.inds[i.id] ? 'checked' : ''}> ${esc(i.name)}${window.TTM_INDICATORS.includes(i) ? ' <span class="bt">TTM</span>' : ''}</label>`).join('') + (window.TTM_INDICATORS.length ? '' : '<p style="font-size:11px;color:#8b8f9a;margin:8px 0 0">TTM indicators will appear here.</p>'); $('ttc').appendChild(p);
+  p.onchange = e => { const id = e.target.dataset.i; if(!id) return; S.inds[id] = e.target.checked ? 1 : 0; lsSet('inds', S.inds); paint(); };
+}
+/* ---------- replay ---------- */
+function startReplay(){ if(!S.data.length) return; S.rp.on = true; S.rp.play = false; $('tcRp').classList.add('on'); $('tcRpBar').classList.add('on'); S.rp.idx = Math.max(1, Math.round(S.v0 + S.vn * .5)); S.rp.idx = Math.min(S.data.length - 2, S.rp.idx); S.rp.pick = true; setStatus('Tap a candle to start the replay from there (or press Play to start from the middle).'); rpBtn(); paint(); }
+function stopReplay(silent){ if(!S || !S.rp) return; clearTimeout(S.rp.t); const was = S.rp.on; S.rp.on = false; S.rp.play = false; S.rp.pick = false; if($('tcRp')){ $('tcRp').classList.remove('on'); $('tcRpBar').classList.remove('on'); } if(was && !silent){ setStatus(''); fit(); paint(); } }
+function rpBtn(){ const b = $('rpPlay'); if(b) b.textContent = S.rp.play ? '⏸ Pause' : '▶ Play'; }
+function rpInfo(){ const e = $('rpInfo'); if(e && S.data[S.rp.idx]) e.textContent = new Date(S.data[S.rp.idx].t).toLocaleString() + ' · bar ' + (S.rp.idx + 1) + ' of ' + S.data.length; }
+function rpStep(n){ if(!S.rp.on) return; const i = S.rp.idx + n; if(i < 1 || i > S.data.length - 1){ S.rp.play = false; rpBtn(); return; } S.rp.idx = i; if(S.v0 + S.vn < i + 2) S.v0 = i + 4 - S.vn; paint(); }
+function rpToggle(){ if(!S.rp.on) return startReplay(); S.rp.pick = false; setStatus(''); S.rp.play = !S.rp.play; rpBtn(); if(S.rp.play) rpLoop(); else clearTimeout(S.rp.t); }
+function rpLoop(){ clearTimeout(S.rp.t); if(!S || !S.rp.play) return; if(S.rp.idx >= S.data.length - 1){ S.rp.play = false; rpBtn(); return; } rpStep(1); S.rp.t = setTimeout(rpLoop, 1000 / S.rp.speed); }
+window.ttmChartsOpen = open;
+})();
