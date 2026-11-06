@@ -4102,11 +4102,11 @@ async function hlMids(){
 const getJ = async u => { const r = await fetch(u, {cache: 'no-store'}); if(!r.ok) throw new Error('http'); return r.json(); };
 const kl = d => d.map(r => ({t: +r[0], o: +r[1], h: +r[2], l: +r[3], c: +r[4]}));
 const FETCH = {
-  okx: async (a, iv, n) => { for(const inst of [a + '-USDT', a + '-USDT-SWAP']){ try{ const d = await getJ(`https://www.okx.com/api/v5/market/candles?instId=${inst}&bar=${iv}&limit=${Math.min(n, 300)}`); if(d.data && d.data.length) return kl(d.data).reverse(); }catch(e){} } throw new Error('none'); },
-  binance: async (a, iv, n) => kl(await getJ(`https://api.binance.com/api/v3/klines?symbol=${a}USDT&interval=${iv}&limit=${Math.min(n, 1000)}`)),
+  okx: async (a, iv, n, perp) => { for(const inst of perp ? [a + '-USDT-SWAP', a + '-USDT'] : [a + '-USDT', a + '-USDT-SWAP']){ try{ const d = await getJ(`https://www.okx.com/api/v5/market/candles?instId=${inst}&bar=${iv}&limit=${Math.min(n, 300)}`); if(d.data && d.data.length) return kl(d.data).reverse(); }catch(e){} } throw new Error('none'); },
+  binance: async (a, iv, n, perp) => { if(perp){ try{ const d = kl(await getJ(`https://fapi.binance.com/fapi/v1/klines?symbol=${a}USDT&interval=${iv}&limit=${Math.min(n, 1000)}`)); if(d.length) return d; }catch(e){} } return kl(await getJ(`https://api.binance.com/api/v3/klines?symbol=${a}USDT&interval=${iv}&limit=${Math.min(n, 1000)}`)); },
   mexc: async (a, iv, n) => kl(await getJ(`https://api.mexc.com/api/v3/klines?symbol=${a}USDT&interval=${iv}&limit=${Math.min(n, 500)}`)),
-  bybit: async (a, iv, n) => { const d = await getJ(`https://api.bybit.com/v5/market/kline?category=spot&symbol=${a}USDT&interval=${iv}&limit=${Math.min(n, 1000)}`); return kl(d.result.list).reverse(); },
-  bitget: async (a, iv, n) => { const d = await getJ(`https://api.bitget.com/api/v2/spot/market/candles?symbol=${a}USDT&granularity=${iv}&limit=${Math.min(n, 1000)}`); return kl(d.data).sort((x, y) => x.t - y.t); },
+  bybit: async (a, iv, n, perp) => { const d = await getJ(`https://api.bybit.com/v5/market/kline?category=${perp ? 'linear' : 'spot'}&symbol=${a}USDT&interval=${iv}&limit=${Math.min(n, 1000)}`); return kl(d.result.list).reverse(); },
+  bitget: async (a, iv, n, perp) => { if(perp){ const g = {'5min': '5m', '15min': '15m', '1h': '1H', '4h': '4H', '12h': '12H', '1day': '1D', '1week': '1W', '1M': '1M'}[iv] || iv; try{ const d = await getJ(`https://api.bitget.com/api/v2/mix/market/candles?symbol=${a}USDT&productType=USDT-FUTURES&granularity=${g}&limit=${Math.min(n, 1000)}`); const r = kl(d.data).sort((x, y) => x.t - y.t); if(r.length) return r; }catch(e){} } const d = await getJ(`https://api.bitget.com/api/v2/spot/market/candles?symbol=${a}USDT&granularity=${iv}&limit=${Math.min(n, 1000)}`); return kl(d.data).sort((x, y) => x.t - y.t); },
   // Swyftx and Independent Reserve quote in AUD. Independent Reserve publishes no candles, so it gives live prices only (candles then come from the next exchange).
   swyftx: async (a, iv, n) => { const step = {'5m': 3e5, '1h': 36e5, '4h': 144e5, '1d': 864e5}[iv] || 36e5, end = Date.now(), st = end - Math.min(n, 1000) * step;
     for(const path of [`AUD/${a}`, `${a}/AUD`]){ try{ const j = await getJ(`https://api.swyftx.com.au/charts/getBars/${path}/ask/?resolution=${iv}&timeStart=${st}&timeEnd=${end}&limit=${Math.min(n, 1000)}`), c = (j.candles || j.data || j).map(x => ({t: +x.time, o: +x.open, h: +x.high, l: +x.low, c: +x.close})).filter(x => x.c > 0).sort((p, q) => p.t - q.t); if(c.length) return c; }catch(e){} }
@@ -4115,11 +4115,11 @@ const FETCH = {
   hyperliquid: async (a, iv, n) => { if(!HLC.map[a]) await hlMids(); const coin = HLC.map[a]; if(!coin) throw new Error('none'); const end = Date.now(), d = await postHL({type: 'candleSnapshot', req: {coin, interval: iv, startTime: end - Math.min(n, 500) * HLMS[iv], endTime: end}}); return d.map(r => ({t: +r.t, o: +r.o, h: +r.h, l: +r.l, c: +r.c})).sort((x, y) => x.t - y.t); }
 };
 const TICK = {
-  okx: async () => { const d = await getJ('https://www.okx.com/api/v5/market/tickers?instType=SPOT'), m = {}; d.data.forEach(t => { if(t.instId.endsWith('-USDT')) m[t.instId.slice(0, -5)] = +t.last; }); return m; },
-  binance: async () => { const d = await getJ('https://api.binance.com/api/v3/ticker/price'), m = {}; d.forEach(t => { if(t.symbol.endsWith('USDT')) m[t.symbol.slice(0, -4)] = +t.price; }); return m; },
+  okx: async perp => { const d = await getJ('https://www.okx.com/api/v5/market/tickers?instType=' + (perp ? 'SWAP' : 'SPOT')), m = {}; d.data.forEach(t => { if(perp){ if(t.instId.endsWith('-USDT-SWAP')) m[t.instId.slice(0, -10)] = +t.last; } else if(t.instId.endsWith('-USDT')) m[t.instId.slice(0, -5)] = +t.last; }); return m; },
+  binance: async perp => { const d = await getJ(perp ? 'https://fapi.binance.com/fapi/v1/ticker/price' : 'https://api.binance.com/api/v3/ticker/price'), m = {}; d.forEach(t => { if(t.symbol.endsWith('USDT')) m[t.symbol.slice(0, -4)] = +t.price; }); return m; },
   mexc: async () => { const d = await getJ('https://api.mexc.com/api/v3/ticker/price'), m = {}; d.forEach(t => { if(t.symbol.endsWith('USDT')) m[t.symbol.slice(0, -4)] = +t.price; }); return m; },
-  bybit: async () => { const d = await getJ('https://api.bybit.com/v5/market/tickers?category=spot'), m = {}; d.result.list.forEach(t => { if(t.symbol.endsWith('USDT')) m[t.symbol.slice(0, -4)] = +t.lastPrice; }); return m; },
-  bitget: async () => { const d = await getJ('https://api.bitget.com/api/v2/spot/market/tickers'), m = {}; d.data.forEach(t => { if(t.symbol.endsWith('USDT')) m[t.symbol.slice(0, -4)] = +t.lastPr; }); return m; },
+  bybit: async perp => { const d = await getJ('https://api.bybit.com/v5/market/tickers?category=' + (perp ? 'linear' : 'spot')), m = {}; d.result.list.forEach(t => { if(t.symbol.endsWith('USDT')) m[t.symbol.slice(0, -4)] = +t.lastPrice; }); return m; },
+  bitget: async perp => { const d = await getJ(perp ? 'https://api.bitget.com/api/v2/mix/market/tickers?productType=USDT-FUTURES' : 'https://api.bitget.com/api/v2/spot/market/tickers'), m = {}; d.data.forEach(t => { if(t.symbol.endsWith('USDT')) m[t.symbol.slice(0, -4)] = +t.lastPr; }); return m; },
   hyperliquid: hlMids,
   swyftx: async () => { const [as, lr] = await Promise.all([getJ('https://api.swyftx.com.au/markets/assets/'), getJ('https://api.swyftx.com.au/live-rates/36/')]), m = {};
     as.forEach(x => { const r = lr[x.id]; if(!r || !x.code) return; const v = +(r.midPrice || r.mid || r.ask || r.price || r.bid); if(v > 0) m[String(x.code).toUpperCase()] = v; }); if(!Object.keys(m).length) throw new Error('none'); return m; },
@@ -4127,33 +4127,33 @@ const TICK = {
     await Promise.all(codes.map(async c => { try{ const d = await getJ(`https://api.independentreserve.com/Public/GetMarketSummary?primaryCurrencyCode=${c}&secondaryCurrencyCode=aud`), v = +(d.LastPrice || d.CurrentLowestOfferPrice); if(v > 0) m[(String(c).toUpperCase() === 'XBT' ? 'BTC' : String(c).toUpperCase())] = v; }catch(e){} })); if(!Object.keys(m).length) throw new Error('none'); return m; }
 };
 function aggC(rows, ms){ const g = {}; rows.forEach(x => { const k = Math.floor(x.t / ms), b = g[k]; if(!b) g[k] = {t: k * ms, o: x.o, h: x.h, l: x.l, c: x.c}; else { b.h = Math.max(b.h, x.h); b.l = Math.min(b.l, x.l); b.c = x.c; } }); return Object.keys(g).sort((p, q) => p - q).map(k => g[k]); }
-async function getCandles(a, tf){
+async function getCandles(a, tf, perp){
   const order = [SRC, 'bybit', 'okx', 'binance', 'mexc', 'bitget', 'hyperliquid'].filter((x, i, ar) => ar.indexOf(x) === i);
   for(const src of order){
     try{ const spec = TFBASE[src][tf], iv = Array.isArray(spec) ? spec[0] : spec, nat = Array.isArray(spec) ? spec[1] : 0;
-      let rows = await FETCH[src](a, iv, nat ? Math.ceil(110 * TFMS[tf] / nat) : 110);
+      let rows = await FETCH[src](a, iv, nat ? Math.ceil(110 * TFMS[tf] / nat) : 110, perp);
       if(nat) rows = aggC(rows, TFMS[tf]);
       if(rows.length > 5) return {rows: rows.slice(-90), src}; }catch(e){}
   }
   return null;
 }
 let TK = {src: '', map: {}, t: 0, used: ''};
-async function getTickers(){
-  if(Date.now() - TK.t < 8000 && TK.src === SRC) return TK;
+async function getTickers(perp){
+  perp = !!perp; if(Date.now() - TK.t < 8000 && TK.src === SRC && TK.perp === perp) return TK;
   for(const src of [SRC].concat(SRC === 'okx' ? [] : ['okx'])){
-    try{ const m = await TICK[src](); if(Object.keys(m).length > 20){ await fillGaps(m, src); TK = {src: SRC, map: m, t: Date.now(), used: src}; return TK; } }catch(e){}
+    try{ const m = await TICK[src](perp); if(Object.keys(m).length > 20){ await fillGaps(m, src, perp); TK = {src: SRC, map: m, t: Date.now(), used: src, perp}; return TK; } }catch(e){}
   }
   return null;
 }
 // Coins your chosen exchange does not list (BIO, for example) are filled in live from Bybit, then the other exchanges.
 let GAP = {t: 0, maps: {}}, GAPSRC = {};
-async function fillGaps(m, used){
+async function fillGaps(m, used, perp){
   if(Date.now() - GAP.t > 20000){ GAP.maps = {}; GAP.t = Date.now(); }
   // coins the chosen exchange does not list: ask every USDT exchange and use the MIDDLE price, so one delisted / frozen / wrong feed cannot set the price
   const got = {};
   for(const src of ['bybit', 'okx', 'binance', 'mexc', 'bitget', 'hyperliquid']){
     if(src === used) continue;
-    try{ const g = GAP.maps[src] || (GAP.maps[src] = await TICK[src]()); Object.keys(g).forEach(k => { if(!(m[k] > 0) && g[k] > 0) (got[k] = got[k] || []).push([g[k], src]); }); }catch(e){ GAP.maps[src] = {}; }
+    try{ const gk = src + (perp ? 'P' : ''), g = GAP.maps[gk] || (GAP.maps[gk] = await TICK[src](perp)); Object.keys(g).forEach(k => { if(!(m[k] > 0) && g[k] > 0) (got[k] = got[k] || []).push([g[k], src]); }); }catch(e){ GAP.maps[src + (perp ? 'P' : '')] = {}; }
   }
   Object.keys(got).forEach(k => { const a = got[k].sort((x, y) => x[0] - y[0]), mid = a[Math.floor((a.length - 1) / 2)]; m[k] = mid[0]; GAPSRC[k] = mid[1]; });
 }
@@ -4162,9 +4162,9 @@ const secOn = id => { const s = document.getElementById(id); return !!(s && s.cl
 const rrActive = () => secOn('riskreward'), pfActive = () => secOn('portfolio'), tjActive = () => secOn('tradejournal');
 function loadCandles(){ clearTimeout(ctimer); ctimer = setTimeout(doCandles, 250); }
 async function doCandles(){
-  const a = S.asset, tf = S.tf, key = a + '|' + tf + '|' + SRC, tok = ++ctok; if(!a) return;
+  const a = S.asset, tf = S.tf, key = a + '|' + tf + '|' + SRC + '|' + (S.mkt === 'spot' ? 's' : 'p'), tok = ++ctok; if(!a) return;
   if($('rrCanSt')) $('rrCanSt').textContent = 'Loading ' + a + ' candles from ' + SRCS[SRC] + '…';
-  const res = await getCandles(a, tf);
+  const res = await getCandles(a, tf, S.mkt !== 'spot');
   if(tok !== ctok) return;
   if(!res){ CAN = {key, rows: [], err: 'No candles', src: ''}; $('rrCanSt').textContent = `No candles for ${a} on ${SRCS[SRC]} or OKX (an unlisted or custom ticker, or the feed is unreachable). You can still type your levels in by hand.`; }
   else { CAN = {key, rows: res.rows, err: '', src: res.src}; const l = CAN.rows[CAN.rows.length - 1];
@@ -4172,7 +4172,7 @@ async function doCandles(){
   drawCandles(calc());
 }
 function autoFit(){
-  const c = calc(); if(!c.ok || !CAN.rows.length || CAN.key !== S.asset + '|' + S.tf + '|' + SRC){ $('rrCanSt').textContent = 'Fill in entry and stop first and wait for the candles to load, then press Auto-fit.'; return; }
+  const c = calc(); if(!c.ok || !CAN.rows.length || CAN.key !== S.asset + '|' + S.tf + '|' + SRC + '|' + (S.mkt === 'spot' ? 's' : 'p')){ $('rrCanSt').textContent = 'Fill in entry and stop first and wait for the candles to load, then press Auto-fit.'; return; }
   const atr = CAN.rows.reduce((t, r) => t + (r.h - r.l) / r.c, 0) / CAN.rows.length * 100, cur = TFMS[S.tf];
   let best = null; TFS.forEach(([id]) => { const est = atr * Math.sqrt(TFMS[id] / cur), d = Math.abs(est - c.distPct / 3); if(best == null || d < best.d) best = {id, d, est}; });
   S.tf = best.id; persist(); pushInputs(); render(); loadCandles();
@@ -4267,7 +4267,7 @@ document.addEventListener('click', e => { if(e.target.id !== 'ehAdd') return;
 // ---- trade chart: candles, every limit order, the average entry, stop and targets; add or manage orders
 let tc = null;
 function openTC(i){ const x = loadSaved()[i]; if(!x || !x.snap) return; tc = {i, tf: tfOf(x) || 'h1', rows: null, err: '', src: '', busy: false}; drawTC(); $('rrModal').classList.add('open'); loadTC(); }
-async function loadTC(){ if(!tc) return; const x = loadSaved()[tc.i]; if(!x) return; const t = tc; t.busy = true; t.err = ''; paintTC(); const res = await getCandles(x.snap.asset, t.tf); if(tc !== t) return; t.busy = false; if(res){ t.rows = res.rows; t.src = res.src; } else { t.rows = null; t.err = 'No candles for ' + x.snap.asset + ' on your exchange or the fallbacks.'; } paintTC(); }
+async function loadTC(){ if(!tc) return; const x = loadSaved()[tc.i]; if(!x) return; const t = tc; t.busy = true; t.err = ''; paintTC(); const res = await getCandles(x.snap.asset, t.tf, x.snap.mkt !== 'spot'); if(tc !== t) return; t.busy = false; if(res){ t.rows = res.rows; t.src = res.src; } else { t.rows = null; t.err = 'No candles for ' + x.snap.asset + ' on your exchange or the fallbacks.'; } paintTC(); }
 function tcLevels(x){
   const sn = x.snap, L = [], ord = x.orders || [{p: sn.E, filled: x.fill !== 'pending', ft: x.opened || null, only: true}];
   ord.forEach((o, k) => L.push({k: ord.length > 1 || x.orders ? 'LO' + (k + 1) + (o.filled ? '' : ' (waiting)') : 'Entry' + (o.filled ? '' : ' (waiting)'), p: o.p, col: '#f2c14e', dash: !o.filled, w: 1.2, ord: o}));
@@ -4652,7 +4652,7 @@ function wire(){
   $('rrLive').addEventListener('click', async () => {
     const btn = $('rrLive'), a = S.asset; if(!a){ btn.textContent = 'Pick an asset first'; return; }
     btn.textContent = 'Fetching…'; TK.t = 0;
-    const t = await getTickers(), p = t && t.map[a];
+    const t = await getTickers(S.mkt !== 'spot'), p = t && t.map[a];
     if(p > 0){ S.entry = p >= 1 ? +p.toFixed(4) : +p.toPrecision(5); persist(); pushInputs(); render(); loadCandles(); const fs = GAPSRC[a]; btn.textContent = fs ? `Live ${a}: ${pr(p)} (${SRCS[fs]}, ${SRCS[SRC]} does not list it) ✓` : `Live ${a}: ${pr(p)} (${SRCS[t.used]}${t.used !== SRC ? ', ' + SRCS[SRC] + ' unavailable' : ''}) ✓`; }
     else { const c = COINS.find(x => x.s === a); if(c && c.p){ S.entry = c.p >= 1 ? +c.p.toFixed(4) : +c.p.toPrecision(5); persist(); pushInputs(); render(); btn.textContent = `${a}: ${pr(c.p)} from the list snapshot (not live)`; } else btn.textContent = 'No live price for ' + a; }
     setTimeout(() => { btn.textContent = 'Use live price as entry'; }, 4500);
