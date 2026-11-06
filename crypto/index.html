@@ -4149,10 +4149,13 @@ async function getTickers(){
 let GAP = {t: 0, maps: {}}, GAPSRC = {};
 async function fillGaps(m, used){
   if(Date.now() - GAP.t > 20000){ GAP.maps = {}; GAP.t = Date.now(); }
+  // coins the chosen exchange does not list: ask every USDT exchange and use the MIDDLE price, so one delisted / frozen / wrong feed cannot set the price
+  const got = {};
   for(const src of ['bybit', 'okx', 'binance', 'mexc', 'bitget', 'hyperliquid']){
     if(src === used) continue;
-    try{ const g = GAP.maps[src] || (GAP.maps[src] = await TICK[src]()); Object.keys(g).forEach(k => { if(!(m[k] > 0) && g[k] > 0){ m[k] = g[k]; GAPSRC[k] = src; } }); }catch(e){ GAP.maps[src] = {}; }
+    try{ const g = GAP.maps[src] || (GAP.maps[src] = await TICK[src]()); Object.keys(g).forEach(k => { if(!(m[k] > 0) && g[k] > 0) (got[k] = got[k] || []).push([g[k], src]); }); }catch(e){ GAP.maps[src] = {}; }
   }
+  Object.keys(got).forEach(k => { const a = got[k].sort((x, y) => x[0] - y[0]), mid = a[Math.floor((a.length - 1) / 2)]; m[k] = mid[0]; GAPSRC[k] = mid[1]; });
 }
 let CAN = {key: '', rows: [], err: '', src: ''}, ctok = 0, ctimer = null;
 const secOn = id => { const s = document.getElementById(id); return !!(s && s.classList.contains('active')); };
