@@ -1,0 +1,43 @@
+name: Update property cycle data
+
+on:
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+  push:
+    paths:
+      - scripts/update_property.py
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-property
+  cancel-in-progress: false
+
+jobs:
+  property:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build property cycle data
+        run: python3 scripts/update_property.py
+      - name: Commit
+        run: |
+          git config user.name "ttm-calendar-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add property_cycles.json
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Auto-update property cycle data"
+            for i in 1 2 3 4; do
+              git pull --rebase -X theirs origin main && git push && break
+              echo "Push attempt $i failed, retrying..."
+              sleep 5
+            done
+          fi
