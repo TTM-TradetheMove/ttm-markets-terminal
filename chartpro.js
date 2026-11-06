@@ -11,7 +11,7 @@ const css = `#tcp{position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,.72)
 #tcp button{background:rgba(255,255,255,.06);border:1px solid var(--line,#2a2a2e);color:inherit;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer}
 #tcp button.on{background:var(--gold,#dba118);color:#111;border-color:transparent;font-weight:700}
 #tcp .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:6px 0}#tcp .sp{flex:1}
-#tcp svg{width:100%;height:auto;display:block;background:#0f0f12;border-radius:10px;touch-action:none}
+#tcp svg{user-select:none;-webkit-user-select:none;width:100%;height:auto;display:block;background:#0f0f12;border-radius:10px;touch-action:none}
 #tcp .nt{font-size:12px;color:var(--mute,#8b8f9a);margin:6px 0 0}#tcp label{font-size:13px;display:inline-flex;gap:4px;align-items:center}`;
 function pickTf(px, orders){ if(!orders.length || !px) return '1h'; const d = Math.max.apply(null, orders.map(o => Math.abs(o - px) / px * 100)); return d < 1.5 ? '15m' : d < 4 ? '1h' : d < 10 ? '4h' : d < 30 ? '1d' : '1w'; }
 async function gj(u){ const r = await fetch(u); if(!r.ok) throw 0; return r.json(); }
@@ -29,11 +29,11 @@ function save(){ try{ localStorage.setItem(SK(ST.sym), JSON.stringify(ST.draw));
 async function open(o){
   close(); const sym = String(o.sym || 'BTC').toUpperCase().replace(/USDT$/, ''), orders = (o.orders || []).filter(x => x > 0);
   let draw = []; try{ draw = JSON.parse(localStorage.getItem(SK(sym)) || '[]'); }catch(e){}
-  ST = {sym, orders, tf: o.tf || null, tool: null, pts: [], draw, data: [], title: o.title || 'Chart', mv: null};
+  ST = {sym, orders, tf: o.tf || null, tool: null, pts: [], draw, data: [], title: o.title || 'Chart', mv: null, v0: 0, vn: 80, pv: null};
   if(!document.getElementById('tcpCss')){ const s = document.createElement('style'); s.id = 'tcpCss'; s.textContent = css; document.head.appendChild(s); }
   const m = document.createElement('div'); m.id = 'tcp';
   m.innerHTML = `<div class="bx"><div class="hd"><img src="${BASE}img/logo0.png" alt="TTM" style="height:26px"><b>${esc(sym)}/USDT</b><span class="bt">BETA</span><span class="sp"></span>${TFS.map(t => `<button data-tf="${t[0]}">${t[1]}</button>`).join('')}<button id="tcpX" title="Close">✕</button></div>
-  <div class="row" id="tcpTools">${[['tl', 'Trend line'], ['hl', 'Horizontal line'], ['fib', 'Fib retracement'], ['rc', 'Box']].map(t => `<button data-tool="${t[0]}">${t[1]}</button>`).join('')}<button id="tcpUndo">Undo</button><button id="tcpClr">Clear drawings</button><span class="sp"></span><button id="tcpDl">Download image</button><button id="tcpPost">Post in chat…</button></div>
+  <div class="row" id="tcpTools">${[['tl', 'Trend line'], ['hl', 'Horizontal line'], ['fib', 'Fib retracement'], ['rc', 'Box'], ['pa', 'Path']].map(t => `<button data-tool="${t[0]}">${t[1]}</button>`).join('')}<button id="tcpDone" style="display:none">Finish path</button><button id="tcpFit" title="Reset the view">Fit</button><button id="tcpZi" title="Zoom in">＋</button><button id="tcpZo" title="Zoom out">－</button><button id="tcpUndo">Undo</button><button id="tcpClr">Clear drawings</button><span class="sp"></span><button id="tcpDl">Download image</button><button id="tcpPost">Post in chat…</button></div>
   <svg id="tcpSvg" viewBox="0 0 900 460"></svg><p class="nt" id="tcpNt">Loading candles…</p></div>`;
   document.body.appendChild(m); document.addEventListener('keydown', onKey);
   m.addEventListener('click', e => { if(e.target === m) close(); });
@@ -45,40 +45,67 @@ async function open(o){
   m.querySelector('#tcpDl').onclick = async () => { const b = await png(); if(!b) return; const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'TTM-' + ST.sym + '-' + ST.tf + '.png'; a.click(); };
   m.querySelector('#tcpPost').onclick = postChat;
   const sv = m.querySelector('#tcpSvg');
-  sv.addEventListener('pointerdown', e => { if(!ST.tool) return; const p = pt(e); ST.pts.push(p); if(ST.tool === 'hl' || ST.pts.length === 2){ ST.draw.push({k: ST.tool, a: ST.pts[0], b: ST.pts[1] || ST.pts[0]}); ST.pts = []; ST.mv = null; save(); } paint(); note(); });
-  sv.addEventListener('pointermove', e => { if(ST.tool && ST.pts.length === 1){ ST.mv = pt(e); paint(); } });
+  m.querySelector('#tcpDone').onclick = finishPath;
+  m.querySelector('#tcpFit').onclick = () => { fit(); paint(); };
+  m.querySelector('#tcpZi').onclick = () => { zoom(.75); paint(); }; m.querySelector('#tcpZo').onclick = () => { zoom(1.33); paint(); };
+  let drag = null;
+  let lastDown = {t: 0, x: 0, y: 0};
+  sv.addEventListener('pointerdown', e => { if(!ST.data.length) return; e.preventDefault(); const dbl = Date.now() - lastDown.t < 400 && Math.abs(e.clientX - lastDown.x) < 12 && Math.abs(e.clientY - lastDown.y) < 12; lastDown = {t: dbl ? 0 : Date.now(), x: e.clientX, y: e.clientY};
+    if(dbl){ if(ST.tool === 'pa'){ ST.pts.pop(); finishPath(); } else if(!ST.tool){ fit(); paint(); } return; }
+    const r = sv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * G.W;
+    if(ST.tool){ const p = pt(e); if(ST.tool === 'pa'){ ST.pts.push(p); paint(); note(); return; } ST.pts.push(p); if(ST.tool === 'hl' || ST.pts.length === 2){ ST.draw.push({k: ST.tool, a: ST.pts[0], b: ST.pts[1] || ST.pts[0]}); ST.pts = []; ST.mv = null; save(); } paint(); note(); return; }
+    drag = {x: e.clientX, y: e.clientY, axis: x > G.W - G.R, v0: ST.v0, lo: ST.sc.lo, hi: ST.sc.hi}; sv.setPointerCapture(e.pointerId); sv.style.cursor = 'grabbing'; });
+  sv.addEventListener('pointermove', e => { if(drag){ const r = sv.getBoundingClientRect(), dx = (e.clientX - drag.x) / r.width * G.W, dy = (e.clientY - drag.y) / r.height * G.H, ph = G.H - G.T - G.B;
+      if(drag.axis){ const c = (drag.hi + drag.lo) / 2, h = (drag.hi - drag.lo) / 2 * Math.exp(dy / 160); ST.pv = {lo: c - h, hi: c + h}; }
+      else { ST.v0 = drag.v0 - dx / ST.sc.w; const sh = dy / ph * (drag.hi - drag.lo); ST.pv = {lo: drag.lo + sh, hi: drag.hi + sh}; clampV(); }
+      paint(); return; }
+    if(ST.tool && ST.pts.length >= 1){ ST.mv = pt(e); paint(); } });
+  const end = () => { drag = null; sv.style.cursor = ''; }; sv.addEventListener('pointerup', end); sv.addEventListener('pointercancel', end);
+  sv.addEventListener('wheel', e => { e.preventDefault(); zoom(e.deltaY > 0 ? 1.15 : .87); paint(); }, {passive: false});
+  document.addEventListener('keydown', k => { if(ST && ST.tool === 'pa' && k.key === 'Enter') finishPath(); });
   tools(); note();
   await setTf(ST.tf || '1h', !ST.tf);
 }
-function tools(){ document.querySelectorAll('#tcpTools [data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === ST.tool)); }
-function note(){ const n = document.getElementById('tcpNt'); if(!n || !ST) return; if(ST.tool){ n.textContent = ST.tool === 'hl' ? 'Tap the chart once to place a horizontal line.' : 'Tap two points on the chart (' + (ST.pts.length ? 'second' : 'first') + ' point).'; return; } n.textContent = ST.data.length ? ST.sym + ' · ' + ST.tf.toUpperCase() + ' · dashed gold lines are your limit orders. Pick a tool to draw. Education only, not financial advice.' : n.textContent; }
+function finishPath(){ if(ST.pts.length > 1){ ST.draw.push({k: 'pa', pts: ST.pts.slice()}); save(); } ST.pts = []; ST.mv = null; paint(); note(); }
+function clampV(){ const n = ST.data.length; ST.v0 = Math.max(-ST.vn * .6, Math.min(n - ST.vn * .4, ST.v0)); }
+function zoom(f){ const n = ST.data.length, c = ST.v0 + ST.vn / 2; ST.vn = Math.max(12, Math.min(Math.max(n, 40), ST.vn * f)); ST.v0 = c - ST.vn / 2; clampV(); }
+// opening view: last ~80 candles with a little room on the right; prices fitted to the candles on screen, plus the limit orders when they are close enough not to flatten the candles
+function fit(){ const n = ST.data.length; ST.vn = Math.min(n, 80); ST.v0 = n - ST.vn + 3; ST.pv = null; }
+function tools(){ document.querySelectorAll('#tcpTools [data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === ST.tool)); const d = document.getElementById('tcpDone'); if(d) d.style.display = ST.tool === 'pa' ? '' : 'none'; }
+function note(){ const n = document.getElementById('tcpNt'); if(!n || !ST) return; if(ST.tool){ n.textContent = ST.tool === 'hl' ? 'Tap the chart once to place a horizontal line.' : ST.tool === 'pa' ? 'Path: tap each point along the path. Double-tap (or press Enter) to finish. Points so far: ' + ST.pts.length + '.' : 'Tap two points on the chart (' + (ST.pts.length ? 'second' : 'first') + ' point).'; return; } n.textContent = ST.data.length ? ST.sym + ' · ' + ST.tf.toUpperCase() + ' · dashed gold lines are your limit orders. Drag to move, drag the price scale on the right to stretch it, scroll or ＋/－ to zoom, double-tap or Fit to reset. Education only, not financial advice.' : n.textContent; }
 async function setTf(tf, auto){
   const n = document.getElementById('tcpNt'); if(n) n.textContent = 'Loading candles…';
   let d = await candles(ST.sym, tf); if(!ST) return;
   if(auto){ const t = pickTf(d.length ? d[d.length - 1].c : 0, ST.orders); if(t !== tf){ tf = t; d = await candles(ST.sym, tf); if(!ST) return; } }
   ST.tf = tf; ST.data = d; document.querySelectorAll('#tcp [data-tf]').forEach(b => b.classList.toggle('on', b.dataset.tf === tf));
   if(!d.length){ if(n) n.textContent = 'Could not load candles for ' + ST.sym + ' (Bitget and Binance gave nothing). Try another time frame.'; document.getElementById('tcpSvg').innerHTML = ''; return; }
-  paint(); note();
+  fit(); paint(); note();
 }
 const G = {L: 8, R: 78, T: 44, B: 26, W: 900, H: 460};
-function scale(){ const d = ST.data, ps = d.flatMap(x => [x.h, x.l]).concat(ST.orders), lo0 = Math.min.apply(null, ps), hi0 = Math.max.apply(null, ps), pad = (hi0 - lo0) * .06 || hi0 * .02, lo = lo0 - pad, hi = hi0 + pad, w = (G.W - G.L - G.R) / d.length; ST.sc = {lo, hi, w};
-  ST.x = i => G.L + (i + .5) * w; ST.y = p => G.T + (G.H - G.T - G.B) * (1 - (p - lo) / (hi - lo)); }
+function scale(){ const d = ST.data, i0 = Math.max(0, Math.floor(ST.v0)), i1 = Math.min(d.length - 1, Math.ceil(ST.v0 + ST.vn)), vis = d.slice(i0, i1 + 1);
+  let lo = Math.min.apply(null, vis.map(x => x.l)), hi = Math.max.apply(null, vis.map(x => x.h)); const rng = (hi - lo) || hi * .02;
+  if(!ST.pv){ ST.orders.forEach(o => { if(o >= lo - rng * 1.2 && o <= hi + rng * 1.2){ lo = Math.min(lo, o); hi = Math.max(hi, o); } }); const pad = (hi - lo) * .08; lo -= pad; hi += pad; } else { lo = ST.pv.lo; hi = ST.pv.hi; }
+  const w = (G.W - G.L - G.R) / ST.vn; ST.sc = {lo, hi, w};
+  ST.x = i => G.L + (i - ST.v0 + .5) * w; ST.y = p => G.T + (G.H - G.T - G.B) * (1 - (p - lo) / (hi - lo)); }
 function idxOf(t){ const d = ST.data, step = d.length > 1 ? d[1].t - d[0].t : 36e5; if(t <= d[0].t) return (t - d[0].t) / step; if(t >= d[d.length - 1].t) return d.length - 1 + (t - d[d.length - 1].t) / step; let lo = 0, hi = d.length - 1; while(hi - lo > 1){ const m = (lo + hi) >> 1; if(d[m].t <= t) lo = m; else hi = m; } return lo + (t - d[lo].t) / (d[hi].t - d[lo].t); }
-function pt(e){ const sv = document.getElementById('tcpSvg'), r = sv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * G.W, y = (e.clientY - r.top) / r.height * G.H, d = ST.data, i = Math.max(0, (x - G.L) / ST.sc.w - .5), step = d.length > 1 ? d[1].t - d[0].t : 36e5, t = i <= d.length - 1 ? d[Math.floor(i)].t + (i - Math.floor(i)) * step : d[d.length - 1].t + (i - (d.length - 1)) * step, p = ST.sc.lo + (1 - (y - G.T) / (G.H - G.T - G.B)) * (ST.sc.hi - ST.sc.lo); return {t, p}; }
+function pt(e){ const sv = document.getElementById('tcpSvg'), r = sv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * G.W, y = (e.clientY - r.top) / r.height * G.H, d = ST.data, i = ST.v0 + (x - G.L) / ST.sc.w - .5, step = d.length > 1 ? d[1].t - d[0].t : 36e5, k = Math.max(0, Math.min(d.length - 1, Math.floor(i))), t = d[k].t + (i - k) * step, p = ST.sc.lo + (1 - (y - G.T) / (G.H - G.T - G.B)) * (ST.sc.hi - ST.sc.lo); return {t, p}; }
 function paint(){
   const sv = document.getElementById('tcpSvg'); if(!sv || !ST || !ST.data.length) return; scale(); const d = ST.data, X = ST.x, Y = ST.y; let g = '';
   for(let k = 0; k <= 4; k++){ const p = ST.sc.lo + (ST.sc.hi - ST.sc.lo) * k / 4, y = Y(p); g += `<line x1="${G.L}" x2="${G.W - G.R}" y1="${y}" y2="${y}" stroke="#23232a"/><text x="${G.W - G.R + 6}" y="${y + 4}" fill="#8b8f9a" font-size="11">${fx(p)}</text>`; }
-  const bw = Math.max(1, ST.sc.w * .62);
-  d.forEach((c, i) => { const up = c.c >= c.o, col = up ? '#3fb47a' : '#e0554d', x = X(i); g += `<line x1="${x}" x2="${x}" y1="${Y(c.h)}" y2="${Y(c.l)}" stroke="${col}"/><rect x="${x - bw / 2}" y="${Math.min(Y(c.o), Y(c.c))}" width="${bw}" height="${Math.max(1, Math.abs(Y(c.o) - Y(c.c)))}" fill="${col}"/>`; });
+  const bw = Math.max(1, ST.sc.w * .62), vi0 = Math.max(0, Math.floor(ST.v0) - 1), vi1 = Math.min(d.length - 1, Math.ceil(ST.v0 + ST.vn) + 1);
+  g += `<defs><clipPath id="tcpClip"><rect x="${G.L}" y="${G.T - 4}" width="${G.W - G.L - G.R}" height="${G.H - G.T - G.B + 8}"/></clipPath></defs><g clip-path="url(#tcpClip)">`;
+  d.forEach((c, i) => { if(i < vi0 || i > vi1) return; const up = c.c >= c.o, col = up ? '#3fb47a' : '#e0554d', x = X(i); g += `<line x1="${x}" x2="${x}" y1="${Y(c.h)}" y2="${Y(c.l)}" stroke="${col}"/><rect x="${x - bw / 2}" y="${Math.min(Y(c.o), Y(c.c))}" width="${bw}" height="${Math.max(1, Math.abs(Y(c.o) - Y(c.c)))}" fill="${col}"/>`; });
+  g += '</g>';
   const last = d[d.length - 1].c; g += `<line x1="${G.L}" x2="${G.W - G.R}" y1="${Y(last)}" y2="${Y(last)}" stroke="#8ab4ff" stroke-dasharray="2 3"/><rect x="${G.W - G.R}" y="${Y(last) - 9}" width="${G.R - 2}" height="18" rx="3" fill="#8ab4ff"/><text x="${G.W - G.R + 4}" y="${Y(last) + 4}" fill="#111" font-size="11" font-weight="700">${fx(last)}</text>`;
-  ST.orders.forEach((p, i) => { const y = Y(p); g += `<line x1="${G.L}" x2="${G.W - G.R}" y1="${y}" y2="${y}" stroke="#dba118" stroke-width="1.5" stroke-dasharray="7 4"/><rect x="${G.L + 4}" y="${y - 17}" width="${86}" height="16" rx="3" fill="#dba118"/><text x="${G.L + 8}" y="${y - 5}" fill="#111" font-size="11" font-weight="700">Limit ${fx(p)}</text><rect x="${G.W - G.R}" y="${y - 9}" width="${G.R - 2}" height="18" rx="3" fill="#dba118"/><text x="${G.W - G.R + 4}" y="${y + 4}" fill="#111" font-size="11" font-weight="700">${fx(p)}</text>`; });
-  const shape = (s, live) => { const a = s.a, b = s.b, xa = X(idxOf(a.t)), ya = Y(a.p), xb = X(idxOf(b.t)), yb = Y(b.p), op = live ? .6 : 1; let o = '';
+  ST.orders.forEach((p, i) => { const y0 = Y(p), off = y0 < G.T || y0 > G.H - G.B, y = Math.max(G.T + 8, Math.min(G.H - G.B - 8, y0)); if(off){ g += `<line x1="${G.L}" x2="${G.W - G.R}" y1="${y}" y2="${y}" stroke="#dba118" stroke-dasharray="2 6" opacity=".6"/><rect x="${G.L + 4}" y="${y - 8}" width="150" height="16" rx="3" fill="#dba118"/><text x="${G.L + 8}" y="${y + 4}" fill="#111" font-size="11" font-weight="700">${y0 < G.T ? '▲' : '▼'} Limit ${fx(p)} (off screen)</text>`; return; } g += `<line x1="${G.L}" x2="${G.W - G.R}" y1="${y}" y2="${y}" stroke="#dba118" stroke-width="1.5" stroke-dasharray="7 4"/><rect x="${G.L + 4}" y="${y - 17}" width="${86}" height="16" rx="3" fill="#dba118"/><text x="${G.L + 8}" y="${y - 5}" fill="#111" font-size="11" font-weight="700">Limit ${fx(p)}</text><rect x="${G.W - G.R}" y="${y - 9}" width="${G.R - 2}" height="18" rx="3" fill="#dba118"/><text x="${G.W - G.R + 4}" y="${y + 4}" fill="#111" font-size="11" font-weight="700">${fx(p)}</text>`; });
+  const shape = (s, live) => { const a = s.a || s.pts[0], b = s.b || a, xa = X(idxOf(a.t)), ya = Y(a.p), xb = X(idxOf(b.t)), yb = Y(b.p), op = live ? .6 : 1; let o = '';
     if(s.k === 'tl'){ o = `<line x1="${xa}" y1="${ya}" x2="${xb}" y2="${yb}" stroke="#4fd1c5" stroke-width="2" opacity="${op}"/>`; }
     else if(s.k === 'hl'){ o = `<line x1="${G.L}" x2="${G.W - G.R}" y1="${ya}" y2="${ya}" stroke="#4fd1c5" stroke-width="1.5" opacity="${op}"/><text x="${G.L + 4}" y="${ya - 4}" fill="#4fd1c5" font-size="11">${fx(a.p)}</text>`; }
+    else if(s.k === 'pa'){ const q = s.pts.map(z => X(idxOf(z.t)) + ',' + Y(z.p)).join(' '); o = `<polyline points="${q}" fill="none" stroke="#ff9f68" stroke-width="2.2" stroke-linejoin="round" opacity="${op}"/>` + s.pts.map(z => `<circle cx="${X(idxOf(z.t))}" cy="${Y(z.p)}" r="3" fill="#ff9f68" opacity="${op}"/>`).join(''); }
     else if(s.k === 'rc'){ o = `<rect x="${Math.min(xa, xb)}" y="${Math.min(ya, yb)}" width="${Math.abs(xb - xa)}" height="${Math.abs(yb - ya)}" fill="rgba(79,209,197,.12)" stroke="#4fd1c5" opacity="${op}"/>`; }
     else if(s.k === 'fib'){ const lv = [0, .236, .382, .5, .618, .786, 1], x1 = Math.min(xa, xb), x2 = Math.max(xa, xb) + 40; o = lv.map(f => { const p = a.p + (b.p - a.p) * f, y = Y(p); return `<line x1="${x1}" x2="${Math.max(x2, G.W - G.R)}" y1="${y}" y2="${y}" stroke="#b18cff" opacity="${op * .8}"/><text x="${x1 + 3}" y="${y - 3}" fill="#b18cff" font-size="10">${f} · ${fx(p)}</text>`; }).join('') + `<line x1="${xa}" y1="${ya}" x2="${xb}" y2="${yb}" stroke="#b18cff" stroke-dasharray="3 3" opacity="${op}"/>`; }
     return o; };
-  ST.draw.forEach(s => { g += shape(s, false); }); if(ST.tool && ST.pts.length === 1 && ST.mv) g += shape({k: ST.tool, a: ST.pts[0], b: ST.mv}, true);
+  ST.draw.forEach(s => { g += shape(s, false); }); if(ST.tool && ST.pts.length >= 1 && ST.mv) g += ST.tool === 'pa' ? shape({k: 'pa', pts: ST.pts.concat([ST.mv])}, true) : (ST.pts.length === 1 ? shape({k: ST.tool, a: ST.pts[0], b: ST.mv}, true) : '');
   g += `<image href="${BASE}img/logo0.png" x="12" y="6" height="30" width="70" preserveAspectRatio="xMinYMid meet"/><text x="90" y="26" fill="#e8e8ea" font-size="15" font-weight="800">${esc(ST.sym)}/USDT · ${ST.tf.toUpperCase()}</text><text x="${G.W - G.R}" y="26" fill="#dba118" font-size="10" font-weight="800" text-anchor="end">TTM BETA</text>`;
   sv.innerHTML = g;
 }
