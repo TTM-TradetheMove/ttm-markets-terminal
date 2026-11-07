@@ -1,4 +1,8 @@
--- Eclipse alerts: a phone push 7 days before EVERY eclipse line (Lunar 1-4, Solar 1-4). Run once in the Supabase SQL editor.
+-- Eclipse alerts: a phone push 7 days before AND on the day of EVERY eclipse line (Lunar 1-4, Solar 1-4). Run once in the Supabase SQL editor.
+-- Adds the "on the day" push flag (past events are marked done so only future ones alert)
+alter table public.ttm_luna_alerts add column if not exists notified_day boolean not null default false;
+update public.ttm_luna_alerts set notified_day = true where starts_at < now();
+
 insert into public.ttm_luna_alerts (starts_at, name, color) values
   ('2027-02-06 12:00+00', 'Solar 2 · Annular eclipse', 'green'),
   ('2027-08-02 12:00+00', 'Solar 3 · Total eclipse', 'green'),

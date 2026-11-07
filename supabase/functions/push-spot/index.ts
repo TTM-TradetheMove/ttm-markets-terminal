@@ -199,13 +199,21 @@ Deno.serve(async (req) => {
     const c = await claim("ttm_live", s.id, "announced"); if (!c) continue;
     await send(await subsFor(null), {title: "New live session", body: s.title + " · " + when(s.starts_at), tag: "live-new-" + s.id, url: "./crypto/index.html"}, "live");
   }
+  // Eclipse alerts: a push 7 days before and another on the day, to admin, Team, beta testers and Pro members
+  const ecAudience = async () => { let people; try { people = await get("ttm_profiles?select=id&or=(is_admin.eq.true,beta.eq.true,team.eq.true,plan.eq.pro)"); } catch (_) { people = await get("ttm_profiles?select=id&or=(is_admin.eq.true,beta.eq.true)"); } return await subsFor(idsOf(people)); };
+  const ecDay = (t: string) => new Intl.DateTimeFormat("en-AU", {timeZone: "Australia/Melbourne", weekday: "short", day: "numeric", month: "short", year: "numeric"}).format(new Date(t));
   const luna = await get(`ttm_luna_alerts?select=*&notified=eq.false&starts_at=gt.${new Date(now).toISOString()}&starts_at=lte.${new Date(now + 7 * 864e5).toISOString()}`);
   for (const s of luna) {
     const c = await claim("ttm_luna_alerts", s.id, "notified"); if (!c) continue;
-    let people; try { people = await get("ttm_profiles?select=id&or=(is_admin.eq.true,beta.eq.true,team.eq.true)"); } catch (_) { people = await get("ttm_profiles?select=id&or=(is_admin.eq.true,beta.eq.true)"); }
-    const day = new Intl.DateTimeFormat("en-AU", {timeZone: "Australia/Melbourne", weekday: "short", day: "numeric", month: "short", year: "numeric"}).format(new Date(s.starts_at));
-    await send(await subsFor(idsOf(people)), {title: (s.color === "green" ? "🟢 " : "🔴 ") + s.name, body: "Starts in 7 days · " + day, tag: "luna-" + s.id, url: "./crypto/index.html#lunacycles"}, "luna");
+    await send(await ecAudience(), {title: (s.color === "green" ? "🟢 " : "🔴 ") + s.name, body: "Eclipse in 7 days · " + ecDay(s.starts_at), tag: "luna-" + s.id, url: "./crypto/index.html#lunacycles"}, "luna");
   }
+  try {
+    const today = await get(`ttm_luna_alerts?select=*&notified_day=eq.false&starts_at=lte.${new Date(now).toISOString()}&starts_at=gt.${new Date(now - 2 * 864e5).toISOString()}`);
+    for (const s of today) {
+      const c = await claim("ttm_luna_alerts", s.id, "notified_day"); if (!c) continue;
+      await send(await ecAudience(), {title: (s.color === "green" ? "🟢 " : "🔴 ") + s.name, body: "Eclipse is happening today · " + ecDay(s.starts_at), tag: "luna-day-" + s.id, url: "./crypto/index.html#lunacycles"}, "luna");
+    }
+  } catch (e) { console.log("eclipse day alert failed (run supabase/eclipse_alerts.sql):", String(e)); }
   // one-off announcements: insert a row in ttm_announce (see supabase/announce.sql); it goes out within a minute, once
   try {
     for (const an of await get("ttm_announce?select=*&sent=eq.false&order=id.asc&limit=5")) {
