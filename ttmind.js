@@ -188,26 +188,43 @@ push({id: 'fgi', name: 'Fear & Greed, crypto (TTM)', pane: 'sub', range: [0, 100
 
 /* 13. TTM RSI combo (sub pane): smoothed RSI + volume-weighted RSI, exhaustion, divergences, warning dots, reversals */
 const piv = (a, n, hi) => a.map((v, i) => { const c = i - n; if(c < n || v == null || a[c] == null) return null; for(let k = c - n; k <= c + n; k++){ if(k === c || a[k] == null) { if(a[k] == null && k !== c) return null; continue; } if(hi ? a[k] > a[c] : a[k] < a[c]) return null; } return {c, v: a[c]}; });
-push({id: 'rsic', name: 'TTM RSI combo (confluence)', pane: 'sub', range: [0, 100], lines: [30, 50, 70], calc: r => {
-  const rs = rsiA(closes(r), 14), osc = emaA(rs.map(v => v), 5), rv = rsiA(r.map(x => x.v * x.c), 14), ov = emaA(rv, 5), n = r.length;
+push({id: 'rsic', name: 'Trade with Confluence (TTM)', pane: 'sub', range: [0, 100], lines: [30, 50, 70], calc: r => {
+  const n = r.length, osc = emaA(rsiA(closes(r), 14), 5), ov = emaA(rsiA(r.map(x => x.v * x.c), 14), 5);
   const slope = osc.map((v, i) => v != null && i && osc[i - 1] != null ? v - osc[i - 1] : null);
-  const pl = piv(r.map(x => x.l), 5, false), ph = piv(r.map(x => x.h), 5, true), ol = piv(osc, 5, false), oh = piv(osc, 5, true), oh3 = piv(osc, 3, true), ol3 = piv(osc, 3, false);
-  const divs = [], bullD = {}, bearD = {}, divEv = []; let pLo = null, pHi = null;
-  for(let i = 0; i < n; i++){ if(pl[i] && ol[i]){ if(pLo && pl[i].v < pLo.pv && ol[i].v > pLo.ov){ divs.push({k: 'bull', a: pLo.c, b: pl[i].c, ya: pLo.ov, yb: ol[i].v}); bullD[i] = 1; divEv.push({i, k: 'dB'}); } pLo = {pv: pl[i].v, ov: ol[i].v, c: pl[i].c}; }
-    if(ph[i] && oh[i]){ if(pHi && ph[i].v > pHi.pv && oh[i].v < pHi.ov){ divs.push({k: 'bear', a: pHi.c, b: ph[i].c, ya: pHi.ov, yb: oh[i].v}); bearD[i] = 1; divEv.push({i, k: 'dS'}); } pHi = {pv: ph[i].v, ov: oh[i].v, c: ph[i].c}; } }
-  const ev = []; for(let i = 1; i < n; i++){ const o = osc[i], s = slope[i], sp = slope[i - 1]; if(o == null || s == null) continue;
+  // PVSRA volume columns
+  const hl = r.map(x => x.v * (x.h - x.l)), pc = [], vs = [];
+  for(let i = 0; i < n; i++){ let av = 0, mh = 0, k = 0; for(let j = Math.max(0, i - 10); j < i; j++){ av += r[j].v; mh = Math.max(mh, hl[j]); k++; } av = k ? av / k : 0;
+    const va = r[i].v >= av * 2 || (k && hl[i] >= mh) ? 200 : r[i].v >= av * 1.5 ? 150 : 100, bu = r[i].c > r[i].o;
+    pc[i] = va === 200 ? (bu ? '#00ff00' : '#ff0000') : va === 150 ? (bu ? '#3d7bff' : '#ff00ff') : (bu ? '#e8e8e8' : '#777777');
+    let mx = 0; for(let j = Math.max(0, i - 299); j <= i; j++) mx = Math.max(mx, r[j].v); vs[i] = mx > 0 ? r[i].v / mx : 0; }
+  // volume pressure (0-100)
+  const bf = r.map(x => x.h > x.l ? (x.c - x.l) / (x.h - x.l) : .5), bs = emaA(r.map((x, i) => x.v * bf[i]), 14), es = emaA(r.map((x, i) => x.v * (1 - bf[i])), 14), vp = bs.map((b, i) => b != null && es[i] != null && b + es[i] > 0 ? b / (b + es[i]) * 100 : 50);
+  // divergences (price vs src)
+  const divFn = (src, kb, ks) => { const lo = piv(src, 5, false), hi = piv(src, 5, true), out = [], evs = []; let pL = null, pH = null;
+    for(let i = 0; i < n; i++){ if(lo[i]){ const c = lo[i].c, pr = r[c] ? r[c].l : null; if(pL && pr != null){ const d = c - pL.c; if(d >= 5 && d <= 60 && pr < pL.pr && lo[i].v > pL.v){ out.push({k: 'bull', a: pL.c, b: c, ya: pL.v, yb: lo[i].v, s: kb}); evs.push({i, k: kb}); } } if(pr != null) pL = {v: lo[i].v, c, pr}; }
+      if(hi[i]){ const c = hi[i].c, pr = r[c] ? r[c].h : null; if(pH && pr != null){ const d = c - pH.c; if(d >= 5 && d <= 60 && pr > pH.pr && hi[i].v < pH.v){ out.push({k: 'bear', a: pH.c, b: c, ya: pH.v, yb: hi[i].v, s: ks}); evs.push({i, k: ks}); } } if(pr != null) pH = {v: hi[i].v, c, pr}; } }
+    return {out, evs}; };
+  const rd = divFn(osc, 'dB', 'dS'), vd2 = divFn(vp, 'vB', 'vS'), bullD = {}, bearD = {}; rd.evs.forEach(e => { (e.k === 'dB' ? bullD : bearD)[e.i] = 1; });
+  const oh3 = piv(osc, 3, true), ol3 = piv(osc, 3, false), ev = [];
+  for(let i = 1; i < n; i++){ const o = osc[i], s = slope[i], sp = slope[i - 1]; if(o == null || s == null) continue;
     if(o > 15 && o < 30 && s < 0) ev.push({i, k: 'exB'}); if(o < 85 && o > 70 && s > 0) ev.push({i, k: 'exS'});
     if(s > 0 && sp != null && s < sp && o > 70 && o < 85 && (bearD[i] || oh3[i])) ev.push({i, k: 'wS'}); if(s < 0 && sp != null && s > sp && o < 30 && o > 15 && (bullD[i] || ol3[i])) ev.push({i, k: 'wB'});
-    if(o < 40 && s > 0 && sp != null && sp <= 0) ev.push({i, k: 'rB'}); if(o > 60 && s < 0 && sp != null && sp >= 0) ev.push({i, k: 'rS'}); }
-  return {osc, ov, slope, divs, ev: ev.concat(divEv)}; },
-  alerts: [{k: 'rB', name: 'Bullish momentum reversal'}, {k: 'rS', name: 'Bearish momentum reversal'}, {k: 'dB', name: 'Bullish divergence'}, {k: 'dS', name: 'Bearish divergence'}, {k: 'wB', name: 'Bullish exhaustion warning'}, {k: 'wS', name: 'Bearish exhaustion warning'}], alertHits: (r, R) => R.ev,
+    if(o < 40 && s > 0 && sp != null && sp <= 0) ev.push({i, k: 'rB'}); if(o > 60 && s < 0 && sp != null && sp >= 0) ev.push({i, k: 'rS'});
+    const pv = osc[i - 1]; if(pv != null){ if(pv < 70 && o >= 70) ev.push({i, k: 'ob'}); if(pv > 30 && o <= 30) ev.push({i, k: 'os'}); } }
+  return {osc, ov, slope, pc, vs, vp, divs: rd.out, vdivs: vd2.out, ev: ev.concat(rd.evs, vd2.evs)}; },
+  alerts: [{k: 'rB', name: 'Bullish momentum reversal'}, {k: 'rS', name: 'Bearish momentum reversal'}, {k: 'dB', name: 'Bullish divergence'}, {k: 'dS', name: 'Bearish divergence'}, {k: 'vB', name: 'Bullish volume divergence'}, {k: 'vS', name: 'Bearish volume divergence'}, {k: 'exB', name: 'Oversold exhaustion'}, {k: 'exS', name: 'Overbought exhaustion'}, {k: 'ob', name: 'Overbought (RSI crossed 70)'}, {k: 'os', name: 'Oversold (RSI crossed 30)'}, {k: 'wB', name: 'Bullish exhaustion warning'}, {k: 'wS', name: 'Bearish exhaustion warning'}], alertHits: (r, R) => R.ev,
   subPaint: a => { const R = a.res, {c, g, X, yy, top, bot, i0, i1} = a; if(!R) return;
     for(let i = i0; i <= i1; i++){ const o = R.osc[i]; if(o == null) continue; if(o >= 70 || o <= 30){ c.fillStyle = o >= 70 ? 'rgba(255,60,60,.14)' : 'rgba(60,200,90,.14)'; c.fillRect(X(i) - g.w / 2, top, g.w + .5, bot - top); } }
+    const vh = (bot - top) * .2; for(let i = i0; i <= i1; i++){ c.fillStyle = R.pc[i]; c.globalAlpha = .85; const h = R.vs[i] * vh; c.fillRect(X(i) - g.w * .4, bot - h, g.w * .8, h); } c.globalAlpha = 1;
+    const ln = (s, col, w) => { c.strokeStyle = col; c.lineWidth = w; c.beginPath(); let on = false; for(let i = i0; i <= i1; i++){ const v = s[i]; if(v == null){ on = false; continue; } if(on) c.lineTo(X(i), yy(v)); else { c.moveTo(X(i), yy(v)); on = true; } } c.stroke(); c.lineWidth = 1; };
+    ln(R.vp, 'rgba(0,229,255,.8)', 1);
     const glow = (s, w) => { for(let i = Math.max(1, i0); i <= i1; i++){ const v = s[i], u = s[i - 1], sl = R.slope[i]; if(v == null || u == null) continue; const col = sl == null ? '#8b8f9a' : sl > 0 ? '#2ecc71' : sl < 0 ? '#4f8cff' : '#8b8f9a'; [[w + 3, .22], [w + 1.5, .3], [w, 1]].forEach(z => { c.globalAlpha = z[1]; c.strokeStyle = col; c.lineWidth = z[0]; c.beginPath(); c.moveTo(X(i - 1), yy(u)); c.lineTo(X(i), yy(v)); c.stroke(); }); } c.globalAlpha = 1; c.lineWidth = 1; };
     glow(R.ov, 1.2); glow(R.osc, 2);
-    R.divs.forEach(d => { if(d.b < i0 - 50 || d.a > i1) return; c.strokeStyle = d.k === 'bull' ? '#93ff7d' : '#ff3b30'; c.lineWidth = 2; c.beginPath(); c.moveTo(X(d.a), yy(d.ya)); c.lineTo(X(d.b), yy(d.yb)); c.stroke(); c.lineWidth = 1; });
+    const dv = (arr, cb, cs, t1, t2) => arr.forEach(d => { if(d.b < i0 - 50 || d.a > i1) return; const col = d.k === 'bull' ? cb : cs; c.strokeStyle = col; c.lineWidth = 2; c.beginPath(); c.moveTo(X(d.a), yy(d.ya)); c.lineTo(X(d.b), yy(d.yb)); c.stroke(); c.lineWidth = 1; if(d.b >= i0 && d.b <= i1) tagL(c, X(d.b), yy(d.yb), d.k === 'bull' ? t1 : t2, col, d.k === 'bull' ? '#000' : '#fff', d.k !== 'bull'); });
+    dv(R.divs, '#93ff7d', '#ff3b30', 'Bull', 'Bear'); dv(R.vdivs, '#00E5FF', '#FF9100', 'Vol Bull', 'Vol Bear');
     R.ev.forEach(e => { if(e.i < i0 || e.i > i1) return; const x = X(e.i), o = R.osc[e.i];
       if(e.k === 'exB') tagL(c, x, bot - 14, '▲', '#1e6120', '#fff', false); else if(e.k === 'exS') tagL(c, x, top + 14, '▼', '#7d1e1e', '#fff', true);
       else if(e.k === 'wS' || e.k === 'wB'){ c.fillStyle = e.k === 'wS' ? '#9023f5' : '#f9c431'; c.beginPath(); c.moveTo(x, yy(o) - 4); c.lineTo(x + 4, yy(o)); c.lineTo(x, yy(o) + 4); c.lineTo(x - 4, yy(o)); c.fill(); }
-      else if(e.k === 'rB' || e.k === 'rS'){ c.fillStyle = e.k === 'rB' ? '#45b02d' : '#d60f0f'; c.beginPath(); c.arc(x, yy(o), 3.5, 0, 6.3); c.fill(); } }); }});
+      else if(e.k === 'rB' || e.k === 'rS'){ c.fillStyle = e.k === 'rB' ? '#45b02d' : '#d60f0f'; c.beginPath(); c.arc(x, yy(o), 3.5, 0, 6.3); c.fill(); } });
+    c.font = '10px system-ui'; c.fillStyle = 'rgba(212,175,55,.8)'; c.textAlign = 'right'; c.fillText('Indicators by TTM', g.pw - 6, bot - 8); c.textAlign = 'left'; }});
 })();
