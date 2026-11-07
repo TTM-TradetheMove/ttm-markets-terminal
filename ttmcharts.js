@@ -180,7 +180,7 @@ function paint(){
   if(S.tool && S.cross && S.cross.y >= g.mT && S.cross.y <= g.mB && (S.magnet || S.ctrl)){ const pp = ptr({clientX: S.cross.x + cv.getBoundingClientRect().left, clientY: S.cross.y + cv.getBoundingClientRect().top, ctrlKey: true}); if(pp.snap){ c.strokeStyle = '#dba118'; c.lineWidth = 2; c.beginPath(); c.arc(pp.x, pp.y, 6, 0, 6.3); c.stroke(); c.lineWidth = 1; } }
   if(S.rp.on){ const x = X(S.rp.idx) + g.w / 2; c.strokeStyle = 'rgba(219,161,24,.6)'; c.beginPath(); c.moveTo(x, g.mT); c.lineTo(x, g.mB); c.stroke(); rpInfo(); }
 }
-function R(ind, d){ const key = S.sym + '|' + S.tf + '|' + S.ex + '|' + d.length + '|' + d[0].t + '|' + d[d.length - 1].c + '|' + d[d.length - 1].h + '|' + d[d.length - 1].l; if(!ind._m || ind._k !== key){ ind._m = ind.calc ? ind.calc(d, S) : null; ind._k = key; } return ind._m; }
+function R(ind, d){ const key = S.sym + '|' + S.tf + '|' + S.ex + '|' + d.length + '|' + d[0].t + '|' + d[d.length - 1].c + '|' + d[d.length - 1].h + '|' + d[d.length - 1].l + '|' + (ind.ver ? ind.ver() : ''); if(!ind._m || ind._k !== key){ ind._m = ind.calc ? ind.calc(d, S) : null; ind._k = key; } return ind._m; }
 function drawPanels(act, A, g){ const c = cx, stack = {tr: 0, br: 0, bl: 0};
   act.filter(i => i.panel).forEach(i => { let p; try{ p = i.panel(A(i)); }catch(e){ return; } if(!p || !p.rows) return; c.font = '11px system-ui,sans-serif';
     const rows = p.rows, title = p.title, ws = [0, 0]; rows.forEach(r => r.forEach((cell, k) => { ws[k] = Math.max(ws[k] || 0, c.measureText(cell[0]).width); })); const tw = title ? c.measureText(title).width : 0, W = Math.max(tw + 16, ws[0] + (ws[1] ? ws[1] + 18 : 0) + 16), H = rows.length * 16 + (title ? 20 : 8) + 2;
