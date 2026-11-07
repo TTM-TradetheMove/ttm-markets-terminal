@@ -131,7 +131,7 @@ function zoom(f, cxr){ const n = vd().length, a = S.v0 + S.vn * (cxr == null ? 1
 /* ---------- geometry ---------- */
 const P = {R: 68, T: 46, B: 22};
 function geo(){ const r = cv.getBoundingClientRect(); dpr = window.devicePixelRatio || 1; const W = Math.round(r.width), H = Math.round(r.height); if(cv.width !== W * dpr || cv.height !== H * dpr){ cv.width = W * dpr; cv.height = H * dpr; }
-  const subs = allInd().filter(i => S.inds[i.id] && i.pane === 'sub'), avail = H - P.T - P.B, def = Math.round(avail * .2); S.subH = S.subH || {};
+  const subs = allInd().filter(i => S.inds[i.id] && i.pane === 'sub'), avail = H - P.T - P.B, def = Math.round(avail * .2); S.subH = S.subH || ls('subh', {});
   let shs = subs.map(i => Math.max(40, Math.min(Math.round(avail * .6), S.subH[i.id] || def))); const room = avail - 120 - subs.length * 6; let tot = shs.reduce((a, b) => a + b, 0); if(tot > room && tot > 0){ const f = Math.max(0, room) / tot; shs = shs.map(v => Math.max(30, Math.floor(v * f))); }
   const total = avail - shs.reduce((a, b) => a + b, 0) - subs.length * 6, mB = P.T + total, tops = []; let y = mB + 6; shs.forEach(v => { tops.push(y); y += v + 6; });
   S.g = {W, H, pw: W - P.R, mT: P.T, mB, subs, sh: shs[0] || 0, shs, tops, w: (W - P.R) / S.vn}; }
@@ -302,7 +302,7 @@ function wire(m){
     const r = cv.getBoundingClientRect(); S.cross = {x: e.clientX - r.left, y: e.clientY - r.top};
     if(S.mvd){ const q = ptr(e), M = S.mvd, dt = q.t - M.p0.t, dp = q.p - M.p0.p, mvp = (o, n) => { n.t = o.t + dt; n.p = o.p + dp; }; if(Math.abs(e.clientX - last.x) >= 0 || true){ M.moved = true; if(M.orig.a) mvp(M.orig.a, M.s.a); if(M.orig.b) mvp(M.orig.b, M.s.b); if(M.orig.pts) M.orig.pts.forEach((z, i) => mvp(z, M.s.pts[i])); paint(); } return; }
     if(S.brush){ const q = ptr(e); S.brush.push({t: q.t, p: q.p}); paint(); return; }
-    if(rs){ S.subH[rs.id] = Math.round(rs.h + (rs.y - e.clientY)); paint(); return; }
+    if(rs){ S.subH[rs.id] = Math.round(rs.h + (rs.y - e.clientY)); lsSet('subh', S.subH); paint(); return; }
     if(tx){ const nv = Math.max(12, Math.min(Math.max(vd().length + 20, 60), tx.vn * Math.exp((e.clientX - tx.x) / 180))); S.vn = nv; S.v0 = tx.v0 + tx.vn - nv; clampV(); paint(); return; }
     if(!drag && !S.tool) cv.style.cursor = divAt(S.cross.y) >= 0 ? 'ns-resize' : (S.cross.y > S.g.H - P.B ? 'ew-resize' : (hitDraw(S.cross.x, S.cross.y) ? 'move' : ''));
     if(drag){ const dx = e.clientX - drag.x, dy = e.clientY - drag.y, ph = S.g.mB - S.g.mT;
