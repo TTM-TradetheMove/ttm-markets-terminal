@@ -34,6 +34,29 @@ const IND = [
 ];
 window.TTM_INDICATORS = window.TTM_INDICATORS || [];   // push {id, name, pane: 'price'|'sub', color, calc(rows) -> array, range?: [lo, hi], lines?: [..]} here for TTM's own indicators
 const allInd = () => IND.concat(window.TTM_INDICATORS);
+// coin categories for the symbol search (Layer 1, DeFi, Gaming ...). Simple lists kept by TTM; coins not listed just have no category.
+const TAGS = {
+  'Layer 1': 'BTC ETH BNB SOL ADA AVAX DOT TRX NEAR ATOM APT SUI SEI TON ICP ALGO XLM XRP HBAR KAS FTM S EGLD FLOW MINA KAVA ONE CELO ZIL IOTA XTZ EOS NEO KDA ROSE INJ TIA CFX BERA LTC BCH DOGE XMR ZEC DASH ETC XDC VET THETA QTUM ICX ONT WAVES MONAD HYPE XNO CKB FIL AR TAO',
+  'Layer 2': 'ARB OP MATIC POL IMX STRK ZK MANTA METIS BOBA SKL LRC MNT BLAST STX TAIKO SCR CKB ZKJ MOVE ZRO',
+  'Smart contracts': 'ETH SOL ADA AVAX DOT NEAR ATOM APT SUI SEI TON ALGO EOS TRX BNB FTM S EGLD ICP HBAR FLOW XTZ NEO CELO KAVA INJ ONE MINA ROSE CFX VET XDC TIA HYPE BERA MONAD',
+  'DeFi': 'UNI AAVE MKR SNX CRV COMP SUSHI 1INCH LDO RPL YFI BAL DYDX GMX PENDLE JUP RAY CAKE ENA ETHFI EIGEN LQTY FXS CVX KNC RUNE OSMO CETUS JTO DRIFT HYPE MORPHO AERO VELO COW UMA BNT ZRX LINK SUN SYRUP',
+  'Gaming': 'AXS SAND MANA GALA ENJ ILV IMX BEAM PIXEL YGG PRIME RON MAGIC ALICE GMT APE NOT TLM SLP UOS PORTAL ACE XAI BIGTIME GODS MBOX VOXEL HERO SUPER AGLD PYR WEMIX',
+  'Metaverse': 'MANA SAND AXS APE ENJ GALA ALICE HIGH RNDR RENDER',
+  'AI': 'FET AGIX OCEAN RNDR RENDER TAO WLD AKT ARKM AI16Z VIRTUAL GRT NMR IO KAITO AIXBT GRASS AIOZ TRAC NFP ALI GLM ARC',
+  'Meme': 'DOGE SHIB PEPE FLOKI BONK WIF TRUMP POPCAT BRETT MEW MOG TURBO NEIRO PNUT GOAT ACT FARTCOIN CHILLGUY MOODENG DEGEN BOME CASHCAT HIPPO MEME PENGU SPX',
+  'Exchange': 'BNB OKB CRO KCS GT BGB LEO HT MX',
+  'Oracle': 'LINK PYTH BAND API3 TRB UMA DIA',
+  'Privacy': 'XMR ZEC DASH SCRT ROSE BEAM XVG DCR',
+  'RWA': 'ONDO POLYX CFG MPL TRU PLUME CPOOL RIO',
+  'DePIN / storage': 'FIL AR STORJ SC HNT IOTX RNDR RENDER ANKR AKT THETA GLM IO MOBILE',
+  'Payments': 'XRP XLM LTC BCH XNO ALGO CELO DASH',
+  'NFT': 'BLUR APE LOOKS RARE MAGIC SUPER',
+  'Liquid staking': 'LDO RPL ETHFI SWISE ANKR EIGEN',
+  'Interoperability': 'ATOM DOT LINK ZRO AXL W STG QNT RUNE CELR'
+};
+const TAGSET = {}; Object.keys(TAGS).forEach(k => { TAGSET[k] = new Set(TAGS[k].split(' ')); });
+const symKey = s => String(s).replace(/^(1000000|100000|10000|1000|1M)/, '');
+const tagsOf = s => Object.keys(TAGS).filter(k => TAGSET[k].has(symKey(s)));
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'})[c]);
 const fx = v => v == null || !isFinite(v) ? '—' : Math.abs(v) >= 1000 ? v.toLocaleString(undefined, {maximumFractionDigits: 1}) : Math.abs(v) >= 1 ? v.toFixed(3) : Math.abs(v) >= .01 ? v.toFixed(5) : v.toPrecision(3);
 const css = `#ttc{position:fixed;inset:0;z-index:6000;background:#0b0b0e;color:#e8e8ea;display:flex;flex-direction:column;font-family:inherit}
@@ -44,10 +67,14 @@ const css = `#ttc{position:fixed;inset:0;z-index:6000;background:#0b0b0e;color:#
 #ttc .lt button{width:38px;height:34px;padding:0;font-size:15px}#ttc .cw{position:relative;flex:1;min-width:0}#ttc canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
 #ttc .rp{display:none;align-items:center;gap:6px;padding:6px 8px;border-top:1px solid #23232a;background:#121216;flex-wrap:wrap}#ttc .rp.on{display:flex}
 #ttc .pop{position:absolute;z-index:5;background:#16161b;border:1px solid #2a2a31;border-radius:12px;padding:10px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
-#ttc .sym{top:48px;left:8px;width:min(380px,94vw);max-height:70vh;display:flex;flex-direction:column;gap:6px}#ttc .sl{overflow:auto;flex:1}
+#ttc .sym{top:48px;left:8px;width:min(430px,94vw);max-height:78vh;display:flex;flex-direction:column;gap:6px}#ttc .sl{overflow:auto;flex:1}
 #ttc .sl div{display:flex;justify-content:space-between;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px}#ttc .sl div:hover{background:#23232a}
 #ttc .ind{top:48px;right:8px;width:230px}#ttc .ind label{display:flex;gap:7px;align-items:center;padding:4px 2px;font-size:13px}
 #ttc .st{position:absolute;left:8px;bottom:8px;font-size:12px;color:#8b8f9a;pointer-events:none}
+#ttc .cats{display:flex;flex-wrap:wrap;gap:4px}#ttc .cats button{padding:3px 8px;font-size:11px;border-radius:999px}
+#ttc .sl small{color:#6b6f7a;margin-left:6px;font-size:10px}#ttc .tst{position:absolute;right:12px;bottom:46px;z-index:7;display:flex;flex-direction:column;gap:6px}
+#ttc .tst div{background:#16161b;border:1px solid #dba118;border-radius:10px;padding:8px 12px;font-size:12px;box-shadow:0 6px 24px rgba(0,0,0,.6);max-width:300px}
+#ttc .al{top:48px;right:8px;width:min(330px,94vw);max-height:76vh;overflow:auto}#ttc .al h4{margin:10px 0 4px;font-size:12px;color:#dba118}#ttc .al label{display:flex;gap:7px;align-items:center;padding:3px 0;font-size:12.5px}
 @media(max-width:700px){#ttc .lt{flex-direction:row;border-right:0;border-bottom:1px solid #23232a;overflow-x:auto}#ttc .mn{flex-direction:column}}`;
 let S = null, timer = null, cv, cx, dpr = 1, logo = new Image();
 const SK = k => 'ttm_charts_' + k;
@@ -56,34 +83,34 @@ const lsSet = (k, v) => { try{ localStorage.setItem(SK(k), JSON.stringify(v)); }
 function open(o){
   close(); o = o || {};
   const exk = o.ex && EX[o.ex] ? o.ex : ls('ex', 'bybit_perp'), sym = String(o.sym || ls('sym', 'BTC')).toUpperCase().replace(/USDT$/, ''), tf = TFS.includes(o.tf) ? o.tf : ls('tf', '1h');
-  S = {ex: exk, sym, tf, data: [], v0: 0, vn: 90, pv: null, tool: null, pts: [], mv: null, cross: null, draw: ls('draw_' + sym, []), inds: ls('inds', {ema21: 1, ema50: 1, vol: 1}), rp: {on: false, pick: false, idx: 0, play: false, speed: 1}, tok: 0, done: false, loading: false, list: {}, orders: o.orders || []};
+  S = {ex: exk, sym, tf, data: [], v0: 0, vn: 90, pv: null, tool: null, pts: [], mv: null, cross: null, draw: ls('draw_' + sym, []), inds: ls('inds', {ema21: 1, ema50: 1, vol: 1}), rp: {on: false, pick: false, idx: 0, play: false, speed: 1}, tok: 0, done: false, loading: false, list: {}, orders: o.orders || [], embedded: !!o.embedded, magnet: ls('magnet', false), alerts: ls('alerts', {phone: true, on: {}}), fired: {}};
   if(!document.getElementById('ttcCss')){ const st = document.createElement('style'); st.id = 'ttcCss'; st.textContent = css; document.head.appendChild(st); }
   logo.src = BASE + 'img/logo0.png'; logo.onload = paint;
   const m = document.createElement('div'); m.id = 'ttc';
   m.innerHTML = `<div class="tb"><img src="${BASE}img/logo0.png" alt="TTM" style="height:24px"><span class="bt">TTM CHARTS · BETA</span>
     <button id="tcSym" style="font-weight:800;min-width:96px"></button><select id="tcEx">${Object.keys(EX).map(k => `<option value="${k}">${EX[k].n}</option>`).join('')}</select>
     ${TFS.map(t => `<button data-tf="${t}">${t}</button>`).join('')}<span class="sp"></span>
-    <button id="tcInd">Indicators</button><button id="tcRp">⏪ Replay</button><button id="tcFit">Fit</button><button id="tcPng">Image</button><button id="tcChat">Post in chat…</button><button id="tcX">✕</button></div>
-  <div class="mn"><div class="lt" id="tcTools">${[['cur', '✥', 'Move'], ['tl', '／', 'Trend line'], ['ray', '↗', 'Ray'], ['hl', '─', 'Horizontal line'], ['vl', '│', 'Vertical line'], ['fib', 'ƒ', 'Fib retracement'], ['rc', '▭', 'Box'], ['pa', '〰', 'Path (double-tap to finish)'], ['ru', '📏', 'Measure']].map(t => `<button data-tool="${t[0]}" title="${t[2]}">${t[1]}</button>`).join('')}<button id="tcUndo" title="Undo">↶</button><button id="tcClr" title="Clear drawings">🗑</button></div>
+    <button id="tcInd">Indicators</button><button id="tcAl" title="Phone alerts">🔔 Alerts</button><button id="tcRp">⏪ Replay</button><button id="tcFit">Fit</button><button id="tcPng">Image</button><button id="tcChat">Post in chat…</button>${o.embedded ? '' : '<button id="tcPop" title="Open in its own window">⧉ Pop out</button><button id="tcX">✕</button>'}</div>
+  <div class="mn"><div class="lt" id="tcTools">${[['cur', '✥', 'Move'], ['tl', '／', 'Trend line'], ['ray', '↗', 'Ray'], ['hl', '─', 'Horizontal line'], ['vl', '│', 'Vertical line'], ['fib', 'ƒ', 'Fib retracement'], ['rc', '▭', 'Box'], ['pa', '〰', 'Path (double-tap to finish)'], ['ru', '📏', 'Measure']].map(t => `<button data-tool="${t[0]}" title="${t[2]}">${t[1]}</button>`).join('')}<button id="tcMag" title="Magnet: snap to the candle high / low / open / close. Hold Ctrl (Cmd on Mac) while clicking to snap just once.">🧲</button><button id="tcUndo" title="Undo">↶</button><button id="tcClr" title="Clear drawings">🗑</button></div>
   <div class="cw" id="tcCw"><canvas id="tcCv"></canvas><div class="st" id="tcSt">Loading…</div></div></div>
   <div class="rp" id="tcRpBar"><b style="color:#dba118">REPLAY</b><button id="rpPick">Pick start bar</button><button id="rpBack">⏮ Back</button><button id="rpPlay">▶ Play</button><button id="rpStep">Step ⏭</button>
     <select id="rpSpd"><option value="1">1×</option><option value="2">2×</option><option value="5">5×</option><option value="10">10×</option><option value="25">25×</option></select><span id="rpInfo" style="color:#8b8f9a;font-size:12px"></span><span class="sp"></span><button id="rpX">Exit replay</button></div>`;
   document.body.appendChild(m); cv = m.querySelector('#tcCv'); cx = cv.getContext('2d');
   m.querySelector('#tcEx').value = S.ex; wire(m); syncTf(); syncTools(); syncSym();
-  window.addEventListener('resize', paint); document.addEventListener('keydown', key);
+  window.addEventListener('resize', paint); document.addEventListener('keydown', key); document.addEventListener('keyup', e => { if(S){ S.ctrl = e.ctrlKey || e.metaKey; } });
   loadAll(true); timer = setInterval(poll, 3000);
 }
 function close(){ clearInterval(timer); timer = null; const e = document.getElementById('ttc'); if(e) e.remove(); window.removeEventListener('resize', paint); document.removeEventListener('keydown', key); if(S && S.rp) clearTimeout(S.rp.t); S = null; }
-function key(e){ if(!S) return; if(e.key === 'Escape'){ const p = document.querySelector('#ttc .pop'); if(p) p.remove(); else if(S.tool){ S.tool = null; S.pts = []; syncTools(); paint(); } else close(); } if(e.key === 'Enter' && S.tool === 'pa') finishPath(); if(e.key === ' ' && S.rp.on && !/INPUT|SELECT/.test((e.target.tagName))){ e.preventDefault(); rpToggle(); } if(e.key === 'ArrowRight' && S.rp.on) rpStep(1); }
+function key(e){ if(!S) return; S.ctrl = e.ctrlKey || e.metaKey; if(e.key === 'Escape'){ const p = document.querySelector('#ttc .pop'); if(p) p.remove(); else if(S.tool){ S.tool = null; S.pts = []; syncTools(); paint(); } else if(!S.embedded) close(); } if(e.key === 'Enter' && S.tool === 'pa') finishPath(); if(e.key === ' ' && S.rp.on && !/INPUT|SELECT/.test((e.target.tagName))){ e.preventDefault(); rpToggle(); } if(e.key === 'ArrowRight' && S.rp.on) rpStep(1); }
 const $ = id => document.getElementById(id);
 function syncTf(){ document.querySelectorAll('#ttc [data-tf]').forEach(b => b.classList.toggle('on', b.dataset.tf === S.tf)); }
-function syncTools(){ document.querySelectorAll('#ttc [data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === (S.tool || 'cur'))); }
+function syncTools(){ document.querySelectorAll('#ttc [data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === (S.tool || 'cur'))); const m = $('tcMag'); if(m) m.classList.toggle('on', !!S.magnet); }
 function syncSym(){ $('tcSym').textContent = S.sym + '/USDT ▾'; }
 function setStatus(t){ const e = $('tcSt'); if(e) e.textContent = t; }
 const vd = () => S.rp.on ? S.data.slice(0, S.rp.idx + 1) : S.data;
 async function loadAll(first){
   const tok = ++S.tok; S.loading = true; S.done = false; setStatus('Loading ' + S.sym + ' ' + S.tf + '…'); stopReplay(true);
-  try{ const d = await EX[S.ex].candles(S.sym, S.tf, 500); if(!S || tok !== S.tok) return; if(d.length < 5) throw new Error('empty'); S.data = d; S.loading = false; fit(); setStatus(''); }
+  try{ const d = await EX[S.ex].candles(S.sym, S.tf, 500); if(!S || tok !== S.tok) return; if(d.length < 5) throw new Error('empty'); S.data = d; S.loading = false; fit(); setStatus(''); setTimeout(checkAlerts, 50); }
   catch(e){ if(!S || tok !== S.tok) return; S.loading = false; S.data = []; setStatus(S.sym + ' is not listed on ' + EX[S.ex].n + ' (or the feed is unreachable). Pick another symbol or exchange.'); }
   paint();
 }
@@ -91,7 +118,7 @@ async function more(){ if(S.loading || S.done || !S.data.length || S.rp.on) retu
   try{ const d = (await EX[S.ex].candles(S.sym, S.tf, 500, first - 1)).filter(x => x.t < first); if(!S || tok !== S.tok) return; if(!d.length) S.done = true; else { S.data = d.concat(S.data); S.v0 += d.length; } }catch(e){ if(S) S.done = true; }
   if(S) S.loading = false; paint(); }
 async function poll(){ if(!S || S.rp.on || !S.data.length || document.hidden) return; const tok = S.tok; try{ const d = await EX[S.ex].candles(S.sym, S.tf, 3); if(!S || tok !== S.tok || S.rp.on) return;
-  d.forEach(c => { const L = S.data[S.data.length - 1]; if(c.t === L.t) S.data[S.data.length - 1] = c; else if(c.t > L.t) S.data.push(c); }); paint(); }catch(e){} }
+  d.forEach(c => { const L = S.data[S.data.length - 1]; if(c.t === L.t) S.data[S.data.length - 1] = c; else if(c.t > L.t) S.data.push(c); }); paint(); checkAlerts(); }catch(e){} }
 function fit(){ const n = vd().length; S.vn = Math.min(Math.max(n, 20), 90); S.v0 = n - S.vn + 4; S.pv = null; }
 function clampV(){ const n = vd().length; S.v0 = Math.max(-S.vn * .6, Math.min(n - S.vn * .3, S.v0)); }
 function zoom(f, cxr){ const n = vd().length, a = S.v0 + S.vn * (cxr == null ? 1 : cxr); S.vn = Math.max(12, Math.min(Math.max(n + 20, 60), S.vn * f)); S.v0 = a - S.vn * (cxr == null ? 1 : cxr); clampV(); if(S.v0 < 15) more(); }
@@ -112,16 +139,19 @@ function paint(){
   S.orders.forEach(o => { if(o >= lo - rg && o <= hi + rg){ lo = Math.min(lo, o); hi = Math.max(hi, o); } });
   if(S.pv){ lo = S.pv.lo; hi = S.pv.hi; } else { const pd = (hi - lo) * .08; lo -= pd; hi += pd; if(S.inds.vol) lo -= (hi - lo) * .12; }
   S.sc = {lo, hi}; const Y = p => g.mT + (g.mB - g.mT) * (1 - (p - lo) / (hi - lo)); S.Y = Y;
+  const act = allInd().filter(i => S.inds[i.id]), A = ind => ({c, g, X, Y, d, i0, i1, S, res: R(ind, d), fx, i0w: i0, daily: sy => EX[S.ex].candles(sy, '1d', 95), repaint: paint}), cc = act.find(i => i.candleColor), cols = cc ? R(cc, d) : null;
   c.font = '11px system-ui,sans-serif'; c.textBaseline = 'middle';
   for(let k = 0; k <= 5; k++){ const p = lo + (hi - lo) * k / 5, y = Y(p); c.strokeStyle = '#1b1b21'; c.beginPath(); c.moveTo(0, y); c.lineTo(g.pw, y); c.stroke(); c.fillStyle = '#8b8f9a'; c.textAlign = 'left'; c.fillText(fx(p), g.pw + 6, y); }
   // time axis
   const step = TFMS[S.tf], every = Math.max(1, Math.round(110 / g.w)), fmtT = t => { const D = new Date(t); return step >= 864e5 ? D.toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: '2-digit'}) : D.toLocaleString(undefined, {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false}); };
   c.textAlign = 'center'; for(let i = Math.ceil(S.v0 / every) * every; i < S.v0 + S.vn; i += every){ if(i < 0 || i >= d.length) continue; const x = X(i); c.fillStyle = '#8b8f9a'; c.fillText(fmtT(d[i].t), x, g.H - 10); c.strokeStyle = '#17171c'; c.beginPath(); c.moveTo(x, g.mT); c.lineTo(x, g.mB); c.stroke(); }
   c.save(); c.beginPath(); c.rect(0, g.mT - 2, g.pw, g.mB - g.mT + 4); c.clip();
-  if(S.inds.vol){ const mv = Math.max.apply(null, vis.map(x => x.v)) || 1, vh = (g.mB - g.mT) * .16; vis.forEach((r, k) => { const i = i0 + k, x = X(i), h = r.v / mv * vh; c.fillStyle = r.c >= r.o ? 'rgba(63,180,122,.35)' : 'rgba(224,85,77,.35)'; c.fillRect(x - Math.max(1, g.w * .31), g.mB - h, Math.max(1, g.w * .62), h); }); }
+  act.filter(i => i.under).forEach(i => { try{ i.under(A(i)); }catch(e){} });
+  if(S.inds.vol){ const mv = Math.max.apply(null, vis.map(x => x.v)) || 1, vh = (g.mB - g.mT) * .16; vis.forEach((r, k) => { const i = i0 + k, x = X(i), h = r.v / mv * vh; if(cols && cols[i]){ c.globalAlpha = .45; c.fillStyle = cols[i]; } else c.fillStyle = r.c >= r.o ? 'rgba(63,180,122,.35)' : 'rgba(224,85,77,.35)'; c.fillRect(x - Math.max(1, g.w * .31), g.mB - h, Math.max(1, g.w * .62), h); c.globalAlpha = 1; }); }
   const bw = Math.max(1, g.w * .62);
-  vis.forEach((r, k) => { const i = i0 + k, x = X(i), up = r.c >= r.o, col = up ? '#3fb47a' : '#e0554d'; c.strokeStyle = col; c.fillStyle = col; c.beginPath(); c.moveTo(x, Y(r.h)); c.lineTo(x, Y(r.l)); c.stroke(); const yo = Y(r.o), yc = Y(r.c); c.fillRect(x - bw / 2, Math.min(yo, yc), bw, Math.max(1, Math.abs(yo - yc))); });
-  allInd().filter(i => S.inds[i.id] && i.pane === 'price' && i.calc).forEach(ind => { let s; try{ s = ind.calc(d); }catch(e){ return; } c.strokeStyle = ind.color || '#fff'; c.lineWidth = 1.5; c.beginPath(); let on = false; for(let i = i0; i <= i1; i++){ const v = s[i]; if(v == null){ on = false; continue; } const x = X(i), y = Y(v); if(on) c.lineTo(x, y); else { c.moveTo(x, y); on = true; } } c.stroke(); c.lineWidth = 1; });
+  vis.forEach((r, k) => { const i = i0 + k, x = X(i), up = r.c >= r.o, col = (cols && cols[i]) || (up ? '#3fb47a' : '#e0554d'); c.strokeStyle = col; c.fillStyle = col; c.beginPath(); c.moveTo(x, Y(r.h)); c.lineTo(x, Y(r.l)); c.stroke(); const yo = Y(r.o), yc = Y(r.c); c.fillRect(x - bw / 2, Math.min(yo, yc), bw, Math.max(1, Math.abs(yo - yc))); });
+  allInd().filter(i => S.inds[i.id] && i.pane === 'price' && i.calc).forEach(ind => { let s; try{ s = R(ind, d); }catch(e){ return; } c.strokeStyle = ind.color || '#fff'; c.lineWidth = 1.5; c.beginPath(); let on = false; for(let i = i0; i <= i1; i++){ const v = s[i]; if(v == null){ on = false; continue; } const x = X(i), y = Y(v); if(on) c.lineTo(x, y); else { c.moveTo(x, y); on = true; } } c.stroke(); c.lineWidth = 1; });
+  act.filter(i => i.over).forEach(i => { try{ i.over(A(i)); }catch(e){} });
   S.orders.forEach(o => { const y = Y(o); c.strokeStyle = '#dba118'; c.setLineDash([7, 4]); c.beginPath(); c.moveTo(0, y); c.lineTo(g.pw, y); c.stroke(); c.setLineDash([]); });
   S.draw.forEach(s => shape(s, 1)); if(S.tool && S.pts.length && S.mv) shape(S.tool === 'pa' ? {k: 'pa', pts: S.pts.concat([S.mv])} : {k: S.tool, a: S.pts[0], b: S.mv}, .6);
   c.restore();
@@ -130,16 +160,26 @@ function paint(){
   tag(g.pw, yl, fx(last), up ? '#3fb47a' : '#e0554d', '#fff'); S.orders.forEach(o => tag(g.pw, Y(o), fx(o), '#dba118', '#111'));
   // sub panes
   g.subs.forEach((ind, n) => { const top = g.mB + 6 + n * (g.sh + 6), bot = top + g.sh; c.fillStyle = '#0c0c0f'; c.fillRect(0, top, g.pw, g.sh); c.strokeStyle = '#23232a'; c.strokeRect(.5, top + .5, g.pw - 1, g.sh - 1);
-    let s = []; try{ s = ind.calc(d); }catch(e){} const vv = s.slice(i0, i1 + 1).filter(v => v != null), rng = ind.range || [Math.min.apply(null, vv), Math.max.apply(null, vv)], yy = v => bot - (v - rng[0]) / ((rng[1] - rng[0]) || 1) * (g.sh - 4) - 2;
+    const ro = (() => { try{ return R(ind, d); }catch(e){ return null; } })(); let s = Array.isArray(ro) ? ro : []; const vv = s.slice(i0, i1 + 1).filter(v => v != null), rng = ind.range || [Math.min.apply(null, vv), Math.max.apply(null, vv)], yy = v => bot - (v - rng[0]) / ((rng[1] - rng[0]) || 1) * (g.sh - 4) - 2;
     (ind.lines || []).forEach(L => { c.strokeStyle = '#2d2d36'; c.beginPath(); c.moveTo(0, yy(L)); c.lineTo(g.pw, yy(L)); c.stroke(); c.fillStyle = '#6b6f7a'; c.textAlign = 'left'; c.fillText(String(L), g.pw + 6, yy(L)); });
-    c.save(); c.beginPath(); c.rect(0, top, g.pw, g.sh); c.clip(); c.strokeStyle = ind.color || '#b18cff'; c.lineWidth = 1.5; c.beginPath(); let on = false; for(let i = i0; i <= i1; i++){ const v = s[i]; if(v == null){ on = false; continue; } const x = X(i), y = yy(v); if(on) c.lineTo(x, y); else { c.moveTo(x, y); on = true; } } c.stroke(); c.restore(); c.lineWidth = 1;
+    c.save(); c.beginPath(); c.rect(0, top, g.pw, g.sh); c.clip(); if(ind.subPaint){ try{ ind.subPaint({c, g, X, yy, top, bot, i0, i1, d, S, res: ro, fx}); }catch(e){} } c.strokeStyle = ind.color || '#b18cff'; c.lineWidth = 1.5; c.beginPath(); let on = false; for(let i = i0; i <= i1 && !ind.subPaint; i++){ const v = s[i]; if(v == null){ on = false; continue; } const x = X(i), y = yy(v); if(on) c.lineTo(x, y); else { c.moveTo(x, y); on = true; } } c.stroke(); c.restore(); c.lineWidth = 1;
     const lv = s[d.length - 1]; c.fillStyle = '#8b8f9a'; c.textAlign = 'left'; c.fillText(ind.name + (lv != null ? '  ' + lv.toFixed(1) : ''), 6, top + 10); });
   // crosshair + readout
   let hi_ = d[d.length - 1];
   if(S.cross && !S.drag){ const cr = S.cross, i = Math.round(S.v0 + cr.x / g.w - .5), r = d[i]; c.strokeStyle = 'rgba(200,200,210,.35)'; c.setLineDash([3, 3]); c.beginPath(); if(cr.y >= g.mT && cr.y <= g.mB){ c.moveTo(0, cr.y); c.lineTo(g.pw, cr.y); } c.moveTo(cr.x, g.mT); c.lineTo(cr.x, g.H - P.B); c.stroke(); c.setLineDash([]); if(cr.y >= g.mT && cr.y <= g.mB) tag(g.pw, cr.y, fx(lo + (1 - (cr.y - g.mT) / (g.mB - g.mT)) * (hi - lo)), '#3a3a45', '#fff'); if(r){ hi_ = r; c.fillStyle = '#3a3a45'; const tx = fmtT(r.t), tw = c.measureText(tx).width + 12; c.fillRect(Math.max(0, Math.min(cr.x - tw / 2, g.pw - tw)), g.H - P.B + 2, tw, 16); c.fillStyle = '#fff'; c.textAlign = 'center'; c.fillText(tx, Math.max(tw / 2, Math.min(cr.x, g.pw - tw / 2)), g.H - 10); } }
-  drawBrand(hi_, d);
+  drawBrand(hi_, d); drawPanels(act, A, g);
+  if(S.tool && S.cross && S.cross.y >= g.mT && S.cross.y <= g.mB && (S.magnet || S.ctrl)){ const pp = ptr({clientX: S.cross.x + cv.getBoundingClientRect().left, clientY: S.cross.y + cv.getBoundingClientRect().top, ctrlKey: true}); if(pp.snap){ c.strokeStyle = '#dba118'; c.lineWidth = 2; c.beginPath(); c.arc(pp.x, pp.y, 6, 0, 6.3); c.stroke(); c.lineWidth = 1; } }
   if(S.rp.on){ const x = X(S.rp.idx) + g.w / 2; c.strokeStyle = 'rgba(219,161,24,.6)'; c.beginPath(); c.moveTo(x, g.mT); c.lineTo(x, g.mB); c.stroke(); rpInfo(); }
 }
+function R(ind, d){ const key = S.sym + '|' + S.tf + '|' + S.ex + '|' + d.length + '|' + d[0].t + '|' + d[d.length - 1].c + '|' + d[d.length - 1].h + '|' + d[d.length - 1].l; if(!ind._m || ind._k !== key){ ind._m = ind.calc ? ind.calc(d, S) : null; ind._k = key; } return ind._m; }
+function drawPanels(act, A, g){ const c = cx, stack = {tr: 0, br: 0, bl: 0};
+  act.filter(i => i.panel).forEach(i => { let p; try{ p = i.panel(A(i)); }catch(e){ return; } if(!p || !p.rows) return; c.font = '11px system-ui,sans-serif';
+    const rows = p.rows, title = p.title, ws = [0, 0]; rows.forEach(r => r.forEach((cell, k) => { ws[k] = Math.max(ws[k] || 0, c.measureText(cell[0]).width); })); const tw = title ? c.measureText(title).width : 0, W = Math.max(tw + 16, ws[0] + (ws[1] ? ws[1] + 18 : 0) + 16), H = rows.length * 16 + (title ? 20 : 8) + 2;
+    const x = p.pos === 'bl' ? 8 : g.pw - W - 6, y = p.pos === 'tr' ? g.mT + 22 + stack.tr : p.pos === 'br' ? g.mB - H - 6 - stack.br : g.mB - H - 6 - stack.bl; stack[p.pos] += H + 6;
+    c.fillStyle = 'rgba(8,8,10,.78)'; c.fillRect(x, y, W, H); c.strokeStyle = '#2a2a31'; c.strokeRect(x + .5, y + .5, W - 1, H - 1); let yy = y + 6; c.textAlign = 'left'; c.textBaseline = 'middle';
+    if(title){ c.fillStyle = '#dba118'; c.font = '800 10px system-ui,sans-serif'; c.fillText(title, x + 8, yy + 6); yy += 16; c.font = '11px system-ui,sans-serif'; }
+    rows.forEach(r => { r.forEach((cell, k) => { c.fillStyle = cell[1] || '#e8e8ea'; c.fillText(cell[0], k ? x + 8 + ws[0] + 10 : x + 8, yy + 8); }); yy += 16; }); });
+  c.textBaseline = 'middle'; }
 function tag(x, y, t, bg, fg){ const c = cx; c.fillStyle = bg; c.fillRect(x, y - 9, P.R - 2, 18); c.fillStyle = fg; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(t, x + 4, y); }
 function drawBrand(r, d){ const c = cx, g = S.g; if(logo.complete && logo.naturalWidth){ const h = 24, w = Math.min(70, logo.naturalWidth / logo.naturalHeight * h); c.drawImage(logo, 8, 6, w, h); } c.textAlign = 'left'; c.textBaseline = 'middle'; c.font = '800 14px system-ui,sans-serif'; c.fillStyle = '#e8e8ea'; c.fillText(S.sym + '/USDT · ' + S.tf + ' · ' + EX[S.ex].n, 84, 18);
   c.font = '11px system-ui,sans-serif'; if(r){ const ch = d && d.length > 1 ? (r.c / (d[Math.max(0, d.indexOf(r) - 1)] || r).c - 1) * 100 : 0; c.fillStyle = r.c >= r.o ? '#3fb47a' : '#e0554d'; c.fillText(`O ${fx(r.o)}  H ${fx(r.h)}  L ${fx(r.l)}  C ${fx(r.c)}  (${ch >= 0 ? '+' : ''}${ch.toFixed(2)}%)  Vol ${r.v >= 1e6 ? (r.v / 1e6).toFixed(2) + 'M' : r.v >= 1e3 ? (r.v / 1e3).toFixed(1) + 'K' : r.v.toFixed(0)}`, 8, 36); }
@@ -156,10 +196,12 @@ function shape(s, op){ const c = cx, g = S.g, Y = S.Y; c.globalAlpha = op; c.lin
 /* ---------- pointer ---------- */
 const saveDraw = () => lsSet('draw_' + S.sym, S.draw);
 function finishPath(){ if(S.pts.length > 1){ S.draw.push({k: 'pa', pts: S.pts.slice()}); saveDraw(); } S.pts = []; S.mv = null; paint(); }
-function ptr(e){ const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, g = S.g, i = S.v0 + x / g.w - .5, p = S.sc.lo + (1 - (y - g.mT) / (g.mB - g.mT)) * (S.sc.hi - S.sc.lo); return {x, y, i, t: tOfIdx(Math.max(0, Math.min(S.data.length - 1, i))) + (i > S.data.length - 1 ? (i - (S.data.length - 1)) * TFMS[S.tf] : 0), p}; }
+function ptr(e){ const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, g = S.g, i = S.v0 + x / g.w - .5, p = S.sc.lo + (1 - (y - g.mT) / (g.mB - g.mT)) * (S.sc.hi - S.sc.lo); let o = {x, y, i, t: tOfIdx(Math.max(0, Math.min(S.data.length - 1, i))) + (i > S.data.length - 1 ? (i - (S.data.length - 1)) * TFMS[S.tf] : 0), p};
+  if(S.tool && (S.magnet || e.ctrlKey || e.metaKey) && S.data.length){ const k = Math.max(0, Math.min(vd().length - 1, Math.round(i))), r = S.data[k]; if(r){ const best = [r.o, r.h, r.l, r.c].reduce((m, v) => Math.abs(S.Y(v) - y) < Math.abs(S.Y(m) - y) ? v : m); o = {x: S.v0 !== undefined ? (k - S.v0 + .5) * S.g.w : x, y: S.Y(best), i: k, t: r.t, p: best, snap: true}; } }
+  return o; }
 function wire(m){
   const q = s => m.querySelector(s);
-  q('#tcX').onclick = close; q('#tcFit').onclick = () => { fit(); paint(); };
+  if(q('#tcX')) q('#tcX').onclick = close; if(q('#tcPop')) q('#tcPop').onclick = () => { const u = BASE + 'charts/index.html?ex=' + S.ex + '&sym=' + S.sym + '&tf=' + S.tf; close(); window.open(u, 'ttmcharts', 'popup=yes,width=1500,height=900'); }; q('#tcMag').onclick = () => { S.magnet = !S.magnet; lsSet('magnet', S.magnet); syncTools(); }; q('#tcAl').onclick = alPop; q('#tcFit').onclick = () => { fit(); paint(); };
   m.querySelectorAll('[data-tf]').forEach(b => b.onclick = () => { S.tf = b.dataset.tf; lsSet('tf', S.tf); syncTf(); loadAll(); });
   q('#tcEx').onchange = e => { S.ex = e.target.value; lsSet('ex', S.ex); S.list = {}; loadAll(); };
   m.querySelectorAll('[data-tool]').forEach(b => b.onclick = () => { S.tool = b.dataset.tool === 'cur' ? null : (S.tool === b.dataset.tool ? null : b.dataset.tool); S.pts = []; S.mv = null; syncTools(); paint(); });
@@ -196,16 +238,39 @@ function wire(m){
 function popClose(){ document.querySelectorAll('#ttc .pop').forEach(p => p.remove()); }
 async function symPop(){
   if(document.querySelector('#ttc .sym')){ popClose(); return; } popClose();
-  const p = document.createElement('div'); p.className = 'pop sym'; p.innerHTML = `<input id="tcQ" placeholder="Search ${EX[S.ex].n} (e.g. SOL)" autocomplete="off"><div class="sl" id="tcSl"><div>Loading…</div></div>`; $('ttc').appendChild(p);
+  const p = document.createElement('div'); p.className = 'pop sym'; let cat = '';
+  p.innerHTML = `<input id="tcQ" placeholder="Search a ticker, or a category (Layer 1, DeFi, Gaming, AI, Meme…)" autocomplete="off"><div class="cats" id="tcCats"><button data-c="">All</button>${Object.keys(TAGS).map(k => `<button data-c="${esc(k)}">${esc(k)}</button>`).join('')}</div><div class="sl" id="tcSl"><div>Loading…</div></div>`; $('ttc').appendChild(p);
   let L = S.list[S.ex]; try{ if(!L){ L = (await EX[S.ex].list()).sort((a, b) => b.vol - a.vol); S.list[S.ex] = L; } }catch(e){ $('tcSl').innerHTML = '<div>Could not load the list from ' + EX[S.ex].n + '.</div>'; return; }
-  const draw = () => { const q = $('tcQ').value.trim().toUpperCase(); $('tcSl').innerHTML = L.filter(x => !q || x.s.includes(q)).slice(0, 80).map(x => `<div data-s="${esc(x.s)}"><b>${esc(x.s)}</b><span style="color:${x.chg >= 0 ? '#3fb47a' : '#e0554d'}">${fx(x.px)} · ${x.chg >= 0 ? '+' : ''}${x.chg.toFixed(1)}%</span></div>`).join('') || '<div>No match</div>'; };
-  draw(); $('tcQ').oninput = draw; $('tcQ').focus();
+  const draw = () => { const q = $('tcQ').value.trim().toUpperCase(), qc = Object.keys(TAGS).filter(k => q.length > 1 && k.toUpperCase().includes(q)), want = cat ? [cat] : qc;
+    document.querySelectorAll('#tcCats button').forEach(b => b.classList.toggle('on', b.dataset.c === cat));
+    const rows = L.filter(x => want.length ? want.some(k => TAGSET[k].has(symKey(x.s))) || (!cat && x.s.includes(q)) : (!q || x.s.includes(q)));
+    $('tcSl').innerHTML = rows.slice(0, 120).map(x => `<div data-s="${esc(x.s)}"><span><b>${esc(x.s)}</b><small>${esc(tagsOf(x.s).slice(0, 2).join(' · '))}</small></span><span style="color:${x.chg >= 0 ? '#3fb47a' : '#e0554d'}">${fx(x.px)} · ${x.chg >= 0 ? '+' : ''}${x.chg.toFixed(1)}%</span></div>`).join('') || '<div>No match on ' + esc(EX[S.ex].n) + '</div>'; };
+  draw(); $('tcQ').oninput = () => { cat = ''; draw(); }; $('tcQ').focus();
+  $('tcCats').onclick = e => { const b = e.target.closest('[data-c]'); if(!b) return; cat = b.dataset.c; $('tcQ').value = ''; draw(); };
   $('tcSl').onclick = e => { const d = e.target.closest('[data-s]'); if(!d) return; S.sym = d.dataset.s; lsSet('sym', S.sym); S.draw = ls('draw_' + S.sym, []); syncSym(); popClose(); loadAll(); };
 }
 function indPop(){
   if(document.querySelector('#ttc .ind')){ popClose(); return; } popClose();
-  const p = document.createElement('div'); p.className = 'pop ind'; p.innerHTML = `<b style="font-size:13px">Indicators</b>` + allInd().map(i => `<label><input type="checkbox" data-i="${i.id}" ${S.inds[i.id] ? 'checked' : ''}> ${esc(i.name)}${window.TTM_INDICATORS.includes(i) ? ' <span class="bt">TTM</span>' : ''}</label>`).join('') + (window.TTM_INDICATORS.length ? '' : '<p style="font-size:11px;color:#8b8f9a;margin:8px 0 0">TTM indicators will appear here.</p>'); $('ttc').appendChild(p);
+  const p = document.createElement('div'); p.className = 'pop ind'; const all = allInd(), row = i => `<label><input type="checkbox" data-i="${i.id}" ${S.inds[i.id] ? 'checked' : ''}> ${esc(i.name)}</label>`;
+  p.style.width = '290px'; p.style.maxHeight = '78vh'; p.style.overflow = 'auto';
+  p.innerHTML = `<b style="font-size:13px;color:#dba118">TTM indicators</b>` + all.filter(i => i.ttm).map(row).join('') + `<b style="font-size:13px;display:block;margin-top:8px">Standard</b>` + all.filter(i => !i.ttm).map(row).join('') + `<div style="font-size:11px;color:#6b6f7a;margin-top:6px">Sessions and weekends use UTC time.</div>`; $('ttc').appendChild(p);
   p.onchange = e => { const id = e.target.dataset.i; if(!id) return; S.inds[id] = e.target.checked ? 1 : 0; lsSet('inds', S.inds); paint(); };
+}
+/* ---------- phone alerts (fire while a TTM Charts window is open on that coin and time frame) ---------- */
+function toast(t){ let w = document.querySelector('#ttc .tst'); if(!w){ w = document.createElement('div'); w.className = 'tst'; $('ttc').appendChild(w); } const d = document.createElement('div'); d.textContent = t; w.appendChild(d); setTimeout(() => d.remove(), 9000); }
+function alPop(){
+  if(document.querySelector('#ttc .al')){ popClose(); return; } popClose(); const A = S.alerts, withAl = allInd().filter(i => i.alerts);
+  const p = document.createElement('div'); p.className = 'pop al';
+  p.innerHTML = `<b style="font-size:13px;color:#dba118">Alerts for ${esc(S.sym)} · ${S.tf}</b><label style="margin-top:6px"><input type="checkbox" id="alPhone" ${A.phone !== false ? 'checked' : ''}> Send to my phone (TTM alerts)</label><div style="font-size:11px;color:#8b8f9a;margin:2px 0 6px">An alert fires when a bar closes with the signal. It works while this chart is open (pop it out and leave it running). Each alert is sent once. Turn each one on or off below.</div>` +
+    withAl.map(i => `<h4>${esc(i.name)}</h4>` + i.alerts.map(a => `<label><input type="checkbox" data-al="${i.id}.${a.k}" ${A.on[i.id + '.' + a.k] ? 'checked' : ''}> ${esc(a.name)}</label>`).join('')).join(''); $('ttc').appendChild(p);
+  p.onchange = e => { if(e.target.id === 'alPhone') A.phone = e.target.checked; else if(e.target.dataset.al) A.on[e.target.dataset.al] = e.target.checked; lsSet('alerts', A); if(Notification && Notification.permission === 'default') try{ Notification.requestPermission(); }catch(x){} };
+}
+function checkAlerts(){
+  if(!S || S.rp.on || S.data.length < 30) return; const d = S.data, c = d.length - 2, A = S.alerts; if(c < 1) return;
+  allInd().filter(i => i.alerts && i.alertHits).forEach(ind => { if(!ind.alerts) return; const on = ind.alerts.filter(a => A.on[ind.id + '.' + a.k]); if(!on.length) return; let hits = []; try{ hits = ind.alertHits(d, R(ind, d)) || []; }catch(e){ return; }
+    hits.filter(h => h.i === c && on.some(a => a.k === h.k)).forEach(h => { const a = ind.alerts.find(z => z.k === h.k), id = ['ttmv', S.sym, S.tf, ind.id, h.k, d[h.i].t].join('-'); if(S.fired[id]) return; S.fired[id] = 1;
+      const title = '🔔 ' + S.sym + ' ' + S.tf + ' · ' + ind.name.replace(/ \(TTM\)| \(confluence\)/, ''), body = a.name + ' · price ' + fx(d[d.length - 1].c); toast(title + ': ' + a.name);
+      if(A.phone !== false && window.ttmMyPush) window.ttmMyPush(id, title, body); }); });
 }
 /* ---------- replay ---------- */
 function startReplay(){ if(!S.data.length) return; S.rp.on = true; S.rp.play = false; $('tcRp').classList.add('on'); $('tcRpBar').classList.add('on'); S.rp.idx = Math.max(1, Math.round(S.v0 + S.vn * .5)); S.rp.idx = Math.min(S.data.length - 2, S.rp.idx); S.rp.pick = true; setStatus('Tap a candle to start the replay from there (or press Play to start from the middle).'); rpBtn(); paint(); }
@@ -215,5 +280,5 @@ function rpInfo(){ const e = $('rpInfo'); if(e && S.data[S.rp.idx]) e.textConten
 function rpStep(n){ if(!S.rp.on) return; const i = S.rp.idx + n; if(i < 1 || i > S.data.length - 1){ S.rp.play = false; rpBtn(); return; } S.rp.idx = i; if(S.v0 + S.vn < i + 2) S.v0 = i + 4 - S.vn; paint(); }
 function rpToggle(){ if(!S.rp.on) return startReplay(); S.rp.pick = false; setStatus(''); S.rp.play = !S.rp.play; rpBtn(); if(S.rp.play) rpLoop(); else clearTimeout(S.rp.t); }
 function rpLoop(){ clearTimeout(S.rp.t); if(!S || !S.rp.play) return; if(S.rp.idx >= S.data.length - 1){ S.rp.play = false; rpBtn(); return; } rpStep(1); S.rp.t = setTimeout(rpLoop, 1000 / S.rp.speed); }
-window.ttmChartsOpen = open;
+window.ttmChartsOpen = open; window.ttmChartsRepaint = () => { try{ paint(); }catch(e){} };
 })();

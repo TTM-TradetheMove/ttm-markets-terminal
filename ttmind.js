@@ -1,0 +1,143 @@
+/* TTM indicator pack for TTM Charts (BETA). Converted from TTM's TradingView (Pine) indicators.
+   Each indicator: {id, name, pane:'overlay'|'sub', calc(rows)->result, under(api), over(api), candleColor, panel(api), subPaint(api)}.
+   api = {c, g, X, Y, d, i0, i1, res, S, step, daily(sym), repaint()}.  Session times and weekdays use UTC. */
+(function(){
+const L = window.TTM_INDICATORS = window.TTM_INDICATORS || [];
+const DAY = 864e5, utc = t => { const D = new Date(t); return {dow: D.getUTCDay(), min: D.getUTCHours() * 60 + D.getUTCMinutes()}; };
+const emaA = (a, n) => { const k = 2 / (n + 1), o = []; let e = null; a.forEach((v, i) => { if(v == null){ o.push(null); return; } e = e == null ? v : v * k + e * (1 - k); o.push(i >= n - 1 ? e : null); }); return o; };
+const smaA = (a, n) => a.map((v, i) => { if(i < n - 1) return null; let s = 0; for(let k = i - n + 1; k <= i; k++){ if(a[k] == null) return null; s += a[k]; } return s / n; });
+const rsiA = (a, n) => { const o = a.map(() => null); let g = 0, l = 0; for(let i = 1; i < a.length; i++){ const d = a[i] - a[i - 1]; if(i <= n){ g += Math.max(d, 0); l += Math.max(-d, 0); if(i === n){ g /= n; l /= n; o[i] = 100 - 100 / (1 + (l ? g / l : 1e9)); } } else { g = (g * (n - 1) + Math.max(d, 0)) / n; l = (l * (n - 1) + Math.max(-d, 0)) / n; o[i] = 100 - 100 / (1 + (l ? g / l : 1e9)); } } return o; };
+const atrA = (r, n) => { const o = []; let a = null; r.forEach((x, i) => { const tr = i ? Math.max(x.h - x.l, Math.abs(x.h - r[i - 1].c), Math.abs(x.l - r[i - 1].c)) : x.h - x.l; a = i === 0 ? tr : (a * (n - 1) + tr) / n; o.push(i >= n - 1 ? a : null); }); return o; };
+const closes = r => r.map(x => x.c);
+function line(a, s, color, w){ const {c, X, Y, i0, i1} = a; c.strokeStyle = color; c.lineWidth = w || 1.5; c.beginPath(); let on = false; for(let i = i0; i <= i1; i++){ const v = s[i]; if(v == null){ on = false; continue; } if(on) c.lineTo(X(i), Y(v)); else { c.moveTo(X(i), Y(v)); on = true; } } c.stroke(); c.lineWidth = 1; }
+function tagL(c, x, y, text, bg, fg, up){ c.font = '700 9px system-ui,sans-serif'; const w = c.measureText(text).width + 8, h = 14, yy = up ? y - h - 3 : y + 3; c.fillStyle = bg; c.beginPath(); c.roundRect ? c.roundRect(x - w / 2, yy, w, h, 3) : c.rect(x - w / 2, yy, w, h); c.fill(); c.fillStyle = fg; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(text, x, yy + h / 2 + .5); c.font = '11px system-ui,sans-serif'; }
+function box(a, x1, x2, yT, yB, fill, stroke){ const {c} = a; c.fillStyle = fill; c.fillRect(x1, yT, x2 - x1, yB - yT); if(stroke){ c.strokeStyle = stroke; c.strokeRect(x1 + .5, yT + .5, x2 - x1 - 1, yB - yT - 1); } }
+const push = o => { o.ttm = true; L.push(o); };
+
+/* 1. PVSRA candle colours (volume vector candles) */
+push({id: 'pvsra', name: 'PVSRA candles (TTM)', pane: 'overlay', calc: r => {
+  const hl = r.map(x => x.v * (x.h - x.l)), out = [];
+  r.forEach((x, i) => { if(i < 10){ out.push(x.c >= x.o ? '#ffffff' : '#808080'); return; }
+    let av = 0, mx = 0; for(let k = i - 10; k < i; k++){ av += r[k].v; mx = Math.max(mx, hl[k]); } av /= 10;
+    const va = (x.v >= av * 2 || hl[i] >= mx) ? 200 : x.v >= av * 1.5 ? 150 : 0, bull = x.c > x.o;
+    out.push(va === 200 ? (bull ? '#00ff00' : '#ff0000') : va === 150 ? (bull ? '#0000ff' : '#ff00ff') : (bull ? '#ffffff' : '#808080')); });
+  return out; }});
+L[L.length - 1].candleColor = true;
+L[L.length - 1].alerts = [{k: 'b200', name: 'Bullish 200% volume vector candle'}, {k: 's200', name: 'Bearish 200% volume vector candle'}, {k: 'b150', name: 'Bullish 150% vector candle'}, {k: 's150', name: 'Bearish 150% vector candle'}];
+L[L.length - 1].alertHits = (r, cols) => { const M = {'#00ff00': 'b200', '#ff0000': 's200', '#0000ff': 'b150', '#ff00ff': 's150'}, o = []; cols.forEach((c, i) => { if(M[c]) o.push({i, k: M[c]}); }); return o; };
+
+/* 2. Session boxes: Asia 01:30-08:00, UK 08:30-14:00, US 14:30-22:00 (UTC), with the % move */
+const SESS = [['ASIA', 90, 480, '#ffd600', '#000'], ['UK', 510, 840, '#ff3b30', '#fff'], ['US', 870, 1320, '#2f7bff', '#fff']];
+push({id: 'sess', name: 'Session boxes: Asia / UK / US (TTM)', pane: 'overlay', calc: r => {
+  const out = []; if(r.length < 2 || r[1].t - r[0].t > 36e5 * 1.01) return out;
+  SESS.forEach((s, k) => { let st = null, hi = 0, lo = 1e18; const done = (end) => { if(st != null) out.push({k, a: st, b: end, hi, lo}); st = null; hi = 0; lo = 1e18; };
+    r.forEach((x, i) => { const m = utc(x.t).min, inn = m >= s[1] && m < s[2]; if(inn){ if(st == null) st = i; hi = Math.max(hi, x.h); lo = Math.min(lo, x.l); } else done(i - 1); }); done(r.length - 1); });
+  return out; },
+  under: a => { const {c, g, X, Y, i0, i1} = a, w = g.w; (a.res || []).forEach(b => { if(b.b < i0 || b.a > i1) return; const s = SESS[b.k], col = s[3]; box(a, X(b.a) - w / 2, X(b.b) + w / 2, Y(b.hi), Y(b.lo), col + '33', col); const mv = (b.hi - b.lo) / b.lo * 100; tagL(c, (X(b.a) + X(b.b)) / 2, Y(b.hi), s[0] + ' ' + mv.toFixed(2) + '%', col, s[4], true); }); }});
+
+/* 3. Weekend shading: Saturday orange, Sunday purple */
+push({id: 'wknd', name: 'Weekend shading (TTM)', pane: 'overlay', alerts: [{k: 'sat', name: 'Saturday has started'}, {k: 'sun', name: 'Sunday has started'}, {k: 'end', name: 'Weekend has finished'}], alertHits: r => { const o = []; for(let i = Math.max(1, r.length - 6); i < r.length; i++){ const a = utc(r[i - 1].t).dow, b = utc(r[i].t).dow; if(a !== b){ if(b === 6) o.push({i, k: 'sat'}); else if(b === 0) o.push({i, k: 'sun'}); else if(b === 1) o.push({i, k: 'end'}); } } return o; }, calc: () => null, under: a => { const {c, g, X, i0, i1, d} = a, w = g.w; for(let i = i0; i <= i1; i++){ const dw = utc(d[i].t).dow; if(dw !== 6 && dw !== 0) continue; c.fillStyle = dw === 6 ? 'rgba(255,152,0,.14)' : 'rgba(156,39,176,.16)'; c.fillRect(X(i) - w / 2, g.mT, w + .5, g.mB - g.mT); } }});
+
+/* 4. TTM EMA cloud (9/21) + extra MAs (5/13/40) + early (EL/ES) and confirmed (CB/CS) signals */
+push({id: 'ttmema', name: 'TTM EMA cloud + signals', pane: 'overlay', calc: r => {
+  const cl = closes(r), f = emaA(cl, 9), s = emaA(cl, 21), m1 = emaA(cl, 5), m2 = emaA(cl, 13), m3 = emaA(cl, 40), sig = [];
+  r.forEach((x, i) => { if(i < 1 || f[i] == null || f[i - 1] == null || s[i] == null || s[i - 1] == null) return;
+    const far = Math.abs(x.c - f[i]) / f[i] > .0005, p = r[i - 1].c;
+    if(p <= f[i - 1] && x.c > f[i] && far) sig.push({i, k: 'EL'}); if(p >= f[i - 1] && x.c < f[i] && far) sig.push({i, k: 'ES'});
+    if(f[i - 1] <= s[i - 1] && f[i] > s[i]) sig.push({i, k: 'CB'}); if(f[i - 1] >= s[i - 1] && f[i] < s[i]) sig.push({i, k: 'CS'}); });
+  return {f, s, m1, m2, m3, sig}; },
+  alerts: [{k: 'EL', name: 'Early buy: price crossed above the fast EMA'}, {k: 'ES', name: 'Early sell: price crossed below the fast EMA'}, {k: 'CB', name: 'Confirmed buy: fast EMA crossed above slow EMA'}, {k: 'CS', name: 'Confirmed sell: fast EMA crossed below slow EMA'}], alertHits: (r, R) => R.sig,
+  under: a => { const R = a.res, {c, X, Y, i0, i1} = a; if(!R) return; let seg = []; const flush = (up) => { if(seg.length < 2) { seg = []; return; } c.fillStyle = up ? 'rgba(167,219,129,.30)' : 'rgba(255,82,82,.24)'; c.beginPath(); seg.forEach((p, k) => k ? c.lineTo(X(p.i), Y(p.f)) : c.moveTo(X(p.i), Y(p.f))); for(let k = seg.length - 1; k >= 0; k--) c.lineTo(X(seg[k].i), Y(seg[k].s)); c.closePath(); c.fill(); seg = []; };
+    let up = null; for(let i = i0; i <= i1; i++){ if(R.f[i] == null || R.s[i] == null){ flush(up); continue; } const u = R.f[i] > R.s[i]; if(up !== null && u !== up) flush(up); up = u; seg.push({i, f: R.f[i], s: R.s[i]}); } flush(up); },
+  over: a => { const R = a.res, {c, X, Y, d} = a; if(!R) return; line(a, R.m1, '#21cdf3', 1.2); line(a, R.m2, '#ff4b3b', 1.2); line(a, R.m3, '#d29314', 1.2); line(a, R.f, '#dd00ff', 1.6); line(a, R.s, '#a0d82e', 1.6);
+    R.sig.forEach(s => { if(s.i < a.i0 || s.i > a.i1) return; const x = X(s.i), r = d[s.i], low = s.k === 'EL' || s.k === 'CB'; tagL(c, x, low ? Y(r.l) : Y(r.h), s.k, s.k === 'EL' ? '#2e9e4f' : s.k === 'ES' ? '#d93a35' : s.k === 'CB' ? '#00c853' : '#8b1a1a', '#fff', !low); }); }});
+
+/* 5. CME gap (Friday 21:00 UTC close to Monday open), BTC / ETH / XRP / SOL only. Hidden once filled. */
+push({id: 'cme', name: 'CME gap (TTM)', pane: 'overlay', calc: (r, S) => {
+  const out = {}; if(!r.length) return out; let fri = null;
+  for(let i = 0; i < r.length; i++){ const u = utc(r[i].t); if(u.dow === 5 && u.min <= 21 * 60) fri = {i, c: r[i].c}; else if(u.dow === 1 && fri && i > fri.i && (i === 0 || utc(r[i - 1].t).dow !== 1)){ out.g = {a: fri.i, m: i, close: fri.c, top: Math.max(fri.c, r[i].o), bot: Math.min(fri.c, r[i].o)}; fri = null; } }
+  if(fri && !out.g) out.fri = fri; else if(fri && out.g && fri.i > out.g.m) { out.fri = fri; out.g = null; }
+  if(out.g){ let h = r[out.g.m].h, l = r[out.g.m].l; out.g.fill = null; for(let i = out.g.m; i < r.length; i++){ h = Math.max(h, r[i].h); l = Math.min(l, r[i].l); if(Math.min(out.g.top, h) - Math.max(out.g.bot, l) >= (out.g.top - out.g.bot) * .9999 && out.g.fill == null) out.g.fill = i; } out.g.pct = Math.min(1, (Math.min(out.g.top, h) - Math.max(out.g.bot, l)) / ((out.g.top - out.g.bot) || 1)); }
+  return out; },
+  alerts: [{k: 'fill', name: 'CME gap filled'}], alertHits: (r, R) => R && R.g && R.g.fill != null ? [{i: R.g.fill, k: 'fill'}] : [],
+  over: a => { const R = a.res, {c, g, X, Y, S} = a; if(!R || !/^(BTC|ETH|XRP|SOL)$/.test(S.sym)) return; const w = g.w;
+    if(R.fri){ const y = Y(R.fri.c); c.strokeStyle = '#ffd600'; c.beginPath(); c.moveTo(X(R.fri.i), y); c.lineTo(g.pw, y); c.stroke(); tagL(c, X(R.fri.i), y, 'CME Friday close', '#ffd600', '#000', true); }
+    if(R.g && R.g.fill == null){ const gp = R.g, col = gp.pct >= .5 ? '#ff9800' : '#ff3b30', yT = Y(gp.top), yB = Y(gp.bot); box(a, X(gp.a), g.pw, yT, Math.max(yB, yT + 2), col + '30', col); tagL(c, Math.min(g.pw - 40, (X(gp.a) + g.pw) / 2), yT, 'CME GAP ' + Math.round(gp.pct * 100) + '% filled', col, '#fff', true); } }});
+
+/* 6. Monday high / low (current week) */
+push({id: 'mon', name: 'Monday high / low (TTM)', pane: 'overlay', calc: r => {
+  let st = -1; for(let i = r.length - 1; i >= 0; i--){ if(utc(r[i].t).dow === 1){ st = i; if(i === 0 || utc(r[i - 1].t).dow !== 1){ break; } } else if(st >= 0) break; }
+  if(st < 0) return null; let hi = -1, lo = 1e18, hb = st, lb = st; for(let i = st; i < r.length && utc(r[i].t).dow === 1; i++){ if(r[i].h > hi){ hi = r[i].h; hb = i; } if(r[i].l < lo){ lo = r[i].l; lb = i; } } return {hi, lo, hb, lb}; },
+  over: a => { const R = a.res, {c, g, X, Y} = a; if(!R) return; c.strokeStyle = '#d4af37'; c.lineWidth = 2; [[R.hi, R.hb, 'MON HIGH', true], [R.lo, R.lb, 'MON LOW', false]].forEach(z => { const y = Y(z[0]); c.beginPath(); c.moveTo(X(z[1]), y); c.lineTo(g.pw, y); c.stroke(); tagL(c, g.pw - 34, y, z[2], '#d4af37', '#000', z[3]); }); c.lineWidth = 1; }});
+
+/* 7. Supply / demand zones with POI and BOS (swing 10, ATR 50, width 2.5, keep 20) */
+push({id: 'sd', name: 'Supply / demand zones + BOS (TTM)', pane: 'overlay', calc: r => {
+  const N = 10, KEEP = 20, WID = 2.5, atr = atrA(r, 50), Z = [], BOS = []; if(r.length < N * 2 + 2) return {Z, BOS};
+  for(let i = 2 * N; i < r.length; i++){ const cI = i - N; let ph = true, pl = true;
+    for(let k = i - 2 * N; k <= i; k++){ if(k === cI) continue; if(r[k].h > r[cI].h || (k < cI && r[k].h === r[cI].h)) ph = false; if(r[k].l < r[cI].l || (k < cI && r[k].l === r[cI].l)) pl = false; }
+    const a = atr[i] != null ? atr[i] : (r[i].h - r[i].l), buf = a * (WID / 10);
+    const add = (type, top, bot) => { const poi = (top + bot) / 2; if(Z.some(z => Math.abs((z.top + z.bot) / 2 - poi) <= a * 2)) return; Z.unshift({type, a: cI, top, bot}); if(Z.length > KEEP) Z.pop(); };
+    if(ph) add('s', r[cI].h, r[cI].h - buf); else if(pl) add('d', r[cI].l + buf, r[cI].l);
+    for(let k = Z.length - 1; k >= 0; k--){ const z = Z[k]; if((z.type === 's' && r[i].c >= z.top) || (z.type === 'd' && r[i].c <= z.bot)){ BOS.push({a: z.a, b: i, y: (z.top + z.bot) / 2}); Z.splice(k, 1); } } }
+  return {Z, BOS: BOS.slice(-8)}; },
+  over: a => { const R = a.res, {c, g, X, Y, i0} = a; if(!R) return; R.Z.forEach(z => { const x1 = Math.max(-5, X(z.a) - g.w / 2), yT = Y(z.top), yB = Y(z.bot), sup = z.type === 's';
+      box(a, x1, g.pw, yT, yB, sup ? 'rgba(237,237,237,.22)' : 'rgba(0,255,255,.22)', sup ? 'rgba(255,255,255,.35)' : 'rgba(0,255,255,.45)'); const ym = (yT + yB) / 2; c.strokeStyle = 'rgba(255,255,255,.55)'; c.beginPath(); c.moveTo(x1, ym); c.lineTo(g.pw, ym); c.stroke(); c.fillStyle = '#fff'; c.font = '700 9px system-ui,sans-serif'; c.textAlign = 'center'; c.fillText(sup ? 'SUPPLY' : 'DEMAND', (Math.max(x1, 0) + g.pw) / 2, ym - 1); c.textAlign = 'left'; c.fillText('POI', Math.max(x1, 0) + 3, ym - 6); c.font = '11px system-ui,sans-serif'; });
+    R.BOS.forEach(b => { const x1 = X(b.a), x2 = X(b.b), y = Y(b.y); c.strokeStyle = 'rgba(255,255,255,.8)'; c.setLineDash([4, 3]); c.beginPath(); c.moveTo(x1, y); c.lineTo(x2, y); c.stroke(); c.setLineDash([]); c.fillStyle = '#fff'; c.font = '700 9px system-ui,sans-serif'; c.textAlign = 'center'; c.fillText('BOS', (x1 + x2) / 2, y - 6); c.font = '11px system-ui,sans-serif'; }); }});
+
+/* 8. SMA stack 13 / 21 / 50 / 100 / 200 / 300 with a value legend */
+const SMAS = [[300, '#f5f6f7'], [200, '#2296f5'], [100, '#ff3b30'], [50, '#ffbb00'], [21, '#2ecc71'], [13, '#a259ff']];
+push({id: 'smastack', name: 'SMA stack 13/21/50/100/200/300 (TTM)', pane: 'overlay', calc: r => { const cl = closes(r); return SMAS.map(s => ({n: s[0], col: s[1], v: smaA(cl, s[0])})); },
+  over: a => { (a.res || []).forEach(s => line(a, s.v, s.col, 1.3)); },
+  panel: a => ({pos: 'bl', rows: (a.res || []).map(s => { const v = s.v[a.d.length - 1]; return [['SMA ' + s.n, s.col], [v == null ? '—' : a.fx(v), s.col]]; })})});
+
+/* 9. Moon cycle labels (real new-moon reference; New / First quarter / Full / Last quarter) */
+const SYN = 29.530588853, REF = Date.UTC(2000, 0, 6, 18, 14), phaseOf = t => { const p = ((t - REF) / DAY / SYN) % 1; return p < 0 ? p + 1 : p; };
+const moonId = p => (p < .06 || p > .94) ? 1 : (p > .2 && p < .3) ? 2 : (p > .44 && p < .56) ? 3 : (p > .7 && p < .8) ? 4 : 0;
+const MOON = {1: ['🌑', 'New Moon'], 2: ['🌓', 'First Quarter'], 3: ['🌕', 'Full Moon'], 4: ['🌗', 'Last Quarter']};
+const moonState = p => { const m = moonId(p); return m ? MOON[m][0] + ' ' + MOON[m][1] : p < .5 ? '🌒 Waxing' : '🌘 Waning'; };
+const moonBias = p => { const m = moonId(p); return (m === 1 || m === 3) ? ['⚠️ Reversal zone', '#ff9800'] : p < .5 ? ['🟢 Bull build', '#2ecc71'] : ['🔴 Bear build', '#ff3b30']; };
+push({id: 'moon', name: 'Moon cycle (TTM)', pane: 'overlay', calc: r => { const ev = []; let last = 0; r.forEach((x, i) => { const m = moonId(phaseOf(x.t)); if(m && m !== last){ ev.push({i, m}); last = m; } }); return ev; },
+  alerts: [{k: '1', name: 'New Moon'}, {k: '2', name: 'First Quarter'}, {k: '3', name: 'Full Moon'}, {k: '4', name: 'Last Quarter'}], alertHits: (r, ev) => ev.map(e => ({i: e.i, k: String(e.m)})),
+  over: a => { const {c, X, Y, d, i0, i1} = a; (a.res || []).forEach(e => { if(e.i < i0 || e.i > i1) return; const up = e.m >= 3, r = d[e.i], x = X(e.i), y = up ? Y(r.h) - 16 : Y(r.l) + 22; c.font = '18px system-ui,sans-serif'; c.textAlign = 'center'; c.fillText(MOON[e.m][0], x, y); c.font = '700 9px system-ui,sans-serif'; c.fillStyle = '#e8e8ea'; c.fillText(MOON[e.m][1], x, up ? y - 14 : y + 14); c.font = '11px system-ui,sans-serif'; }); }});
+
+/* 10. TTM dashboard: moon + EMA trend bias */
+push({id: 'dash', name: 'TTM dashboard (moon + EMA bias)', pane: 'overlay', calc: r => { const cl = closes(r), f = emaA(cl, 9), s = emaA(cl, 21), i = r.length - 1; return {bias: f[i] == null || s[i] == null ? '⚪ Neutral' : f[i] > s[i] ? '🟢 Bull trend' : f[i] < s[i] ? '🔴 Bear trend' : '⚪ Neutral', col: f[i] > s[i] ? '#2ecc71' : f[i] < s[i] ? '#ff3b30' : '#8b8f9a'}; },
+  panel: a => { const p = phaseOf(a.d[a.d.length - 1].t), mb = moonBias(p); return {pos: 'br', title: 'TTM INDICATORS', rows: [[['Moon', '#e8e8ea'], [moonState(p) + '  ' + mb[0], mb[1]]], [['EMA', '#e8e8ea'], [a.res.bias, a.res.col]]]}; }});
+
+/* 11. Altcoin season index (how many of 19 big coins beat BTC over 90 days, from daily candles on the chosen exchange) */
+const ALTS = ['ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'AVAX', 'DOT', 'POL', 'LINK', 'LTC', 'UNI', 'XLM', 'NEAR', 'APT', 'ATOM', 'S', 'ALGO', 'VET'];
+let ALT = {t: 0, key: '', v: null, busy: false};
+push({id: 'alts', name: 'Altcoin season index (TTM)', pane: 'overlay', calc: () => null,
+  panel: a => { const key = a.S.ex; if((!ALT.v || ALT.key !== key || Date.now() - ALT.t > 6e5) && !ALT.busy){ ALT.busy = true; (async () => { try{ const g = async s => { try{ return await a.daily(s); }catch(e){ return null; } }; const btc = await g('BTC'), res = await Promise.all(ALTS.map(g)); if(btc && btc.length > 91){ const bn = btc[btc.length - 1].c, bo = btc[btc.length - 91].c; let sc = 0, tot = 0; res.forEach(x => { if(x && x.length > 91){ tot++; if((x[x.length - 1].c / bn) / (x[x.length - 91].c / bo) > 1) sc++; } }); ALT = {t: Date.now(), key, v: tot ? {idx: sc / tot * 100, n: tot} : null, busy: false}; } else ALT.busy = false; }catch(e){ ALT.busy = false; } ALT.t = ALT.t || Date.now(); a.repaint(); })(); }
+    if(!ALT.v) return {pos: 'tr', title: 'Index Season by TTM', rows: [[['Loading…', '#8b8f9a']]]};
+    const v = ALT.v.idx, st = v >= 75 ? 'Altcoin Season' : v <= 25 ? 'Bitcoin Season' : 'Neutral', col = v >= 75 ? '#89dc41' : v <= 25 ? '#e7751d' : '#3d9f32';
+    return {pos: 'tr', title: 'Index Season by TTM', rows: [[[v.toFixed(0) + ' (' + st + ')', col]], [[ALT.v.n + ' coins vs BTC, 90 days', '#8b8f9a']]]}; }});
+
+/* 12. @tradethemove watermark */
+push({id: 'wm', name: '@tradethemove watermark', pane: 'overlay', calc: () => null, under: a => { const {c, g} = a; c.save(); c.font = '800 30px system-ui,sans-serif'; c.fillStyle = 'rgba(255,255,255,.05)'; c.textAlign = 'center'; c.fillText('@tradethemove', g.pw / 2, (g.mT + g.mB) / 2); c.font = '700 14px system-ui,sans-serif'; c.fillText('Master the Market', g.pw / 2, (g.mT + g.mB) / 2 + 26); c.restore(); }});
+
+/* 13. TTM RSI combo (sub pane): smoothed RSI + volume-weighted RSI, exhaustion, divergences, warning dots, reversals */
+const piv = (a, n, hi) => a.map((v, i) => { const c = i - n; if(c < n || v == null || a[c] == null) return null; for(let k = c - n; k <= c + n; k++){ if(k === c || a[k] == null) { if(a[k] == null && k !== c) return null; continue; } if(hi ? a[k] > a[c] : a[k] < a[c]) return null; } return {c, v: a[c]}; });
+push({id: 'rsic', name: 'TTM RSI combo (confluence)', pane: 'sub', range: [0, 100], lines: [30, 50, 70], calc: r => {
+  const rs = rsiA(closes(r), 14), osc = emaA(rs.map(v => v), 5), rv = rsiA(r.map(x => x.v * x.c), 14), ov = emaA(rv, 5), n = r.length;
+  const slope = osc.map((v, i) => v != null && i && osc[i - 1] != null ? v - osc[i - 1] : null);
+  const pl = piv(r.map(x => x.l), 5, false), ph = piv(r.map(x => x.h), 5, true), ol = piv(osc, 5, false), oh = piv(osc, 5, true), oh3 = piv(osc, 3, true), ol3 = piv(osc, 3, false);
+  const divs = [], bullD = {}, bearD = {}, divEv = []; let pLo = null, pHi = null;
+  for(let i = 0; i < n; i++){ if(pl[i] && ol[i]){ if(pLo && pl[i].v < pLo.pv && ol[i].v > pLo.ov){ divs.push({k: 'bull', a: pLo.c, b: pl[i].c, ya: pLo.ov, yb: ol[i].v}); bullD[i] = 1; divEv.push({i, k: 'dB'}); } pLo = {pv: pl[i].v, ov: ol[i].v, c: pl[i].c}; }
+    if(ph[i] && oh[i]){ if(pHi && ph[i].v > pHi.pv && oh[i].v < pHi.ov){ divs.push({k: 'bear', a: pHi.c, b: ph[i].c, ya: pHi.ov, yb: oh[i].v}); bearD[i] = 1; divEv.push({i, k: 'dS'}); } pHi = {pv: ph[i].v, ov: oh[i].v, c: ph[i].c}; } }
+  const ev = []; for(let i = 1; i < n; i++){ const o = osc[i], s = slope[i], sp = slope[i - 1]; if(o == null || s == null) continue;
+    if(o > 15 && o < 30 && s < 0) ev.push({i, k: 'exB'}); if(o < 85 && o > 70 && s > 0) ev.push({i, k: 'exS'});
+    if(s > 0 && sp != null && s < sp && o > 70 && o < 85 && (bearD[i] || oh3[i])) ev.push({i, k: 'wS'}); if(s < 0 && sp != null && s > sp && o < 30 && o > 15 && (bullD[i] || ol3[i])) ev.push({i, k: 'wB'});
+    if(o < 40 && s > 0 && sp != null && sp <= 0) ev.push({i, k: 'rB'}); if(o > 60 && s < 0 && sp != null && sp >= 0) ev.push({i, k: 'rS'}); }
+  return {osc, ov, slope, divs, ev: ev.concat(divEv)}; },
+  alerts: [{k: 'rB', name: 'Bullish momentum reversal'}, {k: 'rS', name: 'Bearish momentum reversal'}, {k: 'dB', name: 'Bullish divergence'}, {k: 'dS', name: 'Bearish divergence'}, {k: 'wB', name: 'Bullish exhaustion warning'}, {k: 'wS', name: 'Bearish exhaustion warning'}], alertHits: (r, R) => R.ev,
+  subPaint: a => { const R = a.res, {c, g, X, yy, top, bot, i0, i1} = a; if(!R) return;
+    for(let i = i0; i <= i1; i++){ const o = R.osc[i]; if(o == null) continue; if(o >= 70 || o <= 30){ c.fillStyle = o >= 70 ? 'rgba(255,60,60,.14)' : 'rgba(60,200,90,.14)'; c.fillRect(X(i) - g.w / 2, top, g.w + .5, bot - top); } }
+    const glow = (s, w) => { for(let i = Math.max(1, i0); i <= i1; i++){ const v = s[i], u = s[i - 1], sl = R.slope[i]; if(v == null || u == null) continue; const col = sl == null ? '#8b8f9a' : sl > 0 ? '#2ecc71' : sl < 0 ? '#4f8cff' : '#8b8f9a'; [[w + 3, .22], [w + 1.5, .3], [w, 1]].forEach(z => { c.globalAlpha = z[1]; c.strokeStyle = col; c.lineWidth = z[0]; c.beginPath(); c.moveTo(X(i - 1), yy(u)); c.lineTo(X(i), yy(v)); c.stroke(); }); } c.globalAlpha = 1; c.lineWidth = 1; };
+    glow(R.ov, 1.2); glow(R.osc, 2);
+    R.divs.forEach(d => { if(d.b < i0 - 50 || d.a > i1) return; c.strokeStyle = d.k === 'bull' ? '#93ff7d' : '#ff3b30'; c.lineWidth = 2; c.beginPath(); c.moveTo(X(d.a), yy(d.ya)); c.lineTo(X(d.b), yy(d.yb)); c.stroke(); c.lineWidth = 1; });
+    R.ev.forEach(e => { if(e.i < i0 || e.i > i1) return; const x = X(e.i), o = R.osc[e.i];
+      if(e.k === 'exB') tagL(c, x, bot - 14, '▲', '#1e6120', '#fff', false); else if(e.k === 'exS') tagL(c, x, top + 14, '▼', '#7d1e1e', '#fff', true);
+      else if(e.k === 'wS' || e.k === 'wB'){ c.fillStyle = e.k === 'wS' ? '#9023f5' : '#f9c431'; c.beginPath(); c.moveTo(x, yy(o) - 4); c.lineTo(x + 4, yy(o)); c.lineTo(x, yy(o) + 4); c.lineTo(x - 4, yy(o)); c.fill(); }
+      else if(e.k === 'rB' || e.k === 'rS'){ c.fillStyle = e.k === 'rB' ? '#45b02d' : '#d60f0f'; c.beginPath(); c.arc(x, yy(o), 3.5, 0, 6.3); c.fill(); } }); }});
+})();

@@ -1,4 +1,4 @@
-// One function for every phone push and the live-session Telegram posts.
+// One function for every phone push (spot moves, chat, live sessions, unlocks, new members, announcements).
 //  - Database webhook on ttm_spot_feed (insert): Pro members get the spot move
 //  - Database webhook on ttm_chat (insert): admin gets member messages, members get replies
 //  - pg_cron tick every minute (table = "cron"): live sessions are announced, then reminded 15 minutes before
@@ -30,20 +30,6 @@ async function send(subs: any[], payload: object, key?: string) {
     catch (e: any) { if (e.statusCode === 404 || e.statusCode === 410) await rest("ttm_push_subs?endpoint=eq." + encodeURIComponent(s.endpoint), {method: "DELETE"}); }
   }));
   return sent;
-}
-async function telegram(text: string, zoom: string) {
-  const tok = Deno.env.get("TELEGRAM_BOT_TOKEN"), chat = Deno.env.get("TELEGRAM_CHAT_ID");
-  if (!tok || !chat) { console.log("telegram skipped: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID secret is missing"); return false; }
-  const thread = +(Deno.env.get("TELEGRAM_LIVE_THREAD_ID") || "41");
-  const markup = {inline_keyboard: [[{text: "Join the live session", url: zoom}]]};
-  const call = async (method: string, extra: object) => {
-    const r = await fetch(`https://api.telegram.org/bot${tok}/${method}`, {method: "POST", headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({chat_id: chat, message_thread_id: thread, reply_markup: markup, ...extra})});
-    const j = await r.json(); if (!j.ok) console.log("telegram " + method + " failed:", j.error_code, j.description); return !!j.ok;
-  };
-  const photo = Deno.env.get("LIVE_IMAGE_URL") || "https://ttm-tradethemove.github.io/ttm-markets-terminal/promo/live-session.jpg";
-  if (await call("sendPhoto", {photo, caption: text.slice(0, 1000)})) return true;
-  return await call("sendMessage", {text, disable_web_page_preview: true});
 }
 // same clock time in Sydney, a number of days later (so a weekly session stays at the same time across daylight saving)
 const TZ = "Australia/Sydney";
@@ -206,13 +192,11 @@ Deno.serve(async (req) => {
         await rest("ttm_live", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({title: s.title, starts_at: next, zoom_url: s.zoom_url, note: s.note, repeat_days: s.repeat_days || 7, repeat_dow: dows, announced: true})});
     }
     const mins = Math.max(1, Math.round((new Date(s.starts_at).getTime() - now) / 60000));
-    await telegram(`LIVE SESSION STARTING SOON\n\n${s.title}\nStarts in about ${mins} minutes\n${when(s.starts_at)}\n\n${s.zoom_url}`, s.zoom_url);
     await send(await subsFor(null), {title: "Live in " + mins + " minutes", body: s.title, tag: "live-" + s.id, url: s.zoom_url}, "live");
   }
   const fresh = await get(`ttm_live?select=*&announced=eq.false&starts_at=gt.${new Date(now).toISOString()}`);
   for (const s of fresh) {
     const c = await claim("ttm_live", s.id, "announced"); if (!c) continue;
-    await telegram(`LIVE SESSION\n\n${s.title}\n${when(s.starts_at)}\n${s.note ? "\n" + s.note + "\n" : ""}\n${s.zoom_url}`, s.zoom_url);
     await send(await subsFor(null), {title: "New live session", body: s.title + " · " + when(s.starts_at), tag: "live-new-" + s.id, url: "./crypto/index.html"}, "live");
   }
   const luna = await get(`ttm_luna_alerts?select=*&notified=eq.false&starts_at=gt.${new Date(now).toISOString()}&starts_at=lte.${new Date(now + 7 * 864e5).toISOString()}`);
@@ -232,5 +216,13 @@ Deno.serve(async (req) => {
       await rest(`ttm_announce?id=eq.${an.id}`, {method: "PATCH", body: JSON.stringify({sent_to: n || 0})});
     }
   } catch (e) { console.log("announce failed:", String(e)); }
+  // new member: a phone alert to the admin with their name (needs supabase/team_join.sql run once)
+  try {
+    for (const m of await get("ttm_profiles?select=id,email,tg_handle&join_alerted=eq.false&is_admin=eq.false&order=created_at.asc&limit=10")) {
+      if (!(await claim("ttm_profiles", m.id, "join_alerted"))) continue;
+      const admins = await get("ttm_profiles?select=id&is_admin=eq.true");
+      await send(await subsFor(idsOf(admins)), {title: "👋 New TTM member", body: String(m.tg_handle || m.email || "Someone") + " just joined", tag: "join-" + m.id, url: "./index.html#account"});
+    }
+  } catch (e) { console.log("new member alert failed:", String(e)); }
   return new Response("tick");
 });

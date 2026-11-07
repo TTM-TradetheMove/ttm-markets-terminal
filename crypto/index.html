@@ -1214,11 +1214,6 @@ button.tkr{background:none;border:0;padding:0;margin:0;color:var(--gold2);font:i
     <div class="rr-card"><h3>Open positions <span style="float:right;color:var(--mute);text-transform:none;letter-spacing:0;font-size:12px">live prices, refreshed every 30s</span></h3><div class="rr-wrap"><table class="rr-tbl" id="jOpen"></table></div></div>
     <div class="rr-card"><h3>Best results by time frame</h3><div id="jTfBest" style="margin-bottom:10px"></div><div class="rr-wrap"><table class="rr-tbl" id="jTf"></table></div></div>
         <div class="rr-grid" style="align-items:stretch"><div class="rr-card"><h3>By asset</h3><div class="rr-wrap"><table class="rr-tbl" id="jAsset"></table></div></div><div class="rr-card"><h3>By direction &amp; leverage</h3><div class="rr-wrap"><table class="rr-tbl" id="jDir"></table></div></div></div>
-    <div class="rr-card"><h3>Telegram alerts to your own account</h3>
-      <p class="calendar-note" style="margin-top:0">Get a message on your own Telegram when a take-profit is hit on an open trade, for example "TP1 hit: move your stop to entry". Create your own bot with @BotFather, send it one message, and find your chat ID with @userinfobot. Use your own personal bot, not the TTM community bot. The token and chat ID stay in this browser only.</p>
-      <div class="rr-row3"><div class="rr-f"><label for="tgTok">Your bot token</label><input id="tgTok" type="password" autocomplete="off" placeholder="from @BotFather"></div><div class="rr-f"><label for="tgChat">Your chat ID</label><input id="tgChat" type="text" inputmode="numeric" placeholder="e.g. 123456789"></div><div class="rr-f"><label>&nbsp;</label><label style="display:flex;gap:8px;align-items:center;font-size:13.5px;margin-top:8px"><input type="checkbox" id="tgOn" style="width:auto"> Alerts on</label></div></div>
-      <div class="rr-acts"><button type="button" class="rr-btn sm" id="tgSave">Save</button><button type="button" class="rr-btn ghost sm" id="tgTest">Send test message</button></div>
-      <p class="calendar-note" id="tgNote" style="margin:8px 0 0">Alerts only fire while the terminal is open in a browser tab (checked every 30 seconds against the live price, so a very quick wick can be missed). The terminal has no server, so it cannot watch your trades when the page is closed.</p></div>
     <div class="rr-card"><h3>Trade history</h3>
       <div class="filter-row" id="jFilter" style="margin-bottom:10px"><button class="filter-chip active" data-f="all">All</button><button class="filter-chip" data-f="open">Open</button><button class="filter-chip" data-f="win">Wins</button><button class="filter-chip" data-f="loss">Losses</button><button class="filter-chip" data-f="be">Break-even</button></div>
       <div class="rr-wrap"><table class="rr-tbl" id="jHist"></table></div>
@@ -4087,7 +4082,7 @@ function startTrade(c, setup, name, replaceIdx, okUnreal){
 }
 // ---- price source (exchange) + live candles
 const SRCS = {okx: 'OKX', binance: 'Binance', bybit: 'Bybit', bitget: 'Bitget', mexc: 'MEXC', hyperliquid: 'Hyperliquid', swyftx: 'Swyftx (AUD)', independentreserve: 'Independent Reserve (AUD)'};
-const SRCKEY = 'ttm_rr_src_v1', TGKEY = 'ttm_rr_tg_v1';
+const SRCKEY = 'ttm_rr_src_v1';
 let SRC = lsGet(SRCKEY, 'okx'); if(!SRCS[SRC]) SRC = 'okx';
 const TFMS = {m5: 3e5, m15: 9e5, h1: 36e5, h2: 72e5, h4: 144e5, h8: 288e5, h12: 432e5, d1: 864e5, w1: 6048e5, mo1: 2592e6};
 const TFBASE = {
@@ -4222,7 +4217,7 @@ function drawCandles(c){
 
 // ---- live prices, open-trade tracking, optional Telegram alerts
 let PRICES = {}, PSTAMP = 0, pfScope = 'all', PUSED = '';
-const needLive = () => pfActive() || tjActive() || (lsGet(TGKEY, {}).on && loadSaved().some(x => x.status === 'open'));
+const needLive = () => pfActive() || tjActive() || false;
 async function liveLoad(){
   const t = await getTickers(); if(t){ PRICES = t.map; PSTAMP = t.t; PUSED = t.used; }
   trackHits(); renderJournal();
@@ -4387,37 +4382,29 @@ async function publishHoldings(){
 }
 setTimeout(publishHoldings, 9000); setInterval(publishHoldings, 60000);
 document.addEventListener('click', e => { if(e.target.closest && e.target.closest('[data-j="close"],#rrOpen,#rrConfirm,[data-tc]')) setTimeout(() => { HDT = 0; publishHoldings(); }, 1500); });
-let TGERR = '';
-async function tgSend(text){
-  TGERR = ''; const c = lsGet(TGKEY, {}); if(!c.tok || !c.chat){ TGERR = 'Enter both the bot token and the chat ID first.'; return false; }
-  if(!/^\d{6,}:[A-Za-z0-9_-]{30,}$/.test(c.tok)){ TGERR = 'That does not look like a full bot token. A real one looks like 1234567890:AAH... and is about 46 characters long. Copy it again from @BotFather (/mybots, then API Token).'; return false; }
-  const body = new URLSearchParams({chat_id: c.chat, text, parse_mode: 'HTML', disable_web_page_preview: 'true'});
-  try{ const r = await fetch(`https://api.telegram.org/bot${c.tok}/sendMessage`, {method: 'POST', body}); const d = await r.json(); if(!d.ok) TGERR = d.error_code === 401 ? 'Telegram says the bot token is not valid (Unauthorized). Copy it again from @BotFather.' : d.error_code === 400 && /chat not found/i.test(d.description || '') ? 'Telegram says the chat was not found. Check the chat ID, and send your bot a message (press Start) first.' : d.error_code === 403 ? 'The bot is blocked or has not been started. Open your bot in Telegram and press Start, then try again.' : 'Telegram said: ' + (d.description || 'unknown error'); return !!d.ok; }
-  catch(e){ try{ await fetch(`https://api.telegram.org/bot${c.tok}/sendMessage`, {method: 'POST', body, mode: 'no-cors'}); return true; }catch(e2){ return false; } }
-}
 function trackHits(){
-  const list = loadSaved(); let changed = false; const cfg = lsGet(TGKEY, {});
+  const list = loadSaved(); let changed = false;
   list.forEach(x => { if(x.status !== 'open' || !x.snap) return; const pp = priceOf(x.snap.asset); if(!pp || !pp.live) return;
     const sn = x.snap, p = pp.p;
     if(x.orders){ const got = []; x.orders.forEach(o => { if(!o.filled && o.side == null){ o.side = p > o.p ? 1 : -1; if(Math.abs(p / o.p - 1) <= 0.001){ o.filled = true; o.ft = Date.now(); got.push(o); } changed = true; } else if(!o.filled && (o.side > 0 ? p <= o.p : p >= o.p)){ o.filled = true; o.ft = Date.now(); got.push(o); } });
       if(got.length){ syncOrders(x); changed = true; got.forEach(o => spotEv(x, 'fill', 'fill:' + o.id));
-      if(cfg.on) got.forEach(o => tgSend(`✅ <b>Limit order filled</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nOrder at ${pr(o.p)} filled (live ${pr(p)}). ${x.orders.filter(q => q.filled).length} of ${x.orders.length} orders in. Average entry ${pr(sn.E)}.\n<i>${esc(x.name)} · TTM Trade Tracker</i>`)); }
+       }
       if(x.fill === 'pending') return; }
-    else if(x.fill === 'pending'){ if(entryReached(x, p)){ x.fill = 'filled'; x.filledAt = Date.now(); changed = true; spotEv(x, 'fill', 'fill:' + x.id); if(cfg.on) tgSend(`✅ <b>Entry reached</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nPrice ${pr(p)} reached your entry ${pr(sn.E)}. The trade is now live in your tracker.\n<i>${esc(x.name)} · TTM Trade Tracker</i>`); } else return; }
+    else if(x.fill === 'pending'){ if(entryReached(x, p)){ x.fill = 'filled'; x.filledAt = Date.now(); changed = true; spotEv(x, 'fill', 'fill:' + x.id);  } else return; }
     x.hit = x.hit || sn.tps.map(() => false); x.sent = x.sent || {tp: sn.tps.map(() => false), sl: false};
     sn.tps.forEach((t, i) => { const crossed = sn.long ? p >= t.P : p <= t.P;
       if(crossed && !x.hit[i]){ x.hit[i] = true; changed = true; }
       if(x.hit[i] && !x.sent.tp[i]){ x.sent.tp[i] = true; changed = true; spotEv(x, 'tp', 'tp:' + x.id + ':' + i, Math.round(sn.tps.reduce((a, q, k) => a + (x.hit[k] ? q.share : 0), 0) * 10) / 10);
         myPush(x, 'tp:' + x.id + ':' + i, i === sn.tps.length - 1 ? 'Full TP hit' : 'Part TP hit', i === sn.tps.length - 1 ? 'All targets are in at ' + pr(t.P) : 'TP' + (i + 1) + ' at ' + pr(t.P) + (i === 0 && sn.SL !== sn.E ? ' · move SL to entry' : ' · trail your stop'));
-        if(cfg.on) tgSend(`🎯 <b>TP${i + 1} hit</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nTarget ${pr(t.P)} reached (live ${pr(p)}).\n` + (i === 0 && sn.SL !== sn.E ? `👉 <b>Move your stop-loss to entry (${pr(sn.E)})</b> to protect the trade.\n` : i === sn.tps.length - 1 ? 'All targets are in. Consider closing the trade in your tracker.\n' : 'Consider trailing your stop up.\n') + `<i>${esc(x.name)} · TTM Trade Tracker</i>`); } });
+         } });
     if(sn.psl && !x.sent.psl && (sn.long ? p <= sn.psl.P : p >= sn.psl.P)){ x.sent.psl = true; changed = true; myPush(x, 'psl:' + x.id, 'Part SL hit', sn.psl.share + '% of the trade stopped at ' + pr(sn.psl.P) + ' · rest stays on the main stop');
-      if(cfg.on) tgSend(`🛑 <b>Part stop hit</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nPrice ${pr(p)} touched your part stop ${pr(sn.psl.P)}. Close ${sn.psl.share}% of the trade on your exchange and book it in your tracker. The rest stays on the main stop ${pr(sn.SL)}.\n<i>${esc(x.name)} · TTM Trade Tracker</i>`); }
+       }
     const stopped = sn.long ? p <= sn.SL : p >= sn.SL;
-    if(stopped && !x.sent.sl){ x.sent.sl = true; changed = true; myPush(x, 'sl:' + x.id, 'SL hit', 'Price touched your stop at ' + pr(sn.SL)); if(cfg.on) tgSend(`🛑 <b>Stop level reached</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nPrice ${pr(p)} touched your stop ${pr(sn.SL)}. Check your exchange and close the trade in your tracker.\n<i>${esc(x.name)} · TTM Trade Tracker</i>`); }
+    if(stopped && !x.sent.sl){ x.sent.sl = true; changed = true; myPush(x, 'sl:' + x.id, 'SL hit', 'Price touched your stop at ' + pr(sn.SL));  }
     // auto-close: a stop that stays hit (two checks in a row) or every target in closes the trade in the tracker, at the planned level
     const nTp = sn.tps.length, sh = sn.tps.reduce((t, q) => t + q.share, 0), nHit = x.hit.filter(Boolean).length;
     const autoClose = (pnl, how, title, body, tg) => { x.status = 'closed'; x.res = {pnl: Math.round(pnl * 100) / 100, r: pnl / (sn.riskUsd || 1), how, closed: Date.now(), auto: true}; x.slSeen = 0; changed = true;
-      spotEv(x, 'sell', 'sell:' + x.id + ':' + x.res.closed); myPush(x, 'sell:' + x.id, title, body); if(cfg.on) tgSend(tg); };
+      spotEv(x, 'sell', 'sell:' + x.id + ':' + x.res.closed); myPush(x, 'sell:' + x.id, title, body);  };
     if(!sn.noSL && stopped){ x.slSeen = (x.slSeen || 0) + 1; changed = true;
       if(x.slSeen >= 2){ const pnl = settle(sn, x.hit, sn.SL), how = nHit ? 'TP' + x.hit.map((h, k) => h ? k + 1 : 0).filter(Boolean).join(' + TP') + ' hit; rest stopped at the stop (closed automatically)' : 'Stopped out at the stop (closed automatically)';
         autoClose(pnl, how, 'SL hit, trade closed', (pnl >= 0 ? '+' : '') + (pnl / (sn.riskUsd || 1)).toFixed(1) + 'R at ' + pr(sn.SL) + ' · closed in your tracker', `🛑 <b>Stop hit, trade closed</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nStop ${pr(sn.SL)} reached (live ${pr(p)}). Result ${pnl >= 0 ? '+' : ''}${usd(pnl)}. Closed in your tracker.\n<i>${esc(x.name)} · TTM Trade Tracker</i>`); return; } }
@@ -4687,10 +4674,6 @@ function wire(){
     r.readAsText(f); e.target.value = ''; });
   $('rrSrc').addEventListener('change', e => { SRC = e.target.value; lsSet(SRCKEY, SRC); TK.t = 0; CAN = {key: '', rows: [], err: '', src: ''}; render(); loadCandles(); });
   $('pfScope').addEventListener('change', e => { if(e.target.id === 'pfSrc'){ SRC = e.target.value; lsSet(SRCKEY, SRC); TK.t = 0; pushInputs(); liveLoad(); } });
-  const tg0 = lsGet(TGKEY, {}); $('tgTok').value = tg0.tok || ''; $('tgChat').value = tg0.chat || ''; $('tgOn').checked = !!tg0.on;
-  const tgNote = t => { $('tgNote').textContent = t; };
-  $('tgSave').addEventListener('click', () => { if(window.ttmCan && !ttmCan('alerts')){ ttmUpsell('alerts'); return; } lsSet(TGKEY, {tok: $('tgTok').value.trim(), chat: $('tgChat').value.trim(), on: $('tgOn').checked}); tgNote($('tgOn').checked ? 'Saved. Alerts are on while this page is open.' : 'Saved. Alerts are off.'); });
-  $('tgTest').addEventListener('click', async () => { window.ttmTrack && ttmTrack('feat', 'telegram_test'); if(window.ttmCan && !ttmCan('alerts')){ ttmUpsell('alerts'); return; } lsSet(TGKEY, {tok: $('tgTok').value.trim(), chat: $('tgChat').value.trim(), on: $('tgOn').checked}); tgNote('Sending…'); const ok = await tgSend('✅ <b>TTM Trade Tracker</b> is connected. You will get a message here when a take-profit is hit on one of your open trades.'); tgNote(ok ? 'Test sent. Check your Telegram.' : 'Could not send. ' + (TGERR || 'Check the token and chat ID, and that you have sent your bot a message first.')); });
   $('rrBal').addEventListener('input', e => { BALS[S.acc] = e.target.value; lsSet(BKEY, BALS); render(); renderSaved(); });
   $('rrAcc').addEventListener('change', e => { S.acc = e.target.value; if(S.acc === 'lev' || S.acc === 'coinm' || S.acc === 'tokenised'){ S.mkt = 'fut'; S.lev = 3; } else { S.mkt = 'spot'; S.dir = 'long'; } persist(); pushInputs(); render(); });
   $('rrTf').addEventListener('change', e => { S.tf = e.target.value; persist(); pushInputs(); render(); loadCandles(); });
@@ -5013,7 +4996,8 @@ fill(); paint();
 })();
 </script>
 <script src="../chartpro.js?v=2"></script>
-<script src="../ttmcharts.js?v=1"></script>
+<script src="../ttmcharts.js?v=2"></script>
+<script src="../ttmind.js?v=1"></script>
 <script src="../accounts.js?v=1793794965"></script>
 <script>
 (function(){
