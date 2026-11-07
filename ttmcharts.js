@@ -66,6 +66,8 @@ const css = `#ttc{position:fixed;inset:0;z-index:6000;background:#0b0b0e;color:#
 #ttc .sp{flex:1}#ttc .mn{display:flex;flex:1;min-height:0}#ttc .lt{display:flex;flex-direction:column;gap:5px;padding:6px;border-right:1px solid #23232a;background:#121216;overflow:auto}
 #ttc .lt{overflow-y:auto}#ttc .lt button{width:38px;height:34px;padding:0;font-size:15px}#ttc .cw{position:relative;flex:1;min-width:0}#ttc canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
 #ttc .rp{display:none;align-items:center;gap:6px;padding:6px 8px;border-top:1px solid #23232a;background:#121216;flex-wrap:wrap}#ttc .rp.on{display:flex}
+#ttc .wl{display:none;width:250px;flex:none;border-left:1px solid #23232a;background:#121216;flex-direction:column;min-height:0}#ttc .wl.on{display:flex}#ttc .wl .wh{display:flex;gap:4px;padding:6px;border-bottom:1px solid #23232a;flex-wrap:wrap}#ttc .wl .wh select{flex:1;min-width:0}#ttc .wl .wb{overflow:auto;flex:1}#ttc .wl .wr{display:grid;grid-template-columns:1fr auto auto 18px;gap:6px;align-items:center;padding:5px 8px;font-size:12px;cursor:pointer;border-bottom:1px solid #1a1a20}#ttc .wl .wr:hover{background:#1b1b21}#ttc .wl .wr.cur{background:rgba(219,161,24,.12)}#ttc .wl .ws{padding:8px 8px 3px;font-size:10px;font-weight:800;letter-spacing:.08em;color:#8b8f9a;display:flex;justify-content:space-between}#ttc .wl .wx{opacity:.3;text-align:center}#ttc .wl .wr:hover .wx{opacity:1;color:#e0554d}#ttc #tcGrid{display:none;flex:1;min-height:0;gap:4px;padding:4px;background:#0b0b0e}#ttc.grid #tcGrid{display:grid}#ttc.grid .mn,#ttc.grid .rp{display:none}#ttc.grid .tb>*:not(#tcLay):not(.bt):not(img):not(.sp):not(#tcX):not(#tcPop){display:none}#ttc #tcGrid iframe{width:100%;height:100%;border:1px solid #23232a;border-radius:6px;background:#0b0b0e}
+#ttc.pane .tb{padding:3px 6px;gap:3px}#ttc.pane .tb button,#ttc.pane .tb select{padding:2px 6px;font-size:11px}#ttc.pane .tb img,#ttc.pane .bt,#ttc.pane #tcPng,#ttc.pane #tcChat,#ttc.pane #tcAl,#ttc.pane #tcRp{display:none}#ttc.pane .lt{padding:3px;gap:3px}#ttc.pane .lt button{width:28px;height:26px;font-size:13px}#ttc.pane .wl{width:200px}
 #ttc .pop{position:absolute;z-index:5;background:#16161b;border:1px solid #2a2a31;border-radius:12px;padding:10px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
 #ttc .sym{top:48px;left:8px;width:min(430px,94vw);max-height:78vh;display:flex;flex-direction:column;gap:6px}#ttc .sl{overflow:auto;flex:1}
 #ttc .sl div{display:flex;justify-content:space-between;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px}#ttc .sl div:hover{background:#23232a}
@@ -80,32 +82,36 @@ let S = null, timer = null, tick = null, cv, cx, dpr = 1, logo = new Image();
 const SK = k => 'ttm_charts_' + k;
 const ls = (k, d) => { try{ const v = localStorage.getItem(SK(k)); return v == null ? d : JSON.parse(v); }catch(e){ return d; } };
 const lsSet = (k, v) => { try{ localStorage.setItem(SK(k), JSON.stringify(v)); }catch(e){} };
-function open(o){
+function open(o){ o = o || {}; PANE = o.pane ? String(o.pane) : '';
   close(); o = o || {};
   const exk = o.ex && EX[o.ex] ? o.ex : ls('ex', 'bybit_perp'), sym = String(o.sym || ls('sym', 'BTC')).toUpperCase().replace(/USDT$/, ''), tf = TFS.includes(o.tf) ? o.tf : ls('tf', '1h');
-  S = {ex: exk, sym, tf, data: [], v0: 0, vn: 90, pv: null, tool: null, pts: [], mv: null, cross: null, draw: ls('draw_' + sym, []), inds: ls('inds', {ema21: 1, ema50: 1, vol: 1}), rp: {on: false, pick: false, idx: 0, play: false, speed: 1}, tok: 0, done: false, loading: false, list: {}, orders: o.orders || [], embedded: !!o.embedded, magnet: ls('magnet', false), alerts: ls('alerts', {phone: true, on: {}}), fired: {}};
+  S = {ex: exk, sym, tf, data: [], v0: 0, vn: 90, pv: null, tool: null, pts: [], mv: null, cross: null, draw: ls(dk(sym), []), inds: ls('inds', {ema21: 1, ema50: 1, vol: 1}), rp: {on: false, pick: false, idx: 0, play: false, speed: 1}, tok: 0, done: false, loading: false, list: {}, orders: o.orders || [], embedded: !!o.embedded, magnet: ls('magnet', false), alerts: ls('alerts', {phone: true, on: {}}), fired: {}};
   if(!document.getElementById('ttcCss')){ const st = document.createElement('style'); st.id = 'ttcCss'; st.textContent = css; document.head.appendChild(st); }
   logo.src = BASE + 'img/logo0.png'; logo.onload = paint;
   const m = document.createElement('div'); m.id = 'ttc';
   m.innerHTML = `<div class="tb"><img src="${BASE}img/logo0.png" alt="TTM" style="height:24px"><span class="bt">TTM VIEW · TEAM</span>
-    <button id="tcSym" style="font-weight:800;min-width:96px"></button><select id="tcEx">${Object.keys(EX).map(k => `<option value="${k}">${EX[k].n}</option>`).join('')}</select>
+    <button id="tcSym" style="font-weight:800;min-width:96px"></button><button id="tcStar" title="Add this coin to your watchlist" style="font-size:15px;padding:3px 8px">☆</button><select id="tcEx">${Object.keys(EX).map(k => `<option value="${k}">${EX[k].n}</option>`).join('')}</select>
     ${TFS.map(t => `<button data-tf="${t}">${t}</button>`).join('')}<span class="sp"></span>
-    <button id="tcInd">Indicators</button><button id="tcAl" title="Phone alerts">🔔 Alerts</button><button id="tcRp">⏪ Replay</button><button id="tcFit">Fit</button><button id="tcPng">Image</button><button id="tcChat">Post in chat…</button>${o.embedded ? '' : '<button id="tcPop" title="Open in its own window">⧉ Pop out</button><button id="tcX">✕</button>'}</div>
+    <button id="tcWlBtn" title="Watchlists">☰ Watchlist</button>${o.pane ? '' : '<button id="tcLay" title="Split the screen into 2, 3 or 4 charts">▦ Layout</button>'}<button id="tcInd">Indicators</button><button id="tcAl" title="Phone alerts">🔔 Alerts</button><button id="tcRp">⏪ Replay</button><button id="tcFit">Fit</button><button id="tcPng">Image</button><button id="tcChat">Post in chat…</button>${o.embedded ? '' : '<button id="tcPop" title="Open in its own window">⧉ Pop out</button><button id="tcX">✕</button>'}</div>
   <div class="mn"><div class="lt" id="tcTools">${[['cur', '✥', 'Move'], ['tl', '／', 'Trend line'], ['ray', '↗', 'Ray'], ['hl', '─', 'Horizontal line'], ['vl', '│', 'Vertical line'], ['fib', 'ƒ', 'Fib retracement'], ['fbx', 'ƒ+', 'Fib extension (3 clicks: A, B, C)'], ['rc', '▭', 'Box'], ['pa', '〰', 'Path (double-tap to finish)'], ['tx', 'T', 'Text box'], ['hr', '⇥', 'Horizontal ray'], ['cl', '┼', 'Cross line'], ['ar', '➚', 'Arrow'], ['ch', '▤', 'Parallel channel (3 clicks)'], ['tri', '△', 'Triangle (3 clicks)'], ['el', '◯', 'Ellipse'], ['br', '✎', 'Brush (drag)'], ['pl', '$', 'Price label'], ['lp', '▲', 'Long position'], ['sp', '▼', 'Short position'], ['ru', '📏', 'Measure']].map(t => `<button data-tool="${t[0]}" title="${t[2]}">${t[1]}</button>`).join('')}<button id="tcFibCfg" title="Fib settings: your own levels, colours, extensions">ƒ⚙</button><button id="tcMag" title="Magnet: snap to the candle high / low / open / close. Hold Ctrl (Cmd on Mac) while clicking to snap just once.">🧲</button><input type="color" id="tcCol" value="#4fd1c5" title="Drawing colour (new drawings use it; pick a drawing to recolour it)" style="width:38px;height:30px;padding:0;margin:2px 0"><button id="tcUndo" title="Undo">↶</button><button id="tcClr" title="Clear drawings">🗑</button></div>
-  <div class="cw" id="tcCw"><canvas id="tcCv"></canvas><div class="st" id="tcSt">Loading…</div></div></div>
+  <div class="cw" id="tcCw"><canvas id="tcCv"></canvas><div class="st" id="tcSt">Loading…</div></div><div id="tcWl" class="wl"></div></div>
   <div class="rp" id="tcRpBar"><b style="color:#dba118">REPLAY</b><button id="rpPick">Pick start bar</button><button id="rpBack">⏮ Back</button><button id="rpPlay">▶ Play</button><button id="rpStep">Step ⏭</button>
     <select id="rpSpd"><option value="1">1×</option><option value="2">2×</option><option value="5">5×</option><option value="10">10×</option><option value="25">25×</option></select><span id="rpInfo" style="color:#8b8f9a;font-size:12px"></span><span class="sp"></span><button id="rpX">Exit replay</button></div>`;
-  document.body.appendChild(m); cv = m.querySelector('#tcCv'); cx = cv.getContext('2d');
+  if(o.pane) m.classList.add('pane'); document.body.appendChild(m); cv = m.querySelector('#tcCv'); cx = cv.getContext('2d');
   m.querySelector('#tcEx').value = S.ex; wire(m); syncTf(); syncTools(); syncSym();
   window.addEventListener('resize', paint); document.addEventListener('keydown', key); document.addEventListener('keyup', e => { if(S){ S.ctrl = e.ctrlKey || e.metaKey; } });
-  loadAll(true); timer = setInterval(poll, 3000); tick = setInterval(() => { if(S && !S.drag) paint(); }, 1000);
+  loadAll(true); timer = setInterval(poll, 3000); let tk = 0; tick = setInterval(() => { if(S && !S.drag) paint(); if(++tk % 15 === 0) wlRefresh(); }, 1000);
+  wlShow(ls('wlopen', false)); if(!o.pane){ const lay = ls('layout', '1'); if(lay !== '1') layout(lay); }
 }
 function close(){ clearInterval(timer); clearInterval(tick); timer = null; const e = document.getElementById('ttc'); if(e) e.remove(); window.removeEventListener('resize', paint); document.removeEventListener('keydown', key); if(S && S.rp) clearTimeout(S.rp.t); S = null; }
 function key(e){ if(!S) return; S.ctrl = e.ctrlKey || e.metaKey; if(e.key === 'Escape'){ const p = document.querySelector('#ttc .pop'); if(p) p.remove(); else if(S.tool){ S.tool = null; S.pts = []; syncTools(); paint(); } else if(!S.embedded) close(); } if(e.key === 'Enter' && S.tool === 'pa') finishPath(); if((e.key === 'Delete' || e.key === 'Backspace') && S.sel && !/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)){ e.preventDefault(); delSel(); } if(e.key === ' ' && S.rp.on && !/INPUT|SELECT/.test((e.target.tagName))){ e.preventDefault(); rpToggle(); } if(e.key === 'ArrowRight' && S.rp.on) rpStep(1); }
 const $ = id => document.getElementById(id);
 function syncTf(){ document.querySelectorAll('#ttc [data-tf]').forEach(b => b.classList.toggle('on', b.dataset.tf === S.tf)); }
 function syncTools(){ document.querySelectorAll('#ttc [data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === (S.tool || 'cur'))); const m = $('tcMag'); if(m) m.classList.toggle('on', !!S.magnet); }
-function syncSym(){ $('tcSym').textContent = S.sym + '/USDT ▾'; }
+const dk = sym => 'draw_' + sym + (PANE ? '_p' + PANE : '');
+let PANE = '';
+function setSym(sym){ S.sym = sym; lsSet('sym', sym); S.draw = ls(dk(sym), []); S.sel = null; selBar(); syncSym(); loadAll(); wlRender(); }
+function syncSym(){ const st = $('tcStar'); if(st){ const W = wlGet(), it = W.lists[W.cur].items; st.textContent = it.some(x => x.s === S.sym) ? '★' : '☆'; st.style.color = it.some(x => x.s === S.sym) ? '#dba118' : ''; }  $('tcSym').textContent = S.sym + '/USDT ▾'; }
 function setStatus(t){ const e = $('tcSt'); if(e) e.textContent = t; }
 const vd = () => S.rp.on ? S.data.slice(0, S.rp.idx + 1) : S.data;
 async function loadAll(first){
@@ -255,7 +261,7 @@ function fibPop(){ popClose(); const q = sel => document.querySelector('#ttc ' +
   p.onclick = e => { const t = e.target, d = t.dataset; if(d.fx != null){ F.lv.splice(+d.fx, 1); fibSave(); rows(); paint(); } else if(t.id === 'fibAdd'){ const v = parseFloat(q('#fibNew').value); if(isFinite(v)){ F.lv.push([v, 1, '#ff9800']); F.lv.sort((x, y) => x[0] - y[0]); fibSave(); rows(); q('#fibNew').value = ''; paint(); } } else if(t.id === 'fibReset'){ FC = JSON.parse(JSON.stringify(FDEF)); fibSave(); fibPop(); paint(); } else if(t.id === 'fibDone'){ p.remove(); } };
 }
 /* ---------- pointer ---------- */
-const saveDraw = () => lsSet('draw_' + S.sym, S.draw);
+const saveDraw = () => lsSet(dk(S.sym), S.draw);
 function finishPath(){ if(S.pts.length > 1){ S.draw.push({k: 'pa', pts: S.pts.slice(), col: S.col}); saveDraw(); } S.pts = []; S.mv = null; paint(); }
 function ptr(e){ const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, g = S.g, i = S.v0 + x / g.w - .5, p = S.sc.lo + (1 - (y - g.mT) / (g.mB - g.mT)) * (S.sc.hi - S.sc.lo); let o = {x, y, i, t: tOfIdx(Math.max(0, Math.min(S.data.length - 1, i))) + (i > S.data.length - 1 ? (i - (S.data.length - 1)) * TFMS[S.tf] : 0), p};
   if(S.tool && (S.magnet || e.ctrlKey || e.metaKey) && S.data.length){ const k = Math.max(0, Math.min(vd().length - 1, Math.round(i))), r = S.data[k]; if(r){ const best = [r.o, r.h, r.l, r.c].reduce((m, v) => Math.abs(S.Y(v) - y) < Math.abs(S.Y(m) - y) ? v : m); o = {x: S.v0 !== undefined ? (k - S.v0 + .5) * S.g.w : x, y: S.Y(best), i: k, t: r.t, p: best, snap: true}; } }
@@ -266,7 +272,7 @@ function wire(m){
   m.querySelectorAll('[data-tf]').forEach(b => b.onclick = () => { S.tf = b.dataset.tf; lsSet('tf', S.tf); syncTf(); loadAll(); });
   q('#tcEx').onchange = e => { S.ex = e.target.value; lsSet('ex', S.ex); S.list = {}; loadAll(); };
   m.querySelectorAll('[data-tool]').forEach(b => b.onclick = () => { S.tool = b.dataset.tool === 'cur' ? null : (S.tool === b.dataset.tool ? null : b.dataset.tool); S.pts = []; S.mv = null; syncTools(); paint(); });
-  q('#tcFibCfg').onclick = fibPop;
+  q('#tcFibCfg').onclick = fibPop; q('#tcStar').onclick = () => wlToggle(S.sym); q('#tcWlBtn').onclick = () => wlShow(!$('tcWl').classList.contains('on')); if(q('#tcLay')) q('#tcLay').onclick = layPop; wlWire();
   q('#tcCol').oninput = e => { S.col = e.target.value; };
   q('#tcUndo').onclick = () => { S.sel = null; selBar(); S.draw.pop(); saveDraw(); paint(); }; q('#tcClr').onclick = () => { if(S.draw.length && confirm('Remove all drawings for ' + S.sym + '?')){ S.draw = []; saveDraw(); paint(); } };
   q('#tcPng').onclick = () => cv.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `TTM-${S.sym}-${S.tf}.png`; a.click(); });
@@ -280,7 +286,7 @@ function wire(m){
     if(np === 2){ const k = Object.values(ptrs); pinch = {d: Math.hypot(k[0].x - k[1].x, k[0].y - k[1].y), vn: S.vn, v0: S.v0}; drag = null; return; }
     const p = ptr(e);
     if(S.rp.pick){ const i = Math.max(1, Math.min(S.data.length - 1, Math.round(p.i))); S.rp.pick = false; S.rp.idx = i; setStatus(''); fit(); paint(); return; }
-    if(!S.tool){ const h = hitDraw(p.x, p.y); if(h){ S.sel = h; selBar(); paint(); return; } if(S.sel){ S.sel = null; selBar(); paint(); } }
+    if(!S.tool){ const h = hitDraw(p.x, p.y); if(h){ S.sel = h; selBar(); S.mvd = {s: h, p0: p, orig: JSON.parse(JSON.stringify(h)), moved: false}; cv.setPointerCapture(e.pointerId); paint(); return; } if(S.sel){ S.sel = null; selBar(); paint(); } }
     if(S.tool === 'tx'){ const t = prompt('Text for the chart'); if(t){ const o = {k: 'tx', a: {t: p.t, p: p.p}, txt: t, col: S.col}; S.draw.push(o); saveDraw(); S.sel = o; selBar(); } S.tool = null; syncTools(); paint(); return; }
     if(S.tool){ const dbl = Date.now() - last.t < 400 && Math.abs(e.clientX - last.x) < 14 && Math.abs(e.clientY - last.y) < 14; last = {t: dbl ? 0 : Date.now(), x: e.clientX, y: e.clientY};
       if(S.tool === 'pa'){ if(dbl){ S.pts.pop(); finishPath(); } else { S.pts.push({t: p.t, p: p.p}); paint(); } return; }
@@ -294,15 +300,16 @@ function wire(m){
   cv.addEventListener('pointermove', e => { if(ptrs[e.pointerId]) ptrs[e.pointerId] = {x: e.clientX, y: e.clientY};
     if(pinch && Object.keys(ptrs).length === 2){ const k = Object.values(ptrs), d = Math.hypot(k[0].x - k[1].x, k[0].y - k[1].y); S.vn = Math.max(12, Math.min(Math.max(vd().length + 20, 60), pinch.vn * pinch.d / d)); S.v0 = pinch.v0 + (pinch.vn - S.vn) / 2; clampV(); paint(); return; }
     const r = cv.getBoundingClientRect(); S.cross = {x: e.clientX - r.left, y: e.clientY - r.top};
+    if(S.mvd){ const q = ptr(e), M = S.mvd, dt = q.t - M.p0.t, dp = q.p - M.p0.p, mvp = (o, n) => { n.t = o.t + dt; n.p = o.p + dp; }; if(Math.abs(e.clientX - last.x) >= 0 || true){ M.moved = true; if(M.orig.a) mvp(M.orig.a, M.s.a); if(M.orig.b) mvp(M.orig.b, M.s.b); if(M.orig.pts) M.orig.pts.forEach((z, i) => mvp(z, M.s.pts[i])); paint(); } return; }
     if(S.brush){ const q = ptr(e); S.brush.push({t: q.t, p: q.p}); paint(); return; }
     if(rs){ S.subH[rs.id] = Math.round(rs.h + (rs.y - e.clientY)); paint(); return; }
     if(tx){ const nv = Math.max(12, Math.min(Math.max(vd().length + 20, 60), tx.vn * Math.exp((e.clientX - tx.x) / 180))); S.vn = nv; S.v0 = tx.v0 + tx.vn - nv; clampV(); paint(); return; }
-    if(!drag && !S.tool) cv.style.cursor = divAt(S.cross.y) >= 0 ? 'ns-resize' : (S.cross.y > S.g.H - P.B ? 'ew-resize' : '');
+    if(!drag && !S.tool) cv.style.cursor = divAt(S.cross.y) >= 0 ? 'ns-resize' : (S.cross.y > S.g.H - P.B ? 'ew-resize' : (hitDraw(S.cross.x, S.cross.y) ? 'move' : ''));
     if(drag){ const dx = e.clientX - drag.x, dy = e.clientY - drag.y, ph = S.g.mB - S.g.mT;
       if(drag.axis){ const c0 = (drag.hi + drag.lo) / 2, h = (drag.hi - drag.lo) / 2 * Math.exp(dy / 160); S.pv = {lo: c0 - h, hi: c0 + h}; } else { S.v0 = drag.v0 - dx / S.g.w; const sh = dy / ph * (drag.hi - drag.lo); S.pv = {lo: drag.lo + sh, hi: drag.hi + sh}; clampV(); if(S.v0 < 15) more(); }
       paint(); return; }
     if(S.tool && S.pts.length){ const p = ptr(e); S.mv = {t: p.t, p: p.p}; } paint(); });
-  const up = e => { if(S.brush){ if(S.brush.length > 2){ S.draw.push({k: 'br', pts: S.brush, col: S.col}); saveDraw(); } S.brush = null; paint(); } rs = null; tx = null; delete ptrs[e.pointerId]; if(Object.keys(ptrs).length < 2) pinch = null; drag = null; S.drag = false; };
+  const up = e => { if(S.mvd){ if(S.mvd.moved) saveDraw(); S.mvd = null; } if(S.brush){ if(S.brush.length > 2){ S.draw.push({k: 'br', pts: S.brush, col: S.col}); saveDraw(); } S.brush = null; paint(); } rs = null; tx = null; delete ptrs[e.pointerId]; if(Object.keys(ptrs).length < 2) pinch = null; drag = null; S.drag = false; };
   cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); cv.addEventListener('pointerleave', () => { S.cross = null; paint(); });
   cv.addEventListener('wheel', e => { e.preventDefault(); const r = cv.getBoundingClientRect(); zoom(e.deltaY > 0 ? 1.12 : .89, Math.max(0, Math.min(1, (e.clientX - r.left) / S.g.pw))); paint(); }, {passive: false});
   new ResizeObserver(paint).observe(q('#tcCw'));
@@ -317,11 +324,43 @@ async function symPop(){
   const draw = () => { const q = $('tcQ').value.trim().toUpperCase(), qc = Object.keys(TAGS).filter(k => q.length > 1 && k.toUpperCase().includes(q)), want = cat ? [cat] : qc;
     document.querySelectorAll('#tcCats button').forEach(b => b.classList.toggle('on', b.dataset.c === cat));
     const rows = L.filter(x => want.length ? want.some(k => TAGSET[k].has(symKey(x.s))) || (!cat && x.s.includes(q)) : (!q || x.s.includes(q)));
-    $('tcSl').innerHTML = rows.slice(0, 120).map(x => `<div data-s="${esc(x.s)}"><span><b>${esc(x.s)}</b><small>${esc(tagsOf(x.s).slice(0, 2).join(' · '))}</small></span><span style="color:${x.chg >= 0 ? '#3fb47a' : '#e0554d'}">${fx(x.px)} · ${x.chg >= 0 ? '+' : ''}${x.chg.toFixed(1)}%</span></div>`).join('') || '<div>No match on ' + esc(EX[S.ex].n) + '</div>'; };
+    const inWl = new Set(wlGet().lists[wlGet().cur].items.map(z => z.s)); $('tcSl').innerHTML = rows.slice(0, 120).map(x => `<div data-s="${esc(x.s)}"><span><b data-star="${esc(x.s)}" title="Add to watchlist" style="cursor:pointer;color:${inWl.has(x.s) ? '#dba118' : '#6b6f7a'};font-size:15px;margin-right:6px">${inWl.has(x.s) ? '★' : '☆'}</b><b>${esc(x.s)}</b><small>${esc(tagsOf(x.s).slice(0, 2).join(' · '))}</small></span><span style="color:${x.chg >= 0 ? '#3fb47a' : '#e0554d'}">${fx(x.px)} · ${x.chg >= 0 ? '+' : ''}${x.chg.toFixed(1)}%</span></div>`).join('') || '<div>No match on ' + esc(EX[S.ex].n) + '</div>'; };
   draw(); $('tcQ').oninput = () => { cat = ''; draw(); }; $('tcQ').focus();
   $('tcCats').onclick = e => { const b = e.target.closest('[data-c]'); if(!b) return; cat = b.dataset.c; $('tcQ').value = ''; draw(); };
-  $('tcSl').onclick = e => { const d = e.target.closest('[data-s]'); if(!d) return; S.sym = d.dataset.s; lsSet('sym', S.sym); S.draw = ls('draw_' + S.sym, []); syncSym(); popClose(); loadAll(); };
+  $('tcSl').onclick = e => { const st = e.target.closest('[data-star]'); if(st){ e.stopPropagation(); wlToggle(st.dataset.star); draw(); return; } const d = e.target.closest('[data-s]'); if(!d) return; S.sym = d.dataset.s; lsSet('sym', S.sym); setSym(d.dataset.s); popClose(); };
 }
+
+/* ---------- watchlists (5 lists, stars, sections; saved on this device) ---------- */
+const wlGet = () => { let W = ls('wl', null); if(!W || !W.lists){ W = {cur: 0, lists: [0, 1, 2, 3, 4].map(i => ({name: 'Watchlist ' + (i + 1), items: i ? [] : ['BTC', 'ETH', 'SOL'].map(s => ({s}))}))}; lsSet('wl', W); } return W; };
+const wlSave = W => lsSet('wl', W);
+function wlShow(on){ lsSet('wlopen', !!on); const p = $('tcWl'); if(!p) return; p.classList.toggle('on', !!on); const b = $('tcWlBtn'); if(b) b.classList.toggle('on', !!on); wlRender(); setTimeout(() => window.dispatchEvent(new Event('resize')), 30); if(on) wlRefresh(); }
+async function wlRefresh(){ const p = $('tcWl'); if(!S || !p || !p.classList.contains('on')) return; try{ S.list[S.ex] = (await EX[S.ex].list()).sort((a, b) => b.vol - a.vol); wlRender(); }catch(e){} }
+function wlRender(){ const p = $('tcWl'); if(!p || !S || !p.classList.contains('on')) return; const W = wlGet(), L = W.lists[W.cur], px = {}; (S.list[S.ex] || []).forEach(x => { px[x.s] = x; });
+  const keep = $('wlAddIn') ? $('wlAddIn').value : '', foc = document.activeElement && document.activeElement.id === 'wlAddIn';
+  p.innerHTML = `<div class="wh"><select id="wlSel">${W.lists.map((l, i) => `<option value="${i}" ${i === W.cur ? 'selected' : ''}>${esc(l.name)} (${l.items.filter(x => x.s).length})</option>`).join('')}</select><button id="wlRen" title="Rename this list">✎</button><button id="wlSecB" title="Add a heading">+ Section</button></div>
+    <div class="wh"><input id="wlAddIn" placeholder="Add a ticker, e.g. SOL" style="flex:1;min-width:0" value="${esc(keep)}"><button id="wlAdd">Add</button></div>
+    <div class="wb" id="wlBody">${L.items.length ? L.items.map((it, i) => it.sec != null ? `<div class="ws"><span>${esc(String(it.sec).toUpperCase())}</span><span class="wx" data-wx="${i}" style="cursor:pointer">✕</span></div>` : (x => `<div class="wr ${it.s === S.sym ? 'cur' : ''}" data-ws="${esc(it.s)}"><b>${esc(it.s)}</b><span>${x ? fx(x.px) : '—'}</span><span style="color:${x && x.chg < 0 ? '#e0554d' : '#3fb47a'}">${x ? (x.chg >= 0 ? '+' : '') + x.chg.toFixed(2) + '%' : ''}</span><span class="wx" data-wx="${i}">✕</span></div>`)(px[it.s])).join('') : '<div style="padding:12px;color:#8b8f9a;font-size:12px">Empty. Press ☆ next to a coin in the search, or the ☆ at the top, or type a ticker above.</div>'}</div>`;
+  if(foc){ const i = $('wlAddIn'); i.focus(); i.setSelectionRange(keep.length, keep.length); } }
+function wlToggle(sym){ const W = wlGet(), L = W.lists[W.cur], k = L.items.findIndex(x => x.s === sym); if(k >= 0) L.items.splice(k, 1); else L.items.push({s: sym}); wlSave(W); syncSym(); wlRender(); }
+function wlWire(){ const p = $('tcWl'); if(!p || p.dataset.w) return; p.dataset.w = 1;
+  p.onchange = e => { if(e.target.id === 'wlSel'){ const W = wlGet(); W.cur = +e.target.value; wlSave(W); syncSym(); wlRender(); } };
+  p.onclick = e => { const t = e.target, W = wlGet(), L = W.lists[W.cur];
+    if(t.dataset.wx != null){ L.items.splice(+t.dataset.wx, 1); wlSave(W); syncSym(); wlRender(); return; }
+    if(t.id === 'wlRen'){ const n = prompt('Name this watchlist', L.name); if(n && n.trim()){ L.name = n.trim().slice(0, 24); wlSave(W); wlRender(); } return; }
+    if(t.id === 'wlSecB'){ const n = prompt('Heading, e.g. MAJORS, DEX, AI'); if(n && n.trim()){ L.items.push({sec: n.trim().slice(0, 28)}); wlSave(W); wlRender(); } return; }
+    if(t.id === 'wlAdd'){ wlAddTyped(); return; }
+    const r = t.closest('[data-ws]'); if(r) setSym(r.dataset.ws); };
+  p.onkeydown = e => { if(e.key === 'Enter' && e.target.id === 'wlAddIn'){ e.preventDefault(); wlAddTyped(); } e.stopPropagation(); }; }
+function wlAddTyped(){ const i = $('wlAddIn'); if(!i) return; const s = i.value.trim().toUpperCase().replace(/(USDT|\/USDT|-USDT)$/, ''); if(!s) return; const W = wlGet(), L = W.lists[W.cur]; if(!(S.list[S.ex] || []).some(x => x.s === s)){ i.style.outline = '1px solid #e0554d'; i.title = 'Not found on ' + EX[S.ex].n; return; } i.style.outline = ''; if(!L.items.some(x => x.s === s)) L.items.push({s}); i.value = ''; wlSave(W); syncSym(); wlRender(); }
+/* ---------- split screen: 2, 3 or 4 charts side by side ---------- */
+const LAYS = {'1': ['Single chart', 1], '2v': ['2 charts, side by side', 2], '2h': ['2 charts, stacked', 2], '3': ['3 charts', 3], '4': ['4 charts', 4]};
+function layout(code){ lsSet('layout', code); const m = $('ttc'); if(!m) return; let g = $('tcGrid'); if(g) g.remove(); m.classList.toggle('grid', code !== '1'); if(code === '1'){ window.dispatchEvent(new Event('resize')); return; }
+  const n = LAYS[code][1], tfs = [S.tf, '4h', '1d', '15m'].filter((x, i, a) => a.indexOf(x) === i); while(tfs.length < 4) tfs.push(['1h', '1w', '5m'][tfs.length - 1] || '1h');
+  g = document.createElement('div'); g.id = 'tcGrid'; g.style.gridTemplateColumns = code === '2h' ? '1fr' : '1fr 1fr'; g.style.gridTemplateRows = code === '2v' ? '1fr' : code === '2h' ? '1fr 1fr' : '1fr 1fr';
+  if(code === '3'){ g.style.gridTemplateAreas = '"a b" "a c"'; }
+  const lp = ls('panes', {}); g.innerHTML = Array.from({length: n}, (_, i) => { const pk = lp['p' + (i + 1)] || {}, sy = pk.sym || S.sym, tf = pk.tf || tfs[i], ex = pk.ex || S.ex; return `<iframe ${code === '3' ? `style="grid-area:${'abc'[i]}"` : ''} src="${BASE}charts/index.html?pane=${i + 1}&ex=${encodeURIComponent(ex)}&sym=${encodeURIComponent(sy)}&tf=${encodeURIComponent(tf)}" allow="clipboard-write"></iframe>`; }).join(''); m.insertBefore(g, $('tcRpBar')); }
+function layPop(){ if(document.querySelector('#ttc .lay')){ popClose(); return; } popClose(); const p = document.createElement('div'); p.className = 'pop lay'; p.style.cssText = 'top:48px;right:140px'; const cur = ls('layout', '1');
+  p.innerHTML = '<b style="font-size:13px;color:#dba118">Split screen</b>' + Object.keys(LAYS).map(k => `<label style="display:block;margin:6px 0;cursor:pointer"><input type="radio" name="lay" value="${k}" ${k === cur ? 'checked' : ''}> ${LAYS[k][0]}</label>`).join('') + '<div style="font-size:11px;color:#6b6f7a;margin-top:6px;max-width:230px">Each chart has its own coin, time frame and drawings. Change a chart with its own search box.</div>'; $('ttc').appendChild(p); p.onchange = e => { layout(e.target.value); popClose(); }; }
 function indPop(){
   if(document.querySelector('#ttc .ind')){ popClose(); return; } popClose();
   const p = document.createElement('div'); p.className = 'pop ind'; const all = allInd().filter(i => !i.always), row = i => `<label><input type="checkbox" data-i="${i.id}" ${S.inds[i.id] ? 'checked' : ''}> ${esc(i.name)}</label>`;

@@ -3,14 +3,14 @@
 <link rel="icon" type="image/png" href="../favicon.png"><title>TTM View</title>
 <style>
 :root{--bg:#0b0b0c;--card:#121214;--line:#2a2a2e;--text:#e8e6e1;--mute:#9a968c;--gold:#dba118;--gold2:#f2c14e;--panel:#16161a}
-*{box-sizing:border-box}html,body{height:100%}body{margin:0;background:var(--bg);color:var(--text);font:14.5px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#ttmChatBtn,#ttmCommBtn,#ttmLive{display:none!important}*{box-sizing:border-box}html,body{height:100%}body{margin:0;background:var(--bg);color:var(--text);font:14.5px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 #gate{max-width:440px;margin:14vh auto;padding:0 20px;text-align:center}#gate img{height:54px}#gate h1{font-size:20px;margin:14px 0 6px}#gate p{color:var(--mute)}
 #gate button{background:transparent;border:1px solid var(--gold);color:var(--gold2);border-radius:999px;padding:9px 18px;font:inherit;font-weight:700;cursor:pointer}
 </style></head>
 <body data-terminal="charts">
 <div id="gate"><img src="../img/logo0.png" alt="TTM"><h1>TTM View</h1><p id="gMsg">Checking your account…</p><button id="gBtn" style="display:none"></button></div>
 <script src="../chartpro.js?v=2"></script>
-<script src="../ttmcharts.js?v=5"></script>
+<script src="../ttmcharts.js?v=6"></script>
 <script src="../ttmind.js?v=4"></script>
 <script src="../accounts.js?v=1793900006"></script>
 <script>
@@ -22,7 +22,7 @@
     if(!w.ready){ if(++n < 150) return setTimeout(go, 100); g('gMsg').textContent = 'Could not check your account. Refresh this window.'; return; }
     if(!w.user){ g('gMsg').textContent = 'Sign in with your TTM account to open TTM View.'; g('gBtn').textContent = 'Sign in'; g('gBtn').style.display = ''; g('gBtn').onclick = () => { const b = g('acctBtn'); if(b) b.click(); else location.href = '../index.html'; }; return setTimeout(go, 1500); }
     if(!(w.admin || (window.ttmCan && ttmCan('c:ttmcharts')))){ g('gMsg').textContent = 'TTM View is locked for your account while it is in testing.'; g('gBtn').style.display = 'none'; return; }
-    started = true; g('gate').remove(); ttmChartsOpen({embedded: true, ex: q.get('ex'), sym: q.get('sym'), tf: q.get('tf')});
+    started = true; g('gate').remove(); ttmChartsOpen({embedded: true, pane: q.get('pane'), ex: q.get('ex'), sym: q.get('sym'), tf: q.get('tf')});
   }
   go();
 })();
