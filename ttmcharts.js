@@ -141,7 +141,7 @@ function paint(){
   S.orders.forEach(o => { if(o >= lo - rg && o <= hi + rg){ lo = Math.min(lo, o); hi = Math.max(hi, o); } });
   if(S.pv){ lo = S.pv.lo; hi = S.pv.hi; } else { const pd = (hi - lo) * .08; lo -= pd; hi += pd; if(S.inds.vol) lo -= (hi - lo) * .12; }
   S.sc = {lo, hi}; const Y = p => g.mT + (g.mB - g.mT) * (1 - (p - lo) / (hi - lo)); S.Y = Y;
-  const act = allInd().filter(i => S.inds[i.id]), A = ind => ({c, g, X, Y, d, i0, i1, S, res: R(ind, d), fx, i0w: i0, daily: sy => EX[S.ex].candles(sy, '1d', 95), repaint: paint}), cc = act.find(i => i.candleColor), cols = cc ? R(cc, d) : null;
+  const act = allInd().filter(i => S.inds[i.id]), A = ind => ({c, g, X, Y, d, i0, i1, S, res: R(ind, d), fx, i0w: i0, daily: (sy, n) => EX[S.ex].candles(sy, '1d', n || 95), repaint: paint}), cc = act.find(i => i.candleColor), cols = cc ? R(cc, d) : null;
   c.font = '11px system-ui,sans-serif'; c.textBaseline = 'middle';
   for(let k = 0; k <= 5; k++){ const p = lo + (hi - lo) * k / 5, y = Y(p); c.strokeStyle = '#1b1b21'; c.beginPath(); c.moveTo(0, y); c.lineTo(g.pw, y); c.stroke(); c.fillStyle = '#8b8f9a'; c.textAlign = 'left'; c.fillText(fx(p), g.pw + 6, y); }
   // time axis

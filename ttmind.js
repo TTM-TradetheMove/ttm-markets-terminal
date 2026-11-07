@@ -116,6 +116,29 @@ push({id: 'alts', name: 'Altcoin season index (TTM)', pane: 'overlay', calc: () 
 /* 12. @tradethemove watermark */
 push({id: 'wm', name: '@tradethemove watermark', pane: 'overlay', calc: () => null, under: a => { const {c, g} = a; c.save(); c.font = '800 38px system-ui,sans-serif'; c.fillStyle = 'rgba(219,161,24,.30)'; c.textAlign = 'center'; c.fillText('@tradethemove', g.pw / 2, (g.mT + g.mB) / 2); c.font = '700 16px system-ui,sans-serif'; c.fillText('Master the Market', g.pw / 2, (g.mT + g.mB) / 2 + 26); c.restore(); }});
 
+
+/* 14. Key levels: opens plus previous high / low / close for the day, week, month, quarter and year (UTC, from daily candles) */
+const KL = {};
+const KLP = {
+  d: {n: 'Daily', c: '#9aa3b5', k: t => Math.floor(t / 864e5), P: 'D'},
+  w: {n: 'Weekly', c: '#4aa3ff', k: t => Math.floor((t - 3 * 864e5) / 6048e5), P: 'W'},
+  m: {n: 'Monthly', c: '#b18cff', k: t => { const x = new Date(t); return x.getUTCFullYear() * 12 + x.getUTCMonth(); }, P: 'M'},
+  q: {n: 'Quarterly', c: '#ff9f43', k: t => { const x = new Date(t); return x.getUTCFullYear() * 4 + Math.floor(x.getUTCMonth() / 3); }, P: 'Q'},
+  y: {n: 'Yearly', c: '#dba118', k: t => new Date(t).getUTCFullYear(), P: 'Y'}
+};
+function klGroups(D, k){ const G = []; D.forEach(x => { const key = k(x.t), g = G[G.length - 1]; if(g && g.key === key){ g.h = Math.max(g.h, x.h); g.l = Math.min(g.l, x.l); g.c = x.c; } else G.push({key, t: x.t, o: x.o, h: x.h, l: x.l, c: x.c}); }); return G; }
+Object.keys(KLP).forEach(id => { const L = KLP[id];
+  push({id: 'kl_' + id, name: L.n + ' open + previous high / low / close (TTM)', pane: 'overlay', calc: () => null,
+    over: a => { const {c, g, X, Y, d, S} = a; if(!d.length) return; const key = S.ex + ':' + S.sym; let e = KL[key];
+      if(!e || (Date.now() - e.t > 9e5 && !e.busy)){ if(!e) e = KL[key] = {t: 0, D: null, busy: false}; e.busy = true; a.daily(S.sym, 1000).then(D => { e.D = D; e.t = Date.now(); e.busy = false; a.repaint(); }).catch(() => { e.busy = false; e.t = Date.now(); }); }
+      if(!e.D || e.D.length < 3) return; const G = klGroups(e.D, L.k); if(G.length < 2) return; const cur = G[G.length - 1], pv = G[G.length - 2], step = d.length > 1 ? d[1].t - d[0].t : 36e5;
+      const x0 = Math.max(0, X((cur.t - d[0].t) / step)); if(x0 > g.pw) return;
+      c.save(); c.beginPath(); c.rect(0, g.mT, g.pw, g.mB - g.mT); c.clip(); c.font = '700 10px system-ui,sans-serif'; c.textBaseline = 'bottom'; c.textAlign = 'right';
+      [[cur.o, L.P + 'O', 0], [pv.h, 'P' + L.P + 'H', 1], [pv.l, 'P' + L.P + 'L', 1], [pv.c, 'P' + L.P + 'C', 2]].forEach(z => { const y = Y(z[0]); if(y < g.mT - 4 || y > g.mB + 4) return;
+        c.strokeStyle = L.c; c.lineWidth = z[2] === 0 ? 1.6 : 1; c.setLineDash(z[2] === 0 ? [] : z[2] === 1 ? [6, 4] : [2, 3]); c.beginPath(); c.moveTo(x0, y); c.lineTo(g.pw, y); c.stroke(); c.setLineDash([]);
+        c.fillStyle = L.c; c.fillText(z[1] + ' ' + a.fx(z[0]), g.pw - 4, y - 2); }); c.restore(); c.lineWidth = 1; }});
+});
+
 /* 13. TTM RSI combo (sub pane): smoothed RSI + volume-weighted RSI, exhaustion, divergences, warning dots, reversals */
 const piv = (a, n, hi) => a.map((v, i) => { const c = i - n; if(c < n || v == null || a[c] == null) return null; for(let k = c - n; k <= c + n; k++){ if(k === c || a[k] == null) { if(a[k] == null && k !== c) return null; continue; } if(hi ? a[k] > a[c] : a[k] < a[c]) return null; } return {c, v: a[c]}; });
 push({id: 'rsic', name: 'TTM RSI combo (confluence)', pane: 'sub', range: [0, 100], lines: [30, 50, 70], calc: r => {
