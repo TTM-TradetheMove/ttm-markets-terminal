@@ -45,7 +45,7 @@ const SESS: Record<string, {name: string; zone: string; icon: string}> = {asia: 
 const wz = (ms: number, zone: string) => { const p: any = Object.fromEntries(new Intl.DateTimeFormat("en-CA", {timeZone: zone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23"}).formatToParts(new Date(ms)).map((x) => [x.type, x.value])); return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute); };
 const localToUtc = (day: number, min: number, zone: string) => { const want = day + min * 60000; let g = want; for (let i = 0; i < 3; i++) g += want - wz(g, zone); return g; };
 function sessionEvents(now: number) {
-  const out: {t: number; id: string; key: string; warn: boolean; title: string; body: string}[] = [];
+  const out: {t: number; id: string; key: string; warn: boolean; wk: boolean; title: string; body: string}[] = [];
   for (const k of Object.keys(SESS)) {
     let spans: [number, number][] | null = null;
     for (const [kk, zone, o, c] of EXCH) {
@@ -54,12 +54,12 @@ function sessionEvents(now: number) {
       spans = spans === null ? w : spans.flatMap(([a1, b1]) => w.map(([a2, b2]) => [Math.max(a1, a2), Math.min(b1, b2)] as [number, number]).filter(([a, b]) => a < b));
     }
     for (const [st, en] of spans || []) {
-      const dow = new Date(wz(st, SESS[k].zone)).getUTCDay(); if (dow === 0 || dow === 6) continue;
+      const dow = new Date(wz(st, SESS[k].zone)).getUTCDay(), wk = dow === 0 || dow === 6;
       const day = new Date(wz(st, SESS[k].zone)).toISOString().slice(0, 10), s = SESS[k];
-      out.push({t: st - 15 * 60000, id: `${k}-warnopen-${day}`, key: `s_${k}_open`, warn: true, title: `${s.icon} ${s.name} opens in 15 min`, body: "Core market session about to start"});
-      out.push({t: st, id: `${k}-open-${day}`, key: `s_${k}_open`, warn: false, title: `${s.icon} ${s.name} session open`, body: "Core market session is now live"});
-      out.push({t: en - 15 * 60000, id: `${k}-warnclose-${day}`, key: `s_${k}_close`, warn: true, title: `${s.icon} ${s.name} closes in 15 min`, body: "Core market session ending soon"});
-      out.push({t: en, id: `${k}-close-${day}`, key: `s_${k}_close`, warn: false, title: `${s.icon} ${s.name} session closed`, body: "Core market session has ended"});
+      out.push({t: st - 15 * 60000, id: `${k}-warnopen-${day}`, key: `s_${k}_open`, warn: true, wk, title: `${s.icon} ${s.name} opens in 15 min`, body: wk ? "Weekend crypto session about to start" : "Core market session about to start"});
+      out.push({t: st, id: `${k}-open-${day}`, key: `s_${k}_open`, warn: false, wk, title: `${s.icon} ${s.name} session open`, body: wk ? "Weekend crypto session is now live" : "Core market session is now live"});
+      out.push({t: en - 15 * 60000, id: `${k}-warnclose-${day}`, key: `s_${k}_close`, warn: true, wk, title: `${s.icon} ${s.name} closes in 15 min`, body: wk ? "Weekend crypto session ending soon" : "Core market session ending soon"});
+      out.push({t: en, id: `${k}-close-${day}`, key: `s_${k}_close`, warn: false, wk, title: `${s.icon} ${s.name} session closed`, body: wk ? "Weekend crypto session has ended" : "Core market session has ended"});
     }
   }
   return out;
@@ -69,7 +69,7 @@ async function sessionAlerts(now: number) {
     if (!(ev.t <= now && ev.t > now - 150000)) continue;
     const r = await rest("ttm_session_fired?on_conflict=ukey", {method: "POST", headers: {Prefer: "resolution=ignore-duplicates,return=representation"}, body: JSON.stringify({ukey: ev.id})});
     const j = await r.json(); if (!Array.isArray(j) || !j.length) continue;   // already sent
-    const who = await get(`ttm_prefs?select=user_id&prefs->>${ev.key}=eq.true${ev.warn ? "&prefs->>s_warn=eq.true" : ""}`);
+    const who = await get(`ttm_prefs?select=user_id&prefs->>${ev.key}=eq.true${ev.warn ? "&prefs->>s_warn=eq.true" : ""}${ev.wk ? "&or=(prefs->>s_wknd.is.null,prefs->>s_wknd.neq.false)" : ""}`);
     if (!who.length) continue;
     await send(await subsFor(idsOf(who.map((x: any) => ({id: x.user_id})))), {title: ev.title, body: ev.body, tag: "sess-" + ev.id, url: "./crypto/index.html#tradinghours"});
   }

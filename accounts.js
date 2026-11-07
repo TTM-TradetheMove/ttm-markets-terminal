@@ -1183,7 +1183,7 @@ function prefsHtml(){
     + cb('mention', 'Alert me when someone tags me with @' + (PROF && PROF.tg_handle ? PROF.tg_handle : 'myname'))
     + rooms.map(r => cb('r_' + r[0], r[1] + ' room messages')).join('')
     + `<div style="font-size:13px;margin:6px 0 0">${(PREFS.follow || []).length ? 'Following: ' + PREFS.follow.map(f => `${e(f.n)} <u data-unfollow="${e(f.id)}" style="cursor:pointer;color:var(--mute)">remove</u>`).join(' · ') : '<span style="color:var(--mute)">Press <b>follow</b> on a member\'s message in a room to get alerts from them.</span>'}</div><div style="font-size:12px;color:var(--mute);margin-top:4px">Following is private. Nobody is told, and nobody can see who you follow. It only decides which phone alerts you get.</div>` : '';
-  const sess = `<div style="font-size:12.5px;color:var(--mute);margin:2px 0 4px">Phone alert when a core market session opens or closes. All off until you tick them.</div>` + SESSPREF.map(s => cb(s[0], s[1], false)).join('') + cb('s_warn', '15-minute warning before the ones I ticked', false);
+  const sess = `<div style="font-size:12.5px;color:var(--mute);margin:2px 0 4px">Phone alert when a core market session opens or closes. All off until you tick them.</div>` + SESSPREF.map(s => cb(s[0], s[1], false)).join('') + cb('s_warn', '15-minute warning before the ones I ticked', false) + cb('s_wknd', 'Also on weekends (crypto trades all weekend)');
   return `<div style="margin:0 0 12px"><h4 style="margin:6px 0 0;font-size:15px">My settings <span style="font-weight:400;color:var(--mute);font-size:12px">alerts and messages</span></h4>`
     + grp('Trades and TTM', pick(['live', 'mytrade', 'spot', 'chat', 'inbox', 'luna', 'vest']))
     + grp('Market sessions', sess)
