@@ -1,0 +1,27 @@
+-- Eclipse alerts: a phone push 7 days before EVERY eclipse line (Lunar 1-4, Solar 1-4). Run once in the Supabase SQL editor.
+insert into public.ttm_luna_alerts (starts_at, name, color) values
+  ('2027-02-06 12:00+00', 'Solar 2 · Annular eclipse', 'green'),
+  ('2027-08-02 12:00+00', 'Solar 3 · Total eclipse', 'green'),
+  ('2028-01-26 12:00+00', 'Solar 4 · Annular eclipse', 'green'),
+  ('2028-12-31 12:00+00', 'Lunar 1 · Total eclipse', 'red'),
+  ('2029-06-26 12:00+00', 'Lunar 2 · Total eclipse', 'red'),
+  ('2029-12-20 12:00+00', 'Lunar 3 · Total eclipse', 'red'),
+  ('2030-06-15 12:00+00', 'Lunar 4 · Solar 1 · Partial eclipse', 'green'),
+  ('2030-11-25 12:00+00', 'Solar 2 · Total eclipse', 'green'),
+  ('2031-05-21 12:00+00', 'Solar 3 · Annular eclipse', 'green'),
+  ('2031-11-14 12:00+00', 'Solar 4 · Hybrid eclipse', 'green'),
+  ('2032-04-25 12:00+00', 'Lunar 1 · Total eclipse', 'red'),
+  ('2032-10-18 12:00+00', 'Lunar 2 · Total eclipse', 'red'),
+  ('2033-04-14 12:00+00', 'Lunar 3 · Total eclipse', 'red'),
+  ('2033-10-08 12:00+00', 'Lunar 4 · Solar 1 · Total eclipse', 'green'),
+  ('2034-03-20 12:00+00', 'Solar 2 · Total eclipse', 'green'),
+  ('2034-09-12 12:00+00', 'Solar 3 · Annular eclipse', 'green'),
+  ('2035-03-09 12:00+00', 'Solar 4 · Annular eclipse', 'green'),
+  ('2036-02-11 12:00+00', 'Lunar 1 · Total eclipse', 'red'),
+  ('2036-08-07 12:00+00', 'Lunar 2 · Total eclipse', 'red'),
+  ('2037-01-31 12:00+00', 'Lunar 3 · Total eclipse', 'red'),
+  ('2037-07-27 12:00+00', 'Lunar 4 · Solar 1 · Partial eclipse', 'green'),
+  ('2038-01-05 12:00+00', 'Solar 2 · Annular eclipse', 'green'),
+  ('2038-07-02 12:00+00', 'Solar 3 · Annular eclipse', 'green'),
+  ('2038-12-26 12:00+00', 'Solar 4 · Total eclipse', 'green')
+on conflict (starts_at) do update set name = excluded.name;
