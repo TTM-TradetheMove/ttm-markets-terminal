@@ -125,8 +125,10 @@ function zoom(f, cxr){ const n = vd().length, a = S.v0 + S.vn * (cxr == null ? 1
 /* ---------- geometry ---------- */
 const P = {R: 68, T: 46, B: 22};
 function geo(){ const r = cv.getBoundingClientRect(); dpr = window.devicePixelRatio || 1; const W = Math.round(r.width), H = Math.round(r.height); if(cv.width !== W * dpr || cv.height !== H * dpr){ cv.width = W * dpr; cv.height = H * dpr; }
-  const subs = allInd().filter(i => S.inds[i.id] && i.pane === 'sub'), sh = subs.length ? Math.round((H - P.T - P.B) * .2) : 0, total = H - P.T - P.B - subs.length * (sh + 6);
-  S.g = {W, H, pw: W - P.R, mT: P.T, mB: P.T + total, subs, sh, w: (W - P.R) / S.vn}; }
+  const subs = allInd().filter(i => S.inds[i.id] && i.pane === 'sub'), avail = H - P.T - P.B, def = Math.round(avail * .2); S.subH = S.subH || {};
+  let shs = subs.map(i => Math.max(40, Math.min(Math.round(avail * .6), S.subH[i.id] || def))); const room = avail - 120 - subs.length * 6; let tot = shs.reduce((a, b) => a + b, 0); if(tot > room && tot > 0){ const f = Math.max(0, room) / tot; shs = shs.map(v => Math.max(30, Math.floor(v * f))); }
+  const total = avail - shs.reduce((a, b) => a + b, 0) - subs.length * 6, mB = P.T + total, tops = []; let y = mB + 6; shs.forEach(v => { tops.push(y); y += v + 6; });
+  S.g = {W, H, pw: W - P.R, mT: P.T, mB, subs, sh: shs[0] || 0, shs, tops, w: (W - P.R) / S.vn}; }
 const X = i => (i - S.v0 + .5) * S.g.w;
 function idxOfT(t){ const d = S.data; if(!d.length) return 0; const step = TFMS[S.tf]; if(t <= d[0].t) return (t - d[0].t) / step; if(t >= d[d.length - 1].t) return d.length - 1 + (t - d[d.length - 1].t) / step; let lo = 0, hi = d.length - 1; while(hi - lo > 1){ const m = (lo + hi) >> 1; if(d[m].t <= t) lo = m; else hi = m; } return lo + (t - d[lo].t) / (d[hi].t - d[lo].t); }
 function tOfIdx(i){ const d = S.data, step = TFMS[S.tf], k = Math.max(0, Math.min(d.length - 1, Math.floor(i))); return d[k].t + (i - k) * step; }
@@ -159,10 +161,11 @@ function paint(){
   const last = d[d.length - 1].c, yl = Y(last), up = last >= d[d.length - 1].o; c.strokeStyle = up ? '#3fb47a' : '#e0554d'; c.setLineDash([2, 3]); c.beginPath(); c.moveTo(0, yl); c.lineTo(g.pw, yl); c.stroke(); c.setLineDash([]);
   tag(g.pw, yl, fx(last), up ? '#3fb47a' : '#e0554d', '#fff'); S.orders.forEach(o => tag(g.pw, Y(o), fx(o), '#dba118', '#111'));
   // sub panes
-  g.subs.forEach((ind, n) => { const top = g.mB + 6 + n * (g.sh + 6), bot = top + g.sh; c.fillStyle = '#0c0c0f'; c.fillRect(0, top, g.pw, g.sh); c.strokeStyle = '#23232a'; c.strokeRect(.5, top + .5, g.pw - 1, g.sh - 1);
-    const ro = (() => { try{ return R(ind, d); }catch(e){ return null; } })(); let s = Array.isArray(ro) ? ro : []; const vv = s.slice(i0, i1 + 1).filter(v => v != null), rng = ind.range || [Math.min.apply(null, vv), Math.max.apply(null, vv)], yy = v => bot - (v - rng[0]) / ((rng[1] - rng[0]) || 1) * (g.sh - 4) - 2;
+  c.fillStyle = '#2a2a31'; g.tops.forEach(t => { c.fillRect(g.pw / 2 - 18, t - 4, 36, 2); });
+  g.subs.forEach((ind, n) => { const sh = g.shs[n], top = g.tops[n], bot = top + sh; c.fillStyle = '#0c0c0f'; c.fillRect(0, top, g.pw, sh); c.strokeStyle = '#23232a'; c.strokeRect(.5, top + .5, g.pw - 1, sh - 1);
+    const ro = (() => { try{ return R(ind, d); }catch(e){ return null; } })(); let s = Array.isArray(ro) ? ro : []; const vv = s.slice(i0, i1 + 1).filter(v => v != null), rng = ind.range || [Math.min.apply(null, vv), Math.max.apply(null, vv)], yy = v => bot - (v - rng[0]) / ((rng[1] - rng[0]) || 1) * (sh - 4) - 2;
     (ind.lines || []).forEach(L => { c.strokeStyle = '#2d2d36'; c.beginPath(); c.moveTo(0, yy(L)); c.lineTo(g.pw, yy(L)); c.stroke(); c.fillStyle = '#6b6f7a'; c.textAlign = 'left'; c.fillText(String(L), g.pw + 6, yy(L)); });
-    c.save(); c.beginPath(); c.rect(0, top, g.pw, g.sh); c.clip(); if(ind.subPaint){ try{ ind.subPaint({c, g, X, yy, top, bot, i0, i1, d, S, res: ro, fx}); }catch(e){} } c.strokeStyle = ind.color || '#b18cff'; c.lineWidth = 1.5; c.beginPath(); let on = false; for(let i = i0; i <= i1 && !ind.subPaint; i++){ const v = s[i]; if(v == null){ on = false; continue; } const x = X(i), y = yy(v); if(on) c.lineTo(x, y); else { c.moveTo(x, y); on = true; } } c.stroke(); c.restore(); c.lineWidth = 1;
+    c.save(); c.beginPath(); c.rect(0, top, g.pw, sh); c.clip(); if(ind.subPaint){ try{ ind.subPaint({c, g, X, yy, top, bot, i0, i1, d, S, res: ro, fx}); }catch(e){} } c.strokeStyle = ind.color || '#b18cff'; c.lineWidth = 1.5; c.beginPath(); let on = false; for(let i = i0; i <= i1 && !ind.subPaint; i++){ const v = s[i]; if(v == null){ on = false; continue; } const x = X(i), y = yy(v); if(on) c.lineTo(x, y); else { c.moveTo(x, y); on = true; } } c.stroke(); c.restore(); c.lineWidth = 1;
     const lv = s[d.length - 1]; c.fillStyle = '#8b8f9a'; c.textAlign = 'left'; c.fillText(ind.name + (lv != null ? '  ' + lv.toFixed(1) : ''), 6, top + 10); });
   // crosshair + readout
   let hi_ = d[d.length - 1];
@@ -212,6 +215,7 @@ function wire(m){
   q('#tcRp').onclick = () => S.rp.on ? stopReplay() : startReplay(); q('#rpX').onclick = () => stopReplay(); q('#rpPick').onclick = () => { S.rp.pick = true; setStatus('Tap a candle to start the replay from there.'); };
   q('#rpPlay').onclick = rpToggle; q('#rpStep').onclick = () => rpStep(1); q('#rpBack').onclick = () => rpStep(-1); q('#rpSpd').onchange = e => { S.rp.speed = +e.target.value; if(S.rp.play){ clearTimeout(S.rp.t); rpLoop(); } };
   let drag = null, last = {t: 0, x: 0, y: 0}, ptrs = {}, pinch = null;
+  let rs = null, tx = null; const divAt = y => { const g = S.g; for(let n = 0; n < g.tops.length; n++) if(Math.abs(y - (g.tops[n] - 3)) <= 6) return n; return -1; };
   cv.addEventListener('pointerdown', e => { if(!S.data.length) return; e.preventDefault(); ptrs[e.pointerId] = {x: e.clientX, y: e.clientY}; const np = Object.keys(ptrs).length;
     if(np === 2){ const k = Object.values(ptrs); pinch = {d: Math.hypot(k[0].x - k[1].x, k[0].y - k[1].y), vn: S.vn, v0: S.v0}; drag = null; return; }
     const p = ptr(e);
@@ -221,15 +225,20 @@ function wire(m){
       S.pts.push({t: p.t, p: p.p}); const one = S.tool === 'hl' || S.tool === 'vl';
       if(one || S.pts.length === 2){ S.draw = S.draw.filter(z => z.k !== 'ru'); S.draw.push({k: S.tool, a: S.pts[0], b: S.pts[1] || S.pts[0]}); S.pts = []; S.mv = null; if(S.tool !== 'ru') saveDraw(); } paint(); return; }
     const dbl = Date.now() - last.t < 400 && Math.abs(e.clientX - last.x) < 12; last = {t: dbl ? 0 : Date.now(), x: e.clientX, y: e.clientY}; if(dbl){ fit(); paint(); return; }
+    const dv = divAt(p.y); if(dv >= 0 && !S.tool){ rs = {n: dv, y: e.clientY, h: S.g.shs[dv], id: S.g.subs[dv].id}; cv.setPointerCapture(e.pointerId); return; }
+    if(p.y > S.g.H - P.B && !S.tool){ tx = {x: e.clientX, vn: S.vn, v0: S.v0}; cv.setPointerCapture(e.pointerId); return; }
     drag = {x: e.clientX, y: e.clientY, axis: p.x > S.g.pw, v0: S.v0, lo: S.sc.lo, hi: S.sc.hi}; S.drag = true; cv.setPointerCapture(e.pointerId); });
   cv.addEventListener('pointermove', e => { if(ptrs[e.pointerId]) ptrs[e.pointerId] = {x: e.clientX, y: e.clientY};
     if(pinch && Object.keys(ptrs).length === 2){ const k = Object.values(ptrs), d = Math.hypot(k[0].x - k[1].x, k[0].y - k[1].y); S.vn = Math.max(12, Math.min(Math.max(vd().length + 20, 60), pinch.vn * pinch.d / d)); S.v0 = pinch.v0 + (pinch.vn - S.vn) / 2; clampV(); paint(); return; }
     const r = cv.getBoundingClientRect(); S.cross = {x: e.clientX - r.left, y: e.clientY - r.top};
+    if(rs){ S.subH[rs.id] = Math.round(rs.h + (rs.y - e.clientY)); paint(); return; }
+    if(tx){ const nv = Math.max(12, Math.min(Math.max(vd().length + 20, 60), tx.vn * Math.exp((e.clientX - tx.x) / 180))); S.vn = nv; S.v0 = tx.v0 + tx.vn - nv; clampV(); paint(); return; }
+    if(!drag && !S.tool) cv.style.cursor = divAt(S.cross.y) >= 0 ? 'ns-resize' : (S.cross.y > S.g.H - P.B ? 'ew-resize' : '');
     if(drag){ const dx = e.clientX - drag.x, dy = e.clientY - drag.y, ph = S.g.mB - S.g.mT;
       if(drag.axis){ const c0 = (drag.hi + drag.lo) / 2, h = (drag.hi - drag.lo) / 2 * Math.exp(dy / 160); S.pv = {lo: c0 - h, hi: c0 + h}; } else { S.v0 = drag.v0 - dx / S.g.w; const sh = dy / ph * (drag.hi - drag.lo); S.pv = {lo: drag.lo + sh, hi: drag.hi + sh}; clampV(); if(S.v0 < 15) more(); }
       paint(); return; }
     if(S.tool && S.pts.length){ const p = ptr(e); S.mv = {t: p.t, p: p.p}; } paint(); });
-  const up = e => { delete ptrs[e.pointerId]; if(Object.keys(ptrs).length < 2) pinch = null; drag = null; S.drag = false; };
+  const up = e => { rs = null; tx = null; delete ptrs[e.pointerId]; if(Object.keys(ptrs).length < 2) pinch = null; drag = null; S.drag = false; };
   cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); cv.addEventListener('pointerleave', () => { S.cross = null; paint(); });
   cv.addEventListener('wheel', e => { e.preventDefault(); const r = cv.getBoundingClientRect(); zoom(e.deltaY > 0 ? 1.12 : .89, Math.max(0, Math.min(1, (e.clientX - r.left) / S.g.pw))); paint(); }, {passive: false});
   new ResizeObserver(paint).observe(q('#tcCw'));

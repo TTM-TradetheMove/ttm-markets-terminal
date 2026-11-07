@@ -114,7 +114,7 @@ push({id: 'alts', name: 'Altcoin season index (TTM)', pane: 'overlay', calc: () 
     return {pos: 'tr', title: 'Index Season by TTM', rows: [[[v.toFixed(0) + ' (' + st + ')', col]], [[ALT.v.n + ' coins vs BTC, 90 days', '#8b8f9a']]]}; }});
 
 /* 12. @tradethemove watermark */
-push({id: 'wm', name: '@tradethemove watermark', pane: 'overlay', calc: () => null, under: a => { const {c, g} = a; c.save(); c.font = '800 30px system-ui,sans-serif'; c.fillStyle = 'rgba(255,255,255,.05)'; c.textAlign = 'center'; c.fillText('@tradethemove', g.pw / 2, (g.mT + g.mB) / 2); c.font = '700 14px system-ui,sans-serif'; c.fillText('Master the Market', g.pw / 2, (g.mT + g.mB) / 2 + 26); c.restore(); }});
+push({id: 'wm', name: '@tradethemove watermark', pane: 'overlay', calc: () => null, under: a => { const {c, g} = a; c.save(); c.font = '800 38px system-ui,sans-serif'; c.fillStyle = 'rgba(219,161,24,.30)'; c.textAlign = 'center'; c.fillText('@tradethemove', g.pw / 2, (g.mT + g.mB) / 2); c.font = '700 16px system-ui,sans-serif'; c.fillText('Master the Market', g.pw / 2, (g.mT + g.mB) / 2 + 26); c.restore(); }});
 
 /* 13. TTM RSI combo (sub pane): smoothed RSI + volume-weighted RSI, exhaustion, divergences, warning dots, reversals */
 const piv = (a, n, hi) => a.map((v, i) => { const c = i - n; if(c < n || v == null || a[c] == null) return null; for(let k = c - n; k <= c + n; k++){ if(k === c || a[k] == null) { if(a[k] == null && k !== c) return null; continue; } if(hi ? a[k] > a[c] : a[k] < a[c]) return null; } return {c, v: a[c]}; });
