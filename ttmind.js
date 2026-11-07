@@ -38,15 +38,14 @@ push({id: 'sess', name: 'Session boxes: Asia / UK / US (TTM)', pane: 'overlay', 
 /* 3. Weekend shading: Saturday orange, Sunday purple */
 push({id: 'wknd', name: 'Weekend shading (TTM)', pane: 'overlay', alerts: [{k: 'sat', name: 'Saturday has started'}, {k: 'sun', name: 'Sunday has started'}, {k: 'end', name: 'Weekend has finished'}], alertHits: r => { const o = []; for(let i = Math.max(1, r.length - 6); i < r.length; i++){ const a = utc(r[i - 1].t).dow, b = utc(r[i].t).dow; if(a !== b){ if(b === 6) o.push({i, k: 'sat'}); else if(b === 0) o.push({i, k: 'sun'}); else if(b === 1) o.push({i, k: 'end'}); } } return o; }, calc: () => null, under: a => { const {c, g, X, i0, i1, d} = a, w = g.w; for(let i = i0; i <= i1; i++){ const dw = utc(d[i].t).dow; if(dw !== 6 && dw !== 0) continue; c.fillStyle = dw === 6 ? 'rgba(255,152,0,.14)' : 'rgba(156,39,176,.16)'; c.fillRect(X(i) - w / 2, g.mT, w + .5, g.mB - g.mT); } }});
 
-/* 4. TTM EMA cloud (9/21) + extra MAs (5/13/40) + early (EL/ES) and confirmed (CB/CS) signals */
+/* 4. TTM EMA cloud (9/21) + extra MAs (5/13/40) + confirmed (CB/CS) signals (early EL/ES signals removed) */
 push({id: 'ttmema', name: 'TTM EMA cloud + signals', pane: 'overlay', calc: r => {
   const cl = closes(r), f = emaA(cl, 9), s = emaA(cl, 21), m1 = emaA(cl, 5), m2 = emaA(cl, 13), m3 = emaA(cl, 40), sig = [];
   r.forEach((x, i) => { if(i < 1 || f[i] == null || f[i - 1] == null || s[i] == null || s[i - 1] == null) return;
     const far = Math.abs(x.c - f[i]) / f[i] > .0005, p = r[i - 1].c;
-    if(p <= f[i - 1] && x.c > f[i] && far) sig.push({i, k: 'EL'}); if(p >= f[i - 1] && x.c < f[i] && far) sig.push({i, k: 'ES'});
-    if(f[i - 1] <= s[i - 1] && f[i] > s[i]) sig.push({i, k: 'CB'}); if(f[i - 1] >= s[i - 1] && f[i] < s[i]) sig.push({i, k: 'CS'}); });
+        if(f[i - 1] <= s[i - 1] && f[i] > s[i]) sig.push({i, k: 'CB'}); if(f[i - 1] >= s[i - 1] && f[i] < s[i]) sig.push({i, k: 'CS'}); });
   return {f, s, m1, m2, m3, sig}; },
-  alerts: [{k: 'EL', name: 'Early buy: price crossed above the fast EMA'}, {k: 'ES', name: 'Early sell: price crossed below the fast EMA'}, {k: 'CB', name: 'Confirmed buy: fast EMA crossed above slow EMA'}, {k: 'CS', name: 'Confirmed sell: fast EMA crossed below slow EMA'}], alertHits: (r, R) => R.sig,
+  alerts: [{k: 'CB', name: 'Confirmed buy: fast EMA crossed above slow EMA'}, {k: 'CS', name: 'Confirmed sell: fast EMA crossed below slow EMA'}], alertHits: (r, R) => R.sig,
   under: a => { const R = a.res, {c, X, Y, i0, i1} = a; if(!R) return; let seg = []; const flush = (up) => { if(seg.length < 2) { seg = []; return; } c.fillStyle = up ? 'rgba(167,219,129,.30)' : 'rgba(255,82,82,.24)'; c.beginPath(); seg.forEach((p, k) => k ? c.lineTo(X(p.i), Y(p.f)) : c.moveTo(X(p.i), Y(p.f))); for(let k = seg.length - 1; k >= 0; k--) c.lineTo(X(seg[k].i), Y(seg[k].s)); c.closePath(); c.fill(); seg = []; };
     let up = null; for(let i = i0; i <= i1; i++){ if(R.f[i] == null || R.s[i] == null){ flush(up); continue; } const u = R.f[i] > R.s[i]; if(up !== null && u !== up) flush(up); up = u; seg.push({i, f: R.f[i], s: R.s[i]}); } flush(up); },
   over: a => { const R = a.res, {c, X, Y, d} = a; if(!R) return; line(a, R.m1, '#21cdf3', 1.2); line(a, R.m2, '#ff4b3b', 1.2); line(a, R.m3, '#d29314', 1.2); line(a, R.f, '#dd00ff', 1.6); line(a, R.s, '#a0d82e', 1.6);
@@ -109,12 +108,12 @@ const ALTS = ['ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'AVAX', 'DOT', 'POL', '
 let ALT = {t: 0, key: '', v: null, busy: false};
 push({id: 'alts', name: 'Altcoin season index (TTM)', pane: 'overlay', calc: () => null,
   panel: a => { const key = a.S.ex; if((!ALT.v || ALT.key !== key || Date.now() - ALT.t > 6e5) && !ALT.busy){ ALT.busy = true; (async () => { try{ const g = async s => { try{ return await a.daily(s); }catch(e){ return null; } }; const btc = await g('BTC'), res = await Promise.all(ALTS.map(g)); if(btc && btc.length > 91){ const bn = btc[btc.length - 1].c, bo = btc[btc.length - 91].c; let sc = 0, tot = 0; res.forEach(x => { if(x && x.length > 91){ tot++; if((x[x.length - 1].c / bn) / (x[x.length - 91].c / bo) > 1) sc++; } }); ALT = {t: Date.now(), key, v: tot ? {idx: sc / tot * 100, n: tot} : null, busy: false}; } else ALT.busy = false; }catch(e){ ALT.busy = false; } ALT.t = ALT.t || Date.now(); a.repaint(); })(); }
-    if(!ALT.v) return {pos: 'tr', title: 'Index Season by TTM', rows: [[['Loading…', '#8b8f9a']]]};
+    if(!ALT.v) return {pos: 'tr', scale: 1.4, title: 'Index Season by TTM', rows: [[['Loading…', '#8b8f9a']]]};
     const v = ALT.v.idx, st = v >= 75 ? 'Altcoin Season' : v <= 25 ? 'Bitcoin Season' : 'Neutral', col = v >= 75 ? '#89dc41' : v <= 25 ? '#e7751d' : '#3d9f32';
-    return {pos: 'tr', title: 'Index Season by TTM', rows: [[[v.toFixed(0) + ' (' + st + ')', col]], [[ALT.v.n + ' coins vs BTC, 90 days', '#8b8f9a']]]}; }});
+    return {pos: 'tr', scale: 1.4, title: 'Index Season by TTM', rows: [[[v.toFixed(0) + ' (' + st + ')', col]], [[ALT.v.n + ' coins vs BTC, 90 days', '#8b8f9a']]]}; }});
 
 /* 12. @tradethemove watermark */
-push({id: 'wm', name: '@tradethemove watermark', pane: 'overlay', calc: () => null, under: a => { const {c, g} = a; c.save(); c.font = '800 38px system-ui,sans-serif'; c.fillStyle = 'rgba(219,161,24,.30)'; c.textAlign = 'center'; c.fillText('@tradethemove', g.pw / 2, (g.mT + g.mB) / 2); c.font = '700 16px system-ui,sans-serif'; c.fillText('Master the Market', g.pw / 2, (g.mT + g.mB) / 2 + 26); c.restore(); }});
+push({id: 'wm', name: '@tradethemove watermark', always: true, pane: 'overlay', calc: () => null, under: a => { const {c, g} = a; c.save(); c.font = '800 38px system-ui,sans-serif'; c.fillStyle = 'rgba(219,161,24,.30)'; c.textAlign = 'center'; c.fillText('@tradethemove', g.pw / 2, (g.mT + g.mB) / 2); c.font = '700 16px system-ui,sans-serif'; c.fillText('Master the Market', g.pw / 2, (g.mT + g.mB) / 2 + 26); c.restore(); }});
 
 
 /* 14. Key levels: opens plus previous high / low / close for the day, week, month, quarter and year (UTC, from daily candles) */
@@ -138,6 +137,33 @@ Object.keys(KLP).forEach(id => { const L = KLP[id];
         c.strokeStyle = L.c; c.lineWidth = z[2] === 0 ? 1.6 : 1; c.setLineDash(z[2] === 0 ? [] : z[2] === 1 ? [6, 4] : [2, 3]); c.beginPath(); c.moveTo(x0, y); c.lineTo(g.pw, y); c.stroke(); c.setLineDash([]);
         c.fillStyle = L.c; c.fillText(z[1] + ' ' + a.fx(z[0]), g.pw - 4, y - 2); }); c.restore(); c.lineWidth = 1; }});
 });
+
+
+/* 15. Eclipse cycles: vertical lines named Lunar 1-4 (red) and Solar 1-4 (green), same data as the Eclipse screen */
+const ECL = (() => { const DAYMS = 864e5;
+const LD = '2011-06-15T,2011-12-10T,2012-06-04P,2012-11-28N,2013-04-25P,2013-05-25N,2013-10-18N,2014-04-15T,2014-10-08T,2015-04-04T,2015-09-28T,2016-03-23N,2016-09-16N,2017-02-11N,2017-08-07P,2018-01-31T,2018-07-27T,2019-01-21T,2019-07-16P,2020-01-10N,2020-06-05N,2020-07-05N,2020-11-30N,2021-05-26T,2021-11-19P,2022-05-16T,2022-11-08T,2023-05-05N,2023-10-28P,2024-03-25N,2024-09-18P,2025-03-14T,2025-09-07T,2026-03-03T,2026-08-28P,2027-02-20N,2027-07-18N,2027-08-17N,2028-01-12P,2028-07-06P,2028-12-31T,2029-06-26T,2029-12-20T,2030-06-15P,2030-12-09N,2031-05-07N,2031-06-05N,2031-10-30N,2032-04-25T,2032-10-18T,2033-04-14T,2033-10-08T,2034-04-03N,2034-09-28P,2035-02-22N,2035-08-19P,2036-02-11T,2036-08-07T,2037-01-31T,2037-07-27P,2038-01-21N,2038-06-17N,2038-07-16N,2038-12-11N,2039-06-06P,2039-11-30P,2040-05-26T,2040-11-18T'.split(',');
+const SD = '2011-01-04P,2011-06-01P,2011-07-01P,2011-11-25P,2012-05-20A,2012-11-13T,2013-05-10A,2013-11-03H,2014-04-29A,2014-10-23P,2015-03-20T,2015-09-13P,2016-03-09T,2016-09-01A,2017-02-26A,2017-08-21T,2018-02-15P,2018-07-13P,2018-08-11P,2019-01-06P,2019-07-02T,2019-12-26A,2020-06-21A,2020-12-14T,2021-06-10A,2021-12-04T,2022-04-30P,2022-10-25P,2023-04-20H,2023-10-14A,2024-04-08T,2024-10-02A,2025-03-29P,2025-09-21P,2026-02-17A,2026-08-12T,2027-02-06A,2027-08-02T,2028-01-26A,2028-07-22T,2029-01-14P,2029-06-12P,2029-07-11P,2029-12-05P,2030-06-01A,2030-11-25T,2031-05-21A,2031-11-14H,2032-05-09A,2032-11-03P,2033-03-30T,2033-09-23P,2034-03-20T,2034-09-12A,2035-03-09A,2035-09-02T,2036-02-27P,2036-07-23P,2036-08-21P,2037-01-16P,2037-07-13T,2038-01-05A,2038-07-02A,2038-12-26T,2039-06-21A,2039-12-15T,2040-05-11P,2040-11-04P'.split(',');
+const PA = a => a.map(s => ({t: Date.parse(s.slice(0, 10) + 'T12:00:00Z'), k: s[10]}));
+// Rule: 4 lunar eclipses (penumbral ones skipped) from a total one; the 4th starts the solar cycle, which runs through the next 3 total / annular / hybrid solar eclipses; the next total lunar eclipse starts a new cycle.
+function cycles(){
+  const L = PA(LD), S = PA(SD), cy = []; let i = L.findIndex(e => e.k === 'T' && e.t >= Date.UTC(2014, 0, 1));
+  while(i >= 0){
+    const lun = [L[i]]; for(let j = i + 1; j < L.length && lun.length < 4; j++) if(L[j].k !== 'N') lun.push(L[j]);
+    const sol = []; if(lun.length === 4) for(const s of S) if(s.t > lun[3].t && s.k !== 'P' && sol.length < 3) sol.push(s);
+    const nx = sol.length === 3 ? L.findIndex(e => e.k === 'T' && e.t > sol[2].t) : -1;
+    cy.push({lun, sol, end: nx >= 0 ? L[nx].t : null}); i = nx;
+  }
+  return cy;
+}
+const CY = cycles().filter(c => c.lun.length === 4 && c.sol.length === 3), EV = [{t: PA(['2013-05-10A'])[0].t, k: 'A', lab: 'Solar 3', c: 'g'}, {t: PA(['2013-11-03H'])[0].t, k: 'H', lab: 'Solar 4', c: 'g'}];
+  CY.forEach(c => { c.lun.forEach((e, n) => EV.push({t: e.t, k: e.k, lab: 'Lunar ' + (n + 1) + (n === 3 ? ' · Solar 1' : ''), c: n === 3 ? 'g' : 'r'})); c.sol.forEach((e, n) => EV.push({t: e.t, k: e.k, lab: 'Solar ' + (n + 2), c: 'g'})); });
+  return EV.sort((a, b) => a.t - b.t); })();
+const ECN = {T: 'Total', P: 'Partial', N: 'Penumbral', A: 'Annular', H: 'Hybrid'};
+push({id: 'eclipse', name: 'Eclipse cycles: vertical lines (TTM)', pane: 'overlay', calc: () => null,
+  over: a => { const {c, g, X, d, i0, i1} = a; if(d.length < 2) return; const step = d[1].t - d[0].t, ix = t => (t - d[0].t) / step; c.save(); c.beginPath(); c.rect(0, g.mT, g.pw, g.mB - g.mT); c.clip(); c.font = '700 10px system-ui,sans-serif'; c.textAlign = 'left'; c.textBaseline = 'top';
+    ECL.forEach(e => { const i = ix(e.t); if(i < i0 - 2 || i > i1 + 2) return; const x = X(i), col = e.c === 'r' ? '#ff6b61' : '#5fd69a'; c.strokeStyle = col; c.lineWidth = 1.3; c.setLineDash([5, 4]); c.beginPath(); c.moveTo(x, g.mT); c.lineTo(x, g.mB); c.stroke(); c.setLineDash([]);
+      const t = e.lab + ' · ' + ECN[e.k] + ' · ' + new Date(e.t).toLocaleDateString('en-AU', {day: 'numeric', month: 'short', year: '2-digit', timeZone: 'UTC'}); c.save(); c.translate(x + 3, g.mT + 6); c.rotate(Math.PI / 2); c.fillStyle = col; c.fillText(t, 0, -12); c.restore(); }); c.restore(); c.lineWidth = 1; },
+  panel: a => { const now = Date.now(), n = ECL.find(e => e.t > now); if(!n) return null; const days = Math.ceil((n.t - now) / 864e5); return {pos: 'bl', title: 'Next eclipse', rows: [[[n.lab + ' · ' + ECN[n.k], n.c === 'r' ? '#ff6b61' : '#5fd69a']], [['In ' + days + ' days (' + new Date(n.t).toLocaleDateString('en-AU', {day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC'}) + ')', '#e8e8ea']]]}; }});
 
 /* 13. TTM RSI combo (sub pane): smoothed RSI + volume-weighted RSI, exhaustion, divergences, warning dots, reversals */
 const piv = (a, n, hi) => a.map((v, i) => { const c = i - n; if(c < n || v == null || a[c] == null) return null; for(let k = c - n; k <= c + n; k++){ if(k === c || a[k] == null) { if(a[k] == null && k !== c) return null; continue; } if(hi ? a[k] > a[c] : a[k] < a[c]) return null; } return {c, v: a[c]}; });

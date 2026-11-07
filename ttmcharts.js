@@ -1,4 +1,4 @@
-/* TTM Charts (BETA, admin only for now): full-screen chart with live candles from Bybit / Binance / Bitget (spot + perp),
+/* TTM View (TEAM only for now): full-screen chart with live candles from Bybit / Binance / Bitget (spot + perp),
    symbol search, drawing tools, indicators, replay, TTM branding. Open with ttmChartsOpen({sym:'BTC', ex:'bybit_perp', tf:'1h'}).
    Add your own indicators by pushing to window.TTM_INDICATORS (see the bottom of this file for the format). */
 (function(){
@@ -64,7 +64,7 @@ const css = `#ttc{position:fixed;inset:0;z-index:6000;background:#0b0b0e;color:#
 #ttc button,#ttc select,#ttc input{background:#1b1b21;border:1px solid #2a2a31;color:#e8e8ea;border-radius:7px;padding:5px 9px;font-size:12px;cursor:pointer;font-family:inherit}
 #ttc button.on{background:#dba118;color:#111;border-color:transparent;font-weight:800}#ttc .bt{font-size:9px;font-weight:800;background:#dba118;color:#111;border-radius:4px;padding:2px 6px}
 #ttc .sp{flex:1}#ttc .mn{display:flex;flex:1;min-height:0}#ttc .lt{display:flex;flex-direction:column;gap:5px;padding:6px;border-right:1px solid #23232a;background:#121216;overflow:auto}
-#ttc .lt button{width:38px;height:34px;padding:0;font-size:15px}#ttc .cw{position:relative;flex:1;min-width:0}#ttc canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
+#ttc .lt{overflow-y:auto}#ttc .lt button{width:38px;height:34px;padding:0;font-size:15px}#ttc .cw{position:relative;flex:1;min-width:0}#ttc canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
 #ttc .rp{display:none;align-items:center;gap:6px;padding:6px 8px;border-top:1px solid #23232a;background:#121216;flex-wrap:wrap}#ttc .rp.on{display:flex}
 #ttc .pop{position:absolute;z-index:5;background:#16161b;border:1px solid #2a2a31;border-radius:12px;padding:10px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
 #ttc .sym{top:48px;left:8px;width:min(430px,94vw);max-height:78vh;display:flex;flex-direction:column;gap:6px}#ttc .sl{overflow:auto;flex:1}
@@ -76,7 +76,7 @@ const css = `#ttc{position:fixed;inset:0;z-index:6000;background:#0b0b0e;color:#
 #ttc .tst div{background:#16161b;border:1px solid #dba118;border-radius:10px;padding:8px 12px;font-size:12px;box-shadow:0 6px 24px rgba(0,0,0,.6);max-width:300px}
 #ttc .al{top:48px;right:8px;width:min(330px,94vw);max-height:76vh;overflow:auto}#ttc .al h4{margin:10px 0 4px;font-size:12px;color:#dba118}#ttc .al label{display:flex;gap:7px;align-items:center;padding:3px 0;font-size:12.5px}
 @media(max-width:700px){#ttc .lt{flex-direction:row;border-right:0;border-bottom:1px solid #23232a;overflow-x:auto}#ttc .mn{flex-direction:column}}`;
-let S = null, timer = null, cv, cx, dpr = 1, logo = new Image();
+let S = null, timer = null, tick = null, cv, cx, dpr = 1, logo = new Image();
 const SK = k => 'ttm_charts_' + k;
 const ls = (k, d) => { try{ const v = localStorage.getItem(SK(k)); return v == null ? d : JSON.parse(v); }catch(e){ return d; } };
 const lsSet = (k, v) => { try{ localStorage.setItem(SK(k), JSON.stringify(v)); }catch(e){} };
@@ -87,21 +87,21 @@ function open(o){
   if(!document.getElementById('ttcCss')){ const st = document.createElement('style'); st.id = 'ttcCss'; st.textContent = css; document.head.appendChild(st); }
   logo.src = BASE + 'img/logo0.png'; logo.onload = paint;
   const m = document.createElement('div'); m.id = 'ttc';
-  m.innerHTML = `<div class="tb"><img src="${BASE}img/logo0.png" alt="TTM" style="height:24px"><span class="bt">TTM CHARTS · BETA</span>
+  m.innerHTML = `<div class="tb"><img src="${BASE}img/logo0.png" alt="TTM" style="height:24px"><span class="bt">TTM VIEW · TEAM</span>
     <button id="tcSym" style="font-weight:800;min-width:96px"></button><select id="tcEx">${Object.keys(EX).map(k => `<option value="${k}">${EX[k].n}</option>`).join('')}</select>
     ${TFS.map(t => `<button data-tf="${t}">${t}</button>`).join('')}<span class="sp"></span>
     <button id="tcInd">Indicators</button><button id="tcAl" title="Phone alerts">🔔 Alerts</button><button id="tcRp">⏪ Replay</button><button id="tcFit">Fit</button><button id="tcPng">Image</button><button id="tcChat">Post in chat…</button>${o.embedded ? '' : '<button id="tcPop" title="Open in its own window">⧉ Pop out</button><button id="tcX">✕</button>'}</div>
-  <div class="mn"><div class="lt" id="tcTools">${[['cur', '✥', 'Move'], ['tl', '／', 'Trend line'], ['ray', '↗', 'Ray'], ['hl', '─', 'Horizontal line'], ['vl', '│', 'Vertical line'], ['fib', 'ƒ', 'Fib retracement'], ['rc', '▭', 'Box'], ['pa', '〰', 'Path (double-tap to finish)'], ['ru', '📏', 'Measure']].map(t => `<button data-tool="${t[0]}" title="${t[2]}">${t[1]}</button>`).join('')}<button id="tcMag" title="Magnet: snap to the candle high / low / open / close. Hold Ctrl (Cmd on Mac) while clicking to snap just once.">🧲</button><button id="tcUndo" title="Undo">↶</button><button id="tcClr" title="Clear drawings">🗑</button></div>
+  <div class="mn"><div class="lt" id="tcTools">${[['cur', '✥', 'Move'], ['tl', '／', 'Trend line'], ['ray', '↗', 'Ray'], ['hl', '─', 'Horizontal line'], ['vl', '│', 'Vertical line'], ['fib', 'ƒ', 'Fib retracement'], ['rc', '▭', 'Box'], ['pa', '〰', 'Path (double-tap to finish)'], ['tx', 'T', 'Text box'], ['hr', '⇥', 'Horizontal ray'], ['cl', '┼', 'Cross line'], ['ar', '➚', 'Arrow'], ['ch', '▤', 'Parallel channel (3 clicks)'], ['tri', '△', 'Triangle (3 clicks)'], ['el', '◯', 'Ellipse'], ['br', '✎', 'Brush (drag)'], ['pl', '$', 'Price label'], ['lp', '▲', 'Long position'], ['sp', '▼', 'Short position'], ['ru', '📏', 'Measure']].map(t => `<button data-tool="${t[0]}" title="${t[2]}">${t[1]}</button>`).join('')}<button id="tcMag" title="Magnet: snap to the candle high / low / open / close. Hold Ctrl (Cmd on Mac) while clicking to snap just once.">🧲</button><input type="color" id="tcCol" value="#4fd1c5" title="Drawing colour (new drawings use it; pick a drawing to recolour it)" style="width:38px;height:30px;padding:0;margin:2px 0"><button id="tcUndo" title="Undo">↶</button><button id="tcClr" title="Clear drawings">🗑</button></div>
   <div class="cw" id="tcCw"><canvas id="tcCv"></canvas><div class="st" id="tcSt">Loading…</div></div></div>
   <div class="rp" id="tcRpBar"><b style="color:#dba118">REPLAY</b><button id="rpPick">Pick start bar</button><button id="rpBack">⏮ Back</button><button id="rpPlay">▶ Play</button><button id="rpStep">Step ⏭</button>
     <select id="rpSpd"><option value="1">1×</option><option value="2">2×</option><option value="5">5×</option><option value="10">10×</option><option value="25">25×</option></select><span id="rpInfo" style="color:#8b8f9a;font-size:12px"></span><span class="sp"></span><button id="rpX">Exit replay</button></div>`;
   document.body.appendChild(m); cv = m.querySelector('#tcCv'); cx = cv.getContext('2d');
   m.querySelector('#tcEx').value = S.ex; wire(m); syncTf(); syncTools(); syncSym();
   window.addEventListener('resize', paint); document.addEventListener('keydown', key); document.addEventListener('keyup', e => { if(S){ S.ctrl = e.ctrlKey || e.metaKey; } });
-  loadAll(true); timer = setInterval(poll, 3000);
+  loadAll(true); timer = setInterval(poll, 3000); tick = setInterval(() => { if(S && !S.drag) paint(); }, 1000);
 }
-function close(){ clearInterval(timer); timer = null; const e = document.getElementById('ttc'); if(e) e.remove(); window.removeEventListener('resize', paint); document.removeEventListener('keydown', key); if(S && S.rp) clearTimeout(S.rp.t); S = null; }
-function key(e){ if(!S) return; S.ctrl = e.ctrlKey || e.metaKey; if(e.key === 'Escape'){ const p = document.querySelector('#ttc .pop'); if(p) p.remove(); else if(S.tool){ S.tool = null; S.pts = []; syncTools(); paint(); } else if(!S.embedded) close(); } if(e.key === 'Enter' && S.tool === 'pa') finishPath(); if(e.key === ' ' && S.rp.on && !/INPUT|SELECT/.test((e.target.tagName))){ e.preventDefault(); rpToggle(); } if(e.key === 'ArrowRight' && S.rp.on) rpStep(1); }
+function close(){ clearInterval(timer); clearInterval(tick); timer = null; const e = document.getElementById('ttc'); if(e) e.remove(); window.removeEventListener('resize', paint); document.removeEventListener('keydown', key); if(S && S.rp) clearTimeout(S.rp.t); S = null; }
+function key(e){ if(!S) return; S.ctrl = e.ctrlKey || e.metaKey; if(e.key === 'Escape'){ const p = document.querySelector('#ttc .pop'); if(p) p.remove(); else if(S.tool){ S.tool = null; S.pts = []; syncTools(); paint(); } else if(!S.embedded) close(); } if(e.key === 'Enter' && S.tool === 'pa') finishPath(); if((e.key === 'Delete' || e.key === 'Backspace') && S.sel && !/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)){ e.preventDefault(); delSel(); } if(e.key === ' ' && S.rp.on && !/INPUT|SELECT/.test((e.target.tagName))){ e.preventDefault(); rpToggle(); } if(e.key === 'ArrowRight' && S.rp.on) rpStep(1); }
 const $ = id => document.getElementById(id);
 function syncTf(){ document.querySelectorAll('#ttc [data-tf]').forEach(b => b.classList.toggle('on', b.dataset.tf === S.tf)); }
 function syncTools(){ document.querySelectorAll('#ttc [data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === (S.tool || 'cur'))); const m = $('tcMag'); if(m) m.classList.toggle('on', !!S.magnet); }
@@ -141,7 +141,7 @@ function paint(){
   S.orders.forEach(o => { if(o >= lo - rg && o <= hi + rg){ lo = Math.min(lo, o); hi = Math.max(hi, o); } });
   if(S.pv){ lo = S.pv.lo; hi = S.pv.hi; } else { const pd = (hi - lo) * .08; lo -= pd; hi += pd; if(S.inds.vol) lo -= (hi - lo) * .12; }
   S.sc = {lo, hi}; const Y = p => g.mT + (g.mB - g.mT) * (1 - (p - lo) / (hi - lo)); S.Y = Y;
-  const act = allInd().filter(i => S.inds[i.id]), A = ind => ({c, g, X, Y, d, i0, i1, S, res: R(ind, d), fx, i0w: i0, daily: (sy, n) => EX[S.ex].candles(sy, '1d', n || 95), repaint: paint}), cc = act.find(i => i.candleColor), cols = cc ? R(cc, d) : null;
+  const act = allInd().filter(i => S.inds[i.id] || i.always), A = ind => ({c, g, X, Y, d, i0, i1, S, res: R(ind, d), fx, i0w: i0, daily: (sy, n) => EX[S.ex].candles(sy, '1d', n || 95), repaint: paint}), cc = act.find(i => i.candleColor), cols = cc ? R(cc, d) : null;
   c.font = '11px system-ui,sans-serif'; c.textBaseline = 'middle';
   for(let k = 0; k <= 5; k++){ const p = lo + (hi - lo) * k / 5, y = Y(p); c.strokeStyle = '#1b1b21'; c.beginPath(); c.moveTo(0, y); c.lineTo(g.pw, y); c.stroke(); c.fillStyle = '#8b8f9a'; c.textAlign = 'left'; c.fillText(fx(p), g.pw + 6, y); }
   // time axis
@@ -155,11 +155,11 @@ function paint(){
   allInd().filter(i => S.inds[i.id] && i.pane === 'price' && i.calc).forEach(ind => { let s; try{ s = R(ind, d); }catch(e){ return; } c.strokeStyle = ind.color || '#fff'; c.lineWidth = 1.5; c.beginPath(); let on = false; for(let i = i0; i <= i1; i++){ const v = s[i]; if(v == null){ on = false; continue; } const x = X(i), y = Y(v); if(on) c.lineTo(x, y); else { c.moveTo(x, y); on = true; } } c.stroke(); c.lineWidth = 1; });
   act.filter(i => i.over).forEach(i => { try{ i.over(A(i)); }catch(e){} });
   S.orders.forEach(o => { const y = Y(o); c.strokeStyle = '#dba118'; c.setLineDash([7, 4]); c.beginPath(); c.moveTo(0, y); c.lineTo(g.pw, y); c.stroke(); c.setLineDash([]); });
-  S.draw.forEach(s => shape(s, 1)); if(S.tool && S.pts.length && S.mv) shape(S.tool === 'pa' ? {k: 'pa', pts: S.pts.concat([S.mv])} : {k: S.tool, a: S.pts[0], b: S.mv}, .6);
+  S.draw.forEach(s => shape(s, 1)); if(S.tool && S.pts.length && S.mv) shape(S.tool === 'pa' || S.tool === 'ch' || S.tool === 'tri' ? {k: S.tool, pts: S.pts.concat([S.mv])} : {k: S.tool, a: S.pts[0], b: S.mv}, .6); if(S.brush && S.brush.length > 1) shape({k: 'br', pts: S.brush, col: S.col}, .8);
   c.restore();
   // last price
   const last = d[d.length - 1].c, yl = Y(last), up = last >= d[d.length - 1].o; c.strokeStyle = up ? '#3fb47a' : '#e0554d'; c.setLineDash([2, 3]); c.beginPath(); c.moveTo(0, yl); c.lineTo(g.pw, yl); c.stroke(); c.setLineDash([]);
-  tag(g.pw, yl, fx(last), up ? '#3fb47a' : '#e0554d', '#fff'); S.orders.forEach(o => tag(g.pw, Y(o), fx(o), '#dba118', '#111'));
+  tag(g.pw, yl, fx(last), up ? '#3fb47a' : '#e0554d', '#fff'); { const st = TFMS[S.tf], now = Date.now(), off = S.tf === '1w' ? 3 * 864e5 : 0, rem = st - ((now - off) % st), hh = Math.floor(rem / 36e5), mm = Math.floor(rem % 36e5 / 6e4), ss = Math.floor(rem % 6e4 / 1e3), tt = (hh ? hh + ':' : '') + String(mm).padStart(2, '0') + ':' + String(ss).padStart(2, '0'); if(!S.rp.on){ c.fillStyle = up ? '#2c8a5c' : '#b8433c'; c.fillRect(g.pw, yl + 9, P.R - 2, 16); c.fillStyle = '#fff'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(tt, g.pw + 4, yl + 17); } } S.orders.forEach(o => tag(g.pw, Y(o), fx(o), '#dba118', '#111'));
   // sub panes
   c.fillStyle = '#2a2a31'; g.tops.forEach(t => { c.fillRect(g.pw / 2 - 18, t - 4, 36, 2); });
   g.subs.forEach((ind, n) => { const sh = g.shs[n], top = g.tops[n], bot = top + sh; c.fillStyle = '#0c0c0f'; c.fillRect(0, top, g.pw, sh); c.strokeStyle = '#23232a'; c.strokeRect(.5, top + .5, g.pw - 1, sh - 1);
@@ -178,27 +178,60 @@ function R(ind, d){ const key = S.sym + '|' + S.tf + '|' + S.ex + '|' + d.length
 function drawPanels(act, A, g){ const c = cx, stack = {tr: 0, br: 0, bl: 0};
   act.filter(i => i.panel).forEach(i => { let p; try{ p = i.panel(A(i)); }catch(e){ return; } if(!p || !p.rows) return; c.font = '11px system-ui,sans-serif';
     const rows = p.rows, title = p.title, ws = [0, 0]; rows.forEach(r => r.forEach((cell, k) => { ws[k] = Math.max(ws[k] || 0, c.measureText(cell[0]).width); })); const tw = title ? c.measureText(title).width : 0, W = Math.max(tw + 16, ws[0] + (ws[1] ? ws[1] + 18 : 0) + 16), H = rows.length * 16 + (title ? 20 : 8) + 2;
-    const x = p.pos === 'bl' ? 8 : g.pw - W - 6, y = p.pos === 'tr' ? g.mT + 22 + stack.tr : p.pos === 'br' ? g.mB - H - 6 - stack.br : g.mB - H - 6 - stack.bl; stack[p.pos] += H + 6;
+    const k = p.scale || 1, x0 = p.pos === 'bl' ? 8 : g.pw - W * k - 6, y0 = p.pos === 'tr' ? g.mT + 22 + stack.tr : p.pos === 'br' ? g.mB - H * k - 6 - stack.br : g.mB - H * k - 6 - stack.bl; stack[p.pos] += H * k + 6; c.save(); c.translate(x0, y0); c.scale(k, k); const x = 0, y = 0;
     c.fillStyle = 'rgba(8,8,10,.78)'; c.fillRect(x, y, W, H); c.strokeStyle = '#2a2a31'; c.strokeRect(x + .5, y + .5, W - 1, H - 1); let yy = y + 6; c.textAlign = 'left'; c.textBaseline = 'middle';
     if(title){ c.fillStyle = '#dba118'; c.font = '800 10px system-ui,sans-serif'; c.fillText(title, x + 8, yy + 6); yy += 16; c.font = '11px system-ui,sans-serif'; }
-    rows.forEach(r => { r.forEach((cell, k) => { c.fillStyle = cell[1] || '#e8e8ea'; c.fillText(cell[0], k ? x + 8 + ws[0] + 10 : x + 8, yy + 8); }); yy += 16; }); });
+    rows.forEach(r => { r.forEach((cell, k) => { c.fillStyle = cell[1] || '#e8e8ea'; c.fillText(cell[0], k ? x + 8 + ws[0] + 10 : x + 8, yy + 8); }); yy += 16; }); c.restore(); });
   c.textBaseline = 'middle'; }
 function tag(x, y, t, bg, fg){ const c = cx; c.fillStyle = bg; c.fillRect(x, y - 9, P.R - 2, 18); c.fillStyle = fg; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(t, x + 4, y); }
 function drawBrand(r, d){ const c = cx, g = S.g; if(logo.complete && logo.naturalWidth){ const h = 24, w = Math.min(70, logo.naturalWidth / logo.naturalHeight * h); c.drawImage(logo, 8, 6, w, h); } c.textAlign = 'left'; c.textBaseline = 'middle'; c.font = '800 14px system-ui,sans-serif'; c.fillStyle = '#e8e8ea'; c.fillText(S.sym + '/USDT · ' + S.tf + ' · ' + EX[S.ex].n, 84, 18);
   c.font = '11px system-ui,sans-serif'; if(r){ const ch = d && d.length > 1 ? (r.c / (d[Math.max(0, d.indexOf(r) - 1)] || r).c - 1) * 100 : 0; c.fillStyle = r.c >= r.o ? '#3fb47a' : '#e0554d'; c.fillText(`O ${fx(r.o)}  H ${fx(r.h)}  L ${fx(r.l)}  C ${fx(r.c)}  (${ch >= 0 ? '+' : ''}${ch.toFixed(2)}%)  Vol ${r.v >= 1e6 ? (r.v / 1e6).toFixed(2) + 'M' : r.v >= 1e3 ? (r.v / 1e3).toFixed(1) + 'K' : r.v.toFixed(0)}`, 8, 36); }
-  c.fillStyle = 'rgba(219,161,24,.35)'; c.font = '800 10px system-ui,sans-serif'; c.textAlign = 'right'; c.fillText('TTM CHARTS BETA', g.pw - 6, g.mT + 10); c.font = '11px system-ui,sans-serif'; }
-function shape(s, op){ const c = cx, g = S.g, Y = S.Y; c.globalAlpha = op; c.lineWidth = 1.6; const px = z => X(idxOfT(z.t)), a = s.a || s.pts[0], b = s.b || a, xa = px(a), ya = Y(a.p), xb = px(b), yb = Y(b.p);
-  if(s.k === 'tl' || s.k === 'ray'){ c.strokeStyle = '#4fd1c5'; c.beginPath(); c.moveTo(xa, ya); if(s.k === 'ray' && xb !== xa){ const m = (yb - ya) / (xb - xa), xe = xb > xa ? g.pw + 50 : -50; c.lineTo(xe, ya + m * (xe - xa)); } else c.lineTo(xb, yb); c.stroke(); }
-  else if(s.k === 'hl'){ c.strokeStyle = '#4fd1c5'; c.beginPath(); c.moveTo(0, ya); c.lineTo(g.pw, ya); c.stroke(); tag(g.pw, ya, fx(a.p), '#4fd1c5', '#111'); }
-  else if(s.k === 'vl'){ c.strokeStyle = '#4fd1c5'; c.beginPath(); c.moveTo(xa, g.mT); c.lineTo(xa, g.mB); c.stroke(); }
-  else if(s.k === 'rc'){ c.fillStyle = 'rgba(79,209,197,.12)'; c.strokeStyle = '#4fd1c5'; c.fillRect(Math.min(xa, xb), Math.min(ya, yb), Math.abs(xb - xa), Math.abs(yb - ya)); c.strokeRect(Math.min(xa, xb), Math.min(ya, yb), Math.abs(xb - xa), Math.abs(yb - ya)); }
-  else if(s.k === 'fib'){ [0, .236, .382, .5, .618, .786, 1].forEach(f => { const p = a.p + (b.p - a.p) * f, y = Y(p); c.strokeStyle = 'rgba(177,140,255,.8)'; c.beginPath(); c.moveTo(Math.min(xa, xb), y); c.lineTo(Math.max(xa, xb, g.pw - 60), y); c.stroke(); c.fillStyle = '#b18cff'; c.textAlign = 'left'; c.fillText(f + ' · ' + fx(p), Math.min(xa, xb) + 4, y - 7); }); c.setLineDash([3, 3]); c.strokeStyle = '#b18cff'; c.beginPath(); c.moveTo(xa, ya); c.lineTo(xb, yb); c.stroke(); c.setLineDash([]); }
-  else if(s.k === 'pa'){ c.strokeStyle = '#ff9f68'; c.lineWidth = 2.2; c.lineJoin = 'round'; c.beginPath(); s.pts.forEach((z, i) => { const x = px(z), y = Y(z.p); i ? c.lineTo(x, y) : c.moveTo(x, y); }); c.stroke(); c.fillStyle = '#ff9f68'; s.pts.forEach(z => { c.beginPath(); c.arc(px(z), Y(z.p), 3, 0, 7); c.fill(); }); }
+  c.font = '11px system-ui,sans-serif'; }
+function shape(s, op){ const c = cx, g = S.g, Y = S.Y; c.globalAlpha = op; c.lineWidth = s === S.sel ? 3 : 1.6; const col = s.col || ({fib: '#b18cff', pa: '#ff9f68', tx: '#dba118'})[s.k] || '#4fd1c5'; const px = z => X(idxOfT(z.t)), a = s.a || s.pts[0], b = s.b || a, xa = px(a), ya = Y(a.p), xb = px(b), yb = Y(b.p);
+  if(s.k === 'tl' || s.k === 'ray'){ c.strokeStyle = col; c.beginPath(); c.moveTo(xa, ya); if(s.k === 'ray' && xb !== xa){ const m = (yb - ya) / (xb - xa), xe = xb > xa ? g.pw + 50 : -50; c.lineTo(xe, ya + m * (xe - xa)); } else c.lineTo(xb, yb); c.stroke(); }
+  else if(s.k === 'hl'){ c.strokeStyle = col; c.beginPath(); c.moveTo(0, ya); c.lineTo(g.pw, ya); c.stroke(); tag(g.pw, ya, fx(a.p), col, '#111'); }
+  else if(s.k === 'vl'){ c.strokeStyle = col; c.beginPath(); c.moveTo(xa, g.mT); c.lineTo(xa, g.mB); c.stroke(); }
+  else if(s.k === 'rc'){ c.fillStyle = hexA(col, .12); c.strokeStyle = col; c.fillRect(Math.min(xa, xb), Math.min(ya, yb), Math.abs(xb - xa), Math.abs(yb - ya)); c.strokeRect(Math.min(xa, xb), Math.min(ya, yb), Math.abs(xb - xa), Math.abs(yb - ya)); }
+  else if(s.k === 'fib'){ [0, .236, .382, .5, .618, .786, 1].forEach(f => { const p = a.p + (b.p - a.p) * f, y = Y(p); c.strokeStyle = hexA(col, .8); c.beginPath(); c.moveTo(Math.min(xa, xb), y); c.lineTo(Math.max(xa, xb, g.pw - 60), y); c.stroke(); c.fillStyle = col; c.textAlign = 'left'; c.fillText(f + ' · ' + fx(p), Math.min(xa, xb) + 4, y - 7); }); c.setLineDash([3, 3]); c.strokeStyle = col; c.beginPath(); c.moveTo(xa, ya); c.lineTo(xb, yb); c.stroke(); c.setLineDash([]); }
+  else if(s.k === 'pa'){ c.strokeStyle = col; c.lineWidth = 2.2; c.lineJoin = 'round'; c.beginPath(); s.pts.forEach((z, i) => { const x = px(z), y = Y(z.p); i ? c.lineTo(x, y) : c.moveTo(x, y); }); c.stroke(); c.fillStyle = col; s.pts.forEach(z => { c.beginPath(); c.arc(px(z), Y(z.p), 3, 0, 7); c.fill(); }); }
   else if(s.k === 'ru'){ const pc = (b.p / a.p - 1) * 100, bars = Math.round(idxOfT(b.t) - idxOfT(a.t)); c.fillStyle = pc >= 0 ? 'rgba(63,180,122,.15)' : 'rgba(224,85,77,.15)'; c.strokeStyle = pc >= 0 ? '#3fb47a' : '#e0554d'; c.fillRect(Math.min(xa, xb), Math.min(ya, yb), Math.abs(xb - xa), Math.abs(yb - ya)); c.strokeRect(Math.min(xa, xb), Math.min(ya, yb), Math.abs(xb - xa), Math.abs(yb - ya)); const t = `${pc >= 0 ? '+' : ''}${pc.toFixed(2)}%  ·  ${fx(b.p - a.p)}  ·  ${bars} bars`; c.font = '800 12px system-ui,sans-serif'; const w = c.measureText(t).width + 12; c.fillStyle = pc >= 0 ? '#3fb47a' : '#e0554d'; c.fillRect((xa + xb) / 2 - w / 2, Math.min(ya, yb) - 22, w, 18); c.fillStyle = '#fff'; c.textAlign = 'center'; c.fillText(t, (xa + xb) / 2, Math.min(ya, yb) - 13); c.font = '11px system-ui,sans-serif'; }
+  else if(s.k === 'hr'){ c.strokeStyle = col; c.beginPath(); c.moveTo(xa, ya); c.lineTo(g.pw, ya); c.stroke(); tag(g.pw, ya, fx(a.p), col, '#111'); }
+  else if(s.k === 'cl'){ c.strokeStyle = col; c.beginPath(); c.moveTo(0, ya); c.lineTo(g.pw, ya); c.moveTo(xa, g.mT); c.lineTo(xa, g.mB); c.stroke(); tag(g.pw, ya, fx(a.p), col, '#111'); }
+  else if(s.k === 'ar'){ c.strokeStyle = col; c.fillStyle = col; c.lineWidth = s === S.sel ? 3.4 : 2.2; c.beginPath(); c.moveTo(xa, ya); c.lineTo(xb, yb); c.stroke(); const an = Math.atan2(yb - ya, xb - xa); c.beginPath(); c.moveTo(xb, yb); c.lineTo(xb - 12 * Math.cos(an - .45), yb - 12 * Math.sin(an - .45)); c.lineTo(xb - 12 * Math.cos(an + .45), yb - 12 * Math.sin(an + .45)); c.closePath(); c.fill(); }
+  else if(s.k === 'el'){ c.strokeStyle = col; c.fillStyle = hexA(col, .12); c.beginPath(); c.ellipse((xa + xb) / 2, (ya + yb) / 2, Math.abs(xb - xa) / 2 + .1, Math.abs(yb - ya) / 2 + .1, 0, 0, 7); c.fill(); c.stroke(); }
+  else if(s.k === 'tri'){ const q = s.pts; c.strokeStyle = col; c.fillStyle = hexA(col, .12); c.beginPath(); q.forEach((z, i) => i ? c.lineTo(px(z), Y(z.p)) : c.moveTo(px(z), Y(z.p))); if(q.length > 2) c.closePath(); c.fill(); c.stroke(); }
+  else if(s.k === 'ch'){ const q = s.pts, cc = q[2]; c.strokeStyle = col; c.beginPath(); c.moveTo(xa, ya); c.lineTo(xb, yb); c.stroke(); if(cc){ const off = Y(cc.p) - (ya + (yb - ya) * (px(cc) - xa) / ((xb - xa) || 1)); c.fillStyle = hexA(col, .1); c.beginPath(); c.moveTo(xa, ya); c.lineTo(xb, yb); c.lineTo(xb, yb + off); c.lineTo(xa, ya + off); c.closePath(); c.fill(); c.beginPath(); c.moveTo(xa, ya + off); c.lineTo(xb, yb + off); c.stroke(); c.setLineDash([4, 4]); c.beginPath(); c.moveTo(xa, ya + off / 2); c.lineTo(xb, yb + off / 2); c.stroke(); c.setLineDash([]); } }
+  else if(s.k === 'br'){ c.strokeStyle = col; c.lineWidth = s === S.sel ? 3.6 : 2.4; c.lineJoin = 'round'; c.lineCap = 'round'; c.beginPath(); s.pts.forEach((z, i) => i ? c.lineTo(px(z), Y(z.p)) : c.moveTo(px(z), Y(z.p))); c.stroke(); c.lineCap = 'butt'; }
+  else if(s.k === 'pl'){ const t = fx(a.p), w = c.measureText(t).width + 14; c.fillStyle = col; c.beginPath(); c.moveTo(xa, ya); c.lineTo(xa + 6, ya - 10); c.lineTo(xa + w, ya - 10); c.lineTo(xa + w, ya + 10); c.lineTo(xa + 6, ya + 10); c.closePath(); c.fill(); c.fillStyle = '#111'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(t, xa + 10, ya); }
+  else if(s.k === 'lp' || s.k === 'sp'){ const tgt = b.p, stp = a.p - (b.p - a.p) / 2, ys = Y(stp), x1 = Math.min(xa, xb), w = Math.max(40, Math.abs(xb - xa)), pt = (tgt / a.p - 1) * 100, ps = (stp / a.p - 1) * 100; c.fillStyle = 'rgba(63,180,122,.2)'; c.strokeStyle = '#3fb47a'; c.fillRect(x1, Math.min(ya, yb), w, Math.abs(yb - ya)); c.strokeRect(x1, Math.min(ya, yb), w, Math.abs(yb - ya)); c.fillStyle = 'rgba(224,85,77,.2)'; c.strokeStyle = '#e0554d'; c.fillRect(x1, Math.min(ya, ys), w, Math.abs(ys - ya)); c.strokeRect(x1, Math.min(ya, ys), w, Math.abs(ys - ya)); c.font = '800 11px system-ui,sans-serif'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillStyle = '#3fb47a'; c.fillText('Target ' + fx(tgt) + ' (' + (pt >= 0 ? '+' : '') + pt.toFixed(2) + '%)', x1 + 6, yb + (yb < ya ? 10 : -10)); c.fillStyle = '#e0554d'; c.fillText('Stop ' + fx(stp) + ' (' + (ps >= 0 ? '+' : '') + ps.toFixed(2) + '%)', x1 + 6, ys + (ys > ya ? -10 : 10)); c.fillStyle = '#e8e8ea'; c.fillText((s.k === 'lp' ? 'Long ' : 'Short ') + fx(a.p) + ' · R:R 2.0', x1 + 6, ya); c.font = '11px system-ui,sans-serif'; }
+  else if(s.k === 'tx'){ c.font = '800 13px system-ui,sans-serif'; const w = c.measureText(s.txt).width + 12; c.fillStyle = 'rgba(8,8,10,.8)'; c.fillRect(xa, ya - 11, w, 22); c.strokeStyle = col; c.lineWidth = 1; c.strokeRect(xa + .5, ya - 10.5, w - 1, 21); c.fillStyle = col; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(s.txt, xa + 6, ya + 1); c.font = '11px system-ui,sans-serif'; }
+  if(s === S.sel){ c.fillStyle = '#fff'; c.strokeStyle = '#000'; c.lineWidth = 1; (s.pts || [a, b]).forEach(z => { const x = px(z), y = Y(z.p); c.fillRect(x - 4, y - 4, 8, 8); c.strokeRect(x - 4.5, y - 4.5, 9, 9); }); }
   c.lineWidth = 1; c.globalAlpha = 1; }
+const hexA = (h, a) => { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; };
+function hitDraw(mx, my){ const g = S.g, Y = S.Y; if(mx > g.pw || my > g.mB) return null; const px = z => X(idxOfT(z.t)), dseg = (x1, y1, x2, y2) => { const dx = x2 - x1, dy = y2 - y1, l = dx * dx + dy * dy, t = l ? Math.max(0, Math.min(1, ((mx - x1) * dx + (my - y1) * dy) / l)) : 0; return Math.hypot(mx - (x1 + t * dx), my - (y1 + t * dy)); };
+  for(let i = S.draw.length - 1; i >= 0; i--){ const s = S.draw[i]; if(s.k === 'ru') continue; const a = s.a || (s.pts && s.pts[0]), b = s.b || a, xa = px(a), ya = Y(a.p), xb = px(b), yb = Y(b.p); let d = 1e9;
+    if(s.k === 'tl') d = dseg(xa, ya, xb, yb); else if(s.k === 'ray'){ const m = xb !== xa ? (yb - ya) / (xb - xa) : 0, xe = xb >= xa ? g.pw + 50 : -50; d = xb === xa ? dseg(xa, ya, xb, yb) : dseg(xa, ya, xe, ya + m * (xe - xa)); }
+    else if(s.k === 'hl') d = Math.abs(my - ya); else if(s.k === 'vl') d = Math.abs(mx - xa);
+    else if(s.k === 'rc'){ const x1 = Math.min(xa, xb), x2 = Math.max(xa, xb), y1 = Math.min(ya, yb), y2 = Math.max(ya, yb); d = mx >= x1 && mx <= x2 && my >= y1 && my <= y2 ? 0 : 1e9; }
+    else if(s.k === 'fib'){ [0, .236, .382, .5, .618, .786, 1].forEach(f => { const y = Y(a.p + (b.p - a.p) * f); if(mx >= Math.min(xa, xb) - 4 && mx <= Math.max(xa, xb, g.pw - 60)) d = Math.min(d, Math.abs(my - y)); }); }
+    else if(s.k === 'hr') d = mx >= xa - 4 ? Math.abs(my - ya) : 1e9; else if(s.k === 'cl') d = Math.min(Math.abs(my - ya), Math.abs(mx - xa)); else if(s.k === 'ar') d = dseg(xa, ya, xb, yb);
+    else if(s.k === 'el'){ const rx = Math.abs(xb - xa) / 2 || 1, ry = Math.abs(yb - ya) / 2 || 1, q = Math.hypot((mx - (xa + xb) / 2) / rx, (my - (ya + yb) / 2) / ry); d = q <= 1.05 ? 0 : 1e9; }
+    else if(s.k === 'tri'){ const q = s.pts; for(let k = 0; k < q.length; k++){ const u = q[k], v = q[(k + 1) % q.length]; d = Math.min(d, dseg(px(u), Y(u.p), px(v), Y(v.p))); } }
+    else if(s.k === 'ch'){ const cc = s.pts[2]; d = dseg(xa, ya, xb, yb); if(cc){ const off = Y(cc.p) - (ya + (yb - ya) * (px(cc) - xa) / ((xb - xa) || 1)); d = Math.min(d, dseg(xa, ya + off, xb, yb + off)); } }
+    else if(s.k === 'pl'){ cx.font = '11px system-ui,sans-serif'; const w = cx.measureText(fx(a.p)).width + 14; d = mx >= xa && mx <= xa + w && Math.abs(my - ya) <= 10 ? 0 : 1e9; }
+    else if(s.k === 'lp' || s.k === 'sp'){ const x1 = Math.min(xa, xb), w = Math.max(40, Math.abs(xb - xa)), ys = Y(a.p - (b.p - a.p) / 2); d = mx >= x1 && mx <= x1 + w && my >= Math.min(ya, yb, ys) && my <= Math.max(ya, yb, ys) ? 0 : 1e9; }
+    else if(s.k === 'pa' || s.k === 'br'){ for(let k = 1; k < s.pts.length; k++) d = Math.min(d, dseg(px(s.pts[k - 1]), Y(s.pts[k - 1].p), px(s.pts[k]), Y(s.pts[k].p))); }
+    else if(s.k === 'tx'){ cx.font = '800 13px system-ui,sans-serif'; const w = cx.measureText(s.txt).width + 12; d = mx >= xa && mx <= xa + w && Math.abs(my - ya) <= 11 ? 0 : 1e9; }
+    if(d <= 7) return s; } return null; }
+function selBar(){ let el = $('tcSel'); if(!S.sel){ if(el) el.style.display = 'none'; return; }
+  if(!el){ el = document.createElement('div'); el.id = 'tcSel'; el.style.cssText = 'position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:5;display:flex;gap:8px;align-items:center;background:#16161a;border:1px solid #dba118;border-radius:10px;padding:6px 10px;font-size:12px'; el.innerHTML = '<span style="color:#dba118;font-weight:800">Selected</span><input type="color" id="tcSelCol" style="width:34px;height:26px;padding:0" title="Colour"><button id="tcSelTx">Edit text</button><button id="tcSelDel" style="border-color:#e0554d;color:#ff8a82">Delete</button><button id="tcSelX">Done</button>'; $('tcCw').appendChild(el);
+    $('tcSelCol').oninput = e => { if(S.sel){ S.sel.col = e.target.value; saveDraw(); paint(); } }; $('tcSelDel').onclick = delSel; $('tcSelX').onclick = () => { S.sel = null; selBar(); paint(); };
+    $('tcSelTx').onclick = () => { if(S.sel && S.sel.k === 'tx'){ const t = prompt('Text', S.sel.txt); if(t){ S.sel.txt = t; saveDraw(); paint(); } } }; }
+  el.style.display = 'flex'; $('tcSelTx').style.display = S.sel.k === 'tx' ? '' : 'none'; $('tcSelCol').value = S.sel.col || ({fib: '#b18cff', pa: '#ff9f68', tx: '#dba118'})[S.sel.k] || '#4fd1c5'; }
+function delSel(){ if(!S.sel) return; S.draw = S.draw.filter(z => z !== S.sel); S.sel = null; saveDraw(); selBar(); paint(); }
 /* ---------- pointer ---------- */
 const saveDraw = () => lsSet('draw_' + S.sym, S.draw);
-function finishPath(){ if(S.pts.length > 1){ S.draw.push({k: 'pa', pts: S.pts.slice()}); saveDraw(); } S.pts = []; S.mv = null; paint(); }
+function finishPath(){ if(S.pts.length > 1){ S.draw.push({k: 'pa', pts: S.pts.slice(), col: S.col}); saveDraw(); } S.pts = []; S.mv = null; paint(); }
 function ptr(e){ const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, g = S.g, i = S.v0 + x / g.w - .5, p = S.sc.lo + (1 - (y - g.mT) / (g.mB - g.mT)) * (S.sc.hi - S.sc.lo); let o = {x, y, i, t: tOfIdx(Math.max(0, Math.min(S.data.length - 1, i))) + (i > S.data.length - 1 ? (i - (S.data.length - 1)) * TFMS[S.tf] : 0), p};
   if(S.tool && (S.magnet || e.ctrlKey || e.metaKey) && S.data.length){ const k = Math.max(0, Math.min(vd().length - 1, Math.round(i))), r = S.data[k]; if(r){ const best = [r.o, r.h, r.l, r.c].reduce((m, v) => Math.abs(S.Y(v) - y) < Math.abs(S.Y(m) - y) ? v : m); o = {x: S.v0 !== undefined ? (k - S.v0 + .5) * S.g.w : x, y: S.Y(best), i: k, t: r.t, p: best, snap: true}; } }
   return o; }
@@ -208,7 +241,8 @@ function wire(m){
   m.querySelectorAll('[data-tf]').forEach(b => b.onclick = () => { S.tf = b.dataset.tf; lsSet('tf', S.tf); syncTf(); loadAll(); });
   q('#tcEx').onchange = e => { S.ex = e.target.value; lsSet('ex', S.ex); S.list = {}; loadAll(); };
   m.querySelectorAll('[data-tool]').forEach(b => b.onclick = () => { S.tool = b.dataset.tool === 'cur' ? null : (S.tool === b.dataset.tool ? null : b.dataset.tool); S.pts = []; S.mv = null; syncTools(); paint(); });
-  q('#tcUndo').onclick = () => { S.draw.pop(); saveDraw(); paint(); }; q('#tcClr').onclick = () => { if(S.draw.length && confirm('Remove all drawings for ' + S.sym + '?')){ S.draw = []; saveDraw(); paint(); } };
+  q('#tcCol').oninput = e => { S.col = e.target.value; };
+  q('#tcUndo').onclick = () => { S.sel = null; selBar(); S.draw.pop(); saveDraw(); paint(); }; q('#tcClr').onclick = () => { if(S.draw.length && confirm('Remove all drawings for ' + S.sym + '?')){ S.draw = []; saveDraw(); paint(); } };
   q('#tcPng').onclick = () => cv.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `TTM-${S.sym}-${S.tf}.png`; a.click(); });
   q('#tcChat').onclick = () => { if(!window.ttmPostImage) return alert('Chat is not available on this page.'); cv.toBlob(b => { const t = S.sym + ' ' + S.tf + ' chart'; close(); window.ttmPostImage(b, t); }, 'image/png'); };
   q('#tcSym').onclick = symPop; q('#tcInd').onclick = indPop;
@@ -220,10 +254,13 @@ function wire(m){
     if(np === 2){ const k = Object.values(ptrs); pinch = {d: Math.hypot(k[0].x - k[1].x, k[0].y - k[1].y), vn: S.vn, v0: S.v0}; drag = null; return; }
     const p = ptr(e);
     if(S.rp.pick){ const i = Math.max(1, Math.min(S.data.length - 1, Math.round(p.i))); S.rp.pick = false; S.rp.idx = i; setStatus(''); fit(); paint(); return; }
+    if(!S.tool){ const h = hitDraw(p.x, p.y); if(h){ S.sel = h; selBar(); paint(); return; } if(S.sel){ S.sel = null; selBar(); paint(); } }
+    if(S.tool === 'tx'){ const t = prompt('Text for the chart'); if(t){ const o = {k: 'tx', a: {t: p.t, p: p.p}, txt: t, col: S.col}; S.draw.push(o); saveDraw(); S.sel = o; selBar(); } S.tool = null; syncTools(); paint(); return; }
     if(S.tool){ const dbl = Date.now() - last.t < 400 && Math.abs(e.clientX - last.x) < 14 && Math.abs(e.clientY - last.y) < 14; last = {t: dbl ? 0 : Date.now(), x: e.clientX, y: e.clientY};
       if(S.tool === 'pa'){ if(dbl){ S.pts.pop(); finishPath(); } else { S.pts.push({t: p.t, p: p.p}); paint(); } return; }
-      S.pts.push({t: p.t, p: p.p}); const one = S.tool === 'hl' || S.tool === 'vl';
-      if(one || S.pts.length === 2){ S.draw = S.draw.filter(z => z.k !== 'ru'); S.draw.push({k: S.tool, a: S.pts[0], b: S.pts[1] || S.pts[0]}); S.pts = []; S.mv = null; if(S.tool !== 'ru') saveDraw(); } paint(); return; }
+      if(S.tool === 'br'){ S.brush = [{t: p.t, p: p.p}]; cv.setPointerCapture(e.pointerId); return; }
+      S.pts.push({t: p.t, p: p.p}); const need = {hl: 1, vl: 1, hr: 1, cl: 1, pl: 1, ch: 3, tri: 3}[S.tool] || 2;
+      if(S.pts.length >= need){ S.draw = S.draw.filter(z => z.k !== 'ru'); S.draw.push(need === 3 ? {k: S.tool, pts: S.pts.slice(), col: S.col} : {k: S.tool, a: S.pts[0], b: S.pts[1] || S.pts[0], col: S.col}); S.pts = []; S.mv = null; if(S.tool !== 'ru') saveDraw(); } paint(); return; }
     const dbl = Date.now() - last.t < 400 && Math.abs(e.clientX - last.x) < 12; last = {t: dbl ? 0 : Date.now(), x: e.clientX, y: e.clientY}; if(dbl){ fit(); paint(); return; }
     const dv = divAt(p.y); if(dv >= 0 && !S.tool){ rs = {n: dv, y: e.clientY, h: S.g.shs[dv], id: S.g.subs[dv].id}; cv.setPointerCapture(e.pointerId); return; }
     if(p.y > S.g.H - P.B && !S.tool){ tx = {x: e.clientX, vn: S.vn, v0: S.v0}; cv.setPointerCapture(e.pointerId); return; }
@@ -231,6 +268,7 @@ function wire(m){
   cv.addEventListener('pointermove', e => { if(ptrs[e.pointerId]) ptrs[e.pointerId] = {x: e.clientX, y: e.clientY};
     if(pinch && Object.keys(ptrs).length === 2){ const k = Object.values(ptrs), d = Math.hypot(k[0].x - k[1].x, k[0].y - k[1].y); S.vn = Math.max(12, Math.min(Math.max(vd().length + 20, 60), pinch.vn * pinch.d / d)); S.v0 = pinch.v0 + (pinch.vn - S.vn) / 2; clampV(); paint(); return; }
     const r = cv.getBoundingClientRect(); S.cross = {x: e.clientX - r.left, y: e.clientY - r.top};
+    if(S.brush){ const q = ptr(e); S.brush.push({t: q.t, p: q.p}); paint(); return; }
     if(rs){ S.subH[rs.id] = Math.round(rs.h + (rs.y - e.clientY)); paint(); return; }
     if(tx){ const nv = Math.max(12, Math.min(Math.max(vd().length + 20, 60), tx.vn * Math.exp((e.clientX - tx.x) / 180))); S.vn = nv; S.v0 = tx.v0 + tx.vn - nv; clampV(); paint(); return; }
     if(!drag && !S.tool) cv.style.cursor = divAt(S.cross.y) >= 0 ? 'ns-resize' : (S.cross.y > S.g.H - P.B ? 'ew-resize' : '');
@@ -238,7 +276,7 @@ function wire(m){
       if(drag.axis){ const c0 = (drag.hi + drag.lo) / 2, h = (drag.hi - drag.lo) / 2 * Math.exp(dy / 160); S.pv = {lo: c0 - h, hi: c0 + h}; } else { S.v0 = drag.v0 - dx / S.g.w; const sh = dy / ph * (drag.hi - drag.lo); S.pv = {lo: drag.lo + sh, hi: drag.hi + sh}; clampV(); if(S.v0 < 15) more(); }
       paint(); return; }
     if(S.tool && S.pts.length){ const p = ptr(e); S.mv = {t: p.t, p: p.p}; } paint(); });
-  const up = e => { rs = null; tx = null; delete ptrs[e.pointerId]; if(Object.keys(ptrs).length < 2) pinch = null; drag = null; S.drag = false; };
+  const up = e => { if(S.brush){ if(S.brush.length > 2){ S.draw.push({k: 'br', pts: S.brush, col: S.col}); saveDraw(); } S.brush = null; paint(); } rs = null; tx = null; delete ptrs[e.pointerId]; if(Object.keys(ptrs).length < 2) pinch = null; drag = null; S.drag = false; };
   cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); cv.addEventListener('pointerleave', () => { S.cross = null; paint(); });
   cv.addEventListener('wheel', e => { e.preventDefault(); const r = cv.getBoundingClientRect(); zoom(e.deltaY > 0 ? 1.12 : .89, Math.max(0, Math.min(1, (e.clientX - r.left) / S.g.pw))); paint(); }, {passive: false});
   new ResizeObserver(paint).observe(q('#tcCw'));
@@ -260,7 +298,7 @@ async function symPop(){
 }
 function indPop(){
   if(document.querySelector('#ttc .ind')){ popClose(); return; } popClose();
-  const p = document.createElement('div'); p.className = 'pop ind'; const all = allInd(), row = i => `<label><input type="checkbox" data-i="${i.id}" ${S.inds[i.id] ? 'checked' : ''}> ${esc(i.name)}</label>`;
+  const p = document.createElement('div'); p.className = 'pop ind'; const all = allInd().filter(i => !i.always), row = i => `<label><input type="checkbox" data-i="${i.id}" ${S.inds[i.id] ? 'checked' : ''}> ${esc(i.name)}</label>`;
   p.style.width = '290px'; p.style.maxHeight = '78vh'; p.style.overflow = 'auto';
   p.innerHTML = `<b style="font-size:13px;color:#dba118">TTM indicators</b>` + all.filter(i => i.ttm).map(row).join('') + `<b style="font-size:13px;display:block;margin-top:8px">Standard</b>` + all.filter(i => !i.ttm).map(row).join('') + `<div style="font-size:11px;color:#6b6f7a;margin-top:6px">Sessions and weekends use UTC time.</div>`; $('ttc').appendChild(p);
   p.onchange = e => { const id = e.target.dataset.i; if(!id) return; S.inds[id] = e.target.checked ? 1 : 0; lsSet('inds', S.inds); paint(); };
