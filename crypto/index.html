@@ -4097,6 +4097,7 @@ function startTrade(c, setup, name, replaceIdx, okUnreal){
   if(c.ok && c.usesUnreal > 0.005 && !okUnreal && !c.warns.some(w => w[0] === 'bad')){ unrealAsk(c, setup, name, replaceIdx); return false; }
   if(!c.ok || c.warns.some(w => w[0] === 'bad')){ note.textContent = 'Fix the red warnings first, then open the trade.'; note.style.color = '#e0554d'; return false; }
   if(!c.tps.length){ note.textContent = 'Add at least one take-profit target before opening the trade.'; note.style.color = '#e0554d'; return false; }
+  if(replaceIdx == null){ const dup = loadSaved().find(x => x && x.status === 'open' && x.snap && x.snap.asset === setup.asset && (x.snap.acc || 'lev') === (setup.acc || 'lev')); if(dup){ note.textContent = 'You already have an open ' + setup.asset + ' trade in ' + (accName(setup.acc) || 'this portfolio') + ' ("' + dup.name + '"). Only one open trade per ticker per portfolio: open that trade in the Trade Tracker and add to it (use the split orders box) instead of starting a second one.'; note.style.color = '#e0554d'; return false; } }
   const list = loadSaved(), item = {id: uid(), name: (name || '').trim() || `${setup.asset} ${setup.mkt === 'spot' ? 'spot' : setup.lev + '×'} ${setup.dir}`, t: Date.now(), opened: Date.now(), s: Object.assign({}, setup), status: 'open', snap: snapOf(c, setup)};
   const pp0 = priceOf(setup.asset), E0 = item.snap.E; item.fill = pp0 && Math.abs(pp0.p / E0 - 1) > 0.001 ? 'pending' : 'filled'; if(item.fill === 'pending') item.side = pp0.p > E0 ? 1 : -1;   // entry not reached yet = a limit order waiting to fill
   if(c.splits && c.splits.length > 1){ const lv0 = priceOf(setup.asset), lv = lv0 && lv0.live ? lv0 : null; item.orders = c.splits.map((r, k) => { const near = lv && Math.abs(lv.p / r.p - 1) <= 0.001; return {id: uid() + 'o' + k, p: r.p, m: c.margin * r.share / 100, side: lv ? (lv.p > r.p ? 1 : -1) : null, filled: !!near, ft: near ? Date.now() : null}; }); syncOrders(item); item.side = undefined; }
@@ -5021,7 +5022,7 @@ fill(); paint();
 })();
 </script>
 <script src="../chartpro.js?v=2"></script>
-<script src="../ttmcharts.js?v=16"></script>
+<script src="../ttmcharts.js?v=17"></script>
 <script src="../ttmind.js?v=8"></script>
 <script src="../accounts.js?v=1793900008"></script>
 <script>

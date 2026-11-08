@@ -10,7 +10,7 @@ const normPlan = p => (p === 'crypto' || p === 'tradfi') ? 'premium' : p;   // o
 const pname = id => (PLANS.find(p => p[0] === id) || [0, id])[1];
 // what can be locked: key, label, plans that get it by default (Pro always gets everything)
 const CAT = [
-  ['c:holdings', 'Crypto · TTM Spot (spot portfolio, % only)', ['free']], ['c:pension', 'Crypto · TTM Pension / Super (long-term portfolio, % only)', ['beta'], 'off'], ['c:ttmcharts', 'Crypto · TTM LENS (full-screen live charts, drawing tools, indicators, replay)', ['team'], 'off'], ['c:chartpro', 'Crypto · Chart popup with drawing tools and post-to-chat (limit orders list)', ['beta'], 'off'], ['t:propertycycle', 'TradFi · 18-year property cycle (US, AU, UK and more)', ['beta'], 'off'], ['t:holdings', 'TradFi · TTM Spot (invested, % only)', ['free']],
+  ['c:holdings', 'Crypto · TTM Spot (spot portfolio, % only)', ['free']], ['c:pension', 'Crypto · TTM Pension / Super (long-term portfolio, % only)', ['beta'], 'off'], ['c:ttmcharts', 'Crypto · TTM LENS - Charting Tools (full-screen live charts, drawing tools, indicators, replay)', ['team'], 'off'], ['c:chartpro', 'Crypto · Chart popup with drawing tools and post-to-chat (limit orders list)', ['beta'], 'off'], ['t:propertycycle', 'TradFi · 18-year property cycle (US, AU, UK and more)', ['beta'], 'off'], ['t:holdings', 'TradFi · TTM Spot (invested, % only)', ['free']],
   ['c:calendar', 'Crypto · Macro Watch', ['free']], ['c:tradinghours', 'Crypto · Trading Hours', ['free']], ['c:fomo', 'Crypto · FOMO Finder & RSI Chart', ['free']],
   ['c:btcmonthly', 'Crypto · BTC Monthly (with cycle tops)', ['free']], ['c:tokenevents', 'Crypto · Token Events', []], ['c:library', 'Crypto · Reports library', []], ['c:transparency', 'Crypto · Transparency Watch', ['free']],
   ['c:marketpulse', 'Crypto · Market Pulse (liquidations, funding, open interest)', ['premium']], ['c:rsimap', 'Crypto · RSI Heatmap', ['premium']], ['c:community', 'Crypto · Community chat rooms (section)', ['free']], ['room:free', 'Chat room · Free (read and write)', ['free', 'premium']], ['room:premium', 'Chat room · Premium (read and write)', ['premium']], ['room:pro', 'Chat room · Pro (read and write)', []],
@@ -308,12 +308,17 @@ document.addEventListener('click', async ev => {
 });
 
 // ---------- cloud sync of tracker data (never includes the Telegram token)
-const localDoc = () => ({saved: ls(DATAKEYS[0], []), bals: ls(DATAKEYS[1], {})});
-const emptyDoc = d => !(d.saved && d.saved.length) && !(d.bals && Object.keys(d.bals).length);
+const LT = 'ttm_charts__t';
+function lensLocal(){ const o = {}; try{ const t = JSON.parse(localStorage.getItem(LT) || '{}'); Object.keys(t).forEach(k => { const v = localStorage.getItem(k); if(v != null) o[k] = {v, t: t[k]}; }); }catch(err){} return o; }
+const localDoc = () => ({saved: ls(DATAKEYS[0], []), bals: ls(DATAKEYS[1], {}), lens: lensLocal()});
+const emptyDoc = d => !(d.saved && d.saved.length) && !(d.bals && Object.keys(d.bals).length) && !(d.lens && Object.keys(d.lens).length);
 function mergeDocs(a, b){ const rank = x => x.status === 'closed' ? 2 : x.status === 'open' ? 1 : 0, m = {};
   (b.saved || []).concat(a.saved || []).forEach(x => { if(!x) return; const k = x.id || (x.name + '|' + x.t), o = m[k]; if(!o || rank(x) > rank(o)) m[k] = x; });
-  return {saved: Object.keys(m).map(k => m[k]).sort((p, q) => (q.t || 0) - (p.t || 0)), bals: Object.assign({}, a.bals || {}, b.bals || {})}; }
-function applyDoc(d){ try{ localStorage.setItem(DATAKEYS[0], JSON.stringify(d.saved || [])); localStorage.setItem(DATAKEYS[1], JSON.stringify(d.bals || {})); }catch(err){} if(window.ttmRR) window.ttmRR.refresh(); }
+  return {saved: Object.keys(m).map(k => m[k]).sort((p, q) => (q.t || 0) - (p.t || 0)), bals: Object.assign({}, a.bals || {}, b.bals || {}), lens: mergeLens(a.lens, b.lens)}; }
+function mergeLens(a, b){ const m = Object.assign({}, a || {}); Object.keys(b || {}).forEach(k => { if(!m[k] || (b[k].t || 0) > (m[k].t || 0)) m[k] = b[k]; }); return m; }
+function applyDoc(d){ try{ localStorage.setItem(DATAKEYS[0], JSON.stringify(d.saved || [])); localStorage.setItem(DATAKEYS[1], JSON.stringify(d.bals || {})); }catch(err){}
+  let ch = false; try{ const t = JSON.parse(localStorage.getItem(LT) || '{}'); Object.keys(d.lens || {}).forEach(k => { const r = d.lens[k]; if(k.indexOf('ttm_charts_') === 0 && r && typeof r.v === 'string' && (r.t || 0) > (t[k] || 0)){ localStorage.setItem(k, r.v); t[k] = r.t; ch = true; } }); if(ch) localStorage.setItem(LT, JSON.stringify(t)); }catch(err){}
+  if(window.ttmRR) window.ttmRR.refresh(); if(ch && window.ttmLensRefresh) window.ttmLensRefresh(); }
 let dirtyT = null, pushing = false;
 async function pushNow(){
   if(!USER || !can('sync') || pushing) return; pushing = true; SYNC.state = 'saving'; ui();
@@ -323,7 +328,8 @@ async function pushNow(){
     if(r.ok){ lw(SYNCK, {uid: USER.id, ts: Date.parse(now)}); SYNC = {state: 'ok', at: Date.now()}; } else SYNC.state = 'error';
   }catch(err){ SYNC.state = 'error'; } pushing = false; ui();
 }
-window.ttmSync = {dirty(){ if(!USER || !can('sync')) return; clearTimeout(dirtyT); dirtyT = setTimeout(() => { dirtyT = null; pushNow(); }, 1500); }};
+async function pullLens(){ if(!USER || !can('sync') || pushing) return; try{ const meta = ls(SYNCK, {}), cur = await api(`/rest/v1/ttm_user_data?user_id=eq.${USER.id}&select=data,updated_at`), row = cur.ok && cur.json && cur.json[0]; if(row && Date.parse(row.updated_at) > (meta.ts || 0) + 1500){ applyDoc(mergeDocs(localDoc(), row.data || {})); lw(SYNCK, {uid: USER.id, ts: Date.parse(row.updated_at)}); } }catch(err){} }
+window.ttmSync = {pull: pullLens, dirty(){ if(!USER || !can('sync')) return; clearTimeout(dirtyT); dirtyT = setTimeout(() => { dirtyT = null; pushNow(); }, 1500); }};
 async function syncInit(){
   if(!can('sync')){ SYNC.state = 'locked'; ui(); return; }
   try{ const meta = ls(SYNCK, {}), cur = await api(`/rest/v1/ttm_user_data?user_id=eq.${USER.id}&select=data,updated_at`), local = localDoc(), row = cur.ok && cur.json && cur.json[0];
@@ -390,7 +396,7 @@ function planCards(){
   const price = p => { const x = (CFG.plans || {})[p]; if(!(x && (x.monthly || x.annual))) return p === 'free' ? 'Free' : 'Price to be confirmed';
     const one = (v, t) => `<b>${e(v)} USDT</b> / ${t}${fxTxt(+v)}`; return [x.monthly ? one(x.monthly, 'month') : '', x.annual ? one(x.annual, 'year') : ''].filter(Boolean).join('<br>'); };
   const card = (p, head, items) => `<div class="plan-card ${PROF && PROF.plan === p ? 'me' : ''}"><h4>${pname(p)}</h4><div class="pr">${price(p)}${PROF && PROF.plan === p ? ' · <b style="color:var(--gold2)">your plan</b>' : ''}</div><div style="font-size:12px;color:var(--mute);margin-bottom:4px">${head}</div><ul>${items.map(c => `<li>${e(lab(c))}</li>`).join('') || '<li>—</li>'}</ul></div>`;
-  return `<div class="plan-grid">${card('free', 'Includes', free)}${card('premium', 'Everything in Free, plus (Crypto and TradFi together)', only('premium'))}${card('pro', 'Everything in Premium, plus', pro)}</div>`;
+  return `<div class="plan-grid">${card('free', 'Includes', free)}${card('premium', 'Everything in Free, plus (Crypto and TradFi together)', only('premium'))}${card('pro', 'Everything in Premium, plus', pro.concat([['c:ttmcharts', 'TTM LENS - Charting Tools (Team members on Pro)']]))}</div>`;
 }
 function guideLink(){ const f = document.querySelector('footer'); if(!f || f.querySelector('#ttmGuideLink')) return; const p = document.createElement('p'); p.style.cssText = 'text-align:center;margin:10px 0 0'; p.innerHTML = `<a id="ttmShopLink" href="https://ttm-shop.fourthwall.com" target="_blank" rel="noopener" style="color:var(--gold2)">TTM Shop</a> &nbsp;·&nbsp; <a id="ttmGuideLink" href="${BASE}phone-guide.html" target="_blank" rel="noopener" style="color:var(--gold2)">Add TTM to your phone</a><span id="ttmLensGuideSep" style="display:none"> &nbsp;·&nbsp; </span><a id="ttmLensGuideLink" href="${BASE}lens-guide.html" target="_blank" rel="noopener" style="color:var(--gold2);display:none">Add TTM LENS to your phone (Team + Pro)</a>`; f.appendChild(p); try{ tviewInit(); }catch(x){} }
 function ui(){ try{ chatUi(); liveBanner(); commBtn(); guideLink(); engineInit(); }catch(err){}
