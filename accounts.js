@@ -200,7 +200,7 @@ function toast(ev){
   track('feat', 'feed_toast');
 }
 setInterval(() => feedPoll(false), 45000); setTimeout(() => feedPoll(true), 4000);
-window.ttmApi = api; window.ttmCfg = () => CFG; window.ttmWho = () => ({user: !!USER, ready: !USER || !!PROF, admin: !!(PROF && PROF.is_admin), lens: lensOK(), tester: isTester(), token: token});
+window.ttmApi = api; window.ttmCfg = () => CFG; window.ttmWho = () => ({user: !!USER, id: USER ? USER.id : null, handle: USER ? (PROF && PROF.tg_handle ? '@' + String(PROF.tg_handle).replace(/^@/, '') : String(USER.email || 'member').split('@')[0]) : '', ready: !USER || !!PROF, admin: !!(PROF && PROF.is_admin), lens: lensOK(), tester: isTester(), token: token});
 window.ttmCan = can; window.ttmUpsell = upsell; window.ttmIsAdmin = () => !!(PROF && PROF.is_admin);
 window.ttmHoldings = async () => { const r = await raw('/rest/v1/ttm_settings?key=eq.holdings&select=value'); return r.ok && r.json && r.json[0] ? r.json[0].value : null; };
 window.ttmPublishHoldings = async part => { if(!(PROF && PROF.is_admin)) return false; let cur = {}; try{ const g = await api('/rest/v1/ttm_settings?key=eq.holdings&select=value'); if(g.ok && g.json && g.json[0] && g.json[0].value) cur = g.json[0].value; }catch(err){} const v = Object.assign({}, cur, part, {t: Date.now()}); const r = await api('/rest/v1/ttm_settings', {method: 'POST', headers: {Prefer: 'resolution=merge-duplicates'}, body: JSON.stringify([{key: 'holdings', value: v}])}); return r.ok; };

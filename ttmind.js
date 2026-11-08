@@ -69,6 +69,12 @@ push({id: 'mon', name: 'Monday high / low (TTM)', pane: 'overlay', calc: r => {
   if(st < 0) return null; let hi = -1, lo = 1e18, hb = st, lb = st; for(let i = st; i < r.length && utc(r[i].t).dow === 1; i++){ if(r[i].h > hi){ hi = r[i].h; hb = i; } if(r[i].l < lo){ lo = r[i].l; lb = i; } } return {hi, lo, hb, lb}; },
   over: a => { const R = a.res, {c, g, X, Y} = a; if(!R) return; c.strokeStyle = '#d4af37'; c.lineWidth = 2; [[R.hi, R.hb, 'MON HIGH', true], [R.lo, R.lb, 'MON LOW', false]].forEach(z => { const y = Y(z[0]); c.beginPath(); c.moveTo(X(z[1]), y); c.lineTo(g.pw, y); c.stroke(); tagL(c, g.pw - 34, y, z[2], '#d4af37', '#000', z[3]); }); c.lineWidth = 1; }});
 
+/* 6b. Weekend high / low (latest Saturday + Sunday, UTC) */
+push({id: 'wkh', name: 'Weekend high / low (TTM)', pane: 'overlay', calc: r => {
+  let e = -1; for(let i = r.length - 1; i >= 0; i--){ const d = utc(r[i].t).dow; if(d === 6 || d === 0){ e = i; break; } } if(e < 0) return null;
+  let st = e; while(st > 0 && [6, 0].includes(utc(r[st - 1].t).dow)) st--; let hi = -1, lo = 1e18, hb = st, lb = st; for(let i = st; i <= e; i++){ if(r[i].h > hi){ hi = r[i].h; hb = i; } if(r[i].l < lo){ lo = r[i].l; lb = i; } } return {hi, lo, hb, lb}; },
+  over: a => { const R = a.res, {c, g, X, Y} = a; if(!R) return; c.strokeStyle = '#f5f5f5'; c.lineWidth = 2; [[R.hi, R.hb, 'WEEKEND HIGH', true], [R.lo, R.lb, 'WEEKEND LOW', false]].forEach(z => { const y = Y(z[0]); c.beginPath(); c.moveTo(X(z[1]), y); c.lineTo(g.pw, y); c.stroke(); tagL(c, g.pw - 50, y, z[2], '#f5f5f5', '#000', z[3]); }); c.lineWidth = 1; }});
+
 /* 7. Supply / demand zones with POI and BOS (swing 10, ATR 50, width 2.5, keep 20) */
 push({id: 'sd', name: 'Supply / demand zones + BOS (TTM)', pane: 'overlay', calc: r => {
   const N = 10, KEEP = 20, WID = 2.5, atr = atrA(r, 50), Z = [], BOS = []; if(r.length < N * 2 + 2) return {Z, BOS};
