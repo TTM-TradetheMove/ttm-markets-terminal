@@ -1,13 +1,13 @@
-Run at 2026-11-07T23:06:30.997748+00:00
+Run at 2026-11-08T02:25:41.168877+00:00
 
 page title: 'Calendar | Forex Factory'
 page url after load: 'https://www.forexfactory.com/calendar'
 row selector used: 'tr.calendar__row', rows found: 124
 sample row: date_el=False currency_el=False event_el=False actual_el=False raw_text='Sun Nov 1'
-sample row: date_el=True currency_el=True event_el=True actual_el=True raw_text='Sun\nNov 1\n\t\n7:00am\n\tCAD\t\t\nDaylight Saving Time Shift\n\t\n\t\n\t\t\t\t'
+sample row: date_el=True currency_el=True event_el=True actual_el=True raw_text='Sun\nNov 1\n\t\n12:00am\n\tCAD\t\t\nDaylight Saving Time Shift\n\t\n\t\n\t\t\t\t'
 sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='\tUSD\t\t\nDaylight Saving Time Shift\n\t\n\t\n\t\t\t\t'
-sample row: date_el=False currency_el=False event_el=False actual_el=False raw_text='Mon Nov 2'
-sample row: date_el=True currency_el=True event_el=True actual_el=True raw_text='Mon\nNov 2\n\t\n12:00am\n\tAUD\t\t\nMI Inflation Gauge m/m\n\t\n\t\n\t0.5%\t\t0.3%\t'
+sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='4:00pm\n\tAUD\t\t\nMI Inflation Gauge m/m\n\t\n\t\n\t0.5%\t\t0.3%\t'
+sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='4:30pm\n\tAUD\t\t\nBuilding Approvals m/m\n\t\n\t\n\t5.1%\t1.8%\t\n-5.2%\n\t'
 TARGET ROW: date='Tue Nov 3' currency='NZD' title='Unemployment Rate' actual='5.7%'
 TARGET ROW: date='Wed Nov 4' currency='EUR' title='Spanish Unemployment Change' actual='43.1K'
 TARGET ROW: date='Thu Nov 5' currency='CHF' title='Unemployment Rate' actual='3.1%'
@@ -15,17 +15,17 @@ TARGET ROW: date='Thu Nov 5' currency='USD' title='Unemployment Claims' actual='
 TARGET ROW: date='Fri Nov 6' currency='CAD' title='Unemployment Rate' actual='6.7%'
 TARGET ROW: date='Fri Nov 6' currency='USD' title='Unemployment Rate' actual='4.1%'
 TARGET ROW: date='Fri Nov 6' currency='USD' title='Prelim UoM Consumer Sentiment' actual='51.0'
-matched-actuals by date: {'2026-11-02': 20, '2026-11-03': 13, '2026-11-04': 18, '2026-11-05': 18, '2026-11-06': 15}
+matched-actuals by date: {'2026-11-01': 7, '2026-11-02': 16, '2026-11-03': 13, '2026-11-04': 19, '2026-11-05': 17, '2026-11-06': 12}
 Scraped 84 live actual values from forexfactory.com
-Past events without actual (7): 2026-11-02 USD Loan Officer Survey; 2026-11-03 USD Congressional Elections; 2026-11-03 USD API Weekly Statistical Bulletin; 2026-11-04 JPY Monetary Policy Meeting Minutes; 2026-11-05 GBP BOE Monetary Policy Report; 2026-11-05 GBP Monetary Policy Summary; 2026-11-02 USD Congressional Elections
-Scraped GBP keys: [('2026-11-02', 'GBP', 'finalmanufacturingpmi'), ('2026-11-03', 'GBP', '10ybondauction'), ('2026-11-04', 'GBP', 'finalservicespmi'), ('2026-11-05', 'GBP', 'constructionpmi'), ('2026-11-05', 'GBP', 'mpcofficialbankratevotes'), ('2026-11-05', 'GBP', 'officialbankrate'), ('2026-11-06', 'GBP', 'lloydshpimm')]
+Past events without actual (6): 2026-11-02 USD Loan Officer Survey; 2026-11-03 USD Congressional Elections; 2026-11-03 USD API Weekly Statistical Bulletin; 2026-11-04 JPY Monetary Policy Meeting Minutes; 2026-11-05 GBP BOE Monetary Policy Report; 2026-11-05 GBP Monetary Policy Summary
+Scraped GBP keys: [('2026-11-02', 'GBP', 'finalmanufacturingpmi'), ('2026-11-03', 'GBP', '10ybondauction'), ('2026-11-04', 'GBP', 'finalservicespmi'), ('2026-11-05', 'GBP', 'constructionpmi'), ('2026-11-05', 'GBP', 'mpcofficialbankratevotes'), ('2026-11-05', 'GBP', 'officialbankrate'), ('2026-11-05', 'GBP', 'lloydshpimm')]
 
 -- month scrape --
-month nov.2026: title='Calendar | Forex Factory' url='https://www.forexfactory.com/calendar?month=nov.2026' rows=438 tracked=288
-month nov.2026: 288 rows for tracked currencies; sample: [{'date': 'Sun Nov 1', 'time': '7:00am', 'cur': 'USD', 'impact': 'icon icon--ff-impact-gra', 'title': 'Daylight Saving Time Shift', 'actual': '', 'forecast': '', 'previous': ''}, {'date': 'Mon Nov 2', 'time': '12:30am', 'cur': 'JPY', 'impact': 'icon icon--ff-impact-yel', 'title': 'Final Manufacturing PMI', 'actual': '53.3', 'forecast': '53.3', 'previous': '53.3'}]
-month nov.2026: page timezone calibrated to UTC (76 matching rows)
-month nov.2026: added 206 events not already in the weekly feeds
+month nov.2026: title='Calendar | Forex Factory' url='https://www.forexfactory.com/calendar?month=nov.2026' rows=445 tracked=272
+month nov.2026: 272 rows for tracked currencies; sample: [{'date': 'Sun Nov 1', 'time': '12:00am', 'cur': 'USD', 'impact': 'icon icon--ff-impact-gra', 'title': 'Daylight Saving Time Shift', 'actual': '', 'forecast': '', 'previous': ''}, {'date': 'Sun Nov 1', 'time': '4:30pm', 'cur': 'JPY', 'impact': 'icon icon--ff-impact-yel', 'title': 'Final Manufacturing PMI', 'actual': '53.3', 'forecast': '53.3', 'previous': '53.3'}]
+month nov.2026: page timezone calibrated to America/Los_Angeles (69 matching rows)
+month nov.2026: added 197 events not already in the weekly feeds
 month dec.2026: title='Just a moment...' url='https://www.forexfactory.com/calendar?month=dec.2026' rows=0 tracked=0
 month dec.2026: first rows: []
 month dec.2026: 0 rows for tracked currencies; sample: []
-month-ahead fallback failed: HTTPError: HTTP Error 429: Too Many Requests
+month-ahead fallback failed: HTTPError: HTTP Error 401: Unauthorized
