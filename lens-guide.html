@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>TTM LENS on your phone</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#0b0b0c;--card:#17171a;--line:#2a2a2e;--gold:#dba118;--gold2:#f0b929;--text:#e8e6e1;--mute:#9a978f;--green:#3fb97a;color-scheme:dark}
+body{background:var(--bg);color:var(--text);font:16px/1.55 Barlow,system-ui,sans-serif;padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
+.w{max-width:620px;margin:auto}
+.top{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.top img{width:56px;height:56px;border-radius:13px}
+h1{font:700 34px/1.05 'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.03em;margin:0;text-wrap:balance}
+h1 span{color:var(--gold2)}
+.sub{color:var(--mute);margin:0 0 26px}
+.tabs{display:flex;gap:8px;margin-bottom:18px}
+.tabs button{flex:1;background:var(--card);color:var(--mute);border:1px solid var(--line);border-radius:8px;padding:11px;font:600 15px Barlow,sans-serif;cursor:pointer}
+.tabs button.on{border-color:var(--gold);color:var(--gold2)}
+.tabs button:focus-visible{outline:2px solid var(--gold2)}
+ol{list-style:none;margin:0;padding:0;display:grid;gap:12px;counter-reset:s}
+li{counter-increment:s;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 16px 16px 62px;position:relative;min-width:0}
+li::before{content:counter(s);position:absolute;left:14px;top:14px;width:34px;height:34px;border-radius:50%;background:var(--gold);color:#0b0b0c;font:700 20px/34px 'Barlow Condensed',sans-serif;text-align:center}
+li b{display:block;font:700 19px 'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.04em;color:var(--gold2);margin-bottom:2px}
+li p{margin:0;color:var(--text)}
+.note{margin-top:18px;border:1px solid var(--line);border-left:3px solid var(--green);border-radius:8px;padding:14px 16px;color:var(--mute);background:var(--card)}
+.note strong{color:var(--text)}
+.url{display:block;margin-top:6px;color:var(--gold2);word-break:break-all}
+[hidden]{display:none!important}
+</style>
+<link rel="icon" href="favicon.png"></head><body>
+<div class="w">
+<div class="top"><h1>TTM <span>LENS</span> app</h1></div>
+<p class="sub">Put TTM LENS on your phone like an app: full screen, its own icon, with Chart, Watchlist, Portfolio, Orders and Alerts along the bottom.</p>
+<div class="tabs" role="tablist"><button class="on" id="tI" role="tab">iPhone</button><button id="tA" role="tab">Android</button></div>
+<ol id="ios">
+<li><b>Open TTM LENS in Safari</b><p>Go to the link below. It must be Safari, not a browser inside Telegram.<a class="url" href="https://ttm-tradethemove.github.io/ttm-markets-terminal/charts/index.html">https://ttm-tradethemove.github.io/ttm-markets-terminal/charts/index.html</a></p></li>
+<li><b>Sign in</b><p>Sign in with your TTM account. TTM LENS is for Team members while it is in testing.</p></li>
+<li><b>Add to Home Screen</b><p>Tap the Share button at the bottom, scroll down and tap <strong>Add to Home Screen</strong>. Name it <strong>TTM LENS</strong> and tap <strong>Add</strong>.</p></li>
+<li><b>Open it from the icon</b><p>Always open TTM LENS from the new icon on your Home Screen. It opens full screen with no browser bars.</p></li>
+<li><b>Turn on phone alerts</b><p>In the main TTM terminal tap your name, then <strong>Phone alerts, Turn on</strong>, and tap <strong>Allow</strong>. Then in TTM LENS tap <strong>Alerts</strong> to pick your chart alerts.</p></li>
+</ol>
+<ol id="and" hidden>
+<li><b>Open TTM LENS in Chrome</b><p>Go to the link below.<a class="url" href="https://ttm-tradethemove.github.io/ttm-markets-terminal/charts/index.html">https://ttm-tradethemove.github.io/ttm-markets-terminal/charts/index.html</a></p></li>
+<li><b>Sign in</b><p>Sign in with your TTM account. TTM LENS is for Team members while it is in testing.</p></li>
+<li><b>Install the app</b><p>Tap the three dots at the top right, then <strong>Install app</strong> (or <strong>Add to Home screen</strong>), then <strong>Install</strong>.</p></li>
+<li><b>Open it from the icon</b><p>Open TTM LENS from the new icon. It opens full screen.</p></li>
+<li><b>Turn on phone alerts</b><p>In the main TTM terminal tap your name, then <strong>Phone alerts, Turn on</strong>, and tap <strong>Allow</strong>. Then in TTM LENS tap <strong>Alerts</strong> to pick your chart alerts.</p></li>
+</ol>
+<div class="note"><strong>Good to know</strong><br>Chart alerts (indicators and drawings) fire while TTM LENS is open. Keep it open on the phone, or pin it in a browser tab on your computer. On iPhone you need iOS 16.4 or later. Watchlists and drawings are saved on each device.</div>
+<script>
+var a=document.getElementById('tI'),b=document.getElementById('tA');
+function s(i){a.className=i?'on':'';b.className=i?'':'on';document.getElementById('ios').hidden=!i;document.getElementById('and').hidden=i}
+a.onclick=function(){s(true)};b.onclick=function(){s(false)};
+</script>
+</div></body></html>
