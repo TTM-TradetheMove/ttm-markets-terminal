@@ -20,7 +20,7 @@
   function go(){
     if(started) return; const w = window.ttmWho ? window.ttmWho() : {ready: false};
     if(!w.ready){ if(++n < 150) return setTimeout(go, 100); g('gMsg').textContent = 'Could not check your account. Refresh this window.'; return; }
-    if(!w.user && (window.__m = (window.__m || 0) + 1) < 40) return setTimeout(go, 150); if(!w.user){ g('gMsg').textContent = 'Sign in with your TTM account to open TTM LENS.'; g('gBtn').textContent = 'Sign in'; g('gBtn').style.display = ''; g('gBtn').onclick = () => { const b = g('acctBtn'); if(b) b.click(); else location.href = '../index.html'; }; return setTimeout(go, 1500); }
+    let has = false; try{ has = !!localStorage.getItem('ttm_auth_v1'); }catch(e){} if(!w.user && (window.__m = (window.__m || 0) + 1) < (has ? 260 : 40)) return setTimeout(go, 150); if(!w.user){ g('gMsg').textContent = 'Sign in with your TTM account to open TTM LENS.'; g('gBtn').textContent = 'Sign in'; g('gBtn').style.display = ''; g('gBtn').onclick = () => { const b = g('acctBtn'); if(b) b.click(); else location.href = '../index.html'; }; return setTimeout(go, 1500); }
     if(!(w.admin || w.lens)){ g('gMsg').textContent = 'TTM LENS is for TTM Team members on the Pro plan while it is in testing.'; g('gBtn').style.display = 'none'; return; }
     started = true; g('gate').remove(); ttmChartsOpen({embedded: true, pane: q.get('pane'), ex: q.get('ex'), sym: q.get('sym'), tf: q.get('tf')});
   }
