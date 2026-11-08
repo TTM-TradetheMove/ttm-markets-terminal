@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-07T22:23:00.933715+00:00",
+  "generated_at": "2026-11-08T01:37:02.558895+00:00",
   "window_hours": 24,
   "sources": [
     "wss://fstream.binance.com/ws/!forceOrder@arr",
@@ -19,41 +19,35 @@
   },
   "buckets": {
     "BTCUSDT": {
-      "mark": 75631.13,
+      "mark": 75662.72,
       "buckets": [
         {
           "pricePct": 0.0,
-          "price": 75631.13,
+          "price": 75662.72,
           "longUsd": 4925.83,
           "shortUsd": 2424.71
         },
         {
           "pricePct": 0.5,
-          "price": 76009.29,
+          "price": 76041.03,
           "longUsd": 455.51,
           "shortUsd": 0.0
         }
       ]
     },
     "ETHUSDT": {
-      "mark": 2228.49,
+      "mark": 2231.3,
       "buckets": [
         {
           "pricePct": 0.0,
-          "price": 2228.49,
-          "longUsd": 0.0,
+          "price": 2231.3,
+          "longUsd": 40.23,
           "shortUsd": 3661.79
         },
         {
           "pricePct": 0.5,
-          "price": 2239.63,
-          "longUsd": 174.66,
-          "shortUsd": 0.0
-        },
-        {
-          "pricePct": 1.0,
-          "price": 2250.77,
-          "longUsd": 22.46,
+          "price": 2242.46,
+          "longUsd": 156.89,
           "shortUsd": 0.0
         }
       ]
@@ -61,10 +55,6 @@
   },
   "priceHistory": {
     "BTCUSDT": [
-      {
-        "time": 1794013954484.7866,
-        "price": 75819.42
-      },
       {
         "time": 1794035531277.4631,
         "price": 75941.98
@@ -80,13 +70,13 @@
       {
         "time": 1794090180704.1309,
         "price": 75631.13
+      },
+      {
+        "time": 1794101822311.2854,
+        "price": 75662.72
       }
     ],
     "ETHUSDT": [
-      {
-        "time": 1794013954484.7866,
-        "price": 2237.8
-      },
       {
         "time": 1794035531277.4631,
         "price": 2243.62
@@ -102,6 +92,10 @@
       {
         "time": 1794090180704.1309,
         "price": 2228.49
+      },
+      {
+        "time": 1794101822311.2854,
+        "price": 2231.3
       }
     ]
   },
