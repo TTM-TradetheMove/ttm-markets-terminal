@@ -25,7 +25,7 @@ li p{margin:0;color:var(--text)}
 .url{display:block;margin-top:6px;color:var(--gold2);word-break:break-all}
 [hidden]{display:none!important}
 </style>
-<link rel="icon" href="favicon.png"></head><body>
+<link rel="icon" href="favicon.png"></head><body data-terminal="charts"><style>#ttmChatBtn,#ttmCommBtn,#ttmLive{display:none!important}</style><div id="lgGate" class="w"><p class="sub" id="lgMsg">Checking your account…</p></div><div id="lgBody" hidden>
 <div class="w">
 <div class="top"><h1>TTM <span>LENS</span> app</h1></div>
 <p class="sub">Put TTM LENS on your phone like an app: full screen, its own icon, with Chart, Watchlist, Portfolio, Orders and Alerts along the bottom.</p>
@@ -50,4 +50,4 @@ var a=document.getElementById('tI'),b=document.getElementById('tA');
 function s(i){a.className=i?'on':'';b.className=i?'':'on';document.getElementById('ios').hidden=!i;document.getElementById('and').hidden=i}
 a.onclick=function(){s(true)};b.onclick=function(){s(false)};
 </script>
-</div></body></html>
+</div></div><script src="accounts.js?v=1793900008"></script><script>(function(){var n=0;function go(){var w=window.ttmWho?window.ttmWho():{ready:false};if(!w.ready){if(++n<150)return setTimeout(go,100);document.getElementById("lgMsg").textContent="Could not check your account. Refresh this page.";return}if(!w.user){document.getElementById("lgMsg").innerHTML="Sign in to the <a href=\"index.html\" style=\"color:#f0b929\">TTM terminal</a> first, then open this guide again.";return}if(!(w.admin||w.lens)){document.getElementById("lgMsg").textContent="This guide is for TTM Team members on the Pro plan.";return}document.getElementById("lgGate").remove();document.getElementById("lgBody").hidden=false}go()})();</script></body></html>
