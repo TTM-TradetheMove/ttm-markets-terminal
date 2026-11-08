@@ -1414,7 +1414,7 @@ body.rm-full #rmIn{font-size:17px}
 <section id="ttmcharts">
   <div class="wrap">
     <div class="section-head">
-      <span class="tag">TTM LENS <span style="background:var(--gold);color:#111;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:800;margin-left:4px">TEAM</span></span>
+      <img src="../img/lens-192.png" alt="TTM LENS" style="height:64px;width:64px;border-radius:16px;display:block;margin:0 0 12px;box-shadow:0 0 0 1px rgba(219,161,24,.5)"><span class="tag">TTM LENS <span style="background:var(--gold);color:#111;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:800;margin-left:4px">TEAM</span></span>
       <h2>TTM LENS</h2>
       <p>A full-screen chart for every coin on Bybit, Binance and Bitget (spot and perp), with live candles, drawing tools (trend line, ray, Fib, box, path, measure), indicators, and replay: pick a candle, press play and watch the chart unfold.</p>
       <p style="margin-top:14px"><button type="button" class="btn" id="ttcOpen" style="padding:12px 22px;font-size:15px;font-weight:800;background:var(--gold);color:#111;border:0;border-radius:10px;cursor:pointer">Open TTM LENS</button> <a href="../lens-guide.html" target="_blank" rel="noopener" style="margin-left:14px;color:var(--gold2)">Add TTM LENS to your phone</a></p>
@@ -4213,7 +4213,7 @@ function autoFit(){
 }
 function drawCandles(c){
   const svg = $('rrCandles'); if(!svg) return;
-  const narrow = svg.getBoundingClientRect().width < 600, W = narrow ? 520 : 900, H = narrow ? 380 : 380, L = 8, R = narrow ? 112 : 128, T = 14, B = 26, fs = narrow ? 12.5 : 11, key = (S.asset || '') + '|' + S.tf + '|' + SRC;
+  const narrow = svg.getBoundingClientRect().width < 600, W = narrow ? 520 : 900, H = narrow ? 380 : 380, L = 8, R = narrow ? 112 : 128, T = 14, B = 26, fs = narrow ? 12.5 : 11, key = (S.asset || '') + '|' + S.tf + '|' + SRC + '|' + (S.mkt === 'spot' ? 's' : 'p');
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   $('rrCanHead').textContent = `${S.asset || ''}/USDT · ${tfName(S.tf)} · ${SRCS[CAN.src || SRC]}`;
   if(CAN.key !== key || !CAN.rows.length){ svg.innerHTML = `<text x="${W / 2}" y="${H / 2}" fill="#8b8f9a" font-size="14" text-anchor="middle">${CAN.key === key && CAN.err ? 'No candles for ' + esc(S.asset || '') : 'Loading candles…'}</text>`; return; }
@@ -5021,8 +5021,8 @@ fill(); paint();
 })();
 </script>
 <script src="../chartpro.js?v=2"></script>
-<script src="../ttmcharts.js?v=15"></script>
-<script src="../ttmind.js?v=7"></script>
+<script src="../ttmcharts.js?v=16"></script>
+<script src="../ttmind.js?v=8"></script>
 <script src="../accounts.js?v=1793900008"></script>
 <script>
 (function(){
