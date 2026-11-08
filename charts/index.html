@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow">
-<link rel="icon" type="image/png" href="../favicon.png"><title>TTM View</title>
+<link rel="icon" type="image/png" href="../favicon.png"><title>TTM LENS</title>
 <style>
 :root{--bg:#0b0b0c;--card:#121214;--line:#2a2a2e;--text:#e8e6e1;--mute:#9a968c;--gold:#dba118;--gold2:#f2c14e;--panel:#16161a}
 #ttmChatBtn,#ttmCommBtn,#ttmLive{display:none!important}*{box-sizing:border-box}html,body{height:100%}body{margin:0;background:var(--bg);color:var(--text);font:14.5px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
@@ -8,11 +8,11 @@
 #gate button{background:transparent;border:1px solid var(--gold);color:var(--gold2);border-radius:999px;padding:9px 18px;font:inherit;font-weight:700;cursor:pointer}
 </style></head>
 <body data-terminal="charts">
-<div id="gate"><img src="../img/logo0.png" alt="TTM"><h1>TTM View</h1><p id="gMsg">Checking your account…</p><button id="gBtn" style="display:none"></button></div>
+<div id="gate"><img src="../img/logo0.png" alt="TTM"><h1>TTM LENS</h1><p id="gMsg">Checking your account…</p><button id="gBtn" style="display:none"></button></div>
 <script src="../chartpro.js?v=2"></script>
-<script src="../ttmcharts.js?v=11"></script>
+<script src="../ttmcharts.js?v=12"></script>
 <script src="../ttmind.js?v=7"></script>
-<script src="../accounts.js?v=1793900006"></script>
+<script src="../accounts.js?v=1793900007"></script>
 <script>
 (function(){
   const q = new URLSearchParams(location.search), g = id => document.getElementById(id);
@@ -20,8 +20,8 @@
   function go(){
     if(started) return; const w = window.ttmWho ? window.ttmWho() : {ready: false};
     if(!w.ready){ if(++n < 150) return setTimeout(go, 100); g('gMsg').textContent = 'Could not check your account. Refresh this window.'; return; }
-    if(!w.user){ g('gMsg').textContent = 'Sign in with your TTM account to open TTM View.'; g('gBtn').textContent = 'Sign in'; g('gBtn').style.display = ''; g('gBtn').onclick = () => { const b = g('acctBtn'); if(b) b.click(); else location.href = '../index.html'; }; return setTimeout(go, 1500); }
-    if(!(w.admin || (window.ttmCan && ttmCan('c:ttmcharts')))){ g('gMsg').textContent = 'TTM View is locked for your account while it is in testing.'; g('gBtn').style.display = 'none'; return; }
+    if(!w.user){ g('gMsg').textContent = 'Sign in with your TTM account to open TTM LENS.'; g('gBtn').textContent = 'Sign in'; g('gBtn').style.display = ''; g('gBtn').onclick = () => { const b = g('acctBtn'); if(b) b.click(); else location.href = '../index.html'; }; return setTimeout(go, 1500); }
+    if(!(w.admin || (window.ttmCan && ttmCan('c:ttmcharts')))){ g('gMsg').textContent = 'TTM LENS is locked for your account while it is in testing.'; g('gBtn').style.display = 'none'; return; }
     started = true; g('gate').remove(); ttmChartsOpen({embedded: true, pane: q.get('pane'), ex: q.get('ex'), sym: q.get('sym'), tf: q.get('tf')});
   }
   go();
