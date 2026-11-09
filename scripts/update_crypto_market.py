@@ -122,12 +122,14 @@ def main():
         print("too few coins returned data; keeping previous file")
         sys.exit(0)
     out["h"] = h
+    json.dump(out, open(OUT, "w"), separators=(",", ":"))   # save the hourly data first so a slow daily pass cannot lose it
+    print("wrote hourly", OUT, os.path.getsize(OUT), "bytes;", used, "coins", flush=True)
     if "--daily" in sys.argv or not out["d"]:
         d, used2 = block(coins, False)
         if used2 >= 40:
             out["d"] = d
-    json.dump(out, open(OUT, "w"), separators=(",", ":"))
-    print("wrote", OUT, os.path.getsize(OUT), "bytes;", used, "coins")
+            json.dump(out, open(OUT, "w"), separators=(",", ":"))
+            print("wrote daily too;", used2, "coins")
 
 
 if __name__ == "__main__":

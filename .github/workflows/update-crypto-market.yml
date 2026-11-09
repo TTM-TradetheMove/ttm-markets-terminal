@@ -26,7 +26,8 @@ jobs:
           python-version: "3.12"
       - name: Build indices (daily history refreshed on the first run of each day)
         run: |
-          if [ "$(date -u +%H)" -lt 4 ]; then python3 scripts/update_crypto_market.py --daily; else python3 scripts/update_crypto_market.py; fi
+          if [ "$(date -u +%H)" -lt 4 ]; then F=--daily; else F=; fi
+          timeout 38m python3 -u scripts/update_crypto_market.py $F || echo "stopped early; committing whatever was saved"
       - name: Commit
         run: |
           git config user.name "ttm-calendar-bot"
