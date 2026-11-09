@@ -323,6 +323,7 @@ function wire(m){
   cv.addEventListener('pointerdown', e => { if(!S.data.length) return; e.preventDefault(); ptrs[e.pointerId] = {x: e.clientX, y: e.clientY}; const np = Object.keys(ptrs).length;
     if(np === 2){ const k = Object.values(ptrs); pinch = {d: Math.hypot(k[0].x - k[1].x, k[0].y - k[1].y), vn: S.vn, v0: S.v0}; drag = null; return; }
     const p = ptr(e);
+    if(S.pickCb){ const i = Math.max(0, Math.min(S.data.length - 1, Math.round(p.i))), f = S.pickCb; S.pickCb = null; f(S.data[i].t); paint(); return; }
     if(S.rp.pick){ const i = Math.max(1, Math.min(S.data.length - 1, Math.round(p.i))); S.rp.pick = false; S.rp.idx = i; setStatus(''); fit(); paint(); return; }
     if(!S.tool){ const ph = papHit(p.x, p.y); if(ph){ if(ph.part === 'x'){ try{ window.TTM_PAPER.chartX(ph.id, ph.kind); }catch(x){} return; } S.pd = {id: ph.id, kind: ph.kind, px: null}; cv.setPointerCapture(e.pointerId); return; } }
     if(!S.tool && S.sel){ const hi = hitHandle(p.x, p.y); if(hi >= 0){ S.hd = {s: S.sel, i: hi}; cv.setPointerCapture(e.pointerId); return; } }
@@ -357,6 +358,8 @@ function wire(m){
   new ResizeObserver(paint).observe(q('#tcCw'));
 }
 /* ---------- popups ---------- */
+window.TTM_LS = {ls: (k, d) => ls(k, d), lsSet: (k, v) => lsSet(k, v)}; window.TTM_REPAINT = () => paint(); window.TTM_S = () => S; window.TTM_PICK = f => { S.pickCb = f; };
+function setPop(ind){ popClose(); const p = document.createElement('div'); p.className = 'pop avs'; p.style.width = '330px'; p.style.maxHeight = '80vh'; p.style.overflow = 'auto'; $('ttc').appendChild(p); ind.settings(p); }
 function popClose(){ document.querySelectorAll('#ttc .pop').forEach(p => p.remove()); }
 async function symPop(){
   if(document.querySelector('#ttc .sym')){ popClose(); return; } popClose();
@@ -408,9 +411,10 @@ function layPop(){ if(document.querySelector('#ttc .lay')){ popClose(); return; 
   p.innerHTML = '<b style="font-size:13px;color:#dba118">Split screen</b>' + Object.keys(LAYS).map(k => `<label style="display:block;margin:6px 0;cursor:pointer"><input type="radio" name="lay" value="${k}" ${k === cur ? 'checked' : ''}> ${LAYS[k][0]}</label>`).join('') + '<div style="font-size:11px;color:#6b6f7a;margin-top:6px;max-width:230px">Each chart has its own coin, time frame and drawings. Change a chart with its own search box.</div>'; $('ttc').appendChild(p); p.onchange = e => { layout(e.target.value); popClose(); }; }
 function indPop(){
   if(document.querySelector('#ttc .ind')){ popClose(); return; } popClose();
-  const p = document.createElement('div'); p.className = 'pop ind'; const all = allInd().filter(i => !i.always), row = i => `<label><input type="checkbox" data-i="${i.id}" ${S.inds[i.id] ? 'checked' : ''}> ${esc(i.name)}</label>`;
+  const p = document.createElement('div'); p.className = 'pop ind'; const all = allInd().filter(i => !i.always), row = i => `<label><input type="checkbox" data-i="${i.id}" ${S.inds[i.id] ? 'checked' : ''}> ${esc(i.name)}${i.settings ? ` <button type="button" data-set="${i.id}" title="Colours, thickness and line style" style="margin-left:6px;padding:0 7px">⚙</button>` : ''}</label>`;
   p.style.width = '290px'; p.style.maxHeight = '78vh'; p.style.overflow = 'auto';
   p.innerHTML = `<b style="font-size:13px;color:#dba118">TTM indicators</b>` + all.filter(i => i.ttm).map(row).join('') + `<b style="font-size:13px;display:block;margin-top:8px">Standard</b>` + all.filter(i => !i.ttm).map(row).join('') + `<div style="font-size:11px;color:#6b6f7a;margin-top:6px">Sessions and weekends use UTC time.</div>`; $('ttc').appendChild(p);
+  p.onclick = e => { const b = e.target.closest('button[data-set]'); if(b){ e.preventDefault(); const ind = allInd().find(z => z.id === b.dataset.set); if(ind) setPop(ind); } };
   p.onchange = e => { const id = e.target.dataset.i; if(!id) return; S.inds[id] = e.target.checked ? 1 : 0; lsSet('inds', S.inds); paint(); };
 }
 /* ---------- phone alerts (fire while a TTM Charts window is open on that coin and time frame) ---------- */

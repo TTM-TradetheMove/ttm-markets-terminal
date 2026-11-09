@@ -75,6 +75,33 @@ push({id: 'wkh', name: 'Weekend high / low (TTM)', pane: 'overlay', calc: r => {
   let st = e; while(st > 0 && [6, 0].includes(utc(r[st - 1].t).dow)) st--; let hi = -1, lo = 1e18, hb = st, lb = st; for(let i = st; i <= e; i++){ if(r[i].h > hi){ hi = r[i].h; hb = i; } if(r[i].l < lo){ lo = r[i].l; lb = i; } } return {hi, lo, hb, lb}; },
   over: a => { const R = a.res, {c, g, X, Y} = a; if(!R) return; c.strokeStyle = '#f5f5f5'; c.lineWidth = 2; [[R.hi, R.hb, 'WEEKEND HIGH', true], [R.lo, R.lb, 'WEEKEND LOW', false]].forEach(z => { const y = Y(z[0]); c.beginPath(); c.moveTo(X(z[1]), y); c.lineTo(g.pw, y); c.stroke(); tagL(c, g.pw - 50, y, z[2], '#f5f5f5', '#000', z[3]); }); c.lineWidth = 1; }});
 
+/* 6c. Anchored VWAP + 1/2/3 standard deviation bands. Anchor per coin; every line has its own colour, thickness and pattern. */
+const AVK = ['m3', 'm2', 'm1', 'v', 'p1', 'p2', 'p3'], AVN = {v: 'AVWAP', p1: '+1', p2: '+2', p3: '+3', m1: '-1', m2: '-2', m3: '-3'}, AVD = {v: ['#dba118', 2, 's', 1], p1: ['#3fb47a', 1.2, 's', 1], p2: ['#4fd1c5', 1.2, 'd', 1], p3: ['#5aa9ff', 1.2, 't', 1], m1: ['#e0554d', 1.2, 's', 1], m2: ['#ff8a5b', 1.2, 'd', 1], m3: ['#d36bff', 1.2, 't', 1]};
+const LSX = () => window.TTM_LS || {ls: (k, d) => d, lsSet(){}}, avCfg = () => { const u = LSX().ls('avwcfg', {}) || {}, o = {}; AVK.forEach(k => { const d = AVD[k], x = u[k] || {}; o[k] = {col: x.col || d[0], w: x.w || d[1], pat: x.pat || d[2], on: x.on == null ? !!d[3] : x.on}; }); return o; };
+const avAnch = sym => { const m = LSX().ls('avwanc', {}) || {}; return m[sym]; };
+const avSet = (sym, t) => { const m = LSX().ls('avwanc', {}) || {}; m[sym] = t; LSX().lsSet('avwanc', m); };
+const avDefault = r => { const last = r[r.length - 1]; if(!last) return 0; const d = new Date(last.t), mon = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return mon; };
+push({id: 'avw', name: 'Anchored VWAP + bands (TTM)', pane: 'overlay', ttm: true, ver: () => JSON.stringify(LSX().ls('avwanc', {})), calc: (r, S) => {
+  if(!r.length) return null; const t0 = (S && avAnch(S.sym)) || avDefault(r); let a = r.findIndex(x => x.t >= t0); if(a < 0) return null;
+  const n = r.length, o = {a, v: [], s: []}; let pv = 0, pv2 = 0, vv = 0;
+  for(let i = a; i < n; i++){ const x = r[i], tp = (x.h + x.l + x.c) / 3, w = x.v > 0 ? x.v : 1; pv += tp * w; pv2 += tp * tp * w; vv += w; const m = pv / vv; o.v[i] = m; o.s[i] = Math.sqrt(Math.max(0, pv2 / vv - m * m)); }
+  return o; },
+  over: A => { const R = A.res, c = A.c, g = A.g, X = A.X, Y = A.Y; if(!R) return; const cf = avCfg(), n = R.v.length, DS = {s: [], d: [7, 4], t: [1.5, 3.5]};
+    c.save(); c.beginPath(); c.rect(0, g.mT, g.pw, g.mB - g.mT); c.clip(); c.font = 'bold 10px system-ui,sans-serif'; c.textBaseline = 'middle';
+    AVK.forEach(k => { const s = cf[k]; if(!s.on) return; const m = k === 'v' ? 0 : (k[0] === 'p' ? 1 : -1) * +k[1]; c.strokeStyle = s.col; c.lineWidth = s.w; c.setLineDash(DS[s.pat] || []); c.beginPath(); let st = false, lx = 0, ly = 0;
+      for(let i = R.a; i < n; i++){ const val = R.v[i] + m * R.s[i], x = X(i), y = Y(val); if(!st){ c.moveTo(x, y); st = true; } else c.lineTo(x, y); lx = x; ly = y; } c.stroke(); c.setLineDash([]);
+      if(st){ c.fillStyle = s.col; c.textAlign = 'left'; c.fillText(AVN[k], Math.min(lx + 4, g.pw - 28), ly - 7); } });
+    c.fillStyle = 'rgba(219,161,24,.9)'; c.beginPath(); c.arc(X(R.a), Y(R.v[R.a]), 4, 0, 6.3); c.fill(); c.restore(); },
+  settings: p => { const cf = avCfg(), S = window.TTM_S && window.TTM_S(); const sym = S ? S.sym : '';
+    const row = k => { const s = cf[k]; return '<div style="display:flex;gap:6px;align-items:center;margin:5px 0"><label style="width:78px;white-space:nowrap"><input type="checkbox" data-k="' + k + '" data-f="on"' + (s.on ? ' checked' : '') + '> <b>' + AVN[k] + '</b></label><input type="color" data-k="' + k + '" data-f="col" value="' + s.col + '" style="width:38px;height:26px;padding:0;border:0;background:none"><select data-k="' + k + '" data-f="w">' + [1, 1.5, 2, 3, 4].map(w => '<option value="' + w + '"' + (+s.w === w ? ' selected' : '') + '>' + w + ' px</option>').join('') + '</select><select data-k="' + k + '" data-f="pat"><option value="s"' + (s.pat === 's' ? ' selected' : '') + '>Solid</option><option value="d"' + (s.pat === 'd' ? ' selected' : '') + '>Dashed</option><option value="t"' + (s.pat === 't' ? ' selected' : '') + '>Dotted</option></select></div>'; };
+    p.innerHTML = '<b style="color:#dba118;font-size:13px">Anchored VWAP lines</b><div style="font-size:11px;color:#8b8f9a;margin:4px 0 8px">Colour, thickness and pattern for every line.</div>' + ['p3', 'p2', 'p1', 'v', 'm1', 'm2', 'm3'].map(row).join('') + '<div style="margin-top:10px"><b style="font-size:12px">Anchor point</b> <span style="font-size:11px;color:#8b8f9a">(for ' + sym + ')</span><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><button type="button" data-an="w">Week open</button><button type="button" data-an="m">Month open</button><button type="button" data-an="y">Year open</button><button type="button" data-an="pick">⚓ Pick a candle</button></div></div><div style="margin-top:10px"><button type="button" data-reset="1">Reset to defaults</button> <button type="button" data-done="1">Done</button></div>';
+    const rp = () => { try{ window.TTM_REPAINT(); }catch(e){} };
+    p.oninput = p.onchange = e => { const t = e.target, k = t.dataset.k, f = t.dataset.f; if(!k) return; const u = LSX().ls('avwcfg', {}) || {}; u[k] = Object.assign({}, cfgOf(k, u), {[f]: f === 'on' ? t.checked : f === 'w' ? +t.value : t.value}); LSX().lsSet('avwcfg', u); rp(); };
+    const cfgOf = (k, u) => Object.assign({}, avCfg()[k], u[k] || {});
+    p.onclick = e => { const b = e.target.closest('button'); if(!b) return; if(b.dataset.done){ p.remove(); return; } if(b.dataset.reset){ LSX().lsSet('avwcfg', {}); p.remove(); rp(); return; }
+      const an = b.dataset.an; if(!an || !S) return; if(an === 'pick'){ p.remove(); window.TTM_PICK(t => { avSet(S.sym, t); rp(); }); return; }
+      const d = new Date(); let t = an === 'w' ? Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - ((d.getUTCDay() + 6) % 7)) : an === 'm' ? Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1) : Date.UTC(d.getUTCFullYear(), 0, 1); avSet(S.sym, t); rp(); }; }});
+
 /* 7. Supply / demand zones with POI and BOS (swing 10, ATR 50, width 2.5, keep 20) */
 push({id: 'sd', name: 'Supply / demand zones + BOS (TTM)', pane: 'overlay', calc: r => {
   const N = 10, KEEP = 20, WID = 2.5, atr = atrA(r, 50), Z = [], BOS = []; if(r.length < N * 2 + 2) return {Z, BOS};
