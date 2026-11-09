@@ -194,6 +194,14 @@ Deno.serve(async (req) => {
     const mins = Math.max(1, Math.round((new Date(s.starts_at).getTime() - now) / 60000));
     await send(await subsFor(null), {title: "Live in " + mins + " minutes", body: s.title, tag: "live-" + s.id, url: s.zoom_url}, "live");
   }
+  // "Live now": a second push when the session actually starts (needs supabase/live_now.sql once)
+  try {
+    const startedRows = await get(`ttm_live?select=*&live_sent=eq.false&starts_at=lte.${new Date(now + 30000).toISOString()}&starts_at=gt.${new Date(now - 10 * 60000).toISOString()}`);
+    for (const s of startedRows) {
+      const c = await claim("ttm_live", s.id, "live_sent"); if (!c) continue;
+      await send(await subsFor(null), {title: "🔴 We are live now", body: s.title + " · tap to join on Zoom", tag: "live-now-" + s.id, url: s.zoom_url}, "live");
+    }
+  } catch (e) { console.log("live-now alert failed (run supabase/live_now.sql):", String(e)); }
   const fresh = await get(`ttm_live?select=*&announced=eq.false&starts_at=gt.${new Date(now).toISOString()}`);
   for (const s of fresh) {
     const c = await claim("ttm_live", s.id, "announced"); if (!c) continue;
