@@ -43,6 +43,27 @@ async function settle(acc){ // fill limit / stop orders, then close anything tha
   return changed; }
 async function pushEquity(acc){ const s = stats(acc); if(Math.abs(s.equity - acc.equity) > 0.005){ acc.equity = s.equity; await api('/rest/v1/ttm_paper_accounts?id=eq.' + acc.id, {method: 'PATCH', body: JSON.stringify({equity: acc.equity, updated_at: new Date().toISOString()})}); } }
 
+
+/* ---- chart overlay: show the open account's positions and orders on the chart; drag SL / TP / pending price ---- */
+let OVR = null; const lsg = k => { try{ return JSON.parse(localStorage.getItem('ttm_charts_' + k)); }catch(e){ return null; } }, lss = (k, v) => { try{ localStorage.setItem('ttm_charts_' + k, JSON.stringify(v)); }catch(e){} };
+P.lines = (sym, last) => { if(!ST.cur || !who().user) return []; const out = [], px = last > 0 ? last : (ST.px[sym] || 0); ST.trades.filter(t => t.sym === sym && (t.status === 'open' || t.status === 'pending')).forEach(t => { const d = dirOf(t), ov = k => (OVR && OVR.id === t.id && OVR.kind === k) ? OVR.px : null, e = ov('entry') != null ? ov('entry') : ov('pend') != null ? ov('pend') : t.entry, pend = t.status === 'pending';
+    out.push({id: t.id, kind: pend ? 'pend' : 'entry', px: e, side: t.side, qty: t.qty, type: t.reason, pnl: pend ? null : (px > 0 ? (px - t.entry) * t.qty * d : 0)});
+    if(t.sl){ const v = ov('sl') != null ? ov('sl') : t.sl; out.push({id: t.id, kind: 'sl', px: v, side: t.side, pnl: (v - e) * t.qty * d}); } if(t.tp){ const v = ov('tp') != null ? ov('tp') : t.tp; out.push({id: t.id, kind: 'tp', px: v, side: t.side, pnl: (v - e) * t.qty * d}); } }); return out; };
+P.preview = (id, kind, v) => { OVR = id == null ? null : {id, kind, px: v}; };
+const rep = () => { try{ ctx().repaint(); }catch(e){} if(ST.view === 'acc' && host && host.isConnected) paint(); };
+P.chartX = async (id, kind) => { const t = ST.trades.find(x => x.id === id), acc = ST.cur; if(!t || !acc) return;
+  if(kind === 'entry'){ const px = ST.px[t.sym] || 0, l = ctx().S.data.length ? ctx().S.data[ctx().S.data.length - 1].c : px; if(!(l > 0) || !confirm('Close your ' + t.side + ' ' + t.sym + ' at about ' + ctx().fx(l) + '?')) return; await closeTrade(acc, t, l, 'manual'); }
+  else if(kind === 'pend'){ if(!confirm('Cancel this ' + t.reason + ' order?')) return; await api('/rest/v1/ttm_paper_trades?id=eq.' + t.id, {method: 'DELETE'}); }
+  else { await api('/rest/v1/ttm_paper_trades?id=eq.' + t.id, {method: 'PATCH', body: JSON.stringify(kind === 'sl' ? {sl: null} : {tp: null})}); }
+  await loadTrades(acc.id); await pushEquity(acc); rep(); };
+P.chartMove = async (id, kind, v) => { OVR = null; const t = ST.trades.find(x => x.id === id), acc = ST.cur; if(!t || !acc || !(v > 0)) return rep(); const lg = t.side === 'long', last = ctx().S.data.length ? ctx().S.data[ctx().S.data.length - 1].c : (ST.px[t.sym] || 0), ref = t.status === 'pending' ? (kind === 'pend' ? last : t.entry) : last, body = {};
+  if(kind === 'pend'){ const lim = t.reason === 'limit'; if(lim ? (lg ? v >= last : v <= last) : (lg ? v <= last : v >= last)){ ctx().toast('A ' + t.reason + ' ' + (lg ? 'buy' : 'sell') + ' has to sit ' + ((lim ? lg : !lg) ? 'below' : 'above') + ' the live price.'); return rep(); } body.entry = v; body.qty = t.margin * t.lev / v; }
+  else if(kind === 'sl'){ if(lg ? v >= ref : v <= ref){ ctx().toast('Stop loss must be on the losing side of the price.'); return rep(); } body.sl = v; }
+  else if(kind === 'tp'){ if(lg ? v <= ref : v >= ref){ ctx().toast('Take profit must be on the winning side of the price.'); return rep(); } body.tp = v; }
+  else return rep();
+  Object.assign(t, body); await api('/rest/v1/ttm_paper_trades?id=eq.' + t.id, {method: 'PATCH', body: JSON.stringify(body)}); rep(); };
+async function chartInit(n){ try{ if(ST.cur) return; if(!who().user){ if(n < 12) setTimeout(() => chartInit(n + 1), 1500); return; } if(!await loadAll()) return; const a = ST.accs.find(x => x.id === lsg('papacc')) || ST.accs[0]; if(!a) return; ST.cur = a; await loadTrades(a.id); await prices(true); rep(); }catch(e){} }
+
 /* ---------- screens ---------- */
 function head(){ return '<h3>Paper trading</h3><p class="sub">Simulated money only. Trade live prices with your own rules, or join a TTM competition. Not financial advice.</p>'; }
 function homeHtml(){ const w = who(), mine = ST.accs.filter(a => !a.comp_id), cmp = ST.accs.filter(a => a.comp_id), retn = a => (a.equity / a.start_balance - 1) * 100, now = Date.now();
@@ -104,7 +125,7 @@ function onTk(e){ const t = e.target; if(!host.querySelector('.pp') || !ST.cur |
   if(e.type === 'change' && (['tpOn', 'slOn', 'tpM', 'slM', 'unit', 'mkt', 'sym'].includes(key))){ if(key === 'unit'){ ST.tk.size = ST.tk.unit === 'pct' ? 10 : ST.tk.size; } prices(true).then(paint); return; }
   const sm = $('tkSum'); if(sm) sm.innerHTML = tkSum(); }
 async function paint(){ if(!host) return; ensureCss(); let h = ''; if(ST.view === 'home') h = homeHtml(); else if(ST.view === 'acc' && ST.cur) h = accHtml(); else if(ST.view === 'board' && ST.cur) h = boardHtml(); host.innerHTML = '<div class="pp">' + h + '</div>'; }
-async function open(accId){ const a = ST.accs.find(x => x.id === accId); if(!a) return; ST.cur = a; ST.view = 'acc'; ST.sym = ctx().S.sym; await loadTrades(a.id); await prices(true); if(await settle(a)) await loadTrades(a.id); await pushEquity(a); paint(); }
+async function open(accId){ const a = ST.accs.find(x => x.id === accId); if(!a) return; ST.cur = a; lss('papacc', a.id); ST.view = 'acc'; ST.sym = ctx().S.sym; await loadTrades(a.id); await prices(true); if(await settle(a)) await loadTrades(a.id); await pushEquity(a); paint(); }
 async function board(id){ const c = comp(id); if(!c) return; ST.cur = c; ST.view = 'board'; const r = await api('/rest/v1/ttm_paper_accounts?comp_id=eq.' + id + '&select=id,handle,start_balance,equity,trades,wins&limit=500'); ST.board = r.ok ? r.json : []; paint(); }
 async function act(b){ const a = b.dataset.a, w = who(), v = id => { const e = $(id); return e ? e.value : ''; }; ST.err = '';
   if(a === 'home'){ ST.view = 'home'; await loadAll(); paint(); }
@@ -147,7 +168,7 @@ P.render = async function(h, getCtx){ host = h; ctx = getCtx; ensureCss(); const
   host.innerHTML = '<div class="pp"><p class="sub">Loading…</p></div>'; if(!host.__pp){ host.__pp = 1; host.addEventListener('input', onTk); host.addEventListener('change', onTk); host.addEventListener('click', e => { if(host.querySelector('.pp')){ const b = e.target.closest('button[data-a]'); if(b) act(b); } }); }
   await loadAll(); await prices(true); if(ST.view === 'acc' && ST.cur && ST.accs.find(x => x.id === ST.cur.id)) await open(ST.cur.id); else { ST.view = 'home'; paint(); } };
 // background: keep stops/targets and the leaderboard equity moving while LENS is open
-P.start = function(getCtx){ ctx = getCtx; clearInterval(bgT); bgT = setInterval(async () => { try{ if(!who().user || document.visibilityState === 'hidden' || !window.ttmApi) return; const r = await api('/rest/v1/ttm_paper_accounts?user_id=eq.' + uid() + '&select=*'); if(!r.ok || !r.json.length) return; await prices(true);
+P.start = function(getCtx){ const first = !ctx; ctx = getCtx; if(first) chartInit(0); clearInterval(bgT); bgT = setInterval(async () => { try{ if(!who().user || document.visibilityState === 'hidden' || !window.ttmApi) return; const r = await api('/rest/v1/ttm_paper_accounts?user_id=eq.' + uid() + '&select=*'); if(!r.ok || !r.json.length) return; await prices(true);
     for(const acc of r.json){ const tr = await api('/rest/v1/ttm_paper_trades?account_id=eq.' + acc.id + '&status=in.(open,pending)&select=*'); if(!tr.ok || !tr.json.length) continue; const keep = ST.trades; ST.trades = tr.json; const ch = await settle(acc); await pushEquity(acc); if(ch && ST.cur && ST.cur.id === acc.id && ST.view === 'acc'){ await loadTrades(acc.id); Object.assign(ST.cur, acc); paint(); } else if(ST.cur && ST.cur.id === acc.id){ ST.trades = keep; } else ST.trades = keep; }
-    if(ST.view === 'acc' && ST.cur && host && host.isConnected && !document.activeElement.closest('.pp input,.pp select')){ await loadTrades(ST.cur.id); paint(); } }catch(e){} }, 20000); };
+    if(ST.cur && !OVR){ await loadTrades(ST.cur.id); const cc = r.json.find(x => x.id === ST.cur.id); if(cc) Object.assign(ST.cur, cc); try{ ctx().repaint(); }catch(e){} if(ST.view === 'acc' && host && host.isConnected && !document.activeElement.closest('.pp input,.pp select')) paint(); } }catch(e){} }, 20000); };
 })();

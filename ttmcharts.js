@@ -154,7 +154,7 @@ function paint(){
   const d = vd(); if(!d.length){ drawBrand(); return; }
   const i0 = Math.max(0, Math.floor(S.v0) - 1), i1 = Math.min(d.length - 1, Math.ceil(S.v0 + S.vn) + 1), vis = d.slice(i0, i1 + 1);
   let lo = Math.min.apply(null, vis.map(x => x.l)), hi = Math.max.apply(null, vis.map(x => x.h)); const rg = (hi - lo) || hi * .02;
-  S.orders.forEach(o => { if(o >= lo - rg && o <= hi + rg){ lo = Math.min(lo, o); hi = Math.max(hi, o); } });
+  S.orders.concat(papLines().map(l => l.px)).forEach(o => { if(o >= lo - rg && o <= hi + rg){ lo = Math.min(lo, o); hi = Math.max(hi, o); } });
   if(S.pv){ lo = S.pv.lo; hi = S.pv.hi; } else { const pd = (hi - lo) * .08; lo -= pd; hi += pd; if(S.inds.vol) lo -= (hi - lo) * .12; }
   S.sc = {lo, hi}; const Y = p => g.mT + (g.mB - g.mT) * (1 - (p - lo) / (hi - lo)); S.Y = Y;
   const act = allInd().filter(i => S.inds[i.id] || i.always), A = ind => ({c, g, X, Y, d, i0, i1, S, res: R(ind, d), fx, i0w: i0, daily: (sy, n) => EX[S.ex].candles(sy, '1d', n || 95), repaint: paint}), cc = act.find(i => i.candleColor), cols = cc ? R(cc, d) : null;
@@ -172,6 +172,7 @@ function paint(){
   allInd().filter(i => S.inds[i.id] && i.pane === 'price' && i.calc).forEach(ind => { let s; try{ s = R(ind, d); }catch(e){ return; } c.strokeStyle = ind.color || '#fff'; c.lineWidth = 1.5; c.beginPath(); let on = false; for(let i = i0; i <= i1; i++){ const v = s[i]; if(v == null){ on = false; continue; } const x = X(i), y = Y(v); if(on) c.lineTo(x, y); else { c.moveTo(x, y); on = true; } } c.stroke(); c.lineWidth = 1; });
   act.filter(i => i.over).forEach(i => { try{ i.over(A(i)); }catch(e){} });
   S.orders.forEach(o => { const y = Y(o); c.strokeStyle = '#dba118'; c.setLineDash([7, 4]); c.beginPath(); c.moveTo(0, y); c.lineTo(g.pw, y); c.stroke(); c.setLineDash([]); });
+  try{ S.papR = papDraw(c, g, Y); }catch(x){ S.papR = []; }
   S.draw.forEach(s => shape(s, 1)); if(S.tool && S.pts.length && S.mv) shape(S.tool === 'pa' || S.tool === 'ch' || S.tool === 'tri' || S.tool === 'fbx' ? {k: S.tool, pts: S.pts.concat([S.mv])} : {k: S.tool, a: S.pts[0], b: S.mv}, .6); if(S.brush && S.brush.length > 1) shape({k: 'br', pts: S.brush, col: S.col}, .8);
   c.restore();
   // last price
@@ -200,6 +201,20 @@ function drawPanels(act, A, g){ const c = cx, stack = {tr: 0, br: 0, bl: 0};
     if(title){ c.fillStyle = '#dba118'; c.font = '800 10px system-ui,sans-serif'; c.fillText(title, x + 8, yy + 6); yy += 16; c.font = '11px system-ui,sans-serif'; }
     rows.forEach(r => { r.forEach((cell, k) => { c.fillStyle = cell[1] || '#e8e8ea'; c.fillText(cell[0], k ? x + 8 + ws[0] + 10 : x + 8, yy + 8); }); yy += 16; }); c.restore(); });
   c.textBaseline = 'middle'; }
+const papLines = () => { try{ return window.TTM_PAPER && window.TTM_PAPER.lines ? window.TTM_PAPER.lines(S.sym, S.data.length ? S.data[S.data.length - 1].c : 0) : []; }catch(x){ return []; } };
+function papDraw(c, g, Y){ const L = papLines(), R = []; c.save(); c.font = 'bold 12px -apple-system,Segoe UI,Roboto,sans-serif'; c.textBaseline = 'middle'; const hide = ls('hidemoney', false);
+  L.forEach((l, n) => { const y = Y(l.px); if(y < g.mT - 4 || y > g.mB + 4) return; const col = l.kind === 'sl' ? '#e0554d' : l.kind === 'tp' ? '#3fb47a' : l.kind === 'pend' ? '#dba118' : (l.side === 'long' ? '#3fb47a' : '#e0554d');
+    c.strokeStyle = col; c.lineWidth = 1; c.setLineDash(l.kind === 'entry' ? [] : [6, 4]); c.beginPath(); c.moveTo(0, y); c.lineTo(g.pw, y); c.stroke(); c.setLineDash([]);
+    const t1 = l.kind === 'sl' ? 'SL' : l.kind === 'tp' ? 'TP' : (l.kind === 'pend' ? (l.type === 'stop' ? 'STOP ' : 'LIMIT ') : '') + (l.side === 'long' ? '' : '-') + +(+l.qty).toPrecision(5), t2 = l.pnl == null ? '' : hide ? '•••• USD' : (l.pnl >= 0 ? '+' : '-') + Math.abs(l.pnl).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' USD', t3 = '✕';
+    const w1 = c.measureText(t1).width + 18, w2 = t2 ? c.measureText(t2).width + 18 : 0, w3 = 28, h = 22, tw = w1 + w2 + w3, x0 = Math.max(6, Math.min(g.pw - tw - 8, g.pw * .5 - tw / 2 + (l.kind === 'entry' ? 0 : -20))), y0 = y - h / 2;
+    c.fillStyle = col; c.fillRect(x0, y0, w1, h); c.fillStyle = '#fff'; c.textAlign = 'left'; c.fillText(t1, x0 + 9, y);
+    c.fillStyle = '#0b0b0d'; c.fillRect(x0 + w1, y0, w2 + w3, h); c.strokeStyle = col; c.strokeRect(x0 + .5, y0 + .5, tw - 1, h - 1);
+    if(t2){ c.fillStyle = l.pnl >= 0 ? '#3fb47a' : '#e0554d'; c.fillText(t2, x0 + w1 + 9, y); } c.fillStyle = '#e0554d'; c.textAlign = 'center'; c.fillText(t3, x0 + w1 + w2 + w3 / 2, y); c.textAlign = 'left';
+    tag(g.pw, y, fx(l.px), col, '#fff');
+    const drag = l.kind !== 'entry'; R.push({id: l.id, kind: l.kind, part: 'x', x: x0 + w1 + w2, y: y0, w: w3, h}); R.push({id: l.id, kind: l.kind, part: 'body', drag, x: drag ? 0 : x0, y: drag ? y - 6 : y0, w: drag ? g.pw : tw - w3, h: drag ? 12 : h}); });
+  c.restore(); return R; }
+const papHit = (x, y) => { const R = S.papR || []; for(let i = 0; i < R.length; i++){ const r = R[i]; if(r.part === 'x' && x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) return r; } for(let i = R.length - 1; i >= 0; i--){ const r = R[i]; if(r.part === 'body' && r.drag && x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) return r; } return null; };
+const papPx = y => S.sc.lo + (1 - (y - S.g.mT) / (S.g.mB - S.g.mT)) * (S.sc.hi - S.sc.lo);
 function tag(x, y, t, bg, fg){ const c = cx; c.fillStyle = bg; c.fillRect(x, y - 9, P.R - 2, 18); c.fillStyle = fg; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(t, x + 4, y); }
 function drawBrand(r, d){ const c = cx, g = S.g; if(logo.complete && logo.naturalWidth){ const h = 26, w = Math.min(70, logo.naturalWidth / logo.naturalHeight * h); c.drawImage(logo, 8, 5, w, h); } c.textAlign = 'left'; c.textBaseline = 'middle'; c.font = '800 14px system-ui,sans-serif'; c.fillStyle = '#e8e8ea'; c.fillText(S.sym + '/USDT · ' + S.tf + ' · ' + EX[S.ex].n, 84, 18);
   c.font = '11px system-ui,sans-serif'; if(r){ const ch = d && d.length > 1 ? (r.c / (d[Math.max(0, d.indexOf(r) - 1)] || r).c - 1) * 100 : 0; c.fillStyle = r.c >= r.o ? '#3fb47a' : '#e0554d'; c.fillText(`O ${fx(r.o)}  H ${fx(r.h)}  L ${fx(r.l)}  C ${fx(r.c)}  (${ch >= 0 ? '+' : ''}${ch.toFixed(2)}%)  Vol ${r.v >= 1e6 ? (r.v / 1e6).toFixed(2) + 'M' : r.v >= 1e3 ? (r.v / 1e3).toFixed(1) + 'K' : r.v.toFixed(0)}`, 8, 36); }
@@ -309,6 +324,7 @@ function wire(m){
     if(np === 2){ const k = Object.values(ptrs); pinch = {d: Math.hypot(k[0].x - k[1].x, k[0].y - k[1].y), vn: S.vn, v0: S.v0}; drag = null; return; }
     const p = ptr(e);
     if(S.rp.pick){ const i = Math.max(1, Math.min(S.data.length - 1, Math.round(p.i))); S.rp.pick = false; S.rp.idx = i; setStatus(''); fit(); paint(); return; }
+    if(!S.tool){ const ph = papHit(p.x, p.y); if(ph){ if(ph.part === 'x'){ try{ window.TTM_PAPER.chartX(ph.id, ph.kind); }catch(x){} return; } S.pd = {id: ph.id, kind: ph.kind, px: null}; cv.setPointerCapture(e.pointerId); return; } }
     if(!S.tool && S.sel){ const hi = hitHandle(p.x, p.y); if(hi >= 0){ S.hd = {s: S.sel, i: hi}; cv.setPointerCapture(e.pointerId); return; } }
     if(!S.tool){ const h = hitDraw(p.x, p.y); if(h){ S.sel = h; selBar(); S.mvd = {s: h, p0: p, orig: JSON.parse(JSON.stringify(h)), moved: false}; cv.setPointerCapture(e.pointerId); paint(); return; } if(S.sel){ S.sel = null; selBar(); paint(); } }
     if(S.tool === 'tx'){ const t = prompt('Text for the chart'); if(t){ const o = {k: 'tx', a: {t: p.t, p: p.p}, txt: t, col: S.col}; S.draw.push(o); saveDraw(); S.sel = o; selBar(); } S.tool = null; syncTools(); paint(); return; }
@@ -324,17 +340,18 @@ function wire(m){
   cv.addEventListener('pointermove', e => { if(ptrs[e.pointerId]) ptrs[e.pointerId] = {x: e.clientX, y: e.clientY};
     if(pinch && Object.keys(ptrs).length === 2){ const k = Object.values(ptrs), d = Math.hypot(k[0].x - k[1].x, k[0].y - k[1].y); S.vn = Math.max(12, Math.min(Math.max(vd().length + 20, 60), pinch.vn * pinch.d / d)); S.v0 = pinch.v0 + (pinch.vn - S.vn) / 2; clampV(); paint(); return; }
     const r = cv.getBoundingClientRect(); S.cross = {x: e.clientX - r.left, y: e.clientY - r.top};
+    if(S.pd){ const r2 = cv.getBoundingClientRect(); S.pd.px = papPx(e.clientY - r2.top); try{ window.TTM_PAPER.preview(S.pd.id, S.pd.kind, S.pd.px); }catch(x){} paint(); return; }
     if(S.hd){ const q = ptr(e), z = anchorsOf(S.hd.s)[S.hd.i]; if(z){ z.t = q.t; z.p = q.p; S.hd.moved = true; paint(); } return; }
     if(S.mvd){ const q = ptr(e), M = S.mvd, dt = q.t - M.p0.t, dp = q.p - M.p0.p, mvp = (o, n) => { n.t = o.t + dt; n.p = o.p + dp; }; if(Math.abs(e.clientX - last.x) >= 0 || true){ M.moved = true; if(M.orig.a) mvp(M.orig.a, M.s.a); if(M.orig.b) mvp(M.orig.b, M.s.b); if(M.orig.pts) M.orig.pts.forEach((z, i) => mvp(z, M.s.pts[i])); paint(); } return; }
     if(S.brush){ const q = ptr(e); S.brush.push({t: q.t, p: q.p}); paint(); return; }
     if(rs){ S.subH[rs.id] = Math.round(rs.h + (rs.y - e.clientY)); lsSet('subh', S.subH); paint(); return; }
     if(tx){ const nv = Math.max(12, Math.min(Math.max(vd().length + 20, 60), tx.vn * Math.exp((e.clientX - tx.x) / 180))); S.vn = nv; S.v0 = tx.v0 + tx.vn - nv; clampV(); paint(); return; }
-    if(!drag && !S.tool) cv.style.cursor = divAt(S.cross.y) >= 0 ? 'ns-resize' : (S.cross.y > S.g.H - P.B ? 'ew-resize' : (hitHandle(S.cross.x, S.cross.y) >= 0 ? 'crosshair' : hitDraw(S.cross.x, S.cross.y) ? 'move' : ''));
+    if(!drag && !S.tool) cv.style.cursor = divAt(S.cross.y) >= 0 ? 'ns-resize' : (S.cross.y > S.g.H - P.B ? 'ew-resize' : (papHit(S.cross.x, S.cross.y) ? 'ns-resize' : hitHandle(S.cross.x, S.cross.y) >= 0 ? 'crosshair' : hitDraw(S.cross.x, S.cross.y) ? 'move' : ''));
     if(drag){ const dx = e.clientX - drag.x, dy = e.clientY - drag.y, ph = S.g.mB - S.g.mT;
       if(drag.axis){ const c0 = (drag.hi + drag.lo) / 2, h = (drag.hi - drag.lo) / 2 * Math.exp(dy / 160); S.pv = {lo: c0 - h, hi: c0 + h}; } else { S.v0 = drag.v0 - dx / S.g.w; const sh = dy / ph * (drag.hi - drag.lo); S.pv = {lo: drag.lo + sh, hi: drag.hi + sh}; clampV(); if(S.v0 < 15) more(); }
       paint(); return; }
     if(S.tool && S.pts.length){ const p = ptr(e); S.mv = {t: p.t, p: p.p}; } paint(); });
-  const up = e => { if(S.hd){ if(S.hd.moved) saveDraw(); S.hd = null; } if(S.mvd){ if(S.mvd.moved) saveDraw(); S.mvd = null; } if(S.brush){ if(S.brush.length > 2){ S.draw.push({k: 'br', pts: S.brush, col: S.col}); saveDraw(); } S.brush = null; paint(); } rs = null; tx = null; delete ptrs[e.pointerId]; if(Object.keys(ptrs).length < 2) pinch = null; drag = null; S.drag = false; };
+  const up = e => { if(S.pd){ const d = S.pd; S.pd = null; try{ if(d.px != null) window.TTM_PAPER.chartMove(d.id, d.kind, d.px); else window.TTM_PAPER.preview(null); }catch(x){} paint(); } if(S.hd){ if(S.hd.moved) saveDraw(); S.hd = null; } if(S.mvd){ if(S.mvd.moved) saveDraw(); S.mvd = null; } if(S.brush){ if(S.brush.length > 2){ S.draw.push({k: 'br', pts: S.brush, col: S.col}); saveDraw(); } S.brush = null; paint(); } rs = null; tx = null; delete ptrs[e.pointerId]; if(Object.keys(ptrs).length < 2) pinch = null; drag = null; S.drag = false; };
   cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); cv.addEventListener('pointerleave', () => { S.cross = null; paint(); });
   cv.addEventListener('wheel', e => { e.preventDefault(); const r = cv.getBoundingClientRect(); zoom(e.deltaY > 0 ? 1.12 : .89, Math.max(0, Math.min(1, (e.clientX - r.left) / S.g.pw))); paint(); }, {passive: false});
   new ResizeObserver(paint).observe(q('#tcCw'));
@@ -431,7 +448,8 @@ const nEsc = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({'&': '&am
 const symOf = a => String(a || '').toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/USDT$/, '');
 async function openAny(sym){ const order = [S.ex].concat(Object.keys(EX).filter(k => k !== S.ex)); for(const k of order){ try{ const d = await EX[k].candles(sym, S.tf, 5); if(d && d.length >= 3){ if(k !== S.ex){ S.ex = k; lsSet('ex', k); const sel = $('tcEx'); if(sel) sel.value = k; S.list = {}; } setSym(sym); return true; } }catch(x){} } setSym(sym); return false; }
 function viewSet(v){ const r = $('tcRail'), w = $('tcView'); if(!r) return; r.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === v)); if(v === 'chart' || v === 'watch'){ w.classList.remove('on'); wlShow(v === 'watch'); return; } wlShow(false); w.classList.add('on'); if(v === 'port') viewPort(); else if(v === 'ord') viewOrd(); else if(v === 'paper') viewPaper(); else viewAlr(); }
-function viewPaper(){ const w = $('tcView'); if(!window.TTM_PAPER){ w.innerHTML = '<p class="sub">Paper trading is loading…</p>'; return; } const gc = () => ({S, EX, fx, toast: m => { try{ toast(m); }catch(e){} }, showSym: x => { viewSet('chart'); if(x !== S.sym) openAny(x); }}); window.TTM_PAPER.start(gc); window.TTM_PAPER.render(w, gc); }
+const papCtx = () => ({S, EX, fx, toast: m => { try{ toast(m); }catch(e){} }, repaint: () => { try{ paint(); }catch(e){} }, showSym: x => { viewSet('chart'); if(x !== S.sym) openAny(x); }});
+function viewPaper(){ const w = $('tcView'); if(!window.TTM_PAPER){ w.innerHTML = '<p class="sub">Paper trading is loading…</p>'; return; } window.TTM_PAPER.start(papCtx); window.TTM_PAPER.render(w, papCtx); }
 const ACCN = [['all', 'All my portfolios'], ['spot', 'Spot portfolio'], ['lev', 'Leverage / futures'], ['coinm', 'Coin-M futures'], ['super', 'Super / retirement'], ['tradfi', 'TradFi / investments'], ['tokenised', 'Tokenised stocks']];
 const myTrades = () => { let l = []; try{ l = JSON.parse(localStorage.getItem('ttm_rr_saved_v1') || '[]'); }catch(x){} return Array.isArray(l) ? l.filter(x => x && x.snap) : []; };
 const myBals = () => { try{ return JSON.parse(localStorage.getItem('ttm_rr_bals_v1') || '{}') || {}; }catch(x){ return {}; } };
@@ -450,7 +468,7 @@ function viewOrd(){ const w = $('tcView'), which = ls('ordsel', 'all'), nm = k =
 function viewAlr(){ const w = $('tcView'), rows = []; try{ for(let i = 0; i < localStorage.length; i++){ const k = localStorage.key(i); if(k && k.indexOf('ttm_charts_draw_') === 0 && !/_p\d$/.test(k)){ const sym = k.slice(16), arr = JSON.parse(localStorage.getItem(k) || '[]'); (Array.isArray(arr) ? arr : []).forEach(d => { if(d && d.al) rows.push({sym, d}); }); } } }catch(x){}
   const nm = {tl: 'Trend line', ray: 'Ray', hl: 'Horizontal line', hr: 'Horizontal ray', cl: 'Cross line', rc: 'Box', tri: 'Triangle', el: 'Circle'}, on = Object.keys(S.alerts.on || {}).filter(k => S.alerts.on[k]).length;
   w.innerHTML = '<h3>Alerts</h3><p class="sub">Alerts fire to your phone while TTM LENS is open (keep it open on a phone or a pinned tab).</p><div class="card"><b>Indicator alerts on:</b> ' + on + ' &nbsp; <button class="go" id="vwInd">Choose indicator alerts</button></div><div class="card"><b>Drawing alerts</b>' + (rows.length ? '<table><thead><tr><th>Symbol</th><th>Drawing</th><th>Condition</th><th>Message</th><th>Status</th></tr></thead><tbody>' + rows.map(r => '<tr><td><button class="go" data-sym="' + nEsc(r.sym) + '">' + nEsc(r.sym) + '</button></td><td>' + nEsc(nm[r.d.k] || r.d.k) + '</td><td>' + nEsc(ALN[r.d.al.cond] || r.d.al.cond) + '</td><td>' + nEsc(r.d.al.msg || '–') + '</td><td>' + (r.d.al.done ? 'Fired' : 'Active') + '</td></tr>').join('') + '</tbody></table>' : '<p class="sub" style="margin:8px 0 0">None yet. Draw a line, box or triangle, select it and press 🔔 Alert.</p>') + '</div>'; }
-function appWire(){ const r = $('tcRail'); if(!r) return; r.onclick = e => { const b = e.target.closest('button'); if(b) viewSet(b.dataset.v); };
+function appWire(){ const r = $('tcRail'); if(!r) return; setTimeout(() => { try{ window.TTM_PAPER && window.TTM_PAPER.start(papCtx); }catch(e){} }, 800); r.onclick = e => { const b = e.target.closest('button'); if(b) viewSet(b.dataset.v); };
   $('tcView').onclick = e => { const b = e.target.closest('button'); if(!b) return; if(b.id === 'vwEye'){ lsSet('hidemoney', !ls('hidemoney', false)); viewPort(); return; } if(b.id === 'vwInd'){ viewSet('chart'); alPop(); return; } if(b.dataset.sym){ const ord = b.dataset.ord ? b.dataset.ord.split(',').map(Number).filter(n => n > 0) : []; viewSet('chart'); S.orders = ord; if(b.dataset.sym !== S.sym) openAny(b.dataset.sym); else paint(); } }; }
 /* ---------- alert sounds ---------- */
 let AC = null; const SNDN = {chime: 'Chime', bell: 'Bell', ping: 'Ping', coin: 'Coin', horn: 'Horn', siren: 'Siren', down: 'Falling tone', none: 'Silent'};
