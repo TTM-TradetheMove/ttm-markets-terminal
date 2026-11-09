@@ -1,0 +1,44 @@
+name: Update Crypto Market indices
+
+on:
+  schedule:
+    - cron: "17 */4 * * *"
+  workflow_dispatch:
+  push:
+    paths:
+      - scripts/update_crypto_market.py
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-crypto-market
+  cancel-in-progress: false
+
+jobs:
+  crypto-market:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build indices (daily history refreshed on the first run of each day)
+        run: |
+          if [ "$(date -u +%H)" -lt 4 ]; then python3 scripts/update_crypto_market.py --daily; else python3 scripts/update_crypto_market.py; fi
+      - name: Commit
+        run: |
+          git config user.name "ttm-calendar-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add crypto_market.json
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Auto-update crypto market indices"
+            for i in 1 2 3 4; do
+              git pull --rebase -X theirs origin main && git push && break
+              echo "Push attempt $i failed, retrying..."
+              sleep 5
+            done
+          fi

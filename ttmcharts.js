@@ -22,6 +22,15 @@ const EX = {
   bitget_spot: {n: 'Bitget Spot', list: async () => (await gj('https://api.bitget.com/api/v2/spot/market/tickers')).data.filter(t => /USDT$/.test(t.symbol)).map(t => ({s: t.symbol.slice(0, -4), vol: +t.usdtVolume, chg: +t.change24h * 100, px: +t.lastPr})),
     candles: async (s, tf, n, end) => kl((await gj(`https://api.bitget.com/api/v2/spot/market/candles?symbol=${s}USDT&granularity=${BGS[tf]}&limit=${n}${end ? '&endTime=' + end : ''}`)).data).sort((a, b) => a.t - b.t)}
 };
+
+// TTM Crypto Market: dominance, TOTAL, TOTAL3, OTHERS and ratios, built by scripts/update_crypto_market.py from CoinGecko (not TradingView data)
+const MKS = ['BTC.D', 'USDT.D', 'USDC.D', 'OTHERS.D', 'TOTAL', 'TOTAL3', 'OTHERS', 'OTHERSBTC', '(OTHERS-USDT)/BTC', '(TOTAL3-USDT)/BTC'];
+let MKD = null, MKT = 0; const mkLoad = async () => { if(MKD && Date.now() - MKT < 600000) return MKD; const r = await fetch(new URL('../crypto_market.json', location.href).href + '?_=' + Math.floor(Date.now() / 600000)); if(!r.ok) throw new Error('no data'); MKD = await r.json(); MKT = Date.now(); return MKD; };
+const mkRows = (B, sym) => { const v = B && B.s[sym]; if(!v) return []; const o = []; for(let j = 0; j < B.n; j++){ if(v[j] == null) continue; const c = v[j], p = o.length ? o[o.length - 1].c : c; o.push({t: B.t0 + j * B.step, o: p, h: Math.max(p, c), l: Math.min(p, c), c, v: 0}); } return o; };
+const mkAgg = (rows, ms) => { const out = []; rows.forEach(r => { const k = Math.floor(r.t / ms) * ms, L = out[out.length - 1]; if(L && L.t === k){ L.h = Math.max(L.h, r.h); L.l = Math.min(L.l, r.l); L.c = r.c; } else out.push({t: k, o: r.o, h: r.h, l: r.l, c: r.c, v: 0}); }); return out; };
+EX.ttm_market = {n: 'TTM Crypto Market', list: async () => { const d = await mkLoad(), B = d.h; return MKS.map(s => { const v = (B.s[s] || []).filter(x => x != null), c = v[v.length - 1], p = v[Math.max(0, v.length - 25)]; return {s, vol: 1e9 - MKS.indexOf(s), px: c, chg: p ? (c / p - 1) * 100 : 0}; }); },
+  candles: async (sym, tf, n, end) => { const d = await mkLoad(); if(!d.h.s[sym]) throw new Error('not an index'); let rows; if((tf === '1d' || tf === '1w') && d.d) rows = mkRows(d.d, sym); else rows = mkRows(d.h, sym); if(tf === '4h') rows = mkAgg(rows, 4 * H1); else if(tf === '1w') rows = mkAgg(rows, 7 * 864e5); else if(tf === '1d' && !d.d) rows = mkAgg(rows, 864e5); if(end) rows = rows.filter(r => r.t < end); return rows.slice(-n); }};
+const H1 = 3600000;
 // built-in indicators + the TTM slot. calc(rows) -> arrays aligned to rows (null where not ready)
 const ema = (rows, n) => { const k = 2 / (n + 1), out = []; let e = null; rows.forEach((r, i) => { e = i === 0 ? r.c : r.c * k + e * (1 - k); out.push(i >= n - 1 ? e : null); }); return out; };
 const sma = (rows, n) => rows.map((r, i) => i < n - 1 ? null : rows.slice(i - n + 1, i + 1).reduce((s, x) => s + x.c, 0) / n);
@@ -121,7 +130,8 @@ function syncTools(){ document.querySelectorAll('#ttc [data-tool]').forEach(b =>
 const dk = sym => 'draw_' + sym + (PANE ? '_p' + PANE : '');
 let PANE = '';
 function setSym(sym){ S.sym = sym; lsSet('sym', sym); S.draw = ls(dk(sym), []); S.hist = []; S.lastSaved = JSON.stringify(S.draw); S.lastKey = dk(sym); S.sel = null; selBar(); syncSym(); loadAll(); wlRender(); }
-function syncSym(){ const st = $('tcStar'); if(st){ const W = wlGet(), it = W.lists[W.cur].items; st.textContent = it.some(x => x.s === S.sym) ? '★' : '☆'; st.style.color = it.some(x => x.s === S.sym) ? '#dba118' : ''; }  $('tcSym').textContent = S.sym + '/USDT ▾'; }
+const pairOf = () => S.ex === 'ttm_market' ? S.sym : S.sym + '/USDT';
+function syncSym(){ const st = $('tcStar'); if(st){ const W = wlGet(), it = W.lists[W.cur].items; st.textContent = it.some(x => x.s === S.sym) ? '★' : '☆'; st.style.color = it.some(x => x.s === S.sym) ? '#dba118' : ''; }  $('tcSym').textContent = pairOf() + ' ▾'; }
 function setStatus(t){ const e = $('tcSt'); if(e) e.textContent = t; }
 const vd = () => S.rp.on ? S.data.slice(0, S.rp.idx + 1) : S.data;
 async function loadAll(first){
@@ -216,7 +226,7 @@ function papDraw(c, g, Y){ const L = papLines(), R = []; c.save(); c.font = 'bol
 const papHit = (x, y) => { const R = S.papR || []; for(let i = 0; i < R.length; i++){ const r = R[i]; if(r.part === 'x' && x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) return r; } for(let i = R.length - 1; i >= 0; i--){ const r = R[i]; if(r.part === 'body' && r.drag && x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) return r; } return null; };
 const papPx = y => S.sc.lo + (1 - (y - S.g.mT) / (S.g.mB - S.g.mT)) * (S.sc.hi - S.sc.lo);
 function tag(x, y, t, bg, fg){ const c = cx; c.fillStyle = bg; c.fillRect(x, y - 9, P.R - 2, 18); c.fillStyle = fg; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(t, x + 4, y); }
-function drawBrand(r, d){ const c = cx, g = S.g; if(logo.complete && logo.naturalWidth){ const h = 26, w = Math.min(70, logo.naturalWidth / logo.naturalHeight * h); c.drawImage(logo, 8, 5, w, h); } c.textAlign = 'left'; c.textBaseline = 'middle'; c.font = '800 14px system-ui,sans-serif'; c.fillStyle = '#e8e8ea'; c.fillText(S.sym + '/USDT · ' + S.tf + ' · ' + EX[S.ex].n, 84, 18);
+function drawBrand(r, d){ const c = cx, g = S.g; if(logo.complete && logo.naturalWidth){ const h = 26, w = Math.min(70, logo.naturalWidth / logo.naturalHeight * h); c.drawImage(logo, 8, 5, w, h); } c.textAlign = 'left'; c.textBaseline = 'middle'; c.font = '800 14px system-ui,sans-serif'; c.fillStyle = '#e8e8ea'; c.fillText(pairOf() + ' · ' + S.tf + ' · ' + EX[S.ex].n, 84, 18);
   c.font = '11px system-ui,sans-serif'; if(r){ const ch = d && d.length > 1 ? (r.c / (d[Math.max(0, d.indexOf(r) - 1)] || r).c - 1) * 100 : 0; c.fillStyle = r.c >= r.o ? '#3fb47a' : '#e0554d'; c.fillText(`O ${fx(r.o)}  H ${fx(r.h)}  L ${fx(r.l)}  C ${fx(r.c)}  (${ch >= 0 ? '+' : ''}${ch.toFixed(2)}%)  Vol ${r.v >= 1e6 ? (r.v / 1e6).toFixed(2) + 'M' : r.v >= 1e3 ? (r.v / 1e3).toFixed(1) + 'K' : r.v.toFixed(0)}`, 8, 36); }
   c.font = '11px system-ui,sans-serif'; }
 function shape(s, op){ const c = cx, g = S.g, Y = S.Y; c.globalAlpha = op; c.lineWidth = s === S.sel ? 3 : 1.6; const col = s.col || ({fib: '#b18cff', pa: '#ff9f68', tx: '#dba118'})[s.k] || '#4fd1c5'; const px = z => X(idxOfT(z.t)), a = s.a || s.pts[0], b = s.b || a, xa = px(a), ya = Y(a.p), xb = px(b), yb = Y(b.p); if(s.al && s.al.on && !s.al.done){ c.font = '12px system-ui'; c.fillStyle = '#dba118'; c.textAlign = 'left'; c.fillText('🔔', Math.max(4, Math.min(xa, g.pw - 40)) + 4, ya - 9); }
@@ -388,25 +398,26 @@ async function symPop(){
 }
 
 /* ---------- watchlists (5 lists, stars, sections; saved on this device) ---------- */
-const wlGet = () => { let W = ls('wl', null); if(!W || !W.lists){ W = {cur: 0, lists: [0, 1, 2, 3, 4].map(i => ({name: 'Watchlist ' + (i + 1), items: i ? [] : ['BTC', 'ETH', 'SOL'].map(s => ({s}))}))}; lsSet('wl', W); } return W; };
+const CMI = [{sec: 'Dominance'}, 'BTC.D', 'USDT.D', 'USDC.D', 'OTHERS.D', {sec: 'Market cap ($B)'}, 'TOTAL', 'TOTAL3', 'OTHERS', 'OTHERSBTC', {sec: 'Ratios'}, '(OTHERS-USDT)/BTC', '(TOTAL3-USDT)/BTC'].map(x => typeof x === 'string' ? {s: x, ex: 'ttm_market'} : x);
+const wlGet = () => { let W = ls('wl', null); if(!W || !W.lists){ W = {cur: 0, lists: [0, 1, 2, 3, 4].map(i => ({name: 'Watchlist ' + (i + 1), items: i ? [] : ['BTC', 'ETH', 'SOL'].map(s => ({s}))}))}; lsSet('wl', W); } if(!W.cmSeeded){ W.cmSeeded = 1; if(!W.lists.some(l => l.name === 'Crypto Market')) W.lists.push({name: 'Crypto Market', items: CMI.map(x => Object.assign({}, x))}); lsSet('wl', W); } return W; };
 const wlSave = W => lsSet('wl', W);
 function wlShow(on){ lsSet('wlopen', !!on); const p = $('tcWl'); if(!p) return; p.classList.toggle('on', !!on); const b = $('tcWlBtn'); if(b) b.classList.toggle('on', !!on); wlRender(); setTimeout(() => window.dispatchEvent(new Event('resize')), 30); if(on) wlRefresh(); }
-async function wlRefresh(){ const p = $('tcWl'); if(!S || !p || !p.classList.contains('on')) return; try{ S.list[S.ex] = (await EX[S.ex].list()).sort((a, b) => b.vol - a.vol); wlRender(); }catch(e){} }
+async function wlRefresh(){ const p = $('tcWl'); if(!S || !p || !p.classList.contains('on')) return; try{ S.list[S.ex] = (await EX[S.ex].list()).sort((a, b) => b.vol - a.vol); wlRender(); }catch(e){} try{ const W = wlGet(), xs = new Set(W.lists[W.cur].items.filter(i => i.ex && i.ex !== S.ex).map(i => i.ex)); for(const x of xs){ S.list[x] = await EX[x].list(); } if(xs.size) wlRender(); }catch(e){ } }
 function wlRender(){ const p = $('tcWl'); if(!p || !S || !p.classList.contains('on')) return; const W = wlGet(), L = W.lists[W.cur], px = {}; (S.list[S.ex] || []).forEach(x => { px[x.s] = x; });
   const keep = $('wlAddIn') ? $('wlAddIn').value : '', foc = document.activeElement && document.activeElement.id === 'wlAddIn';
   p.innerHTML = `<div class="wh"><select id="wlSel">${W.lists.map((l, i) => `<option value="${i}" ${i === W.cur ? 'selected' : ''}>${esc(l.name)} (${l.items.filter(x => x.s).length})</option>`).join('')}</select><button id="wlRen" title="Rename this list">✎</button><button id="wlSecB" title="Add a heading">+ Section</button></div>
     <div class="wh"><input id="wlAddIn" placeholder="Add a ticker, e.g. SOL" style="flex:1;min-width:0" value="${esc(keep)}"><button id="wlAdd">Add</button></div>
-    <div class="wb" id="wlBody">${L.items.length ? L.items.map((it, i) => it.sec != null ? `<div class="ws"><span>${esc(String(it.sec).toUpperCase())}</span><span class="wx" data-wx="${i}" style="cursor:pointer">✕</span></div>` : (x => `<div class="wr ${it.s === S.sym ? 'cur' : ''}" data-ws="${esc(it.s)}"><b>${esc(it.s)}</b><span>${x ? fx(x.px) : '—'}</span><span style="color:${x && x.chg < 0 ? '#e0554d' : '#3fb47a'}">${x ? (x.chg >= 0 ? '+' : '') + x.chg.toFixed(2) + '%' : ''}</span><span class="wx" data-wx="${i}">✕</span></div>`)(px[it.s])).join('') : '<div style="padding:12px;color:#8b8f9a;font-size:12px">Empty. Press ☆ next to a coin in the search, or the ☆ at the top, or type a ticker above.</div>'}</div>`;
+    <div class="wb" id="wlBody">${L.items.length ? L.items.map((it, i) => it.sec != null ? `<div class="ws"><span>${esc(String(it.sec).toUpperCase())}</span><span class="wx" data-wx="${i}" style="cursor:pointer">✕</span></div>` : (x => `<div class="wr ${it.s === S.sym ? 'cur' : ''}" data-ws="${esc(it.s)}" data-wex="${esc(it.ex || '')}"><b>${esc(it.s)}</b><span>${x ? fx(x.px) : '—'}</span><span style="color:${x && x.chg < 0 ? '#e0554d' : '#3fb47a'}">${x ? (x.chg >= 0 ? '+' : '') + x.chg.toFixed(2) + '%' : ''}</span><span class="wx" data-wx="${i}">✕</span></div>`)(((it.ex && it.ex !== S.ex ? (S.list[it.ex] || []) : (S.list[S.ex] || [])).find(z => z.s === it.s)))).join('') : '<div style="padding:12px;color:#8b8f9a;font-size:12px">Empty. Press ☆ next to a coin in the search, or the ☆ at the top, or type a ticker above.</div>'}</div>`;
   if(foc){ const i = $('wlAddIn'); i.focus(); i.setSelectionRange(keep.length, keep.length); } }
-function wlToggle(sym){ const W = wlGet(), L = W.lists[W.cur], k = L.items.findIndex(x => x.s === sym); if(k >= 0) L.items.splice(k, 1); else L.items.push({s: sym}); wlSave(W); syncSym(); wlRender(); }
+function wlToggle(sym){ const W = wlGet(), L = W.lists[W.cur], k = L.items.findIndex(x => x.s === sym); if(k >= 0) L.items.splice(k, 1); else L.items.push(S.ex === 'ttm_market' ? {s: sym, ex: 'ttm_market'} : {s: sym}); wlSave(W); syncSym(); wlRender(); }
 function wlWire(){ const p = $('tcWl'); if(!p || p.dataset.w) return; p.dataset.w = 1;
-  p.onchange = e => { if(e.target.id === 'wlSel'){ const W = wlGet(); W.cur = +e.target.value; wlSave(W); syncSym(); wlRender(); } };
+  p.onchange = e => { if(e.target.id === 'wlSel'){ const W = wlGet(); W.cur = +e.target.value; wlSave(W); syncSym(); wlRender(); wlRefresh(); } };
   p.onclick = e => { const t = e.target, W = wlGet(), L = W.lists[W.cur];
     if(t.dataset.wx != null){ L.items.splice(+t.dataset.wx, 1); wlSave(W); syncSym(); wlRender(); return; }
     if(t.id === 'wlRen'){ const n = prompt('Name this watchlist', L.name); if(n && n.trim()){ L.name = n.trim().slice(0, 24); wlSave(W); wlRender(); } return; }
     if(t.id === 'wlSecB'){ const n = prompt('Heading, e.g. MAJORS, DEX, AI'); if(n && n.trim()){ L.items.push({sec: n.trim().slice(0, 28)}); wlSave(W); wlRender(); } return; }
     if(t.id === 'wlAdd'){ wlAddTyped(); return; }
-    const r = t.closest('[data-ws]'); if(r) setSym(r.dataset.ws); };
+    const r = t.closest('[data-ws]'); if(r){ const ex = r.dataset.wex; if(ex && ex !== S.ex && EX[ex]){ S.ex = ex; lsSet('ex', ex); const sel = $('tcEx'); if(sel) sel.value = ex; S.list = {}; } setSym(r.dataset.ws); } };
   p.onkeydown = e => { if(e.key === 'Enter' && e.target.id === 'wlAddIn'){ e.preventDefault(); wlAddTyped(); } e.stopPropagation(); }; }
 function wlAddTyped(){ const i = $('wlAddIn'); if(!i) return; const s = i.value.trim().toUpperCase().replace(/(USDT|\/USDT|-USDT)$/, ''); if(!s) return; const W = wlGet(), L = W.lists[W.cur]; if(!(S.list[S.ex] || []).some(x => x.s === s)){ i.style.outline = '1px solid #e0554d'; i.title = 'Not found on ' + EX[S.ex].n; return; } i.style.outline = ''; if(!L.items.some(x => x.s === s)) L.items.push({s}); i.value = ''; wlSave(W); syncSym(); wlRender(); }
 /* ---------- split screen: 2, 3 or 4 charts side by side ---------- */
