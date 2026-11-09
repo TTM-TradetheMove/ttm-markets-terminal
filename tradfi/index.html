@@ -611,6 +611,13 @@ select{color-scheme:dark}select option,select optgroup{background:#16161a;color:
 select,select option{color-scheme:dark}select option{background:#16161a;color:#e8e6e1}
 .calendar-note{font-size:12.5px;color:var(--mute);line-height:1.6}
 
+.rt-bar{display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin:6px 0 4px}.rt-bar>div{display:flex;gap:6px;flex-wrap:wrap}
+.rt-heat{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.rt-tile{border:1px solid var(--line);border-radius:12px;padding:12px 14px;position:relative}.rt-tile b{display:block;font-size:15px;color:var(--text)}.rt-tile small{display:block;color:var(--mute);font-size:11px;margin-top:2px}.rt-tile .v{font-size:20px;font-weight:800;margin-top:8px;font-variant-numeric:tabular-nums}.rt-tile .rk{position:absolute;top:10px;right:12px;font-size:11px;color:var(--gold2);font-weight:800}
+.rt-up{color:var(--green);font-weight:700}.rt-dn{color:var(--red);font-weight:700}
+.rt-stages{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}@media(max-width:800px){.rt-stages{grid-template-columns:1fr 1fr}}@media(max-width:480px){.rt-stages{grid-template-columns:1fr}}
+.rt-st{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-height:96px}.rt-st h4{margin:0 0 2px;font-size:13px;color:var(--gold2)}.rt-st p{margin:0 0 8px;font-size:11.5px;color:var(--mute)}.rt-st span{display:inline-block;margin:0 5px 5px 0;padding:3px 9px;border-radius:999px;border:1px solid var(--gold);color:var(--text);font-size:12px;font-weight:700}
+.rt-sc{display:flex;align-items:center;gap:10px;margin-bottom:8px}.rt-sc .n{font-size:30px;font-weight:800;color:var(--gold2);font-variant-numeric:tabular-nums;line-height:1}.rt-bar2{height:5px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin:3px 0 7px}.rt-bar2 i{display:block;height:100%;background:var(--gold)}.rt-cl{font-size:11.5px;color:var(--mute);display:flex;justify-content:space-between}
+.rt-svg text{font-family:inherit}
 </style>
 </head>
 <body data-terminal="tradfi">
@@ -625,6 +632,7 @@ select,select option{color-scheme:dark}select option{background:#16161a;color:#e
       <a href="#tradinghours">Trading Hours</a>
       <a href="#congress">Congress Watch</a>
       <a href="#globalmarkets">Global Markets</a>
+      <a href="#rotation">Sector Rotation <small style="background:var(--gold);color:#111;border-radius:4px;padding:1px 4px;font-size:8px;font-weight:800">NEW</small></a>
       <a href="#bonds">Bonds &amp; Rates</a>
       <a href="#macrointel">Macro Intel</a>
       <a href="#propertycycle">Property Cycle</a>
@@ -641,7 +649,7 @@ select,select option{color-scheme:dark}select option{background:#16161a;color:#e
   <h1>Traditional markets, <em>the TTM way.</em></h1>
   <p>Same macro calendar and session clock as the Crypto terminal, built out here for forex, indices, commodities and stocks. Global market coverage below is actively being built — calendar and trading hours are live now.</p>
 </div>
-<div id="menuHome"><div class="wrap"><h2>TTM Investments</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#holdings"><b>TTM Spot</b><span>What TTM holds in TradFi, as % of the portfolio, plus cash</span></a></div><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tfcalc"><b>Risk / Reward Tooling</b><span>Position size, risk and targets for forex, indices, commodities and stocks</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#congress"><b>Congress Watch</b><span>Congress trading disclosures</span></a><a class="menu-tile" href="#globalmarkets"><b>Global Markets</b><span>Indices, FX, metals and energy</span></a><a class="menu-tile" href="#bonds"><b>Bonds &amp; Rates</b><span>Yields, curves and policy rates</span></a><a class="menu-tile" href="#propertycycle"><b>Property Cycle <small style="background:var(--gold);color:#111;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:800">BETA</small></b><span>The 18-year real estate cycle across the US, AU, UK and more</span></a><a class="menu-tile" href="#macrointel"><b>Macro Intel</b><span>Central banks and financial conditions</span></a><a class="menu-tile" href="#newsrisk"><b>News &amp; Risk</b><span>Headlines and risk watch</span></a></div></div></div>
+<div id="menuHome"><div class="wrap"><h2>TTM Investments</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#holdings"><b>TTM Spot</b><span>What TTM holds in TradFi, as % of the portfolio, plus cash</span></a></div><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tfcalc"><b>Risk / Reward Tooling</b><span>Position size, risk and targets for forex, indices, commodities and stocks</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#congress"><b>Congress Watch</b><span>Congress trading disclosures</span></a><a class="menu-tile" href="#globalmarkets"><b>Global Markets</b><span>Indices, FX, metals and energy</span></a><a class="menu-tile" href="#rotation"><b>Sector Rotation <small style="background:var(--gold);color:#111;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:800">NEW</small></b><span>Where money is rotating between the 11 US sectors, with scores and stages</span></a><a class="menu-tile" href="#bonds"><b>Bonds &amp; Rates</b><span>Yields, curves and policy rates</span></a><a class="menu-tile" href="#propertycycle"><b>Property Cycle <small style="background:var(--gold);color:#111;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:800">BETA</small></b><span>The 18-year real estate cycle across the US, AU, UK and more</span></a><a class="menu-tile" href="#macrointel"><b>Macro Intel</b><span>Central banks and financial conditions</span></a><a class="menu-tile" href="#newsrisk"><b>News &amp; Risk</b><span>Headlines and risk watch</span></a></div></div></div>
 <button id="backFab" type="button">&larr; Menu</button>
 <div id="backBar"><div class="wrap"><button id="backBtn" type="button">&larr; Back to menu</button><span id="backTitle"></span></div></div>
 <section id="calendar">
@@ -998,6 +1006,37 @@ window.addEventListener('hashchange', () => { if(location.hash === '#holdings') 
       <div class="tf-card tf-scroll" id="tfRanges"><div class="tf-empty">Loading…</div></div>
     </div>
     <p class="calendar-note" style="margin-top:12px">Breadth is a proxy, not exchange advance/decline data: it counts the 11 S&amp;P 500 sector ETFs and 7 tracked indices that are up on the day, and compares equal-weight (RSP) with cap-weight (SPY) performance. Open/closed status follows regular cash-session hours and does not account for public holidays.</p>
+  </div>
+</section>
+
+<section id="rotation" class="alt">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">Sector Rotation <small style="background:var(--gold);color:#111;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:800">NEW</small></span>
+      <h2>Where is money rotating?</h2>
+      <p>The 11 US sector ETFs against the S&amp;P 500: returns, relative strength, rotation signals, the TTM Rotation Score and the stage each sector is in. Built to spot a sector turning up <b>early</b> (Stage 2), before it is obvious.</p>
+      <p id="rtUpdated" class="calendar-note" style="margin-top:8px">Loading rotation data…</p>
+    </div>
+    <div class="rt-bar">
+      <div id="rtTf"><button class="filter-chip" data-k="1">1D</button><button class="filter-chip" data-k="5">1W</button><button class="filter-chip active" data-k="21">1M</button><button class="filter-chip" data-k="63">3M</button><button class="filter-chip" data-k="ytd">YTD</button></div>
+      <div id="rtMode"><button class="filter-chip" data-m="abs">Absolute return</button><button class="filter-chip active" data-m="rel">Versus S&amp;P 500</button></div>
+    </div>
+    <div class="tf-sub">Sector heatmap</div>
+    <div class="rt-heat" id="rtHeat"><div class="tf-card tf-empty">Loading…</div></div>
+    <div class="tf-sub">Strength ranking &amp; rotation signal</div>
+    <div class="tf-card tf-scroll"><table class="tf-table" id="rtRank"><tbody><tr><td class="tf-empty">Loading…</td></tr></tbody></table></div>
+    <div class="tf-sub">Rotation radar (relative strength vs momentum)</div>
+    <div class="tf-card" id="rtRadar"><div class="tf-empty">Loading…</div></div>
+    <div class="tf-sub">Multi-timeframe momentum (vs S&amp;P 500, % points)</div>
+    <div class="tf-card tf-scroll"><table class="tf-table" id="rtMtf"><tbody><tr><td class="tf-empty">Loading…</td></tr></tbody></table></div>
+    <div class="tf-sub">TTM Rotation Score &amp; stages</div>
+    <div class="rt-stages" id="rtStages"></div>
+    <div class="tf-grid" id="rtScores" style="margin-top:14px"></div>
+    <div class="tf-sub">Macro context</div>
+    <div class="tf-grid" id="rtMacro"></div>
+    <div class="tf-sub">Back-test of the Stage 2 signal (last year)</div>
+    <div class="tf-card" id="rtBack"><div class="tf-empty">Loading…</div></div>
+    <p class="calendar-note" style="margin-top:12px"><b>How the score works.</b> 0–100, from relative-strength improvement (30%), breadth expansion (25%, equal-weight vs cap-weight sector ETF), volume accumulation (20%) and macro confirmation (10%). Individual-stock leadership (15%) needs constituent data and is coming next, so the score is scaled over the 85% that is live. Bands: 0–29 weak, 30–49 developing, 50–69 early warning, 70–84 confirming, 85+ strong. Educational research only, not financial advice. Rotation alerts for members stay off until the back-test is proven over a longer history.</p>
   </div>
 </section>
 
@@ -2229,6 +2268,109 @@ setInterval(() => {
       else if(t.dataset.pl === 'open'){ if(!confirm('Load "' + p.name + '" and open it?')) return; IDS.forEach(k => { if(p.v[k] != null) $(k).value = p.v[k]; }); long = p.v.long !== false; $('txLong').className = long ? 'on' : ''; $('txShort').className = long ? '' : 'on short'; calc(); const m = openTrade(LAST, p.v.txOpenType === 'lo'); note.textContent = m || 'Opened ' + p.name + ' in TradFi investments.'; } }
     else if(t.id === 'txOpen'){ const m = openTrade(LAST, $('txOpenType').value === 'lo'); note.textContent = m || (LAST ? 'Opened ' + LAST.sym + ' in TradFi investments. See TTM Holdings.' : 'Fix the warnings first.'); if(!LAST) note.textContent = 'Fill in the entry, stop and symbol first.'; } });
   setTimeout(plans, 900); setTimeout(plans, 3000); calc();
+})();
+</script>
+<script>
+(function(){
+const $ = id => document.getElementById(id), esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const SEC = [['XLK','Technology'],['XLC','Communication'],['XLY','Consumer Disc.'],['XLP','Consumer Staples'],['XLF','Financials'],['XLV','Health Care'],['XLI','Industrials'],['XLE','Energy'],['XLB','Materials'],['XLU','Utilities'],['XLRE','Real Estate']];
+const NM = Object.fromEntries(SEC), STG = ['Dormant','Early accumulation','Rotation confirmation','Established leadership'];
+const SIGC = {Leading:'ok',Improving:'blue',Weakening:'warn',Lagging:'bad'};
+let D = null, TF = '21', MODE = 'rel', R = null, BT = null;
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x)), mean = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;
+const fp = (v, d) => v == null || !isFinite(v) ? '—' : (v > 0 ? '+' : '') + v.toFixed(d == null ? 2 : d) + '%';
+const cls = v => v == null ? '' : v >= 0 ? 'rt-up' : 'rt-dn';
+function ret(sym, i, k){
+  const c = D.close[sym]; if(!c) return null;
+  let j;
+  if(k === 'ytd'){ const y = D.dates[i].slice(0, 4); j = -1; for(let t = i; t >= 0; t--){ if(D.dates[t].slice(0, 4) < y){ j = t; break; } } if(j < 0) j = 0; } else j = i - k;
+  if(j < 0 || c[i] == null || c[j] == null) return null; return (c[i] / c[j] - 1) * 100;
+}
+function rsx(s, i){ const c = D.close[s], b = D.close.SPY; if(i < 50) return null; let sum = 0; for(let t = i - 49; t <= i; t++){ if(c[t] == null || !b[t]) return null; sum += c[t] / b[t]; } return 100 * (c[i] / b[i]) / (sum / 50); }
+const MAC = {XLE:[['CL=F',1,8]],XLB:[['HG=F',1,5],['DX-Y.NYB',-1,2]],XLF:[['^TNX',1,6]],XLK:[['^TNX',-1,6]],XLU:[['^TNX',-1,6]],XLRE:[['^TNX',-1,6]],XLP:[['^VIX',1,20]],XLV:[['^VIX',1,20]],XLY:[['^VIX',-1,20],['HG=F',1,5]],XLI:[['HG=F',1,5],['^VIX',-1,20]],XLC:[['^VIX',-1,20]]};
+function volRatio(s, i){ const v = D.vol && D.vol[s]; if(!v || i < 60) return null; const a = v.slice(i - 19, i + 1).filter(x => x), b = v.slice(i - 59, i + 1).filter(x => x); if(a.length < 12 || b.length < 40) return null; return mean(a) / mean(b); }
+function calcAt(i){
+  const out = {};
+  for(const [s] of SEC){
+    if(!D.close[s]) continue;
+    const r = {}; for(const k of [1, 5, 21, 63, 'ytd']){ const a = ret(s, i, k), b = ret('SPY', i, k); r[k] = a; r['r' + k] = a == null || b == null ? null : a - b; }
+    const x = rsx(s, i), x0 = rsx(s, i - 5); let y = x != null && x0 != null ? 100 + (x - x0) : null;
+    const sig = x == null || y == null ? null : x >= 100 ? (y >= 100 ? 'Leading' : 'Weakening') : (y >= 100 ? 'Improving' : 'Lagging');
+    const comp = {};
+    if(r.r21 != null && r.r5 != null && r.r63 != null) comp.rs = clamp(50 + 8 * (0.5 * r.r21 + 1.0 * r.r5 + 0.25 * (r.r21 - r.r63 / 3)), 0, 100);
+    const ew = D.ew && D.ew[s]; if(ew && D.close[ew]){ const e1 = ret(ew, i, 21), e3 = ret(ew, i, 63), c1 = r[21], c3 = r[63]; if(e1 != null && e3 != null && c1 != null && c3 != null) comp.breadth = clamp(50 + 10 * (e1 - c1) + 5 * (e3 - c3), 0, 100); }
+    const vr = volRatio(s, i); if(vr != null && r.r21 != null) comp.vol = clamp(50 + (vr - 1) * 100 * (r.r21 >= 0 ? 1.2 : -1.2), 0, 100);
+    const rules = MAC[s] || []; const sg = rules.map(([a, d, t]) => { const m = ret(a, i, 21); return m == null ? null : clamp(m / t, -1, 1) * d; }).filter(z => z != null); if(sg.length) comp.macro = 50 + 50 * mean(sg);
+    const W = {rs: .30, breadth: .25, vol: .20, macro: .10}; let tw = 0, ts = 0; for(const k in comp){ tw += W[k]; ts += W[k] * comp[k]; }
+    const score = tw >= .5 ? Math.round(ts / tw) : null;
+    let st = 0;
+    if(score != null){
+      if(sig === 'Leading' && r.r63 > 0 && r.r21 > 0 && score >= 50) st = 3;
+      else if(score >= 70 && (sig === 'Leading' || sig === 'Improving')) st = 2;
+      else if(score >= 40 && r.r5 > 0 && sig !== 'Leading') st = 1;
+    }
+    out[s] = {r, x, y, sig, comp, score, st};
+  }
+  return out;
+}
+function band(sc){ return sc == null ? '—' : sc < 30 ? 'Weak' : sc < 50 ? 'Developing' : sc < 70 ? 'Early warning' : sc < 85 ? 'Confirming' : 'Strong'; }
+function backtest(){
+  const n = D.dates.length, res = {1: [], 2: []}, base = []; let prev = {}, lastE = {};
+  for(let i = 64; i < n - 21; i++){
+    const c = calcAt(i);
+    for(const [s] of SEC){
+      const z = c[s]; if(!z) continue;
+      const a = D.close[s][i + 21] / D.close[s][i] - 1, b = D.close.SPY[i + 21] / D.close.SPY[i] - 1, fw = (a - b) * 100; if(!isFinite(fw)) continue;
+      base.push(fw);
+      for(const g of [1, 2]){ const hit = g === 1 ? z.st === 1 : z.st === 2; const key = s + g; if(hit && prev[key] !== true && (lastE[key] == null || i - lastE[key] >= 10)){ res[g].push(fw); lastE[key] = i; } prev[key] = hit; }
+    }
+  }
+  return {res, base, days: n};
+}
+function pill(sig){ return sig ? `<span class="tf-pill ${SIGC[sig]}">${sig}</span>` : '—'; }
+function heatBg(v, k){ if(v == null) return 'transparent'; const sc = ({1: 2, 5: 4, 21: 8, 63: 15, ytd: 25}[k]) / (MODE === 'rel' ? 2 : 1), a = clamp(Math.abs(v) / sc, 0, 1) * .5 + .06; return v >= 0 ? `rgba(63,185,122,${a})` : `rgba(229,83,75,${a})`; }
+function render(){
+  const i = D.dates.length - 1; R = calcAt(i); const key = MODE === 'rel' ? 'r' + TF : TF;
+  const rows = SEC.filter(([s]) => R[s]).map(([s, n]) => ({s, n, z: R[s], v: R[s].r[key]})).sort((a, b) => (b.v == null ? -99 : b.v) - (a.v == null ? -99 : a.v));
+  $('rtHeat').innerHTML = rows.map((o, k) => `<div class="rt-tile" style="background:${heatBg(o.v, TF)}"><span class="rk">#${k + 1}</span><b>${o.s}</b><small>${esc(o.n)}</small><div class="v ${cls(o.v)}">${fp(o.v)}</div></div>`).join('');
+  $('rtRank').innerHTML = `<thead><tr><th>#</th><th>ETF</th><th>Sector</th><th class="num">${MODE === 'rel' ? 'vs S&amp;P' : 'Return'}</th><th class="num">Abs</th><th>Signal</th><th>Stage</th><th class="num">Score</th></tr></thead><tbody>` + rows.map((o, k) => `<tr><td>${k + 1}</td><td><b>${o.s}</b></td><td>${esc(o.n)}</td><td class="num ${cls(o.v)}">${fp(o.v)}</td><td class="num ${cls(o.z.r[TF])}">${fp(o.z.r[TF])}</td><td>${pill(o.z.sig)}</td><td>${o.z.st ? 'Stage ' + (o.z.st + 1) : 'Stage 1'}</td><td class="num"><b>${o.z.score == null ? '—' : o.z.score}</b></td></tr>`).join('') + '</tbody>';
+  // radar
+  const pts = SEC.filter(([s]) => R[s] && R[s].x != null && R[s].y != null).map(([s]) => ({s, x: R[s].x, y: R[s].y, sig: R[s].sig}));
+  const dx = Math.max(2, ...pts.map(p => Math.abs(p.x - 100))) * 1.15, dy = Math.max(.5, ...pts.map(p => Math.abs(p.y - 100))) * 1.15, W = 640, H = 380, px = v => 20 + (v - (100 - dx)) / (2 * dx) * (W - 40), py = v => H - 20 - (v - (100 - dy)) / (2 * dy) * (H - 40);
+  const qc = {Leading: '#3fb97a', Improving: '#60a5fa', Weakening: '#fbbf24', Lagging: '#e5534b'};
+  $('rtRadar').innerHTML = `<svg class="rt-svg" viewBox="0 0 ${W} ${H}" style="width:100%;height:auto"><rect x="${px(100)}" y="0" width="${W - px(100)}" height="${py(100)}" fill="rgba(63,185,122,.08)"/><rect x="0" y="0" width="${px(100)}" height="${py(100)}" fill="rgba(96,165,250,.08)"/><rect x="${px(100)}" y="${py(100)}" width="${W - px(100)}" height="${H - py(100)}" fill="rgba(251,191,36,.08)"/><rect x="0" y="${py(100)}" width="${px(100)}" height="${H - py(100)}" fill="rgba(229,83,75,.08)"/><line x1="${px(100)}" y1="0" x2="${px(100)}" y2="${H}" stroke="#555"/><line x1="0" y1="${py(100)}" x2="${W}" y2="${py(100)}" stroke="#555"/><text x="${W - 8}" y="16" text-anchor="end" fill="#3fb97a" font-size="12" font-weight="700">LEADING</text><text x="8" y="16" fill="#60a5fa" font-size="12" font-weight="700">IMPROVING</text><text x="${W - 8}" y="${H - 8}" text-anchor="end" fill="#fbbf24" font-size="12" font-weight="700">WEAKENING</text><text x="8" y="${H - 8}" fill="#e5534b" font-size="12" font-weight="700">LAGGING</text>` + pts.map(p => `<circle cx="${px(p.x).toFixed(1)}" cy="${py(p.y).toFixed(1)}" r="7" fill="${qc[p.sig]}" stroke="#111"/><text x="${(px(p.x) + 10).toFixed(1)}" y="${(py(p.y) + 4).toFixed(1)}" fill="#e8e6e1" font-size="12" font-weight="700">${p.s}</text>`).join('') + `</svg><div class="tf-note">Right = outperforming the S&amp;P 500 over the last ~10 weeks. Up = relative strength rising over the last week. Sectors moving Lagging → Improving are the early rotation candidates.</div>`;
+  // mtf
+  const mk = k => k === 'ytd' ? 'YTD' : ({1: '1D', 5: '1W', 21: '1M', 63: '3M'})[k];
+  $('rtMtf').innerHTML = `<thead><tr><th>ETF</th><th>Sector</th>${[1, 5, 21, 63, 'ytd'].map(k => `<th class="num">${mk(k)}</th>`).join('')}<th>Trend</th></tr></thead><tbody>` + SEC.filter(([s]) => R[s]).map(([s, n]) => { const r = R[s].r, up = [r.r5, r.r21, r.r63].filter(v => v != null && v > 0).length; return `<tr><td><b>${s}</b></td><td>${esc(n)}</td>${[1, 5, 21, 63, 'ytd'].map(k => `<td class="num ${cls(r['r' + k])}" style="background:${heatBg(r['r' + k], k).replace(/[\d.]+\)$/, m => (parseFloat(m) * .6).toFixed(2) + ')')}">${fp(r['r' + k])}</td>`).join('')}<td>${up === 3 ? '<span class="rt-up">Strong, all 3 up</span>' : up === 0 ? '<span class="rt-dn">Weak, all 3 down</span>' : up + ' of 3 up'}</td></tr>`; }).join('') + '</tbody>';
+  // stages
+  const stDesc = ['Quiet, no clear edge', 'Relative strength turning up, volume and breadth building. The one to catch.', 'Score 70+, outperformance confirmed', 'Already leading over 1M and 3M'];
+  $('rtStages').innerHTML = [0, 1, 2, 3].map(st => `<div class="rt-st"><h4>Stage ${st + 1} · ${STG[st]}</h4><p>${stDesc[st]}</p>${SEC.filter(([s]) => R[s] && R[s].st === st).map(([s]) => `<span>${s}</span>`).join('') || '<small style="color:var(--mute)">None</small>'}</div>`).join('');
+  const sc = SEC.filter(([s]) => R[s] && R[s].score != null).sort((a, b) => R[b[0]].score - R[a[0]].score);
+  const CL = {rs: 'Relative strength (30%)', breadth: 'Breadth (25%)', vol: 'Volume (20%)', macro: 'Macro (10%)'};
+  $('rtScores').innerHTML = sc.map(([s, n]) => { const z = R[s]; return `<div class="tf-card"><div class="rt-sc"><div class="n">${z.score}</div><div><b>${s}</b> ${esc(n)}<div class="tf-note" style="margin:0">${band(z.score)} · ${pill(z.sig)}</div></div></div><div class="rt-bar2"><i style="width:${z.score}%"></i></div>${Object.keys(CL).map(k => z.comp[k] == null ? '' : `<div class="rt-cl"><span>${CL[k]}</span><span>${Math.round(z.comp[k])}</span></div><div class="rt-bar2"><i style="width:${z.comp[k]}%;opacity:.6"></i></div>`).join('')}</div>`; }).join('');
+  // macro
+  const MA = [['^TNX', 'US 10Y yield'], ['DX-Y.NYB', 'US dollar (DXY)'], ['HG=F', 'Copper'], ['GC=F', 'Gold'], ['CL=F', 'Crude oil'], ['^VIX', 'VIX']];
+  $('rtMacro').innerHTML = MA.filter(([s]) => D.close[s]).map(([s, n]) => { const c = D.close[s]; return `<div class="tf-card"><div class="tf-note" style="margin:0 0 4px">${n}</div><b style="font-size:20px">${c[i].toLocaleString('en-US', {maximumFractionDigits: 2})}</b><div class="tf-note">1M <span class="${cls(ret(s, i, 21))}">${fp(ret(s, i, 21))}</span> · 3M <span class="${cls(ret(s, i, 63))}">${fp(ret(s, i, 63))}</span></div></div>`; }).join('') + `<div class="tf-card"><div class="tf-note" style="margin:0 0 4px">Rules used</div><div style="font-size:12px;color:var(--mute);line-height:1.5">Energy ↔ oil · Materials ↔ copper, weak USD · Financials ↔ rising yields · Tech, Utilities, Real Estate ↔ falling yields · Staples, Health ↔ rising VIX · Cyclicals ↔ falling VIX.</div></div>`;
+}
+function paintBack(){
+  if(!BT) BT = backtest(); const st = a => a.length ? {n: a.length, hit: a.filter(x => x > 0).length / a.length * 100, avg: mean(a)} : null, b = st(BT.base), a2 = st(BT.res[1]), a3 = st(BT.res[2]);
+  const row = (t, s) => s ? `<tr><td>${t}</td><td class="num">${s.n}</td><td class="num">${s.hit.toFixed(0)}%</td><td class="num ${cls(s.avg)}">${fp(s.avg)}</td></tr>` : `<tr><td>${t}</td><td class="num" colspan="3">no signals</td></tr>`;
+  $('rtBack').innerHTML = `<div class="tf-scroll"><table class="tf-table"><thead><tr><th>Entry signal</th><th class="num">Signals</th><th class="num">Beat S&amp;P next 1M</th><th class="num">Avg 1M vs S&amp;P</th></tr></thead><tbody>${row('Stage 2 · Early accumulation (new entry)', a2)}${row('Stage 3 · Rotation confirmation (new entry)', a3)}${row('Any sector, any day (baseline)', b)}</tbody></table></div><div class="tf-note">Each sector's first day in a stage (10-day cool-off), then its return versus the S&amp;P 500 over the next 21 trading days. Only about one year of history (${BT.days} days) so this is a sanity check, <b>not proof</b>. Stage 2 should beat the baseline before member alerts are switched on.</div>`;
+}
+function wire(){
+  $('rtTf').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if(!b) return; TF = b.dataset.k; document.querySelectorAll('#rtTf .filter-chip').forEach(c => c.classList.toggle('active', c === b)); render(); });
+  $('rtMode').addEventListener('click', e => { const b = e.target.closest('[data-m]'); if(!b) return; MODE = b.dataset.m; document.querySelectorAll('#rtMode .filter-chip').forEach(c => c.classList.toggle('active', c === b)); render(); });
+}
+function load(){
+  fetch('../tradfi_rotation.json?t=' + Date.now()).then(r => r.ok ? r.json() : null).catch(() => null).then(j => {
+    if(!j || !j.close || !j.close.SPY){ $('rtUpdated').textContent = 'Waiting for the first rotation data run (it is built with the TradFi data job).'; return; }
+    D = j; const t = new Date(j.generated_at || 0), last = j.dates[j.dates.length - 1];
+    $('rtUpdated').textContent = 'Updated ' + (j.generated_at ? t.toLocaleString() : '') + ' · latest close ' + last + ' · US cash session ' + (usOpen() ? 'OPEN (last price is live-ish, delayed up to 15 min)' : 'CLOSED');
+    wire(); render(); setTimeout(paintBack, 50);
+  });
+}
+function usOpen(){ const p = new Intl.DateTimeFormat('en-US', {timeZone: 'America/New_York', weekday: 'short', hour: 'numeric', minute: 'numeric', hour12: false}).formatToParts(new Date()), g = t => p.find(x => x.type === t).value, m = (+g('hour') % 24) * 60 + +g('minute'); return !['Sat', 'Sun'].includes(g('weekday')) && m >= 570 && m < 960; }
+load();
 })();
 </script>
 <script src="../accounts.js?v=1793900008"></script>

@@ -43,6 +43,7 @@ jobs:
           git add tradfi_markets.json 2>/dev/null || true
           git add tradfi_rates.json 2>/dev/null || true
           git add tradfi_news.json 2>/dev/null || true
+          git add tradfi_rotation.json 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else

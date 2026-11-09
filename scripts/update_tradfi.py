@@ -133,6 +133,10 @@ SECTORS = [("XLK", "Tech"), ("XLF", "Financials"), ("XLE", "Energy"), ("XLV", "H
 OTHERS = [("^VIX", "VIX"), ("DX-Y.NYB", "US Dollar Index (DXY)"), ("GC=F", "Gold"), ("CL=F", "WTI Crude"),
           ("HG=F", "Copper"), ("^TNX", "US 10Y yield"), ("BTC-USD", "Bitcoin"), ("RSP", "S&P 500 Equal Weight"),
           ("SPY", "S&P 500 ETF")]
+# equal-weight sector ETFs (Invesco) - used as the breadth-expansion proxy in the rotation model
+EW = [("RSPT", "EW Tech"), ("RSPF", "EW Financials"), ("RSPG", "EW Energy"), ("RSPH", "EW Health Care"),
+      ("RSPD", "EW Cons. Disc."), ("RSPS", "EW Cons. Staples"), ("RSPN", "EW Industrials"), ("RSPM", "EW Materials"),
+      ("RSPU", "EW Utilities"), ("RSPR", "EW Real Estate"), ("RSPC", "EW Comm. Svcs")]
 
 
 def yahoo(sym):
@@ -154,7 +158,7 @@ def yahoo(sym):
                 if c is None:
                     continue
                 d = dt.datetime.fromtimestamp(t + off, dt.timezone.utc).date().isoformat()
-                series.append((d, float(c), qd["high"][i], qd["low"][i]))
+                series.append((d, float(c), qd["high"][i], qd["low"][i], (qd.get("volume") or [None] * len(ts))[i]))
             if len(series) < 5:
                 continue
             return meta, series, off
@@ -202,10 +206,40 @@ def build_quote(sym, name, meta, series, off):
     return q, dict(zip(fdates, full))
 
 
+VOL = {}
+EW_MAP = {"XLK": "RSPT", "XLF": "RSPF", "XLE": "RSPG", "XLV": "RSPH", "XLY": "RSPD", "XLP": "RSPS",
+          "XLI": "RSPN", "XLB": "RSPM", "XLU": "RSPU", "XLRE": "RSPR", "XLC": "RSPC"}
+
+
+def build_rotation(hist):
+    """One year of aligned daily closes + volumes for the sector-rotation page (maths runs in the browser)."""
+    spy = hist.get("SPY")
+    if not spy:
+        return None
+    dates = sorted(spy)
+    want = [s for s, _ in SECTORS] + [s for s, _ in EW] + ["SPY", "RSP", "^VIX", "DX-Y.NYB", "GC=F", "CL=F", "HG=F", "^TNX"]
+    close, vol = {}, {}
+    for sym in want:
+        h = hist.get(sym)
+        if not h:
+            continue
+        last, row, vrow = None, [], []
+        for d in dates:
+            if d in h:
+                last = h[d]
+            row.append(rnd(last, 4) if last is not None else None)
+            vrow.append(VOL.get(sym, {}).get(d))
+        close[sym] = row
+        if sym in VOL and sym in [s for s, _ in SECTORS] + ["SPY"]:
+            vol[sym] = vrow
+    return {"dates": dates, "close": close, "vol": vol,
+            "names": {s: n for s, n in SECTORS}, "ew": EW_MAP}
+
+
 def fetch_markets():
     from concurrent.futures import ThreadPoolExecutor
     quotes, hist = {}, {}
-    allsyms = ([(s, n) for s, n, _ in INDICES] + SECTORS + OTHERS)
+    allsyms = ([(s, n) for s, n, _ in INDICES] + SECTORS + OTHERS + EW)
     region = {s: r for s, _, r in INDICES}
     with ThreadPoolExecutor(max_workers=6) as ex:
         results = list(ex.map(lambda sn: yahoo(sn[0]), allsyms))
@@ -214,6 +248,7 @@ def fetch_markets():
             log(f"yahoo: no data for {sym}")
             continue
         q, h = build_quote(sym, name, *got)
+        VOL[sym] = {r[0]: r[4] for r in got[1] if len(r) > 4 and r[4]}
         if sym in region:
             q["region"] = region[sym]
         quotes[sym] = q
@@ -872,6 +907,15 @@ def main():
     news_new = res("news", {}) or {}
 
     mk_new.pop("sectors_quotes", None)
+    try:
+        rot = build_rotation(hist) if hist else None
+        if rot:
+            rot["generated_at"] = now_iso()
+            with open(os.path.join(ROOT, "tradfi_rotation.json"), "w") as f:
+                json.dump(rot, f, separators=(",", ":"))
+            log(f"wrote tradfi_rotation.json ({len(rot['close'])} series, {len(rot['dates'])} days)")
+    except Exception as e:  # noqa
+        log(f"rotation FAILED: {type(e).__name__}: {e}")
     merge_write("tradfi_markets.json", mk_new)
     merge_write("tradfi_rates.json", rates_new)
     merge_write("tradfi_news.json", news_new)
