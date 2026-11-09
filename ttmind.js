@@ -52,16 +52,16 @@ push({id: 'ttmema', name: 'TTM EMA cloud + signals', pane: 'overlay', calc: r =>
     R.sig.forEach(s => { if(s.i < a.i0 || s.i > a.i1) return; const x = X(s.i), r = d[s.i], low = s.k === 'EL' || s.k === 'CB'; tagL(c, x, low ? Y(r.l) : Y(r.h), s.k, s.k === 'EL' ? '#2e9e4f' : s.k === 'ES' ? '#d93a35' : s.k === 'CB' ? '#00c853' : '#8b1a1a', '#fff', !low); }); }});
 
 /* 5. CME gap (Friday 21:00 UTC close to Monday open), BTC / ETH / XRP / SOL only. Hidden once filled. */
-push({id: 'cme', name: 'CME gap (TTM)', pane: 'overlay', calc: (r, S) => {
+push({id: 'cme', name: 'Old Style CME (TTM)', pane: 'overlay', calc: (r, S) => {
   const out = {}; if(!r.length) return out; let fri = null;
   for(let i = 0; i < r.length; i++){ const u = utc(r[i].t); if(u.dow === 5 && u.min <= 21 * 60) fri = {i, c: r[i].c}; else if(u.dow === 1 && fri && i > fri.i && (i === 0 || utc(r[i - 1].t).dow !== 1)){ out.g = {a: fri.i, m: i, close: fri.c, top: Math.max(fri.c, r[i].o), bot: Math.min(fri.c, r[i].o)}; fri = null; } }
   if(fri && !out.g) out.fri = fri; else if(fri && out.g && fri.i > out.g.m) { out.fri = fri; out.g = null; }
   if(out.g){ let h = r[out.g.m].h, l = r[out.g.m].l; out.g.fill = null; for(let i = out.g.m; i < r.length; i++){ h = Math.max(h, r[i].h); l = Math.min(l, r[i].l); if(Math.min(out.g.top, h) - Math.max(out.g.bot, l) >= (out.g.top - out.g.bot) * .9999 && out.g.fill == null) out.g.fill = i; } out.g.pct = Math.min(1, (Math.min(out.g.top, h) - Math.max(out.g.bot, l)) / ((out.g.top - out.g.bot) || 1)); }
   return out; },
-  alerts: [{k: 'fill', name: 'CME gap filled'}], alertHits: (r, R) => R && R.g && R.g.fill != null ? [{i: R.g.fill, k: 'fill'}] : [],
+  alerts: [{k: 'fill', name: 'Old Style CME filled'}], alertHits: (r, R) => R && R.g && R.g.fill != null ? [{i: R.g.fill, k: 'fill'}] : [],
   over: a => { const R = a.res, {c, g, X, Y, S} = a; if(!R || !/^(BTC|ETH|XRP|SOL)$/.test(S.sym)) return; const w = g.w;
     if(R.fri){ const y = Y(R.fri.c); c.strokeStyle = '#ffd600'; c.beginPath(); c.moveTo(X(R.fri.i), y); c.lineTo(g.pw, y); c.stroke(); tagL(c, X(R.fri.i), y, 'CME Friday close', '#ffd600', '#000', true); }
-    if(R.g && R.g.fill == null){ const gp = R.g, col = gp.pct >= .5 ? '#ff9800' : '#ff3b30', yT = Y(gp.top), yB = Y(gp.bot); box(a, X(gp.a), g.pw, yT, Math.max(yB, yT + 2), col + '30', col); tagL(c, Math.min(g.pw - 40, (X(gp.a) + g.pw) / 2), yT, 'CME GAP ' + Math.round(gp.pct * 100) + '% filled', col, '#fff', true); } }});
+    if(R.g && R.g.fill == null){ const gp = R.g, col = gp.pct >= .5 ? '#ff9800' : '#ff3b30', yT = Y(gp.top), yB = Y(gp.bot); box(a, X(gp.a), g.pw, yT, Math.max(yB, yT + 2), col + '30', col); tagL(c, Math.min(g.pw - 40, (X(gp.a) + g.pw) / 2), yT, 'OLD STYLE CME ' + Math.round(gp.pct * 100) + '% filled', col, '#fff', true); } }});
 
 /* 6. Monday high / low (current week) */
 push({id: 'mon', name: 'Monday high / low (TTM)', pane: 'overlay', calc: r => {
