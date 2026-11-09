@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-09T02:37:49.289292+00:00",
+  "generated_at": "2026-11-09T10:22:03.743802+00:00",
   "window_hours": 24,
   "sources": [
     "wss://fstream.binance.com/ws/!forceOrder@arr",
@@ -19,64 +19,58 @@
   },
   "buckets": {
     "BTCUSDT": {
-      "mark": 75324.38,
+      "mark": 74142.39,
       "buckets": [
         {
-          "pricePct": -1.0,
-          "price": 74571.14,
-          "longUsd": 0.0,
-          "shortUsd": 83257.17
-        },
-        {
-          "pricePct": -0.5,
-          "price": 74947.76,
-          "longUsd": 142535.07,
-          "shortUsd": 101390.74
-        },
-        {
-          "pricePct": 0.0,
-          "price": 75324.38,
-          "longUsd": 452.93,
-          "shortUsd": 0.0
-        },
-        {
           "pricePct": 0.5,
-          "price": 75701.0,
-          "longUsd": 379.03,
-          "shortUsd": 1284.67
+          "price": 74513.1,
+          "longUsd": 0.0,
+          "shortUsd": 59266.67
         },
         {
           "pricePct": 1.0,
-          "price": 76077.62,
+          "price": 74883.81,
+          "longUsd": 142535.07,
+          "shortUsd": 125381.23
+        },
+        {
+          "pricePct": 2.0,
+          "price": 75625.24,
+          "longUsd": 831.96,
+          "shortUsd": 1284.67
+        },
+        {
+          "pricePct": 2.5,
+          "price": 75995.95,
           "longUsd": 456.19,
           "shortUsd": 0.0
         }
       ]
     },
     "ETHUSDT": {
-      "mark": 2148.73,
+      "mark": 2102.1,
       "buckets": [
         {
-          "pricePct": -1.0,
-          "price": 2127.24,
+          "pricePct": 1.5,
+          "price": 2133.63,
           "longUsd": 0.0,
-          "shortUsd": 157547.81
+          "shortUsd": 214590.5
         },
         {
-          "pricePct": -0.5,
-          "price": 2137.99,
+          "pricePct": 2.0,
+          "price": 2144.14,
           "longUsd": 14780.04,
-          "shortUsd": 57042.7
+          "shortUsd": 0.0
         },
         {
-          "pricePct": 0.5,
-          "price": 2159.47,
+          "pricePct": 2.5,
+          "price": 2154.65,
           "longUsd": 0.0,
           "shortUsd": 4142.87
         },
         {
-          "pricePct": 4.5,
-          "price": 2245.42,
+          "pricePct": 6.5,
+          "price": 2238.74,
           "longUsd": 5637.15,
           "shortUsd": 508.7
         }
@@ -85,10 +79,6 @@
   },
   "priceHistory": {
     "BTCUSDT": [
-      {
-        "time": 1794124835069.0159,
-        "price": 75832.69
-      },
       {
         "time": 1794149828121.133,
         "price": 75897.8
@@ -104,13 +94,13 @@
       {
         "time": 1794191868882.8167,
         "price": 75324.38
+      },
+      {
+        "time": 1794219723459.5178,
+        "price": 74142.39
       }
     ],
     "ETHUSDT": [
-      {
-        "time": 1794124835069.0159,
-        "price": 2237.42
-      },
       {
         "time": 1794149828121.133,
         "price": 2237.21
@@ -126,6 +116,10 @@
       {
         "time": 1794191868882.8167,
         "price": 2148.73
+      },
+      {
+        "time": 1794219723459.5178,
+        "price": 2102.1
       }
     ]
   },
