@@ -32,7 +32,7 @@ jobs:
         run: |
           git config user.name "ttm-calendar-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add crypto_market.json
+          git add crypto_market.json 2>/dev/null || echo "no crypto_market.json was produced (data source unavailable)"
           if git diff --cached --quiet; then
             echo "No changes"
           else

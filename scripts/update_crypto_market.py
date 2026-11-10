@@ -2,7 +2,7 @@
 """Crypto Market indices for TTM LENS  ->  crypto_market.json
 
 TradingView's CRYPTOCAP:* series are TradingView's own data, so TTM builds an equivalent from free CoinGecko data:
-the top 125 coins by market cap, hourly for 90 days (and daily for a year with --daily).
+the top 60 coins by market cap, hourly for 90 days (and daily for a year with --daily).
 
   TOTAL     = sum of those market caps ($B)            TOTAL3  = TOTAL - BTC - ETH ($B)
   OTHERS    = TOTAL - the 10 biggest coins ($B)        OTHERSBTC = OTHERS in BTC (OTHERS $ / BTC price)
@@ -19,12 +19,12 @@ from datetime import datetime, timezone
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "crypto_market.json")
 UA = {"User-Agent": "Mozilla/5.0 (compatible; TTMMarketsTerminalBot/1.0)"}
-N = 125
+N = 60
 H = 3600000
 D = 86400000
 
 
-def getj(url, tries=5):
+def getj(url, tries=4):
     for i in range(tries):
         try:
             with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=40) as r:
@@ -32,7 +32,7 @@ def getj(url, tries=5):
         except Exception as ex:
             code = getattr(ex, "code", None)
             print(f"fetch failed {url[:80]} ({type(ex).__name__} {code}), try {i + 1}")
-            time.sleep(25 * (i + 1) if code == 429 else 5 * (i + 1))
+            time.sleep(30 * (i + 1) if code == 429 else 5 * (i + 1))
     return None
 
 
@@ -98,7 +98,7 @@ def block(coins, hourly):
         caps[cid] = grid_of(d["market_caps"], step, t0, n)
         prices[cid] = grid_of(d["prices"], step, t0, n)
         if not fix:
-            time.sleep(6)
+            time.sleep(3.5)
     top10 = ids[:10]
     return {"t0": t0, "step": step, "n": n, "s": build(caps, prices, top10, n)}, len(caps)
 
@@ -107,7 +107,7 @@ def main():
     coins = [("bitcoin", 1)] if os.environ.get("DRY_FILE") and False else top_coins()
     if os.environ.get("DRY_FILE"):
         coins = [(k, 1) for k in json.load(open(os.environ["DRY_FILE"]))]
-    if len(coins) < 50:
+    if len(coins) < 30:
         print("could not load the coin list; keeping previous file")
         sys.exit(0)
     prev = {}
@@ -118,7 +118,7 @@ def main():
     out = {"generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(), "source": "CoinGecko (top %d coins)" % N,
            "note": "TTM-built from CoinGecko top coins; close to, not identical to, TradingView CRYPTOCAP.", "h": None, "d": prev.get("d")}
     h, used = block(coins, True)
-    if used < 40:
+    if used < 30:
         print("too few coins returned data; keeping previous file")
         sys.exit(0)
     out["h"] = h
@@ -126,7 +126,7 @@ def main():
     print("wrote hourly", OUT, os.path.getsize(OUT), "bytes;", used, "coins", flush=True)
     if "--daily" in sys.argv or not out["d"]:
         d, used2 = block(coins, False)
-        if used2 >= 40:
+        if used2 >= 30:
             out["d"] = d
             json.dump(out, open(OUT, "w"), separators=(",", ":"))
             print("wrote daily too;", used2, "coins")
