@@ -160,7 +160,7 @@ Deno.serve(async (req) => {
 
   if (table === "ttm_chat") {
     const row = rec.id && await claim("ttm_chat", rec.id, "pushed"); if (!row) return new Response("skip");
-    const text = String(row.body).slice(0, 140);
+    const text = (String(row.body || "").slice(0, 140)) || "📷 Photo";
     if (row.from_admin) {
       const n = await send(await subsFor(row.member_id), {title: "TTM replied to you", body: text, tag: "chat-" + row.member_id, url: "./crypto/index.html#chat"}, "chat");
       return new Response("reply " + n);

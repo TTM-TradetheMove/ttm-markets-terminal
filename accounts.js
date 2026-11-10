@@ -222,6 +222,8 @@ document.addEventListener('click', async ev => {
   else if(t.dataset && t.dataset.chnew){ const m = (CH.members || []).find(z => z.id === t.dataset.chnew); CH.who[t.dataset.chnew] = m ? (m.tg_handle ? '@' + String(m.tg_handle).replace(/^@/, '') : m.email) : 'Member'; CH.pick = false; CH.sel = t.dataset.chnew; chatPaint(); const i = $('chIn'); if(i) i.focus(); }
   else if(t.dataset && t.dataset.chc){ CH.sel = t.dataset.chc; chatPaint(); chatSeen(); }
   else if(t.id === 'chSend'){ chatSend(); }
+  else if(t.id === 'chImg'){ const f = $('chFile'); if(f) f.click(); }
+  else if(t.id === 'chPrevX'){ CH.pend = null; chPrev(); }
   else if(t.dataset && t.dataset.chdel){ if(!armTap(t)) return; if(await delRow('/rest/v1/ttm_chat?id=eq.' + t.dataset.chdel)) chatLoad(); else alert('Could not delete this message. Run the community update SQL in Supabase, then try again.'); }
   else if(t.id === 'lvAdd'){ lvAdd(); }
   else if(t.id === 'lvCancel'){ lvReset(); const m = $('lvNoteMsg'); if(m) m.textContent = ''; }
@@ -782,7 +784,7 @@ function chatUi(){
   let b = $('ttmChatBtn');
   if(!chatOK()){ if(b) b.remove(); const p = $('ttmChat'); if(p) p.remove(); clearInterval(CH.t); CH.t = null; return; }
   if(!b){ b = document.createElement('button'); b.id = 'ttmChatBtn'; document.body.appendChild(b);
-    const p = document.createElement('div'); p.id = 'ttmChat'; p.innerHTML = '<div class="ch-h"><button id="chBack" style="display:none" aria-label="Back">‹</button><b id="chTitle">Message TTM</b><button id="chX" aria-label="Close">×</button></div><div class="ch-b" id="chBody"></div><div class="ch-f" id="chFoot"><textarea id="chIn" maxlength="2000" placeholder="Write a message"></textarea><button id="chSend">Send</button></div>'; document.body.appendChild(p);
+    const p = document.createElement('div'); p.id = 'ttmChat'; p.innerHTML = '<div class="ch-h"><button id="chBack" style="display:none" aria-label="Back">‹</button><b id="chTitle">Message TTM</b><button id="chX" aria-label="Close">×</button></div><div class="ch-b" id="chBody"></div><div id="chPrev" style="display:none;padding:6px 10px 0;border-top:1px solid var(--line,#2a2a2e)"></div><div class="ch-f" id="chFoot"><button id="chImg" title="Add a photo or screenshot" style="padding:0 11px;font-size:17px">📷</button><input type="file" id="chFile" accept="image/*" style="display:none"><textarea id="chIn" maxlength="2000" placeholder="Write a message"></textarea><button id="chSend">Send</button></div>'; document.body.appendChild(p); { const fi = p.querySelector('#chFile'), ti = p.querySelector('#chIn'); fi.addEventListener('change', ev => { const f = ev.target.files && ev.target.files[0]; ev.target.value = ''; if(f) chPick(f); }); ti.addEventListener('paste', ev => { const it = Array.from((ev.clipboardData || {}).items || []).find(x => x.type && x.type.indexOf('image/') === 0); if(it){ ev.preventDefault(); chPick(it.getAsFile()); } }); }
     $('chIn').addEventListener('keydown', ev => { if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); chatSend(); } }); }
   const n = chUnread(); b.innerHTML = (isAdm() ? 'Inbox' : 'Message TTM') + (n ? `<i>${n}</i>` : '');
   if(!CH.t){ CH.t = setInterval(() => { if(!document.hidden) chatLoad(); }, 8000); chatLoad(); }
@@ -833,10 +835,10 @@ function chatPaint(){
   if(list){
     const g = {}; CH.msgs.forEach(m => { (g[m.member_id] = g[m.member_id] || []).push(m); });
     const ids = Object.keys(g).sort((a, b) => new Date(g[b][g[b].length - 1].ts) - new Date(g[a][g[a].length - 1].ts));
-    body.innerHTML = '<button id="chNew" style="width:100%;margin:0 0 8px;padding:9px;border-radius:8px;border:1px solid var(--gold,#dba118);background:transparent;color:var(--gold,#dba118);font-weight:800;cursor:pointer">＋ New message to a member</button>' + (ids.length ? ids.map(id => { const l = g[id], last = l[l.length - 1], un = l.filter(m => !m.from_admin && !m.seen).length; return `<div class="ch-c" data-chc="${e(id)}"><span style="pointer-events:none"><b>${e(CH.who[id] || 'Member')}</b><br><small style="color:var(--mute)">${e((last.from_admin ? 'You: ' : '') + last.body.slice(0, 60))}</small></span>${un ? `<i style="pointer-events:none">${un}</i>` : ''}</div>`; }).join('') : '<p style="color:var(--mute);font-size:13px;margin:6px 2px">No messages yet. Pro members can write to you from the Message TTM button.</p>');
+    body.innerHTML = '<button id="chNew" style="width:100%;margin:0 0 8px;padding:9px;border-radius:8px;border:1px solid var(--gold,#dba118);background:transparent;color:var(--gold,#dba118);font-weight:800;cursor:pointer">＋ New message to a member</button>' + (ids.length ? ids.map(id => { const l = g[id], last = l[l.length - 1], un = l.filter(m => !m.from_admin && !m.seen).length; return `<div class="ch-c" data-chc="${e(id)}"><span style="pointer-events:none"><b>${e(CH.who[id] || 'Member')}</b><br><small style="color:var(--mute)">${e((last.from_admin ? 'You: ' : '') + (last.body ? last.body.slice(0, 60) : '\U0001F4F7 Photo'))}</small></span>${un ? `<i style="pointer-events:none">${un}</i>` : ''}</div>`; }).join('') : '<p style="color:var(--mute);font-size:13px;margin:6px 2px">No messages yet. Pro members can write to you from the Message TTM button.</p>');
   } else {
     const l = CH.msgs.filter(m => adm ? m.member_id === CH.sel : true);
-    body.innerHTML = l.length ? l.map(m => { const me = adm ? m.from_admin : !m.from_admin; return `<div class="ch-m ${me ? 'me' : ''}">${adm || !m.from_admin ? `<u data-chdel="${m.id}" title="Delete">delete</u>` : ''}${e(m.body)}<small>${me ? 'You' : (adm ? e(CH.who[CH.sel] || 'Member') : 'TTM')} · ${tm(m.ts)}${me && adm ? (m.seen ? ' · read' : '') : (me && m.seen ? ' · read' : '')}</small></div>`; }).join('') : '<p style="color:var(--mute);font-size:13px;margin:6px 2px">Write a private message to TTM. You get a notification on your phone when TTM replies (turn on Phone alerts in your Account card).</p>';
+    body.innerHTML = l.length ? l.map(m => { const me = adm ? m.from_admin : !m.from_admin; return `<div class="ch-m ${me ? 'me' : ''}">${adm || !m.from_admin ? `<u data-chdel="${m.id}" title="Delete">delete</u>` : ''}${m.body ? e(m.body) : ''}${rmImgOk(m.img) ? `<a href="${e(m.img)}" target="_blank" rel="noopener noreferrer"><img class="rm-img" loading="lazy" src="${e(m.img)}" alt="Photo"></a>` : ''}<small>${me ? 'You' : (adm ? e(CH.who[CH.sel] || 'Member') : 'TTM')} · ${tm(m.ts)}${me && adm ? (m.seen ? ' · read' : '') : (me && m.seen ? ' · read' : '')}</small></div>`; }).join('') : '<p style="color:var(--mute);font-size:13px;margin:6px 2px">Write a private message to TTM. You get a notification on your phone when TTM replies (turn on Phone alerts in your Account card).</p>';
     if(atBottom || CH.force){ body.scrollTop = body.scrollHeight; CH.force = false; }
   }
 }
@@ -847,11 +849,33 @@ async function chatSeen(){
   await api('/rest/v1/ttm_chat?' + q, {method: 'PATCH', body: JSON.stringify({seen: true}), headers: {Prefer: 'return=minimal'}});
   CH.msgs.forEach(m => { if(adm ? (!m.from_admin && m.member_id === CH.sel) : m.from_admin) m.seen = true; }); chatUi();
 }
+function chPrev(){ const d = $('chPrev'); if(!d) return; if(!CH.pend){ d.style.display = 'none'; d.innerHTML = ''; return; } d.style.display = ''; d.innerHTML = `<div style="position:relative;display:inline-block"><img src="${CH.pend.url}" alt="" style="max-height:90px;max-width:160px;border-radius:8px;display:block"><button id="chPrevX" title="Remove" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:0;background:#e0554d;color:#fff;font-size:13px;line-height:1;cursor:pointer;padding:0">×</button></div>`; }
+async function chPick(file){
+  const b = $('chBody'), msg = t => { if(b) b.insertAdjacentHTML('beforeend', '<p style="color:#e0554d;font-size:12.5px">' + e(t) + '</p>'); };
+  if(!file || file.type.indexOf('image/') !== 0){ msg('Pick an image file.'); return; }
+  if(file.type === 'image/gif'){ if(file.size > 2e6){ msg('That GIF is over 2 MB.'); return; } CH.pend = {blob: file, url: URL.createObjectURL(file)}; chPrev(); return; }
+  try{ const bmp = await createImageBitmap(file), sc = Math.min(1, 1600 / Math.max(bmp.width, bmp.height)), c = document.createElement('canvas'); c.width = Math.round(bmp.width * sc); c.height = Math.round(bmp.height * sc); c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    let blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.86)); if(blob && blob.size > 1.9e6) blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.6));
+    if(!blob || blob.size > 2e6){ msg('That image is too large. Try a smaller screenshot.'); return; }
+    CH.pend = {blob, url: URL.createObjectURL(blob)}; chPrev(); }catch(err){ msg('Could not read that image.'); }
+}
 async function chatSend(){
-  const i = $('chIn'), txt = (i.value || '').trim(); if(!txt) return; const adm = isAdm(); if(adm && !CH.sel) return;
+  const i = $('chIn'), txt = (i.value || '').trim(); if(!txt && !CH.pend) return; const adm = isAdm(); if(adm && !CH.sel) return;
+  const sb = $('chSend'), b = $('chBody'), fail = t => { if(b) b.insertAdjacentHTML('beforeend', '<p style="color:#e0554d;font-size:12.5px">' + e(t) + '</p>'); if(sb) sb.disabled = false; };
+  if(sb) sb.disabled = true; let img = null;
+  if(CH.pend){
+    const t = await token(), mime = CH.pend.blob.type === 'image/gif' ? 'image/gif' : 'image/jpeg', path = USER.id + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + (mime === 'image/gif' ? '.gif' : '.jpg');
+    const up = await fetch(CFG.url + '/storage/v1/object/room-pending/' + path, {method: 'POST', headers: {apikey: CFG.key, Authorization: 'Bearer ' + t, 'Content-Type': mime}, body: CH.pend.blob});
+    if(!up.ok){ fail('Could not upload the photo. It must be under 2 MB.'); return; }
+    let sc = null; try{ const r = await fetch(CFG.url + '/functions/v1/scan-image', {method: 'POST', headers: {apikey: CFG.key, Authorization: 'Bearer ' + t, 'Content-Type': 'application/json'}, body: JSON.stringify({path, type: mime})}); sc = await r.json(); }catch(x){}
+    if(!sc || !sc.ok){ fail(sc && sc.reason ? 'Photo blocked: ' + sc.reason + '.' : 'Could not check the photo, so it was not sent. Try again.'); CH.pend = null; chPrev(); return; }
+    img = sc.url;
+  }
   i.value = ''; CH.force = true;
-  const r = await api('/rest/v1/ttm_chat', {method: 'POST', headers: {Prefer: 'return=minimal'}, body: JSON.stringify({member_id: adm ? CH.sel : USER.id, from_admin: adm, body: txt})});
-  if(!r.ok){ i.value = txt; const b = $('chBody'); if(b) b.insertAdjacentHTML('beforeend', '<p style="color:#e0554d;font-size:12.5px">Could not send. Messaging is for Pro members, and the database step may still be missing.</p>'); return; }
+  const row = {member_id: adm ? CH.sel : USER.id, from_admin: adm, body: txt}; if(img) row.img = img;
+  const r = await api('/rest/v1/ttm_chat', {method: 'POST', headers: {Prefer: 'return=minimal'}, body: JSON.stringify(row)});
+  if(!r.ok){ i.value = txt; fail(img ? 'Could not send the photo. The "dm_images.sql" database step may still be missing.' : 'Could not send. Messaging is for Pro members, and the database step may still be missing.'); return; }
+  CH.pend = null; chPrev(); if(sb) sb.disabled = false;
   await chatLoad(); chatPaint();
 }
 // live sessions
