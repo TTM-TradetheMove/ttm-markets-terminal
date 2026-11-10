@@ -1,25 +1,25 @@
-Run at 2026-11-10T00:12:59.347678+00:00
+Run at 2026-11-10T07:28:00.405519+00:00
 
 page title: 'Calendar | Forex Factory'
 page url after load: 'https://www.forexfactory.com/calendar'
 row selector used: 'tr.calendar__row', rows found: 112
 sample row: date_el=False currency_el=False event_el=False actual_el=False raw_text='Sun Nov 8'
-sample row: date_el=True currency_el=True event_el=True actual_el=True raw_text='Sun\nNov 8\n\t\n3:30pm\n\tAUD\t\t\nRBA Assist Gov Hunter Speaks\n\t\n\t\n\t\t\t\t'
-sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='6:30pm\n\tCNY\t\t\nCPI y/y\n\t\n\t\n\t0.7%\t0.8%\t0.9%\t'
+sample row: date_el=True currency_el=True event_el=True actual_el=True raw_text='Sun\nNov 8\n\t\n5:30pm\n\tAUD\t\t\nRBA Assist Gov Hunter Speaks\n\t\n\t\n\t\t\t\t'
+sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='8:30pm\n\tCNY\t\t\nCPI y/y\n\t\n\t\n\t0.7%\t0.8%\t0.9%\t'
 sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='\tCNY\t\t\nPPI y/y\n\t\n\t\n\t5.7%\t5.3%\t5.0%\t'
-sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='10:00pm\n\tJPY\t\t\nLeading Indicators\n\t\n\t\n\t116.4%\t116.7%\t118.0%\t'
+sample row: date_el=False currency_el=False event_el=False actual_el=False raw_text='Mon Nov 9'
 TARGET ROW: date='Mon Nov 9' currency='AUD' title='Westpac Consumer Sentiment' actual='-2.7%'
 TARGET ROW: date='Thu Nov 12' currency='USD' title='Unemployment Claims' actual=''
-matched-actuals by date: {'2026-11-08': 3, '2026-11-09': 8}
-Scraped 11 live actual values from forexfactory.com
-Past events without actual (2): 2026-11-09 EUR ECOFIN Meetings; 2026-11-09 EUR Eurogroup Meetings
-Scraped GBP keys: [('2026-11-09', 'GBP', 'brcretailsalesmonitoryy')]
+matched-actuals by date: {'2026-11-08': 2, '2026-11-09': 13, '2026-11-10': 1}
+Scraped 16 live actual values from forexfactory.com
+Past events without actual (11): 2026-11-09 EUR ECOFIN Meetings; 2026-11-09 EUR Eurogroup Meetings; 2026-11-09 JPY BOJ Summary of Opinions; 2026-11-02 USD Loan Officer Survey; 2026-11-04 JPY Monetary Policy Meeting Minutes; 2026-11-05 GBP BOE Monetary Policy Report; 2026-11-05 GBP Monetary Policy Summary; 2026-11-09 EUR ECOFIN Meetings; 2026-11-09 EUR Eurogroup Meetings; 2026-11-10 GBP 30-y Bond Auction; 2026-11-10 USD ADP Weekly Employment Change
+Scraped GBP keys: [('2026-11-02', 'GBP', 'finalmanufacturingpmi'), ('2026-11-04', 'GBP', 'finalservicespmi'), ('2026-11-05', 'GBP', 'constructionpmi'), ('2026-11-05', 'GBP', 'mpcofficialbankratevotes'), ('2026-11-05', 'GBP', 'officialbankrate'), ('2026-11-06', 'GBP', 'lloydshpimm'), ('2026-11-09', 'GBP', 'brcretailsalesmonitoryy')]
 
 -- month scrape --
-month nov.2026: title='Calendar | Forex Factory' url='https://www.forexfactory.com/calendar?month=nov.2026' rows=450 tracked=277
-month nov.2026: 277 rows for tracked currencies; sample: [{'date': 'Sun Nov 1', 'time': '1:00am', 'cur': 'USD', 'impact': 'icon icon--ff-impact-gra', 'title': 'Daylight Saving Time Shift', 'actual': '', 'forecast': '', 'previous': ''}, {'date': 'Sun Nov 1', 'time': '5:30pm', 'cur': 'JPY', 'impact': 'icon icon--ff-impact-yel', 'title': 'Final Manufacturing PMI', 'actual': '53.3', 'forecast': '53.3', 'previous': '53.3'}]
-month nov.2026: page timezone calibrated to None (0 matching rows)
-month nov.2026: not enough matches to trust times -- skipping
+month nov.2026: title='Calendar | Forex Factory' url='https://www.forexfactory.com/calendar?month=nov.2026' rows=449 tracked=277
+month nov.2026: 277 rows for tracked currencies; sample: [{'date': 'Sun Nov 1', 'time': '2:00am', 'cur': 'USD', 'impact': 'icon icon--ff-impact-gra', 'title': 'Daylight Saving Time Shift', 'actual': '', 'forecast': '', 'previous': ''}, {'date': 'Sun Nov 1', 'time': '7:30pm', 'cur': 'JPY', 'impact': 'icon icon--ff-impact-yel', 'title': 'Final Manufacturing PMI', 'actual': '53.3', 'forecast': '53.3', 'previous': '53.3'}]
+month nov.2026: page timezone calibrated to America/New_York (76 matching rows)
+month nov.2026: added 195 events not already in the weekly feeds
 month dec.2026: title='Just a moment...' url='https://www.forexfactory.com/calendar?month=dec.2026' rows=0 tracked=0
 month dec.2026: first rows: []
 month dec.2026: 0 rows for tracked currencies; sample: []
