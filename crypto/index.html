@@ -4249,11 +4249,53 @@ function drawCandles(c){
 
 // ---- live prices, open-trade tracking, optional Telegram alerts
 let PRICES = {}, PSTAMP = 0, pfScope = 'all', PUSED = '';
-const needLive = () => pfActive() || tjActive() || false;
+const hasOpenTrades = () => { try{ return loadSaved().some(x => x && x.status === 'open' && x.snap); }catch(e){ return false; } };
+const needLive = () => pfActive() || tjActive() || hasOpenTrades();
+// Candle replay: finds limit fills, targets and stops that were touched between price checks or while the page was closed.
+// Only closed candles are used. In the candle where an order fills, targets and stops are not judged; if a stop and a target are both in one candle, the stop counts first.
+const WKT = {};
+async function wkCandles(a, from, perp, iv){
+  const step = iv === '5m' ? 3e5 : 36e5, n = 1000, tries = [
+    async () => kl(await getJ(perp ? `https://fapi.binance.com/fapi/v1/klines?symbol=${a}USDT&interval=${iv}&startTime=${from}&limit=${n}` : `https://api.binance.com/api/v3/klines?symbol=${a}USDT&interval=${iv}&startTime=${from}&limit=${n}`)),
+    async () => { const d = await getJ(`https://api.bybit.com/v5/market/kline?category=${perp ? 'linear' : 'spot'}&symbol=${a}USDT&interval=${iv === '5m' ? 5 : 60}&start=${from}&limit=${n}`); return kl(d.result.list).reverse(); },
+    async () => kl(await getJ(`https://api.mexc.com/api/v3/klines?symbol=${a}USDT&interval=${iv === '5m' ? '5m' : '60m'}&startTime=${from}&limit=${Math.min(n, 500)}`))
+  ];
+  for(const f of tries){ try{ const r = await f(); if(r && r.length) return {rows: r, step}; }catch(e){} }
+  return null;
+}
+async function wickScan(){
+  const list = loadSaved(), now = Date.now(); let changed = false;
+  for(const x of list){
+    if(!x || x.status !== 'open' || !x.snap || (WKT[x.id] && now - WKT[x.id] < 55000)) continue;
+    const sn = x.snap, anyFilled = x.orders ? x.orders.some(o => o.filled) : x.fill !== 'pending', anyPend = x.orders ? x.orders.some(o => !o.filled) : x.fill === 'pending';
+    if(x.wkStop || sn.mkt === 'tradfi' || !sn.asset) continue;
+    WKT[x.id] = now;
+    let from = x.wkAt || (!anyFilled ? x.t : Math.max(x.filledAt || x.opened || x.t, now - 864e5));
+    from = Math.max(from, now - 40 * 864e5); const iv = now - from <= 2.9 * 864e5 ? '5m' : '1h';
+    const got = await wkCandles(sn.asset, from, sn.mkt !== 'spot', iv); if(!got) continue;
+    let fillEnd = anyFilled ? (x.filledAt || x.opened || x.t) : null, last = from;
+    for(const c of got.rows){
+      if(c.t < from) continue; const end = c.t + got.step; if(end > now) break; last = end;
+      if(anyPend){
+        if(x.orders){ x.orders.forEach(o => { if(!o.filled && o.side != null && (o.side > 0 ? c.l <= o.p : c.h >= o.p)){ o.filled = true; o.ft = end; fillEnd = fillEnd == null ? end : fillEnd; changed = true; spotEv(x, 'fill', 'fill:' + o.id); } }); if(x.orders.every(o => o.filled)) x.fill = 'filled'; if(changed) syncOrders(x); }
+        else if(x.fill === 'pending' && (fillSide(x) > 0 ? c.l <= sn.E : c.h >= sn.E)){ x.fill = 'filled'; x.filledAt = end; fillEnd = end; changed = true; spotEv(x, 'fill', 'fill:' + x.id); myPush(x, 'filled:' + x.id, 'Limit order filled', 'Your limit order filled at ' + pr(sn.E)); continue; }
+      }
+      if(fillEnd != null && c.t >= fillEnd){
+        if(!sn.noSL && (sn.long ? c.l <= sn.SL : c.h >= sn.SL)){ x.wkStop = c.t; changed = true; break; }
+        x.hit = x.hit || sn.tps.map(() => false);
+        sn.tps.forEach((t, i) => { if(!x.hit[i] && (sn.long ? c.h >= t.P : c.l <= t.P)){ x.hit[i] = true; changed = true; } });
+      }
+    }
+    x.wkAt = last;
+  }
+  if(changed) saveAll(list); else { const l2 = loadSaved(); list.forEach(x => { if(x && x.wkAt){ const y = l2.find(z => z.id === x.id); if(y) y.wkAt = x.wkAt; } }); saveAll(l2); }
+}
 async function liveLoad(){
   const t = await getTickers(); if(t){ PRICES = t.map; PSTAMP = t.t; PUSED = t.used; }
+  try{ await wickScan(); }catch(e){}
   trackHits(); renderJournal();
 }
+document.addEventListener('visibilitychange', () => { if(!document.hidden && needLive()) { Object.keys(WKT).forEach(k => delete WKT[k]); liveLoad(); } });
 function priceOf(a){ if(PRICES[a] > 0) return {p: PRICES[a], live: true}; const c = COINS.find(x => x.s === a); return c && c.p ? {p: c.p, live: false} : null; }
 const hitsOf = (x, p) => x.snap.tps.map((t, i) => !!(x.hit && x.hit[i]) || (p != null && (x.snap.long ? p >= t.P : p <= t.P)));
 // A waiting (limit or stop-entry) order fills when price touches the entry from the side it started on.
@@ -4431,13 +4473,13 @@ function trackHits(){
          } });
     if(sn.psl && !x.sent.psl && (sn.long ? p <= sn.psl.P : p >= sn.psl.P)){ x.sent.psl = true; changed = true; myPush(x, 'psl:' + x.id, 'Part SL hit', sn.psl.share + '% of the trade stopped at ' + pr(sn.psl.P) + ' · rest stays on the main stop');
        }
-    const stopped = sn.long ? p <= sn.SL : p >= sn.SL;
+    const stopped = (sn.long ? p <= sn.SL : p >= sn.SL) || !!x.wkStop;
     if(stopped && !x.sent.sl){ x.sent.sl = true; changed = true; myPush(x, 'sl:' + x.id, 'SL hit', 'Price touched your stop at ' + pr(sn.SL));  }
     // auto-close: a stop that stays hit (two checks in a row) or every target in closes the trade in the tracker, at the planned level
     const nTp = sn.tps.length, sh = sn.tps.reduce((t, q) => t + q.share, 0), nHit = x.hit.filter(Boolean).length;
     const autoClose = (pnl, how, title, body, tg) => { x.status = 'closed'; x.res = {pnl: Math.round(pnl * 100) / 100, r: pnl / (sn.riskUsd || 1), how, closed: Date.now(), auto: true}; x.slSeen = 0; changed = true;
       spotEv(x, 'sell', 'sell:' + x.id + ':' + x.res.closed); myPush(x, 'sell:' + x.id, title, body);  };
-    if(!sn.noSL && stopped){ x.slSeen = (x.slSeen || 0) + 1; changed = true;
+    if(!sn.noSL && stopped){ x.slSeen = x.wkStop ? 2 : (x.slSeen || 0) + 1; changed = true;
       if(x.slSeen >= 2){ const pnl = settle(sn, x.hit, sn.SL), how = nHit ? 'TP' + x.hit.map((h, k) => h ? k + 1 : 0).filter(Boolean).join(' + TP') + ' hit; rest stopped at the stop (closed automatically)' : 'Stopped out at the stop (closed automatically)';
         autoClose(pnl, how, 'SL hit, trade closed', (pnl >= 0 ? '+' : '') + (pnl / (sn.riskUsd || 1)).toFixed(1) + 'R at ' + pr(sn.SL) + ' · closed in your tracker', `🛑 <b>Stop hit, trade closed</b> — ${esc(sn.asset)} ${sn.long ? 'long' : 'short'}\nStop ${pr(sn.SL)} reached (live ${pr(p)}). Result ${pnl >= 0 ? '+' : ''}${usd(pnl)}. Closed in your tracker.\n<i>${esc(x.name)} · TTM Trade Tracker</i>`); return; } }
     else if(x.slSeen){ x.slSeen = 0; changed = true; }
