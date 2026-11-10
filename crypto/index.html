@@ -801,14 +801,14 @@ body.rm-full #rmIn{font-size:17px}
     </div>
 
     <div class="midterm-card">
-      <span class="fl-label">US Midterm Elections</span>
+      <span class="fl-label">US Elections · Next: 2028 Presidential &amp; Congressional</span>
       <div class="midterm-row">
         <div class="midterm-unit"><span id="mtDays">—</span><small>Days</small></div>
         <div class="midterm-unit"><span id="mtHours">—</span><small>Hours</small></div>
         <div class="midterm-unit"><span id="mtMins">—</span><small>Mins</small></div>
         <div class="midterm-unit"><span id="mtSecs">—</span><small>Secs</small></div>
       </div>
-      <p class="midterm-note">Until Election Day — Tuesday, 3 November 2026. All 435 House seats and 35 Senate seats are up; control of Congress for the back half of the cycle is on the line, a standard volatility catalyst for risk assets including crypto.</p>
+      <p class="midterm-note">Counting down to Election Day, <b>Tuesday 7 November 2028, 7:00 AM Eastern (polls open)</b>, which is <b id="mtLocal">…</b> your time. The presidency, all 435 House seats and about a third of the Senate are up. The 2026 midterms have been held, and elections are a standard volatility catalyst for risk assets including crypto.</p>
     </div>
 
     <div class="filter-block">
@@ -2709,8 +2709,9 @@ load(); setInterval(() => { if(!document.hidden) load(); }, 1800000);
 if(/[?&]cycle=1/.test(location.search)) setTimeout(() => { const b = document.getElementById('cycleOpenBtn'); if(b) b.click(); }, 400);
 })();
 
-/* US midterm election countdown -- Tuesday 3 Nov 2026, polls open 7am ET (first polls close) used as the headline target */
-const MIDTERM_TARGET = new Date("2026-11-03T07:00:00-05:00").getTime();
+/* US election countdown -- next federal election: Tuesday 7 Nov 2028, polls open 7:00 AM ET (EST, UTC-5) */
+const MIDTERM_TARGET = new Date("2028-11-07T07:00:00-05:00").getTime();
+(function(){ const e = document.getElementById('mtLocal'); if(e) try{ e.textContent = new Date(MIDTERM_TARGET).toLocaleString(undefined, {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short'}); }catch(x){} })();
 function updateMidtermCountdown(){
   const diff = MIDTERM_TARGET - Date.now();
   const elD = document.getElementById('mtDays');
