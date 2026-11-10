@@ -137,7 +137,7 @@ async function roomPush(m: any) {
   await send(list, {title: (m.name || "Member") + " · " + room + " room", body: m.img && !m.body ? "Sent an image" : String(m.body).slice(0, 140), tag: "room-" + m.room, url: "./crypto/index.html#community"});
 }
 
-Deno.serve(async (req) => {
+const handler = async (req: Request): Promise<Response> => {
   let b: any = {}; try { b = await req.json(); } catch (_) {}
   const table = b.table || "cron", rec = b.record || {};
   const now = Date.now();
@@ -178,6 +178,14 @@ Deno.serve(async (req) => {
   for (const m of await get(`ttm_room_msgs?select=*&pushed=eq.false&ts=gt.${fresh0}&order=id.asc&limit=20`)) {
     if (!(await claim("ttm_room_msgs", m.id, "pushed"))) continue;
     await roomPush(m);
+  }
+  // safety net: if a database webhook is missing or failed, pick up any spot move, chart alert or chat message that was never pushed
+  for (const t of ["ttm_spot_feed", "ttm_my_alerts", "ttm_chat"]) {
+    try {
+      for (const r of await get(`${t}?select=id&pushed=eq.false&ts=gt.${fresh0}&order=id.asc&limit=20`)) {
+        await handler(new Request("http://local/sweep", {method: "POST", body: JSON.stringify({table: t, record: {id: r.id}})}));
+      }
+    } catch (e) { console.log("sweep " + t + " failed:", String(e)); }
   }
   const soon = new Date(now + 15 * 60000).toISOString(), back = new Date(now - 10 * 60000).toISOString();
   const due = await get(`ttm_live?select=*&reminded=eq.false&starts_at=lte.${soon}&starts_at=gt.${back}`);
@@ -241,4 +249,6 @@ Deno.serve(async (req) => {
     }
   } catch (e) { console.log("new member alert failed:", String(e)); }
   return new Response("tick");
-});
+};
+Deno.serve(handler);
+
