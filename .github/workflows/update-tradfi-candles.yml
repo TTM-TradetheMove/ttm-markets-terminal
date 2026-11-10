@@ -25,10 +25,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Check Yahoo is reachable
+        continue-on-error: true
+        run: curl -sS -m 20 -A 'Mozilla/5.0' -o /dev/null -w 'Yahoo HTTP %{http_code}\n' 'https://query1.finance.yahoo.com/v8/finance/chart/XLC?range=5d&interval=1d'
       - name: Download candles (Yahoo Finance)
         run: python3 -u scripts/update_tradfi_candles.py
       - name: Publish to the data branch (single commit, no history build-up)
         run: |
+          ls out/tradfi_candles | wc -l
           cd out
           git init -q -b data
           git config user.name "ttm-calendar-bot"
