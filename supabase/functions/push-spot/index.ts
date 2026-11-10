@@ -1,7 +1,8 @@
 // One function for every phone push (spot moves, chat, live sessions, unlocks, new members, announcements).
 //  - Database webhook on ttm_spot_feed (insert): Pro members get the spot move
 //  - Database webhook on ttm_chat (insert): admin gets member messages, members get replies
-//  - pg_cron tick every minute (table = "cron"): live sessions are announced, then reminded 15 minutes before
+//  - pg_cron tick every minute (table = "cron"): live sessions are announced, then reminded 15 minutes before;
+//    every 3rd minute the Trade watch checks members' open tracker trades against exchange candles (fills, TPs, stops) and sends phone alerts
 // Turn OFF "Verify JWT" for this function. It only ever acts on real rows in the database, and each row
 // can fire only once, so a fake call cannot send anything.
 import webpush from "npm:web-push@3.6.7";
@@ -137,6 +138,72 @@ async function roomPush(m: any) {
   await send(list, {title: (m.name || "Member") + " · " + room + " room", body: m.img && !m.body ? "Sent an image" : String(m.body).slice(0, 140), tag: "room-" + m.room, url: "./crypto/index.html#community"});
 }
 
+
+// ---- Trade watch: checks every member's open tracker trades against exchange candles, 24/7, and sends the same phone alerts the app sends.
+// Uses the same alert keys as the app (tp:<id>:<n>, sl:<id>, filled:<id>), so nothing is ever sent twice. It does not change anyone's trades.
+type Cd = {t: number, o: number, h: number, l: number, c: number};
+const prFmt = (v: number) => v >= 1000 ? v.toLocaleString("en-US", {maximumFractionDigits: 2}) : v >= 1 ? v.toFixed(3) : v >= 0.01 ? v.toFixed(5) : Number(v.toPrecision(4)).toString();
+const cdCache = new Map<string, Cd[] | null>();
+const jget = async (u: string) => { const r = await fetch(u, {headers: {"User-Agent": "ttm-trade-watch"}}); if (!r.ok) throw new Error("http " + r.status); return r.json(); };
+async function srvCandles(a: string, perp: boolean, iv: "5m" | "1h"): Promise<Cd[] | null> {
+  const key = a + (perp ? "P" : "S") + iv; if (cdCache.has(key)) return cdCache.get(key)!;
+  const okxBar = iv === "5m" ? "5m" : "1H";
+  const tries: (() => Promise<Cd[] | null>)[] = [
+    async () => { for (const inst of perp ? [a + "-USDT-SWAP", a + "-USDT"] : [a + "-USDT", a + "-USDT-SWAP"]) { try { const j = await jget(`https://www.okx.com/api/v5/market/candles?instId=${inst}&bar=${okxBar}&limit=300`); if (j.data && j.data.length) return j.data.filter((d: any) => d[8] !== "0").map((d: any) => ({t: +d[0], o: +d[1], h: +d[2], l: +d[3], c: +d[4]})).reverse(); } catch (_) {} } return null; },
+    async () => { const j = await jget(`https://api.bitget.com/api/v2/spot/market/candles?symbol=${a}USDT&granularity=${iv === "5m" ? "5min" : "1h"}&limit=300`); return (j.data || []).map((d: any) => ({t: +d[0], o: +d[1], h: +d[2], l: +d[3], c: +d[4]})).sort((x: Cd, y: Cd) => x.t - y.t); },
+    async () => { const j = await jget(`https://api.mexc.com/api/v3/klines?symbol=${a}USDT&interval=${iv === "5m" ? "5m" : "60m"}&limit=300`); return j.map((d: any) => ({t: +d[0], o: +d[1], h: +d[2], l: +d[3], c: +d[4]})); },
+    async () => { const j = await jget(`https://api.bybit.com/v5/market/kline?category=${perp ? "linear" : "spot"}&symbol=${a}USDT&interval=${iv === "5m" ? 5 : 60}&limit=300`); return j.result.list.map((d: any) => ({t: +d[0], o: +d[1], h: +d[2], l: +d[3], c: +d[4]})).reverse(); },
+    async () => { const j = await jget(`https://api.binance.com/api/v3/klines?symbol=${a}USDT&interval=${iv === "5m" ? "5m" : "1h"}&limit=300`); return j.map((d: any) => ({t: +d[0], o: +d[1], h: +d[2], l: +d[3], c: +d[4]})); },
+  ];
+  let rows: Cd[] | null = null;
+  for (const f of tries) { try { const r = await f(); if (r && r.length > 3) { rows = r; break; } } catch (_) {} }
+  cdCache.set(key, rows); return rows;
+}
+function replayTrade(x: any, rows: Cd[], step: number, now: number): {key: string, title: string, body: string}[] {
+  const sn = x.snap, A = sn.asset, ev: {key: string, title: string, body: string}[] = [], recent = now - 45 * 60000;
+  const ords: any[] = Array.isArray(x.orders) ? x.orders : [];
+  let filled = ords.length ? ords.some((o) => o.filled) : x.fill !== "pending";
+  let from = filled ? Math.max(x.filledAt || x.opened || x.t || 0, now - 24 * 3600000) : (x.t || now - 3600000);
+  let fillEnd: number | null = filled ? from : null; const hit: boolean[] = (x.hit || []).slice();
+  const side = x.side || (sn.long ? 1 : -1);
+  for (const c of rows) {
+    const end = c.t + step; if (c.t < from) continue; if (end > now) break;
+    if (!filled) {
+      let got = false;
+      if (ords.length) { for (const o of ords) if (!o.filled && o.side != null && (o.side > 0 ? c.l <= o.p : c.h >= o.p)) got = true; }
+      else got = side > 0 ? c.l <= sn.E : c.h >= sn.E;
+      if (got) { filled = true; fillEnd = end; if (end >= recent) ev.push({key: "filled:" + x.id, title: A + " · Limit order filled", body: "Your limit order filled at " + prFmt(ords.length ? ords[0].p : sn.E)}); }
+      continue;
+    }
+    if (fillEnd != null && c.t >= fillEnd) {
+      if (!sn.noSL && (sn.long ? c.l <= sn.SL : c.h >= sn.SL)) { if (end >= recent) ev.push({key: "sl:" + x.id, title: A + " · SL hit", body: "Price touched your stop at " + prFmt(sn.SL)}); break; }
+      (sn.tps || []).forEach((t: any, i: number) => {
+        if (hit[i] || !(sn.long ? c.h >= t.P : c.l <= t.P)) return; hit[i] = true;
+        if (end >= recent) { const last = i === sn.tps.length - 1; ev.push({key: "tp:" + x.id + ":" + i, title: A + " · " + (last ? "Full TP hit" : "Part TP hit"), body: last ? "All targets are in at " + prFmt(t.P) : "TP" + (i + 1) + " at " + prFmt(t.P) + (i === 0 && sn.SL !== sn.E ? " · move SL to entry" : " · trail your stop")}); }
+      });
+    }
+  }
+  return ev;
+}
+async function tradeWatch(now: number) {
+  cdCache.clear();
+  const subs = await get("ttm_push_subs?select=user_id"); const uids = [...new Set(subs.map((s: any) => s.user_id))]; if (!uids.length) return;
+  const admins = new Set((await get("ttm_profiles?select=id&is_admin=eq.true")).map((a: any) => a.id));
+  const docs = await get(`ttm_user_data?select=user_id,saved:data->saved&user_id=in.(${uids.join(",")})`);
+  let budget = 120;
+  for (const d of docs) {
+    const list: any[] = Array.isArray(d.saved) ? d.saved : []; const out: any[] = [];
+    for (const x of list) {
+      if (!x || x.status !== "open" || !x.snap || !x.snap.asset || x.snap.mkt === "tradfi" || budget <= 0) continue;
+      if (admins.has(d.user_id) && x.snap.mkt === "spot" && (x.snap.acc || "lev") === "spot") continue; // covered by the spot feed
+      const pending = Array.isArray(x.orders) && x.orders.length ? x.orders.some((o: any) => !o.filled) : x.fill === "pending";
+      const old = pending && now - (x.t || now) > 23 * 3600000; const iv: "5m" | "1h" = old ? "1h" : "5m";
+      budget--; const rows = await srvCandles(String(x.snap.asset).toUpperCase(), x.snap.mkt !== "spot", iv); if (!rows) continue;
+      for (const e of replayTrade(x, rows, iv === "5m" ? 3e5 : 36e5, now)) out.push({user_id: d.user_id, ukey: e.key, title: e.title, body: e.body});
+    }
+    if (out.length) await rest("ttm_my_alerts?on_conflict=user_id,ukey", {method: "POST", headers: {Prefer: "resolution=ignore-duplicates,return=minimal"}, body: JSON.stringify(out)});
+  }
+}
 const handler = async (req: Request): Promise<Response> => {
   let b: any = {}; try { b = await req.json(); } catch (_) {}
   const table = b.table || "cron", rec = b.record || {};
@@ -179,6 +246,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (!(await claim("ttm_room_msgs", m.id, "pushed"))) continue;
     await roomPush(m);
   }
+  if (Math.floor(now / 60000) % 3 === 0) { try { await tradeWatch(now); } catch (e) { console.log("trade watch failed:", String(e)); } }
   // safety net: if a database webhook is missing or failed, pick up any spot move, chart alert or chat message that was never pushed
   for (const t of ["ttm_spot_feed", "ttm_my_alerts", "ttm_chat"]) {
     try {
