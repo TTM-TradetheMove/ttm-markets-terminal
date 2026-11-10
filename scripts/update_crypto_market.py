@@ -19,7 +19,10 @@ from datetime import datetime, timezone
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "crypto_market.json")
 UA = {"User-Agent": "Mozilla/5.0 (compatible; TTMMarketsTerminalBot/1.0)"}
-N = 60
+if os.environ.get("COINGECKO_KEY", "").strip():
+    UA["x-cg-demo-api-key"] = os.environ["COINGECKO_KEY"].strip()
+KEY = os.environ.get("COINGECKO_KEY", "").strip()   # optional free CoinGecko 'Demo' key (higher rate limit)
+N = 125 if KEY else 60
 H = 3600000
 D = 86400000
 
@@ -98,7 +101,7 @@ def block(coins, hourly):
         caps[cid] = grid_of(d["market_caps"], step, t0, n)
         prices[cid] = grid_of(d["prices"], step, t0, n)
         if not fix:
-            time.sleep(3.5)
+            time.sleep(2.2 if KEY else 3.5)
     top10 = ids[:10]
     return {"t0": t0, "step": step, "n": n, "s": build(caps, prices, top10, n)}, len(caps)
 

@@ -25,6 +25,8 @@ jobs:
         with:
           python-version: "3.12"
       - name: Build indices (daily history refreshed on the first run of each day)
+        env:
+          COINGECKO_KEY: ${{ secrets.COINGECKO_KEY }}
         run: |
           if [ "$(date -u +%H)" -lt 4 ]; then F=--daily; else F=; fi
           timeout 38m python3 -u scripts/update_crypto_market.py $F || echo "stopped early; committing whatever was saved"
