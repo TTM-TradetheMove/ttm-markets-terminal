@@ -19,16 +19,17 @@ D = 86400000
 DAYS = 365
 
 SECTORS = [
-    ("Layer 1", "Base-layer smart-contract chains", ["solana", "cardano", "avalanche-2", "near", "aptos", "sui", "sei-network", "tron", "the-open-network", "polkadot"]),
-    ("Layer 2", "Ethereum scaling networks", ["arbitrum", "optimism", "matic-network", "starknet", "mantle", "immutable-x"]),
-    ("DeFi", "Lending, DEXs, perps and yield", ["uniswap", "aave", "lido-dao", "curve-dao-token", "jupiter-exchange-solana", "pendle", "ethena", "maker", "hyperliquid", "dydx-chain", "gmx"]),
-    ("AI", "AI, compute and data networks", ["render-token", "bittensor", "fetch-ai", "virtual-protocol", "akash-network", "the-graph", "worldcoin-wld"]),
-    ("Memecoins", "High-beta attention coins", ["dogecoin", "shiba-inu", "pepe", "bonk", "dogwifcoin", "floki"]),
-    ("RWA & Oracles", "Tokenised assets and data feeds", ["ondo-finance", "chainlink", "pyth-network", "api3", "polymesh", "centrifuge"]),
-    ("Payments", "Payment and settlement coins", ["ripple", "stellar", "hedera-hashgraph", "litecoin", "algorand", "xdc-network", "bitcoin-cash"]),
-    ("Exchange tokens", "Centralised exchange ecosystems", ["binancecoin", "okb", "crypto-com-chain", "leo-token", "bitget-token", "gatechain-token"]),
-    ("Gaming", "Gaming and metaverse", ["gala", "the-sandbox", "axie-infinity", "decentraland", "apecoin"]),
-    ("Privacy", "Privacy coins", ["monero", "zcash", "dash"]),
+    ("Layer 1", "Base-layer smart-contract chains", ["solana", "cardano", "avalanche-2", "near", "aptos", "sui", "sei-network", "tron", "the-open-network", "polkadot", "cosmos", "internet-computer", "kaspa", "injective-protocol", "celestia", "sonic-3", "berachain-bera", "multiversx", "vechain", "tezos", "flow", "mina-protocol", "ethereum-classic", "zilliqa"]),
+    ("Layer 2", "Ethereum scaling networks", ["arbitrum", "optimism", "matic-network", "starknet", "mantle", "immutable-x", "blast", "zksync", "scroll", "manta-network", "metis-token", "loopring", "taiko"]),
+    ("DeFi", "Lending, DEXs, perps and yield", ["uniswap", "aave", "lido-dao", "curve-dao-token", "jupiter-exchange-solana", "pendle", "ethena", "maker", "hyperliquid", "dydx-chain", "gmx", "compound-governance-token", "havven", "1inch", "sushi", "balancer", "raydium", "convex-finance", "frax-share", "rocket-pool", "eigenlayer", "ether-fi", "morpho", "jito-governance-token", "aerodrome-finance", "cow-protocol", "yearn-finance"]),
+    ("AI", "AI, compute and data networks", ["render-token", "bittensor", "fetch-ai", "virtual-protocol", "akash-network", "the-graph", "worldcoin-wld", "singularitynet", "ocean-protocol", "arkham", "aixbt", "grass", "io", "nosana", "golem", "livepeer", "numeraire"]),
+    ("Memecoins", "High-beta attention coins", ["dogecoin", "shiba-inu", "pepe", "bonk", "dogwifcoin", "floki", "official-trump", "fartcoin", "popcat", "brett", "mog-coin", "book-of-meme", "turbo", "pudgy-penguins", "cat-in-a-dogs-world"]),
+    ("RWA & Oracles", "Tokenised assets and data feeds", ["ondo-finance", "chainlink", "pyth-network", "api3", "polymesh", "centrifuge", "band-protocol", "uma", "tellor", "mantra-dao", "plume", "maple", "clearpool", "goldfinch"]),
+    ("Payments", "Payment and settlement coins", ["ripple", "stellar", "hedera-hashgraph", "litecoin", "algorand", "xdc-network", "bitcoin-cash", "quant-network", "iota", "nano"]),
+    ("Exchange tokens", "Centralised exchange ecosystems", ["binancecoin", "okb", "crypto-com-chain", "leo-token", "bitget-token", "gatechain-token", "kucoin-shares", "huobi-token", "mx-token", "bitmart-token", "nexo", "whitebit"]),
+    ("Gaming", "Gaming and metaverse", ["gala", "the-sandbox", "axie-infinity", "decentraland", "apecoin", "illuvium", "enjincoin", "stepn", "beam-2", "ronin", "pixels", "big-time", "magic", "yield-guild-games"]),
+    ("Privacy", "Privacy coins", ["monero", "zcash", "dash", "decred", "horizen", "secret", "beldex", "firo", "oasis-network"]),
+    ("DePIN & Storage", "Decentralised infrastructure and storage", ["filecoin", "arweave", "helium", "iotex", "hivemapper", "aethir", "theta-token", "storj", "ankr", "flux"]),
 ]
 BENCH = ["bitcoin", "ethereum"]
 
@@ -109,10 +110,10 @@ def main():
         coins[cid] = {"sym": (m.get("symbol") or cid).upper(), "name": m.get("name") or cid, "mc": m.get("market_cap") or 0, "p": [r6(v) for v in px], "v": [None if v is None else int(v) for v in vol]}
         if not fix:
             time.sleep(2.2 if KEY else 3.6)
-    if len(coins) < 35 or "bitcoin" not in coins:
+    if len(coins) < 60 or "bitcoin" not in coins:
         status("too few coins returned history (CoinGecko rate limit); no file written", coins=len(coins))
         sys.exit(0)
-    out = {"generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(), "source": "CoinGecko", "dates": dates,
+    out = {"generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(), "source": "TTM Markets data", "dates": dates,
            "sectors": [{"id": s[0], "desc": s[1], "coins": [c for c in s[2] if c in coins]} for s in SECTORS], "coins": coins}
     json.dump(out, open(OUT, "w"), separators=(",", ":"))
     status("ok", coins=len(coins), bytes=os.path.getsize(OUT))

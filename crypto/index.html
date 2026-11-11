@@ -1433,7 +1433,7 @@ body.rm-full #rmIn{font-size:17px}
     <div class="section-head">
       <span class="tag">Crypto Rotation <small style="background:var(--gold);color:#111;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:800">NEW</small></span>
       <h2>Where is the money rotating?</h2>
-      <p>Ten crypto sectors tracked against Bitcoin: which are leading, which are turning up early, and where we are in the rotation cycle. Educational research only, not financial advice.</p>
+      <p>Crypto sectors tracked against Bitcoin: which are leading, which are turning up early, and where we are in the rotation cycle. Educational research only, not financial advice.</p>
       <p id="crUpdated" class="calendar-note" style="margin-top:8px">Loading rotation data…</p>
     </div>
     <div id="crHero" class="cr-hero"><div class="tf-empty">Loading…</div></div>
@@ -1441,7 +1441,8 @@ body.rm-full #rmIn{font-size:17px}
       <div id="crTf"><button class="filter-chip" data-k="7">1W</button><button class="filter-chip active" data-k="30">1M</button><button class="filter-chip" data-k="90">3M</button><button class="filter-chip" data-k="ytd">YTD</button></div>
       <div id="crMode"><button class="filter-chip" data-m="abs">Absolute</button><button class="filter-chip active" data-m="rel">Versus Bitcoin</button></div>
     </div>
-    <div class="cr-sub">Rotation map <small>every bubble is a sector · up and right = leading · tails show the last 3 weeks</small></div>
+    <div class="cr-sub" id="crMapT">Performance race</div>
+    <div class="cr-bar" style="margin:0 0 10px"><div id="crView"><button class="filter-chip active" data-v="race">Performance race</button><button class="filter-chip" data-v="quad">Rotation quadrant</button></div></div>
     <div class="cr-card"><div id="crMap"></div></div>
     <div class="cr-sub">Sector heatmap</div>
     <div class="cr-heat" id="crHeat"></div>
@@ -1451,7 +1452,7 @@ body.rm-full #rmIn{font-size:17px}
     <div class="cr-card" id="crDrill"></div>
     <div class="cr-sub">Back-test of the LEAN IN signal (last year)</div>
     <div class="cr-card" id="crBack"></div>
-    <p class="calendar-note" style="margin-top:12px"><b>How it works.</b> Each sector is an equal-weighted basket of its tokens. The TTM Rotation Score (0 to 100) blends relative strength versus Bitcoin and its recent momentum (35%), breadth, meaning how many tokens are above their 50-day average and beating Bitcoin (25%), volume accumulation (20%), and leadership depth over 3 months (20%). Quadrants follow the standard relative-rotation idea: Leading, Weakening, Lagging, Improving. The cycle ladder is a rules-based reading of which groups are beating Bitcoin, not a prediction. Data: CoinGecko, refreshed every few hours.</p>
+    <p class="calendar-note" style="margin-top:12px"><b>How it works.</b> Each sector is an equal-weighted basket of its tokens. The TTM Rotation Score (0 to 100) blends relative strength versus Bitcoin and its recent momentum (35%), breadth, meaning how many tokens are above their 50-day average and beating Bitcoin (25%), volume accumulation (20%), and leadership depth over 3 months (20%). Quadrants follow the standard relative-rotation idea: Leading, Weakening, Lagging, Improving. The cycle ladder is a rules-based reading of which groups are beating Bitcoin, not a prediction. Data: TTM Markets, refreshed every few hours.</p>
   </div>
 </section>
 
@@ -1521,27 +1522,49 @@ function hero(){
     <div class="cr-gs"><div class="cr-g">${ring(R.alt, R.alt >= 75 ? '#3fb97a' : R.alt >= 40 ? '#f0b929' : '#8ea2ff', 1)}<b>Altseason index</b><small>alts beating BTC, 3M</small></div><div class="cr-g">${ring(lead / SC.length * 100, '#8ea2ff')}<b>Rotation breadth</b><small>${lead} of ${SC.length} sectors up-trending</small></div><div class="cr-g">${ring(avg, '#f0b929')}<b>Avg sector score</b><small>0 weak · 100 strong</small></div></div>`;
 }
 // ---- map
-function map(){
+function quad(){
   const W = 900, H = 520, pl = 56, pr = 24, pt = 24, pb = 44, L = N - 1, pts = SC.map(s => { const tr = []; for(let k = 3; k >= 0; k--){ const i = L - k * 5, r = rsx(s.idx, BTC, i), r7 = rsx(s.idx, BTC, i - 7); if(r != null && r7 != null) tr.push([r, 100 + r - r7]); } return {s, tr}; }).filter(p => p.tr.length > 1);
   if(!pts.length){ $('crMap').innerHTML = '<div class="tf-empty">Not enough history yet.</div>'; return; }
   const devs = a => a.sort((x, y) => x - y)[Math.max(0, Math.ceil(a.length * .85) - 1)], cur = pts.map(p => p.tr[p.tr.length - 1]);
   let mx = Math.max(2, devs(cur.map(t => Math.abs(t[0] - 100))) * 1.5, devs(cur.map(t => Math.abs(t[1] - 100))) * 1.5); mx = Math.ceil(mx * 2) / 2;
   const cl2 = v => clamp(v, 100 - mx * .96, 100 + mx * .96);
   const X = v => pl + (cl2(v) - (100 - mx)) / (2 * mx) * (W - pl - pr), Y = v => pt + (1 - (cl2(v) - (100 - mx)) / (2 * mx)) * (H - pt - pb), cx = X(100), cy = Y(100), mxc = Math.max.apply(null, SC.map(s => s.mc)) || 1;
-  let g = `<svg viewBox="0 0 ${W} ${H}" class="rt-svg"><defs>${SC.map(s => `<radialGradient id="bg_${s.id.replace(/\W/g, '')}" cx="35%" cy="30%"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".35" stop-color="${QC[s.z.q]}" stop-opacity=".95"/><stop offset="1" stop-color="${QC[s.z.q]}" stop-opacity=".55"/></radialGradient>`).join('')}</defs>
+  let g = `<svg viewBox="0 0 ${W} ${H}" class="rt-svg">
   <rect x="${cx}" y="${pt}" width="${W - pr - cx}" height="${cy - pt}" fill="rgba(63,185,122,.07)"/><rect x="${pl}" y="${pt}" width="${cx - pl}" height="${cy - pt}" fill="rgba(142,162,255,.07)"/><rect x="${cx}" y="${cy}" width="${W - pr - cx}" height="${H - pb - cy}" fill="rgba(255,159,104,.07)"/><rect x="${pl}" y="${cy}" width="${cx - pl}" height="${H - pb - cy}" fill="rgba(229,83,75,.07)"/>
   <line x1="${cx}" y1="${pt}" x2="${cx}" y2="${H - pb}" stroke="rgba(255,255,255,.22)"/><line x1="${pl}" y1="${cy}" x2="${W - pr}" y2="${cy}" stroke="rgba(255,255,255,.22)"/><rect x="${pl}" y="${pt}" width="${W - pl - pr}" height="${H - pt - pb}" fill="none" stroke="rgba(255,255,255,.12)"/>
   <text x="${W - pr - 10}" y="${pt + 22}" text-anchor="end" font-size="15" font-weight="800" fill="#3fb97a" opacity=".85" letter-spacing="2">LEADING</text><text x="${pl + 10}" y="${pt + 22}" font-size="15" font-weight="800" fill="#8ea2ff" opacity=".85" letter-spacing="2">IMPROVING</text><text x="${W - pr - 10}" y="${H - pb - 12}" text-anchor="end" font-size="15" font-weight="800" fill="#ff9f68" opacity=".85" letter-spacing="2">WEAKENING</text><text x="${pl + 10}" y="${H - pb - 12}" font-size="15" font-weight="800" fill="#e5534b" opacity=".85" letter-spacing="2">LAGGING</text>
   <text x="${(pl + W - pr) / 2}" y="${H - 10}" text-anchor="middle" font-size="11.5" fill="#9a978f">Relative strength vs Bitcoin  →  stronger</text><text transform="translate(16 ${(pt + H - pb) / 2}) rotate(-90)" text-anchor="middle" font-size="11.5" fill="#9a978f">Momentum  →  accelerating</text>`;
-  pts.forEach(p => { const c = QC[p.s.z.q], d = p.tr.map((t, i) => (i ? 'L' : 'M') + X(t[0]).toFixed(1) + ' ' + Y(t[1]).toFixed(1)).join(' '); g += `<path d="${d}" fill="none" stroke="${c}" stroke-width="2" stroke-opacity=".4" stroke-dasharray="1 5" stroke-linecap="round"/>`; p.tr.slice(0, -1).forEach((t, i) => { g += `<circle cx="${X(t[0]).toFixed(1)}" cy="${Y(t[1]).toFixed(1)}" r="${1.5 + i * .35}" fill="${c}" opacity="${.18 + i * .1}"/>`; }); });
+  pts.forEach(p => { const c = QC[p.s.z.q], d = p.tr.map((t, i) => (i ? 'L' : 'M') + X(t[0]).toFixed(1) + ' ' + Y(t[1]).toFixed(1)).join(' '); g += `<path d="${d}" fill="none" stroke="${c}" stroke-width="1.3" stroke-opacity=".4" stroke-linejoin="round"/>`; p.tr.slice(0, -1).forEach((t, i) => { g += `<circle cx="${X(t[0]).toFixed(1)}" cy="${Y(t[1]).toFixed(1)}" r="1.6" fill="${c}" opacity="${.25 + i * .12}"/>`; }); });
   const bub = pts.slice().sort((a, b) => b.s.mc - a.s.mc).map(p => { const t = p.tr[p.tr.length - 1], r = 11 + 15 * Math.sqrt(p.s.mc / mxc); return {p, x: X(t[0]), y: Y(t[1]), r, c: QC[p.s.z.q]}; });
-  bub.forEach(o => { const p = o.p, x = o.x, y = o.y, r = o.r, c = o.c; g += `<g class="cr-bub" data-s="${esc(p.s.id)}"><title>${esc(p.s.id)} · score ${Math.round(p.s.z.score)} · ${p.s.z.q}</title><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(r + 7).toFixed(1)}" fill="${c}" opacity=".13"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="url(#bg_${p.s.id.replace(/\W/g, '')})" stroke="${SEL === p.s.id ? '#fff' : 'rgba(255,255,255,.4)'}" stroke-width="${SEL === p.s.id ? 2.4 : 1}"/><text x="${x.toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="middle" font-size="${r > 20 ? 12 : 10.5}" font-weight="800" fill="#fff" style="paint-order:stroke;stroke:rgba(0,0,0,.6);stroke-width:2.5px">${Math.round(p.s.z.score)}</text></g>`; });
+  bub.forEach(o => { const p = o.p, x = o.x, y = o.y, r = o.r, c = o.c; g += `<g class="cr-bub" data-s="${esc(p.s.id)}"><title>${esc(p.s.id)} · score ${Math.round(p.s.z.score)} · ${p.s.z.q}</title><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="${c}" fill-opacity=".22" stroke="${SEL === p.s.id ? '#fff' : c}" stroke-width="${SEL === p.s.id ? 2.2 : 1.4}"/><text x="${x.toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="middle" font-size="${r > 20 ? 12 : 10.5}" font-weight="700" fill="${c}">${Math.round(p.s.z.score)}</text></g>`; });
   // labels beside the bubbles, nudged apart so none overlap
   const lab = bub.map(o => ({o, right: o.x < W - pr - 150, y: o.y})).sort((a, b) => a.y - b.y); for(let k = 1; k < lab.length; k++){ const q = lab[k], pv = lab[k - 1]; if(q.right === pv.right && q.y - pv.y < 15) q.y = pv.y + 15; }
   lab.forEach(l => { const o = l.o, lx = l.right ? o.x + o.r + 9 : o.x - o.r - 9, an = l.right ? 'start' : 'end'; if(Math.abs(l.y - o.y) > 4) g += `<line x1="${(l.right ? o.x + o.r : o.x - o.r).toFixed(1)}" y1="${o.y.toFixed(1)}" x2="${(lx + (l.right ? -3 : 3)).toFixed(1)}" y2="${(l.y - 4).toFixed(1)}" stroke="${o.c}" stroke-opacity=".5"/>`; g += `<text class="cr-lbl" data-s="${esc(o.p.s.id)}" x="${lx.toFixed(1)}" y="${(l.y).toFixed(1)}" text-anchor="${an}" font-size="12" font-weight="700" fill="#efece4" style="paint-order:stroke;stroke:rgba(0,0,0,.8);stroke-width:3.5px;cursor:pointer">${esc(o.p.s.id)}</text>`; });
   $('crMap').innerHTML = g + '</svg>';
 }
 // ---- heat
+const PAL = ['#f0b929', '#3fb97a', '#8ea2ff', '#ff9f68', '#c58bff', '#4fd1c5', '#e5534b', '#6ec1ff', '#d9c548', '#ff7eb6', '#9fd356'];
+let VIEW = 'race';
+function race(){
+  const W = 900, H = 440, pl = 50, pr = 168, pt = 16, pb = 32, L = N - 1;
+  let wd; if(TF === 'ytd'){ let j = 0; const y = D.dates[L].slice(0, 4); for(let t = L; t >= 0; t--) if(D.dates[t].slice(0, 4) < y){ j = t; break; } wd = L - j; } else wd = {'7': 30, '30': 90, '90': 180}[TF] || 90;
+  const i0 = Math.max(1, L - wd), n = L - i0;
+  const ser = SC.map((s, k) => { const a = []; for(let i = i0; i <= L; i++){ const v = MODE === 'rel' ? (s.idx[i] / BTC[i]) / (s.idx[i0] / BTC[i0]) : s.idx[i] / s.idx[i0]; a.push(v == null || !isFinite(v) ? null : v * 100); } return {s, a, end: a[a.length - 1], col: PAL[k % PAL.length]}; }).filter(o => o.end != null).sort((x, y) => y.end - x.end);
+  if(!ser.length){ $('crMap').innerHTML = '<div class="tf-empty">Not enough history yet.</div>'; return; }
+  let lo = 100, hi = 100; ser.forEach(o => o.a.forEach(v => { if(v != null){ lo = Math.min(lo, v); hi = Math.max(hi, v); } })); const pd = (hi - lo) * .08 || 2; lo -= pd; hi += pd;
+  const X = i => pl + i / n * (W - pl - pr), Y = v => pt + (1 - (v - lo) / (hi - lo)) * (H - pt - pb), step = [1, 2, 5, 10, 20, 25, 50, 100].find(z => (hi - lo) / z <= 6) || 100;
+  let g = `<svg viewBox="0 0 ${W} ${H}" class="rt-svg">`;
+  for(let v = Math.ceil((lo - 100) / step) * step; v <= hi - 100; v += step){ const y = Y(100 + v); g += `<line x1="${pl}" y1="${y.toFixed(1)}" x2="${W - pr}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,${v === 0 ? .3 : .07})"${v === 0 ? ' stroke-dasharray="5 4"' : ''}/><text x="${pl - 8}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="#8f8c84">${v > 0 ? '+' : ''}${v}%</text>`; }
+  for(let k = 0; k <= 5; k++){ const i = Math.round(n * k / 5), d = new Date(D.dates[i0 + i] + 'T00:00:00Z'); g += `<text x="${X(i).toFixed(1)}" y="${H - 10}" text-anchor="${k === 0 ? 'start' : k === 5 ? 'end' : 'middle'}" font-size="11" fill="#8f8c84">${d.toLocaleDateString(undefined, {month: 'short', day: 'numeric', timeZone: 'UTC'})}</text>`; }
+  g += `<text x="${pl + 6}" y="${(Y(100) - 6).toFixed(1)}" font-size="10.5" fill="#8f8c84" letter-spacing=".08em">${MODE === 'rel' ? 'BITCOIN' : 'START'}</text>`;
+  const topN = new Set(ser.slice(0, 3).map(o => o.s.id)), botN = new Set(ser.slice(-2).map(o => o.s.id)), dim = o => SEL && SEL !== o.s.id;
+  ser.slice().reverse().forEach(o => { const hot = topN.has(o.s.id) || botN.has(o.s.id) || SEL === o.s.id, d = o.a.map((v, i) => v == null ? '' : (i && o.a[i - 1] != null ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1)).join(' '); g += `<g class="cr-bub" data-s="${esc(o.s.id)}" opacity="${dim(o) ? .6 : 1}"><path d="${d}" fill="none" stroke="${o.col}" stroke-width="${SEL === o.s.id ? 3.2 : hot ? 2.4 : 1.4}" stroke-opacity="${hot ? 1 : .5}" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${X(n).toFixed(1)}" cy="${Y(o.end).toFixed(1)}" r="${hot ? 4 : 2.8}" fill="${o.col}"/></g>`; });
+  const lab = ser.map(o => ({o, y: Y(o.end)})); for(let k = 1; k < lab.length; k++) if(lab[k].y - lab[k - 1].y < 15) lab[k].y = lab[k - 1].y + 15;
+  lab.forEach(l => { const o = l.o, v = o.end - 100; g += `<g class="cr-bub" data-s="${esc(o.s.id)}" opacity="${dim(o) ? .75 : 1}">${Math.abs(l.y - Y(o.end)) > 3 ? `<line x1="${(X(n) + 5).toFixed(1)}" y1="${Y(o.end).toFixed(1)}" x2="${W - pr + 10}" y2="${(l.y - 4).toFixed(1)}" stroke="${o.col}" stroke-opacity=".4"/>` : `<line x1="${(X(n) + 5).toFixed(1)}" y1="${Y(o.end).toFixed(1)}" x2="${W - pr + 10}" y2="${(l.y - 4).toFixed(1)}" stroke="${o.col}" stroke-opacity=".25"/>`}<rect x="${W - pr + 12}" y="${(l.y - 12).toFixed(1)}" width="3" height="12" rx="1.5" fill="${o.col}"/><text x="${W - pr + 20}" y="${(l.y - 2).toFixed(1)}" font-size="12" font-weight="700" fill="#e9e6df">${esc(o.s.id)}</text><text x="${W - 4}" y="${(l.y - 2).toFixed(1)}" text-anchor="end" font-size="12" font-weight="700" fill="${v >= 0 ? '#3fb97a' : '#e5534b'}">${v > 0 ? '+' : ''}${v.toFixed(1)}%</text></g>`; });
+  $('crMap').innerHTML = g + '</svg>';
+}
+function map(){ document.querySelectorAll('#crView button').forEach(b => b.classList.toggle('active', b.getAttribute('data-v') === VIEW)); const t = $('crMapT'); if(t) t.innerHTML = VIEW === 'race' ? 'Performance race <small>' + (MODE === 'rel' ? 'every sector against Bitcoin' : 'every sector, absolute') + ' · same start, higher = stronger · tap a line</small>' : 'Rotation map <small>up and right = leading · tails show the last 3 weeks</small>'; VIEW === 'race' ? race() : quad(); }
+document.addEventListener('click', e => { const b = e.target.closest('#crView button'); if(b){ VIEW = b.getAttribute('data-v'); map(); } });
 function heat(){
   const vs = SC.map(s => val(s, TF)).filter(x => x != null), m = Math.max(5, Math.max.apply(null, vs.map(Math.abs)));
   $('crHeat').innerHTML = order().map(s => { const v = val(s, TF), a = v == null ? 0 : clamp(Math.abs(v) / m, 0, 1), up = v == null || v >= 0, bg = up ? `linear-gradient(160deg,rgba(63,185,122,${.1 + a * .55}),rgba(20,60,40,${.25 + a * .3}))` : `linear-gradient(160deg,rgba(229,83,75,${.1 + a * .55}),rgba(70,25,25,${.25 + a * .3}))`;
@@ -1569,7 +1592,7 @@ function backtest(){
 function all(){ hero(); map(); heat(); board(); drill(); }
 function pick(id){ SEL = id; map(); heat(); board(); drill(); }
 function boot(){
-  $('crUpdated').textContent = 'Updated ' + new Date(D.generated_at).toLocaleString() + ' · ' + Object.keys(D.coins).length + ' tokens · ' + D.source;
+  $('crUpdated').textContent = 'Updated ' + new Date(D.generated_at).toLocaleString() + ' · ' + Object.keys(D.coins).length + ' tokens';
   init(); if(!SC.length){ $('crHero').innerHTML = '<div class="tf-empty">Not enough history to score yet.</div>'; return; }
   SEL = order()[0].id; all(); backtest();
 }
