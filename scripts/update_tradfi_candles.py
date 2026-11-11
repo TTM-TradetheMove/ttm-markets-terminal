@@ -10,7 +10,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(os.environ.get("OUT_DIR", os.path.join(ROOT, "out")), "tradfi_candles")
-UA = {"User-Agent": "Mozilla/5.0 (compatible; TTMMarketsTerminalBot/1.0)", "Accept": "application/json"}
+UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36", "Accept": "application/json,text/plain,*/*", "Accept-Language": "en-US,en;q=0.9"}
+ERR = {}
 
 SYMS = [
     ("^GSPC", "S&P 500", "Index"), ("^NDX", "Nasdaq 100", "Index"), ("^DJI", "Dow Jones", "Index"), ("^RUT", "Russell 2000", "Index"),
@@ -33,13 +34,15 @@ def sf(sym):
     return re.sub(r"[^A-Za-z0-9]", "_", sym)
 
 
-def get(url, tries=3):
+def get(url, tries=4):
     for i in range(tries):
         try:
             with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=25) as r:
                 return json.loads(r.read())
         except Exception as e:
-            time.sleep(2 * (i + 1))
+            code = str(getattr(e, "code", type(e).__name__))
+            ERR[code] = ERR.get(code, 0) + 1
+            time.sleep(6 * (i + 1) if code == "429" else 2 * (i + 1))
     return None
 
 
@@ -67,6 +70,7 @@ def one(item):
     sym, name, typ = item
     info = None
     for tf, iv, rng in TFS:
+        time.sleep(0.4)
         rows, meta = fetch(sym, iv, rng)
         if not rows:
             print("  no data", sym, tf)
@@ -84,15 +88,15 @@ def one(item):
 
 def main():
     os.makedirs(OUT, exist_ok=True)
-    with ThreadPoolExecutor(max_workers=5) as ex:
+    with ThreadPoolExecutor(max_workers=3) as ex:
         res = list(ex.map(one, SYMS))
     idx = [r for r in res if r]
     if len(idx) < 10:
-        print("too few symbols returned data:", len(idx))
+        print("too few symbols returned data:", len(idx), "| Yahoo errors by code:", ERR)
         sys.exit(1)
     with open(os.path.join(OUT, "index.json"), "w") as f:
         json.dump({"generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "items": idx}, f, separators=(",", ":"))
-    print("wrote", len(idx), "symbols to", OUT)
+    print("wrote", len(idx), "symbols to", OUT, "| Yahoo errors by code:", ERR)
 
 
 if __name__ == "__main__":
