@@ -1,13 +1,8 @@
 name: Update TradFi candles (LENS)
 
 on:
-  schedule:
-    - cron: "11,41 * * * 1-5"
+  # PAUSED: schedule removed. Add it back to resume:  schedule:\n    - cron: "11,41 * * * 1-5"
   workflow_dispatch: {}
-  push:
-    paths:
-      - scripts/update_tradfi_candles.py
-      - .github/workflows/update-tradfi-candles.yml
 
 permissions:
   contents: write
