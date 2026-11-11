@@ -29,6 +29,8 @@ jobs:
         continue-on-error: true
         run: curl -sS -m 20 -A 'Mozilla/5.0' -o /dev/null -w 'Yahoo HTTP %{http_code}\n' 'https://query1.finance.yahoo.com/v8/finance/chart/XLC?range=5d&interval=1d'
       - name: Download candles (Yahoo Finance)
+        id: dl
+        continue-on-error: true
         run: python3 -u scripts/update_tradfi_candles.py
       - name: Publish to the data branch (single commit, no history build-up)
         run: |
@@ -40,3 +42,20 @@ jobs:
           git add -A
           git commit -qm "TradFi candles $(date -u +%FT%TZ)"
           git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" data
+
+      - name: Report status to main (so problems are visible without logs)
+        if: always()
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          python3 - <<'PY'
+          import json,os
+          p="tradfi_candles_status.json"
+          d=json.load(open(p)) if os.path.exists(p) else {"msg":"download step wrote no status"}
+          d["download"]="${{ steps.dl.outcome }}"
+          d["files"]=len(os.listdir("out/tradfi_candles")) if os.path.isdir("out/tradfi_candles") else 0
+          d["data_branch_on_remote"]=bool(os.popen("git ls-remote --heads origin data").read().strip())
+          json.dump(d,open(p,"w"))
+          PY
+          git config user.name "ttm-calendar-bot"; git config user.email "actions@users.noreply.github.com"
+          git add tradfi_candles_status.json
+          git diff --cached --quiet || { git commit -qm "TradFi candles status"; for i in 1 2 3; do git pull --rebase -X theirs origin main && git push && break; sleep 5; done; }

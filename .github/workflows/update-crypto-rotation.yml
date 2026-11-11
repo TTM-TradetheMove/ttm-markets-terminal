@@ -32,7 +32,7 @@ jobs:
         run: |
           git config user.name "ttm-calendar-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add crypto_rotation.json 2>/dev/null || echo "no crypto_rotation.json was produced (data source unavailable)"
+          git add crypto_rotation_status.json 2>/dev/null; git add crypto_rotation.json 2>/dev/null || echo "no crypto_rotation.json was produced (data source unavailable)"
           if git diff --cached --quiet; then
             echo "No changes"
           else

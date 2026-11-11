@@ -33,6 +33,16 @@ SECTORS = [
 BENCH = ["bitcoin", "ethereum"]
 
 
+STATUS = os.path.join(ROOT, "crypto_rotation_status.json")
+ERRS = {}
+
+
+def status(msg, **kw):
+    kw.update({"at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(), "msg": msg, "http_errors": ERRS, "keyed": bool(KEY)})
+    json.dump(kw, open(STATUS, "w"))
+    print("STATUS:", msg, kw, flush=True)
+
+
 def getj(url, tries=4):
     for i in range(tries):
         try:
@@ -40,6 +50,7 @@ def getj(url, tries=4):
                 return json.loads(r.read())
         except Exception as ex:
             code = getattr(ex, "code", None)
+            ERRS[str(code or type(ex).__name__)] = ERRS.get(str(code or type(ex).__name__), 0) + 1
             print(f"fetch failed {url[:90]} ({type(ex).__name__} {code}), try {i + 1}", flush=True)
             time.sleep(30 * (i + 1) if code == 429 else 5 * (i + 1))
     return None
@@ -76,7 +87,7 @@ def main():
             for c in (m or []):
                 meta[c["id"]] = c
         if len(meta) < 30:
-            print("could not load coin list; keeping previous file")
+            status("could not load the coin list from CoinGecko (rate-limited or blocked); no file written", loaded=len(meta))
             sys.exit(0)
     else:
         meta = {i: {"id": i, "symbol": i[:4], "name": i, "market_cap": 1e9} for i in fix}
@@ -99,12 +110,12 @@ def main():
         if not fix:
             time.sleep(2.2 if KEY else 3.6)
     if len(coins) < 35 or "bitcoin" not in coins:
-        print("too few coins returned data; keeping previous file")
+        status("too few coins returned history (CoinGecko rate limit); no file written", coins=len(coins))
         sys.exit(0)
     out = {"generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(), "source": "CoinGecko", "dates": dates,
            "sectors": [{"id": s[0], "desc": s[1], "coins": [c for c in s[2] if c in coins]} for s in SECTORS], "coins": coins}
     json.dump(out, open(OUT, "w"), separators=(",", ":"))
-    print("wrote", OUT, os.path.getsize(OUT), "bytes;", len(coins), "coins")
+    status("ok", coins=len(coins), bytes=os.path.getsize(OUT))
 
 
 if __name__ == "__main__":

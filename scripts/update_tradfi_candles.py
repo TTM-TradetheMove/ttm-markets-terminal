@@ -30,6 +30,11 @@ SYMS = [
 TFS = [("1d", "1d", "5y"), ("1h", "1h", "1y"), ("15m", "15m", "60d"), ("5m", "5m", "30d")]
 
 
+def write_status(msg, **kw):
+    kw.update({"at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "msg": msg, "yahoo_errors": ERR})
+    json.dump(kw, open(os.path.join(ROOT, "tradfi_candles_status.json"), "w"))
+
+
 def sf(sym):
     return re.sub(r"[^A-Za-z0-9]", "_", sym)
 
@@ -93,7 +98,9 @@ def main():
     idx = [r for r in res if r]
     if len(idx) < 10:
         print("too few symbols returned data:", len(idx), "| Yahoo errors by code:", ERR)
+        write_status("too few symbols returned data", symbols=len(idx))
         sys.exit(1)
+    write_status("downloaded", symbols=len(idx))
     with open(os.path.join(OUT, "index.json"), "w") as f:
         json.dump({"generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "items": idx}, f, separators=(",", ":"))
     print("wrote", len(idx), "symbols to", OUT, "| Yahoo errors by code:", ERR)
