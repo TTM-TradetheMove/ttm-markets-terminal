@@ -681,6 +681,34 @@ body.view-section #backFab{display:block}
 #rrMkt{pointer-events:none;opacity:.75}
 #riskreward.no-tracker .trk-only{display:none !important}
 button.tkr{background:none;border:0;padding:0;margin:0;color:var(--gold2);font:inherit;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px;text-align:left}button.tkr:hover{color:#fff}
+.cr-hero{display:grid;grid-template-columns:1.5fr 1fr;gap:18px;border:1px solid var(--line);border-radius:18px;padding:22px;background:radial-gradient(900px 300px at 8% -20%,rgba(219,161,24,.16),transparent 60%),radial-gradient(500px 260px at 100% 120%,rgba(63,185,122,.09),transparent 60%),linear-gradient(180deg,#1a1a1d,#121214);box-shadow:0 10px 40px rgba(0,0,0,.35)}
+@media(max-width:820px){.cr-hero{grid-template-columns:1fr;padding:16px}}
+.cr-k{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:8px}
+.cr-reg{font-size:30px;font-weight:800;letter-spacing:.02em;line-height:1.1;background:linear-gradient(90deg,#fff,var(--gold2));-webkit-background-clip:text;background-clip:text;color:transparent}@media(max-width:520px){.cr-reg{font-size:23px}}
+.cr-regs{font-size:13px;color:var(--mute);margin:8px 0 18px;max-width:560px;line-height:1.5}
+.cr-lad{display:flex;align-items:flex-start;position:relative;margin:4px 0 2px}.cr-st{flex:1;text-align:center;position:relative;z-index:1;min-width:0}
+.cr-st i{display:block;width:16px;height:16px;border-radius:50%;margin:0 auto 7px;background:#26262b;border:2px solid #3a3a41;position:relative}
+.cr-st.done i{background:var(--gold);border-color:var(--gold)}.cr-st.now i{background:var(--gold2);border-color:#fff;box-shadow:0 0 0 5px rgba(240,185,41,.2),0 0 18px rgba(240,185,41,.75);animation:crp 2s ease-in-out infinite}
+@keyframes crp{50%{box-shadow:0 0 0 9px rgba(240,185,41,.08),0 0 26px rgba(240,185,41,.9)}}
+.cr-st b{display:block;font-size:11.5px;color:var(--mute);font-weight:700;line-height:1.2}.cr-st.now b{color:#fff}.cr-st.done b{color:#d8c690}.cr-st small{display:block;font-size:10px;color:#6f6c66;margin-top:2px;line-height:1.2}
+.cr-lad::before{content:"";position:absolute;left:10%;right:10%;top:7px;height:2px;background:#2d2d33}.cr-lad .cr-fill{position:absolute;left:10%;top:7px;height:2px;background:linear-gradient(90deg,var(--gold),var(--gold2));box-shadow:0 0 8px rgba(240,185,41,.6)}
+.cr-gs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-content:center}.cr-g{text-align:center;padding:10px 4px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.02)}
+.cr-g svg{width:78px;height:78px;display:block;margin:0 auto 4px}.cr-g b{display:block;font-size:11px;color:var(--text);letter-spacing:.02em}.cr-g small{display:block;font-size:10px;color:var(--mute);margin-top:2px}
+.cr-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.cr-chip{display:inline-flex;gap:7px;align-items:baseline;padding:6px 11px;border:1px solid var(--line);border-radius:999px;font-size:12px;background:rgba(255,255,255,.02)}.cr-chip span{color:var(--mute);font-size:10.5px;letter-spacing:.05em}.cr-chip b{font-variant-numeric:tabular-nums}
+.cr-bar{display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin:18px 0 0}.cr-bar>div{display:flex;gap:6px;flex-wrap:wrap}
+.cr-sub{color:var(--gold);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;margin:30px 0 12px;font-weight:600}.cr-sub small{color:var(--mute);text-transform:none;letter-spacing:0;font-weight:400;margin-left:8px;font-size:11.5px}
+.cr-card{border:1px solid var(--line);border-radius:16px;padding:14px;background:linear-gradient(180deg,#18181b,#131315);overflow:hidden}
+#crMap svg{width:100%;height:auto;display:block}.cr-tbl{width:100%;border-collapse:collapse;font-size:13.5px}.cr-tbl th{text-align:left;color:var(--mute);font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;padding:0 12px 10px;font-weight:700;white-space:nowrap}.cr-tbl td{padding:12px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}.cr-tbl th.num,.cr-tbl td.num{text-align:right}.cr-tbl tr:nth-child(2) td:first-child{color:var(--gold2);font-weight:700}#cryptorotation .tf-note{font-size:12px;color:var(--mute);margin-top:10px;line-height:1.5}#crMap text{font-family:inherit}.cr-bub{cursor:pointer;transition:opacity .15s}.cr-bub:hover{opacity:.85}
+.cr-heat{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px}.cr-tile{position:relative;border-radius:14px;padding:13px 14px 10px;overflow:hidden;cursor:pointer;border:1px solid rgba(255,255,255,.07);transition:transform .15s,border-color .15s}.cr-tile:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.28)}.cr-tile.sel{border-color:var(--gold2);box-shadow:0 0 0 1px var(--gold2)}
+.cr-tile b{display:block;font-size:14px;color:#fff}.cr-tile em{display:block;font-style:normal;font-size:24px;font-weight:800;margin:4px 0 0;font-variant-numeric:tabular-nums;color:#fff;letter-spacing:-.01em}.cr-tile small{display:block;font-size:10.5px;color:rgba(255,255,255,.62)}.cr-tile svg{display:block;width:100%;height:30px;margin-top:6px}
+.cr-row{display:grid;grid-template-columns:26px minmax(120px,1.2fr) 92px 44px 140px minmax(90px,.8fr) minmax(90px,.8fr);gap:14px;align-items:center;padding:11px 4px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:8px}.cr-row:last-child{border-bottom:0}.cr-row:hover{background:rgba(255,255,255,.03)}.cr-row.sel{background:rgba(219,161,24,.07)}
+.cr-rk{color:var(--mute);font-size:12px}.cr-nm b{display:block;font-size:15.5px}.cr-nm span{display:block;font-size:11.5px;color:var(--mute);margin-top:1px}
+.cr-vd{font-size:10.5px;font-weight:800;letter-spacing:.12em;text-align:center;border:1px solid;border-radius:6px;padding:6px 0}.cr-row small{display:block;font-size:10px;color:var(--mute);margin-bottom:4px}
+.cr-b{position:relative;height:5px;border-radius:3px;background:rgba(255,255,255,.07);margin-bottom:4px}.cr-b::after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:rgba(255,255,255,.25)}.cr-b i{position:absolute;top:0;bottom:0;border-radius:3px}.cr-b+span{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+@media(max-width:760px){.cr-row{grid-template-columns:22px 1fr 84px 40px;gap:8px 10px}.cr-row .cr-spw{grid-column:2/4}.cr-row .c1{grid-column:2/3}.cr-row .c3{grid-column:3/5}}
+.cr-tk{display:grid;grid-template-columns:30px 90px 1fr 120px 120px;gap:12px;align-items:center;padding:9px 4px;border-bottom:1px solid var(--line);font-size:13px}.cr-tk:last-child{border-bottom:0}.cr-tk b{font-size:14px}.cr-tk .t{font-size:9.5px;font-weight:800;letter-spacing:.1em;padding:2px 6px;border-radius:5px;margin-left:6px}
+@media(max-width:640px){.cr-tk{grid-template-columns:24px 70px 1fr 90px}.cr-tk .c3x{display:none}}
+.cr-up{color:var(--green);font-weight:700}.cr-dn{color:var(--red);font-weight:700}
 </style>
 <style>
 .mkt-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:0 0 22px}
@@ -731,6 +759,7 @@ body.rm-full #rmIn{font-size:17px}
       <a href="#riskreward">Risk / Reward</a>
       <a href="#tradejournal">Trade Tracker</a>
       <a href="#portfolio">Portfolio Forecast</a>
+      <a href="#cryptorotation">Crypto Rotation <small style="background:var(--gold);color:#111;border-radius:4px;padding:1px 4px;font-size:8px;font-weight:800">NEW</small></a>
       <a href="#holdings">TTM Spot</a>
       <a href="#pension">TTM Pension / Super</a>
       <a href="#ttmcharts">TTM LENS</a>
@@ -783,7 +812,7 @@ body.rm-full #rmIn{font-size:17px}
   </div>
 </div>
 
-<div id="menuHome"><div class="wrap"><h2 class="mkt-h2">Market snapshot</h2><div id="mktStrip" class="mkt-strip"></div><h2>TTM Investments</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#holdings"><b>TTM Spot</b><span>What TTM holds on spot, as % of the portfolio, plus cash</span></a><a class="menu-tile" href="#pension"><b>TTM Pension / Super</b><span>What TTM holds long term in super / retirement, as % of the portfolio, plus cash</span></a></div><h2>Trading tools</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#riskreward"><b>Risk / Reward Tooling</b><span>Size a trade by risk % , risk $ or investment, with live candles, leverage and liquidation</span></a><a class="menu-tile" href="#tradejournal"><b>Trade Tracker &amp; Win Ratio</b><span>Open and closed trades by account and time frame, win rate, equity curve, Excel export</span></a><a class="menu-tile" href="#pnlcal"><b>P&amp;L Calendar</b><span>Daily and monthly profit and loss, with a running total</span></a><a class="menu-tile eng-tile" data-engine data-href="../engine/index.html" href="#"><b>TTM Automated Trading Engine <i class="eng-badge">Locked</i></b><span>Automated trading on your own exchange account. Early access only.</span></a><a class="menu-tile" href="#portfolio"><b>Portfolio Forecast</b><span>Spot, leverage and super / retirement: forecast vs actual at live prices</span></a><a class="menu-tile" href="#ttmcharts"><b>TTM LENS <small style="background:var(--gold);color:#111;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:800">TEAM</small></b><span>Full-screen live charts with drawing tools, indicators and replay</span></a><a class="menu-tile" href="#members"><b>TradingView Indicators</b><span>TTM indicators for TradingView (coming soon)</span></a></div><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#marketpulse"><b>Market Pulse</b><span>Fear & Greed, funding, liquidations</span></a><a class="menu-tile" href="#btcmonthly"><b>BTC Monthly</b><span>Bitcoin returns month by month</span></a><a class="menu-tile" href="#fomo"><b>FOMO Finder &amp; RSI Chart</b><span>Sentiment gauge plus price and RSI</span></a><a class="menu-tile" href="#rsimap"><b>RSI Heatmap</b><span>Overbought / oversold across ~125 coins</span></a><a class="menu-tile" href="#painzones"><b>Pain Zones</b><span>Average holder cost, support / resistance and RSI for any coin</span></a><a class="menu-tile" href="#lunacycles"><b>Eclipse</b><span>Bitcoin against the eclipse cycles, with the phase we are in now</span></a><a class="menu-tile" href="#maxpain"><b>Max Pain</b><span>Options max pain by token, with RSI confluence</span></a><a class="menu-tile" href="#volume"><b>Volume Heatmap</b><span>Surging and drying-up volume by coin</span></a><a class="menu-tile" href="#socialpulse"><b>Social Pulse</b><span>Truth Social and crypto news feed</span></a><a class="menu-tile" href="#tokenevents"><b>Token Events</b><span>Unlocks, listings and airdrops</span></a><a class="menu-tile" href="#library"><b>Reports</b><span>Asset reviews and deep dives</span></a><a class="menu-tile" href="#transparency"><b>Transparency Watch</b><span>Congress and insider trading watch</span></a></div></div></div>
+<div id="menuHome"><div class="wrap"><h2 class="mkt-h2">Market snapshot</h2><div id="mktStrip" class="mkt-strip"></div><h2>TTM Investments</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#holdings"><b>TTM Spot</b><span>What TTM holds on spot, as % of the portfolio, plus cash</span></a><a class="menu-tile" href="#pension"><b>TTM Pension / Super</b><span>What TTM holds long term in super / retirement, as % of the portfolio, plus cash</span></a></div><h2>Trading tools</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#riskreward"><b>Risk / Reward Tooling</b><span>Size a trade by risk % , risk $ or investment, with live candles, leverage and liquidation</span></a><a class="menu-tile" href="#tradejournal"><b>Trade Tracker &amp; Win Ratio</b><span>Open and closed trades by account and time frame, win rate, equity curve, Excel export</span></a><a class="menu-tile" href="#pnlcal"><b>P&amp;L Calendar</b><span>Daily and monthly profit and loss, with a running total</span></a><a class="menu-tile eng-tile" data-engine data-href="../engine/index.html" href="#"><b>TTM Automated Trading Engine <i class="eng-badge">Locked</i></b><span>Automated trading on your own exchange account. Early access only.</span></a><a class="menu-tile" href="#portfolio"><b>Portfolio Forecast</b><span>Spot, leverage and super / retirement: forecast vs actual at live prices</span></a><a class="menu-tile" href="#ttmcharts"><b>TTM LENS <small style="background:var(--gold);color:#111;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:800">TEAM</small></b><span>Full-screen live charts with drawing tools, indicators and replay</span></a><a class="menu-tile" href="#members"><b>TradingView Indicators</b><span>TTM indicators for TradingView (coming soon)</span></a></div><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#marketpulse"><b>Market Pulse</b><span>Fear & Greed, funding, liquidations</span></a><a class="menu-tile" href="#btcmonthly"><b>BTC Monthly</b><span>Bitcoin returns month by month</span></a><a class="menu-tile" href="#fomo"><b>FOMO Finder &amp; RSI Chart</b><span>Sentiment gauge plus price and RSI</span></a><a class="menu-tile" href="#rsimap"><b>RSI Heatmap</b><span>Overbought / oversold across ~125 coins</span></a><a class="menu-tile" href="#cryptorotation"><b>Crypto Rotation <small style="background:var(--gold);color:#111;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:800">NEW</small></b><span>Which crypto sectors are leading Bitcoin, which are turning up early, and the rotation cycle</span></a><a class="menu-tile" href="#painzones"><b>Pain Zones</b><span>Average holder cost, support / resistance and RSI for any coin</span></a><a class="menu-tile" href="#lunacycles"><b>Eclipse</b><span>Bitcoin against the eclipse cycles, with the phase we are in now</span></a><a class="menu-tile" href="#maxpain"><b>Max Pain</b><span>Options max pain by token, with RSI confluence</span></a><a class="menu-tile" href="#volume"><b>Volume Heatmap</b><span>Surging and drying-up volume by coin</span></a><a class="menu-tile" href="#socialpulse"><b>Social Pulse</b><span>Truth Social and crypto news feed</span></a><a class="menu-tile" href="#tokenevents"><b>Token Events</b><span>Unlocks, listings and airdrops</span></a><a class="menu-tile" href="#library"><b>Reports</b><span>Asset reviews and deep dives</span></a><a class="menu-tile" href="#transparency"><b>Transparency Watch</b><span>Congress and insider trading watch</span></a></div></div></div>
 <button id="backFab" type="button">&larr; Menu</button>
 <div id="backBar"><div class="wrap"><button id="backBtn" type="button">&larr; Back to menu</button><span id="backTitle"></span></div></div>
 <section id="calendar">
@@ -1398,6 +1427,160 @@ body.rm-full #rmIn{font-size:17px}
   </div>
 </section>
 
+
+<section id="cryptorotation" class="alt">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">Crypto Rotation <small style="background:var(--gold);color:#111;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:800">NEW</small></span>
+      <h2>Where is the money rotating?</h2>
+      <p>Ten crypto sectors tracked against Bitcoin: which are leading, which are turning up early, and where we are in the rotation cycle. Educational research only, not financial advice.</p>
+      <p id="crUpdated" class="calendar-note" style="margin-top:8px">Loading rotation data…</p>
+    </div>
+    <div id="crHero" class="cr-hero"><div class="tf-empty">Loading…</div></div>
+    <div class="cr-bar">
+      <div id="crTf"><button class="filter-chip" data-k="7">1W</button><button class="filter-chip active" data-k="30">1M</button><button class="filter-chip" data-k="90">3M</button><button class="filter-chip" data-k="ytd">YTD</button></div>
+      <div id="crMode"><button class="filter-chip" data-m="abs">Absolute</button><button class="filter-chip active" data-m="rel">Versus Bitcoin</button></div>
+    </div>
+    <div class="cr-sub">Rotation map <small>every bubble is a sector · up and right = leading · tails show the last 6 weeks</small></div>
+    <div class="cr-card"><div id="crMap"></div></div>
+    <div class="cr-sub">Sector heatmap</div>
+    <div class="cr-heat" id="crHeat"></div>
+    <div class="cr-sub">Rotation board: where to lean</div>
+    <div class="cr-card" id="crBoard"></div>
+    <div class="cr-sub" id="crDrillH">Inside the sector</div>
+    <div class="cr-card" id="crDrill"></div>
+    <div class="cr-sub">Back-test of the LEAN IN signal (last year)</div>
+    <div class="cr-card" id="crBack"></div>
+    <p class="calendar-note" style="margin-top:12px"><b>How it works.</b> Each sector is an equal-weighted basket of its tokens. The TTM Rotation Score (0 to 100) blends relative strength versus Bitcoin and its recent momentum (35%), breadth, meaning how many tokens are above their 50-day average and beating Bitcoin (25%), volume accumulation (20%), and leadership depth over 3 months (20%). Quadrants follow the standard relative-rotation idea: Leading, Weakening, Lagging, Improving. The cycle ladder is a rules-based reading of which groups are beating Bitcoin, not a prediction. Data: CoinGecko, refreshed every few hours.</p>
+  </div>
+</section>
+
+<script>
+(function(){
+const $ = id => document.getElementById(id), esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let D = null, MK = null, TF = '30', MODE = 'rel', SEL = null, SC = [], BTC = null, ETH = null, N = 0, uid = 0;
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x)), mean = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;
+const fp = (v, d) => v == null || !isFinite(v) ? '—' : (v > 0 ? '+' : '') + v.toFixed(d == null ? 1 : d) + '%';
+const cl = v => v == null ? '' : v >= 0 ? 'cr-up' : 'cr-dn';
+const VC = {'LEAN IN':'#3fb97a','HOLD':'#f0b929','WATCH':'#8ea2ff','REDUCE':'#ff9f68','AVOID':'#e5534b'};
+const QC = {Leading:'#3fb97a',Improving:'#8ea2ff',Weakening:'#ff9f68',Lagging:'#e5534b'};
+const STG = ['Dormant','Early accumulation','Rotation confirmation','Established leadership'];
+const LADDER = [['Bitcoin','BTC leads'],['Ethereum','ETH outperforms'],['Large caps','L1 · Pay · Exch'],['Mid caps','DeFi · AI · L2'],['Speculative','Memes · Gaming']];
+function spark(a, w, h, col, area){ const v = a.filter(x => x != null); if(v.length < 2) return ''; const lo = Math.min.apply(null, v), hi = Math.max.apply(null, v), r = hi - lo || 1, id = 'cg' + (++uid); const pts = v.map((x, i) => [i / (v.length - 1) * w, h - 2 - (x - lo) / r * (h - 4)]);
+  const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%;height:${h}px;display:block"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".35"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>${area === false ? '' : `<path d="${d} L${w} ${h} L0 ${h}Z" fill="url(#${id})"/>`}<path d="${d}" fill="none" stroke="${col}" stroke-width="1.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/><circle cx="${pts[pts.length - 1][0]}" cy="${pts[pts.length - 1][1]}" r="2.4" fill="${col}"/></svg>`; }
+function ring(v, col, big){ const r = 32, c = 2 * Math.PI * r, o = c * (1 - clamp(v, 0, 100) / 100); return `<svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="${r}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="7"/><circle cx="40" cy="40" r="${r}" fill="none" stroke="${col}" stroke-width="7" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${o.toFixed(1)}" transform="rotate(-90 40 40)" style="filter:drop-shadow(0 0 5px ${col}88)"/><text x="40" y="${big ? 46 : 45}" text-anchor="middle" font-size="${big ? 22 : 21}" font-weight="800" fill="#fff">${Math.round(v)}</text></svg>`; }
+// ---- maths
+function buildIdx(ids){ const out = new Array(N).fill(null); out[0] = 100; for(let i = 1; i < N; i++){ const r = []; ids.forEach(c => { const p = D.coins[c].p; if(p[i] != null && p[i - 1] != null && p[i - 1] > 0) r.push(clamp(p[i] / p[i - 1] - 1, -.4, .4)); }); out[i] = out[i - 1] * (1 + (r.length ? mean(r) : 0)); } return out; }
+function ret(a, i, k){ let j; if(k === 'ytd'){ const y = D.dates[i].slice(0, 4); j = 0; for(let t = i; t >= 0; t--) if(D.dates[t].slice(0, 4) < y){ j = t; break; } } else j = i - k; if(j < 0 || a[i] == null || a[j] == null) return null; return (a[i] / a[j] - 1) * 100; }
+function rel(a, b, i, k){ const x = ret(a, i, k), y = ret(b, i, k); return x == null || y == null ? null : ((1 + x / 100) / (1 + y / 100) - 1) * 100; }
+function rsx(a, b, i){ if(i < 50) return null; let s = 0; for(let t = i - 49; t <= i; t++) s += a[t] / b[t]; return 100 * (a[i] / b[i]) / (s / 50); }
+function pAt(id, i){ return D.coins[id].p[i]; }
+function coinRet(id, i, k){ const p = D.coins[id].p; return ret(p, i, k); }
+function ma50(id, i){ const p = D.coins[id].p; let s = 0, n = 0; for(let t = i - 49; t <= i; t++) if(p[t] != null){ s += p[t]; n++; } return n > 25 ? s / n : null; }
+function stats(sc, i){
+  const rs = rsx(sc.idx, BTC, i), rs7 = rsx(sc.idx, BTC, i - 7); if(rs == null || rs7 == null) return null;
+  const mom = 100 + (rs - rs7), q = rs >= 100 ? (mom >= 100 ? 'Leading' : 'Weakening') : (mom >= 100 ? 'Improving' : 'Lagging');
+  const r30 = rel(sc.idx, BTC, i, 30), r90 = rel(sc.idx, BTC, i, 90);
+  let above = 0, nA = 0, beat = 0, nB = 0, beat90 = 0, nC = 0;
+  sc.coins.forEach(c => { const p = pAt(c, i), m = ma50(c, i); if(p != null && m){ nA++; if(p > m) above++; } const x = coinRet(c, i, 30), bb = ret(BTC, i, 30); if(x != null && bb != null){ nB++; if(x > bb) beat++; } const y = coinRet(c, i, 90), b9 = ret(BTC, i, 90); if(y != null && b9 != null){ nC++; if(y > b9) beat90++; } });
+  const sv = (a, b) => { let s = 0, n = 0; sc.coins.forEach(c => { const v = D.coins[c].v; for(let t = a; t <= b; t++) if(v[t] != null){ s += v[t]; n++; } }); return n ? s / (b - a + 1) : null; };
+  const v7 = sv(i - 6, i), v30 = sv(i - 29, i), vr = v7 && v30 ? v7 / v30 : 1;
+  const sRS = .6 * clamp(50 + (r30 || 0) * 2.5, 0, 100) + .4 * clamp(50 + (mom - 100) * 10, 0, 100), sBr = .5 * (nA ? above / nA * 100 : 50) + .5 * (nB ? beat / nB * 100 : 50), sVol = clamp((vr - .7) / .8 * 100, 0, 100), sLead = nC ? beat90 / nC * 100 : 50;
+  const score = .35 * sRS + .25 * sBr + .2 * sVol + .2 * sLead;
+  let stage = 0; if(q === 'Improving' && score >= 40) stage = 1; else if(q === 'Leading' && mom >= 100 && score >= 60 && (r90 == null || r90 < 40)) stage = 2; else if(q === 'Leading' || q === 'Weakening') stage = 3;
+  let v; if(q === 'Improving') v = score >= 45 ? 'LEAN IN' : 'WATCH'; else if(q === 'Leading') v = mom >= 100 && score >= 55 && (r30 == null || r30 < 35) ? 'LEAN IN' : 'HOLD'; else if(q === 'Weakening') v = 'REDUCE'; else v = mom >= 100 ? 'WATCH' : 'AVOID';
+  return {rs, mom, q, score, stage, v, r30, r90, sRS, sBr, sVol, sLead, vr, nA, above, beat, nB};
+}
+function init(){
+  N = D.dates.length; BTC = D.coins.bitcoin.p.map(x => x); let f = BTC.find(x => x != null); BTC = BTC.map(x => x == null ? f : x); ETH = D.coins.ethereum ? D.coins.ethereum.p.map(x => x == null ? D.coins.ethereum.p.find(y => y != null) : x) : null;
+  SC = D.sectors.filter(s => s.coins.length >= 3).map(s => { const o = {id: s.id, desc: s.desc, coins: s.coins}; o.idx = buildIdx(s.coins); o.mc = s.coins.reduce((a, c) => a + (D.coins[c].mc || 0), 0); return o; });
+  SC.forEach(s => { s.z = stats(s, N - 1); });
+  SC = SC.filter(s => s.z);
+}
+const order = () => SC.slice().sort((a, b) => b.z.score - a.z.score);
+function val(sc, k){ return MODE === 'rel' ? rel(sc.idx, BTC, N - 1, k) : ret(sc.idx, N - 1, k); }
+// ---- hero
+function regime(){
+  const L = N - 1, g = ids => { const v = SC.filter(s => ids.indexOf(s.id) >= 0).map(s => rel(s.idx, BTC, L, 30)).filter(x => x != null); return v.length ? mean(v) : null; };
+  const eth = ETH ? rel(ETH, BTC, L, 30) : null, large = g(['Layer 1', 'Payments', 'Exchange tokens']), mid = g(['DeFi', 'AI', 'Layer 2', 'RWA & Oracles']), spec = g(['Memecoins', 'Gaming']);
+  let alts = 0, na = 0; Object.keys(D.coins).forEach(c => { if(c === 'bitcoin') return; const x = coinRet(c, L, 90), b = ret(BTC, L, 90); if(x != null && b != null){ na++; if(x > b) alts++; } }); const alt = na ? alts / na * 100 : 0;
+  const btc30 = ret(BTC, L, 30); let p = 1; if(eth != null && eth > 0) p = 2; if(p >= 2 && large != null && large > 0) p = 3; if(p >= 3 && mid != null && mid > 0) p = 4; if(p >= 4 && spec != null && spec > 0) p = 5;
+  const risk = btc30 != null && btc30 < -12 && alt < 30;
+  const T = [['BITCOIN LEADS', 'Money is concentrated in Bitcoin. Altcoins are lagging, so rotation has not started. Patience is the edge here.'], ['ETHEREUM ROTATION', 'Ether is beating Bitcoin. Historically this is the first step of an alt rotation. Watch whether large caps follow.'], ['LARGE-CAP ALTS', 'Large-cap alts are beating Bitcoin. The rotation is broadening, and the next step is mid-cap sectors.'], ['MID-CAP SECTOR RUNS', 'DeFi, AI, L2 and RWA are beating Bitcoin. Selective sector leadership, and the strongest part of the cycle for rotation plays.'], ['SPECULATIVE PHASE', 'Memes and gaming are beating Bitcoin. Late-cycle risk appetite: momentum is strong, but tops often form here.']];
+  return {p, t: risk ? ['RISK-OFF', 'Bitcoin is falling hard and alts are not holding up. Capital is leaving the market. Capital preservation first.'] : T[p - 1], alt, eth, large, mid, spec, btc30, risk};
+}
+function macro(){ const m = MK && MK.d && MK.d.s; if(!m) return null; const s = m['BTC.D'], u = m['USDT.D'], c = m['USDC.D'], t3 = m['TOTAL3']; if(!s) return null; const n = s.length, last = a => { for(let i = n - 1; i >= 0; i--) if(a && a[i] != null) return i; return -1; }, li = last(s), pi = li - 30; if(li < 30) return null; return {btcd: s[li], btcdc: s[li] - s[pi], st: (u[li] || 0) + (c[li] || 0), stc: (u[li] || 0) + (c[li] || 0) - ((u[pi] || 0) + (c[pi] || 0)), t3c: t3 && t3[li] && t3[pi] ? (t3[li] / t3[pi] - 1) * 100 : null}; }
+function hero(){
+  const R = regime(), M = macro(), o = order(), lead = SC.filter(s => s.z.q === 'Leading' || s.z.q === 'Improving').length, avg = mean(SC.map(s => s.z.score));
+  const ladder = LADDER.map((l, i) => `<div class="cr-st ${R.risk ? '' : i + 1 < R.p ? 'done' : i + 1 === R.p ? 'now' : ''}"><i></i><b>${l[0]}</b><small>${l[1]}</small></div>`).join('');
+  const fill = R.risk ? 0 : (R.p - 1) / 5 * 100 * (1 / 1) * .8 * 1.25;
+  const best = o.filter(s => s.z.v === 'LEAN IN').slice(0, 3);
+  $('crHero').innerHTML = `<div><div class="cr-k">Market regime</div><div class="cr-reg">${R.t[0]}</div><div class="cr-regs">${R.t[1]}</div><div class="cr-lad"><div class="cr-fill" style="width:${R.risk ? 0 : (R.p - 1) * 20}%"></div>${ladder}</div>
+    <div class="cr-chips">${best.length ? '<span class="cr-chip"><span>LEAN IN</span><b style="color:#3fb97a">' + best.map(s => esc(s.id)).join(' · ') + '</b></span>' : '<span class="cr-chip"><span>LEAN IN</span><b style="color:var(--mute)">no sector yet</b></span>'}${R.eth != null ? `<span class="cr-chip"><span>ETH vs BTC 1M</span><b class="${cl(R.eth)}">${fp(R.eth)}</b></span>` : ''}<span class="cr-chip"><span>BTC 1M</span><b class="${cl(R.btc30)}">${fp(R.btc30)}</b></span>${M ? `<span class="cr-chip"><span>BTC.D</span><b>${M.btcd.toFixed(1)}%</b><span class="${M.btcdc <= 0 ? 'cr-up' : 'cr-dn'}">${(M.btcdc > 0 ? '+' : '') + M.btcdc.toFixed(1)} pts 1M</span></span><span class="cr-chip"><span>STABLES</span><b>${M.st.toFixed(1)}%</b><span class="${M.stc <= 0 ? 'cr-up' : 'cr-dn'}">${(M.stc > 0 ? '+' : '') + M.stc.toFixed(1)} pts</span></span>` : ''}</div></div>
+    <div class="cr-gs"><div class="cr-g">${ring(R.alt, R.alt >= 75 ? '#3fb97a' : R.alt >= 40 ? '#f0b929' : '#8ea2ff', 1)}<b>Altseason index</b><small>alts beating BTC, 3M</small></div><div class="cr-g">${ring(lead / SC.length * 100, '#8ea2ff')}<b>Rotation breadth</b><small>${lead} of ${SC.length} sectors up-trending</small></div><div class="cr-g">${ring(avg, '#f0b929')}<b>Avg sector score</b><small>0 weak · 100 strong</small></div></div>`;
+}
+// ---- map
+function map(){
+  const W = 900, H = 520, pl = 56, pr = 24, pt = 24, pb = 44, L = N - 1, pts = SC.map(s => { const tr = []; for(let k = 6; k >= 0; k--){ const i = L - k * 7, r = rsx(s.idx, BTC, i), r7 = rsx(s.idx, BTC, i - 7); if(r != null && r7 != null) tr.push([r, 100 + r - r7]); } return {s, tr}; }).filter(p => p.tr.length > 1);
+  if(!pts.length){ $('crMap').innerHTML = '<div class="tf-empty">Not enough history yet.</div>'; return; }
+  const devs = a => a.sort((x, y) => x - y)[Math.max(0, Math.ceil(a.length * .85) - 1)], cur = pts.map(p => p.tr[p.tr.length - 1]);
+  let mx = Math.max(2, devs(cur.map(t => Math.abs(t[0] - 100))) * 1.5, devs(cur.map(t => Math.abs(t[1] - 100))) * 1.5); mx = Math.ceil(mx * 2) / 2;
+  const cl2 = v => clamp(v, 100 - mx * .96, 100 + mx * .96);
+  const X = v => pl + (cl2(v) - (100 - mx)) / (2 * mx) * (W - pl - pr), Y = v => pt + (1 - (cl2(v) - (100 - mx)) / (2 * mx)) * (H - pt - pb), cx = X(100), cy = Y(100), mxc = Math.max.apply(null, SC.map(s => s.mc)) || 1;
+  let g = `<svg viewBox="0 0 ${W} ${H}" class="rt-svg"><defs>${SC.map(s => `<radialGradient id="bg_${s.id.replace(/\W/g, '')}" cx="35%" cy="30%"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".35" stop-color="${QC[s.z.q]}" stop-opacity=".95"/><stop offset="1" stop-color="${QC[s.z.q]}" stop-opacity=".55"/></radialGradient>`).join('')}</defs>
+  <rect x="${cx}" y="${pt}" width="${W - pr - cx}" height="${cy - pt}" fill="rgba(63,185,122,.07)"/><rect x="${pl}" y="${pt}" width="${cx - pl}" height="${cy - pt}" fill="rgba(142,162,255,.07)"/><rect x="${cx}" y="${cy}" width="${W - pr - cx}" height="${H - pb - cy}" fill="rgba(255,159,104,.07)"/><rect x="${pl}" y="${cy}" width="${cx - pl}" height="${H - pb - cy}" fill="rgba(229,83,75,.07)"/>
+  <line x1="${cx}" y1="${pt}" x2="${cx}" y2="${H - pb}" stroke="rgba(255,255,255,.22)"/><line x1="${pl}" y1="${cy}" x2="${W - pr}" y2="${cy}" stroke="rgba(255,255,255,.22)"/><rect x="${pl}" y="${pt}" width="${W - pl - pr}" height="${H - pt - pb}" fill="none" stroke="rgba(255,255,255,.12)"/>
+  <text x="${W - pr - 10}" y="${pt + 22}" text-anchor="end" font-size="15" font-weight="800" fill="#3fb97a" opacity=".85" letter-spacing="2">LEADING</text><text x="${pl + 10}" y="${pt + 22}" font-size="15" font-weight="800" fill="#8ea2ff" opacity=".85" letter-spacing="2">IMPROVING</text><text x="${W - pr - 10}" y="${H - pb - 12}" text-anchor="end" font-size="15" font-weight="800" fill="#ff9f68" opacity=".85" letter-spacing="2">WEAKENING</text><text x="${pl + 10}" y="${H - pb - 12}" font-size="15" font-weight="800" fill="#e5534b" opacity=".85" letter-spacing="2">LAGGING</text>
+  <text x="${(pl + W - pr) / 2}" y="${H - 10}" text-anchor="middle" font-size="11.5" fill="#9a978f">Relative strength vs Bitcoin  →  stronger</text><text transform="translate(16 ${(pt + H - pb) / 2}) rotate(-90)" text-anchor="middle" font-size="11.5" fill="#9a978f">Momentum  →  accelerating</text>`;
+  pts.forEach(p => { const c = QC[p.s.z.q], d = p.tr.map((t, i) => (i ? 'L' : 'M') + X(t[0]).toFixed(1) + ' ' + Y(t[1]).toFixed(1)).join(' '); g += `<path d="${d}" fill="none" stroke="${c}" stroke-width="2" stroke-opacity=".5" stroke-dasharray="1 5" stroke-linecap="round"/>`; p.tr.slice(0, -1).forEach((t, i) => { g += `<circle cx="${X(t[0]).toFixed(1)}" cy="${Y(t[1]).toFixed(1)}" r="${1.5 + i * .35}" fill="${c}" opacity="${.18 + i * .1}"/>`; }); });
+  const bub = pts.slice().sort((a, b) => b.s.mc - a.s.mc).map(p => { const t = p.tr[p.tr.length - 1], r = 11 + 15 * Math.sqrt(p.s.mc / mxc); return {p, x: X(t[0]), y: Y(t[1]), r, c: QC[p.s.z.q]}; });
+  bub.forEach(o => { const p = o.p, x = o.x, y = o.y, r = o.r, c = o.c; g += `<g class="cr-bub" data-s="${esc(p.s.id)}"><title>${esc(p.s.id)} · score ${Math.round(p.s.z.score)} · ${p.s.z.q}</title><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(r + 7).toFixed(1)}" fill="${c}" opacity=".13"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="url(#bg_${p.s.id.replace(/\W/g, '')})" stroke="${SEL === p.s.id ? '#fff' : 'rgba(255,255,255,.4)'}" stroke-width="${SEL === p.s.id ? 2.4 : 1}"/><text x="${x.toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="middle" font-size="${r > 20 ? 12 : 10.5}" font-weight="800" fill="#fff" style="paint-order:stroke;stroke:rgba(0,0,0,.6);stroke-width:2.5px">${Math.round(p.s.z.score)}</text></g>`; });
+  // labels beside the bubbles, nudged apart so none overlap
+  const lab = bub.map(o => ({o, right: o.x < W - pr - 150, y: o.y})).sort((a, b) => a.y - b.y); for(let k = 1; k < lab.length; k++){ const q = lab[k], pv = lab[k - 1]; if(q.right === pv.right && q.y - pv.y < 15) q.y = pv.y + 15; }
+  lab.forEach(l => { const o = l.o, lx = l.right ? o.x + o.r + 9 : o.x - o.r - 9, an = l.right ? 'start' : 'end'; if(Math.abs(l.y - o.y) > 4) g += `<line x1="${(l.right ? o.x + o.r : o.x - o.r).toFixed(1)}" y1="${o.y.toFixed(1)}" x2="${(lx + (l.right ? -3 : 3)).toFixed(1)}" y2="${(l.y - 4).toFixed(1)}" stroke="${o.c}" stroke-opacity=".5"/>`; g += `<text class="cr-lbl" data-s="${esc(o.p.s.id)}" x="${lx.toFixed(1)}" y="${(l.y).toFixed(1)}" text-anchor="${an}" font-size="12" font-weight="700" fill="#efece4" style="paint-order:stroke;stroke:rgba(0,0,0,.8);stroke-width:3.5px;cursor:pointer">${esc(o.p.s.id)}</text>`; });
+  $('crMap').innerHTML = g + '</svg>';
+}
+// ---- heat
+function heat(){
+  const vs = SC.map(s => val(s, TF)).filter(x => x != null), m = Math.max(5, Math.max.apply(null, vs.map(Math.abs)));
+  $('crHeat').innerHTML = order().map(s => { const v = val(s, TF), a = v == null ? 0 : clamp(Math.abs(v) / m, 0, 1), up = v == null || v >= 0, bg = up ? `linear-gradient(160deg,rgba(63,185,122,${.1 + a * .55}),rgba(20,60,40,${.25 + a * .3}))` : `linear-gradient(160deg,rgba(229,83,75,${.1 + a * .55}),rgba(70,25,25,${.25 + a * .3}))`;
+    const ra = []; for(let i = Math.max(0, N - 60); i < N; i++) ra.push(MODE === 'rel' ? s.idx[i] / BTC[i] : s.idx[i]);
+    return `<div class="cr-tile ${SEL === s.id ? 'sel' : ''}" data-s="${esc(s.id)}" style="background:${bg}"><b>${esc(s.id)}</b><em>${fp(v)}</em><small>${s.coins.length} tokens · score ${Math.round(s.z.score)}</small>${spark(ra, 120, 30, up ? '#7be3ab' : '#ff8f88')}</div>`; }).join('');
+}
+// ---- board
+function bar(v){ if(v == null) return '<div class="cr-b"></div><span>—</span>'; const w = clamp(Math.abs(v) / 40 * 50, 1, 50), c = v >= 0 ? '#3fb97a' : '#e5534b'; return `<div class="cr-b"><i style="${v >= 0 ? 'left:50%' : 'right:50%'};width:${w}%;background:${c}"></i></div><span class="${cl(v)}">${fp(v)}</span>`; }
+function board(){
+  $('crBoard').innerHTML = order().map((s, k) => { const z = s.z, ra = []; for(let i = Math.max(0, N - 60); i < N; i++) ra.push(s.idx[i] / BTC[i]);
+    return `<div class="cr-row ${SEL === s.id ? 'sel' : ''}" data-s="${esc(s.id)}"><div class="cr-rk">${k + 1}</div><div class="cr-nm"><b>${esc(s.id)}</b><span>${esc(s.desc)}</span></div><div class="cr-vd" style="color:${VC[z.v]};border-color:${VC[z.v]}66;background:${VC[z.v]}12">${z.v}</div><div>${ring(z.score, QC[z.q])}</div><div class="cr-spw">${spark(ra, 140, 34, QC[z.q])}<small style="margin:3px 0 0">${STG[z.stage]} · ${z.q}</small></div><div class="c1"><small>1M vs BTC</small>${bar(rel(s.idx, BTC, N - 1, 30))}</div><div class="c3"><small>3M vs BTC</small>${bar(z.r90)}</div></div>`; }).join('') + '<div class="tf-note" style="margin-top:10px">LEAN IN = rotation building or confirmed. HOLD = already leading. WATCH = no edge yet. REDUCE = leadership fading. AVOID = behind and still falling. A rules-based reading of the data, not financial advice. Tap a row to see its tokens.</div>';
+}
+// ---- drill
+function drill(){
+  const s = SC.find(x => x.id === SEL); if(!s){ $('crDrill').innerHTML = ''; return; } $('crDrillH').textContent = 'Inside ' + s.id + ' · ' + s.desc; const L = N - 1;
+  const rows = s.coins.map(c => { const d = D.coins[c], r30 = (() => { const x = coinRet(c, L, 30), b = ret(BTC, L, 30); return x == null || b == null ? null : ((1 + x / 100) / (1 + b / 100) - 1) * 100; })(), r7 = (() => { const x = coinRet(c, L, 7), b = ret(BTC, L, 7); return x == null || b == null ? null : ((1 + x / 100) / (1 + b / 100) - 1) * 100; })(), ra = []; for(let i = Math.max(0, N - 60); i < N; i++) if(d.p[i] != null) ra.push(d.p[i] / BTC[i]); return {c, d, r30, r7, ra, abs: coinRet(c, L, 30)}; }).sort((a, b) => (b.r30 == null ? -1e9 : b.r30) - (a.r30 == null ? -1e9 : a.r30));
+  $('crDrill').innerHTML = rows.map((r, k) => { const lead = k === 0 && r.r30 != null && r.r30 > 0, lag = k === rows.length - 1 && r.r30 != null && r.r30 < 0; return `<div class="cr-tk"><span style="color:var(--mute)">${k + 1}</span><span><b>${esc(r.d.sym)}</b>${lead ? '<span class="t" style="background:rgba(63,185,122,.18);color:#3fb97a">LEADER</span>' : lag ? '<span class="t" style="background:rgba(229,83,75,.18);color:#e5534b">LAGGARD</span>' : ''}</span><span>${spark(r.ra, 120, 26, r.r30 >= 0 ? '#3fb97a' : '#e5534b', false)}</span><span><small style="color:var(--mute);font-size:10px;display:block">1W vs BTC</small><span class="${cl(r.r7)}">${fp(r.r7)}</span></span><span class="c3x"><small style="color:var(--mute);font-size:10px;display:block">1M vs BTC</small><span class="${cl(r.r30)}">${fp(r.r30)}</span></span></div>`; }).join('');
+}
+// ---- back-test
+function backtest(){
+  const out = [], base = []; SC.forEach(s => { let last = -99; for(let i = 70; i < N - 22; i++){ const z = stats(s, i); if(!z) continue; const f = rel(s.idx, BTC, i + 21, 21); const fut = (s.idx[i + 21] / s.idx[i]) / (BTC[i + 21] / BTC[i]) - 1; base.push(fut * 100); if(z.v === 'LEAN IN' && i - last > 10){ out.push(fut * 100); last = i; } } });
+  const row = (n, a) => `<tr><td>${n}</td><td class="num">${a.length}</td><td class="num">${a.length ? Math.round(a.filter(x => x > 0).length / a.length * 100) + '%' : '—'}</td><td class="num ${cl(mean(a))}">${a.length ? fp(mean(a)) : '—'}</td></tr>`;
+  $('crBack').innerHTML = `<div class="tf-scroll"><table class="tf-table cr-tbl"><thead><tr><th>Signal</th><th class="num">Signals</th><th class="num">Beat BTC next 1M</th><th class="num">Avg 1M vs BTC</th></tr></thead><tbody>${row('LEAN IN (first day, 10-day cool-off)', out)}${row('Any sector, any day (baseline)', base)}</tbody></table></div><div class="tf-note">Return of the sector basket versus Bitcoin over the 21 days after each signal. Only one year of data, so this is a sanity check, <b>not proof</b>. Crypto regimes change fast; treat it as context.</div>`;
+}
+function all(){ hero(); map(); heat(); board(); drill(); }
+function pick(id){ SEL = id; map(); heat(); board(); drill(); }
+function boot(){
+  $('crUpdated').textContent = 'Updated ' + new Date(D.generated_at).toLocaleString() + ' · ' + Object.keys(D.coins).length + ' tokens · ' + D.source;
+  init(); if(!SC.length){ $('crHero').innerHTML = '<div class="tf-empty">Not enough history to score yet.</div>'; return; }
+  SEL = order()[0].id; all(); backtest();
+}
+['crTf', 'crMode'].forEach(id => $(id).addEventListener('click', e => { const b = e.target.closest('button'); if(!b || !D) return; [].forEach.call($(id).children, x => x.classList.toggle('active', x === b)); if(id === 'crTf') TF = b.dataset.k; else MODE = b.dataset.m; heat(); board(); }));
+document.addEventListener('click', e => { const t = e.target.closest('#cryptorotation [data-s]'); if(t && D) pick(t.getAttribute('data-s')); });
+let started = false;
+function start(){ if(started) return; started = true; Promise.all([fetch('../crypto_rotation.json?t=' + Date.now()).then(r => r.ok ? r.json() : null).catch(() => null), fetch('../crypto_market.json?t=' + Date.now()).then(r => r.ok ? r.json() : null).catch(() => null)]).then(([j, m]) => { MK = m; if(!j || !j.coins || !j.coins.bitcoin){ $('crUpdated').textContent = 'Waiting for the first rotation data run. Run “Update Crypto Rotation data” in GitHub Actions.'; $('crHero').innerHTML = ''; return; } D = j; boot(); }); }
+window.addEventListener('hashchange', () => { if(location.hash === '#cryptorotation') start(); });
+if(location.hash === '#cryptorotation') setTimeout(start, 200); else setTimeout(start, 4000);
+})();
+</script>
 
 <section id="holdings">
   <div class="wrap">
