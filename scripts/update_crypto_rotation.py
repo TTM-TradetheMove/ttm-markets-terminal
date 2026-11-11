@@ -57,10 +57,11 @@ def getj(url, tries=4):
     return None
 
 
-def day_grid(pairs, t0, n, fill=True):
+def day_grid(pairs, t0, n, fill=True, step=None):
+    step = step or D
     out, b = [None] * n, {}
     for t, v in pairs:
-        j = int((t - t0) // D)
+        j = int((t - t0) // step)
         if 0 <= j < n and v is not None:
             b[j] = v
     last = None
@@ -69,6 +70,10 @@ def day_grid(pairs, t0, n, fill=True):
             last = b[j]
         out[j] = last if fill else b.get(j)
     return out
+
+
+def day_grid_step(pairs, t0, n, step):
+    return day_grid(pairs, t0, n, True, step)
 
 
 def r6(v):
