@@ -119,6 +119,7 @@ revoke all on function public.ttm_extend(uuid, text, text, text) from public, an
 --     4 referred members who paid monthly = 1 month free for the referrer.
 --     4 referred members who paid yearly  = 12 months free. If the referrer is on Pro and the referred members took Premium, a yearly reward is
 --     worth 6 months (a mix of Pro and Premium lands in between). Monthly rewards are always 1 month.
+--     A Premium referrer whose 4 referrals all took Pro is upgraded to Pro for the reward period (1 month, or 12 months for yearly).
 alter table public.ttm_profiles add column if not exists ref_code text;
 alter table public.ttm_profiles add column if not exists referred_by uuid;
 alter table public.ttm_profiles add column if not exists ref_paid boolean not null default false;
@@ -170,7 +171,7 @@ grant execute on function public.ttm_use_referral(text) to authenticated;
 -- Internal: a member just made a real payment. First time only, credit whoever referred them.
 create or replace function public.ttm_referral_credit(p_user uuid, p_plan text, p_term text) returns void
 language plpgsql security definer set search_path = public as $$
-declare ref uuid; r record; ids uuid[]; n_pro int; months int; plan_now text;
+declare ref uuid; r record; ids uuid[]; n_pro int; months int; plan_now text; ratio numeric;
 begin
   select referred_by into ref from public.ttm_profiles where id = p_user and not ref_paid for update;
   if ref is null then return; end if;
@@ -185,6 +186,15 @@ begin
                  else 12 end;
   update public.ttm_profiles set ref_earned = ref_earned + months where id = ref;
   if r.plan in ('premium','pro') and r.plan_until is null then return; end if;   -- already has a permanent plan: nothing to extend
+  if r.plan = 'premium' and r.plan_until > now() and n_pro = 4 then
+    -- Premium referrer whose 4 referrals all took Pro: upgraded to Pro for the reward period.
+    -- Their remaining paid Premium time is converted to Pro at the price ratio, so nothing is lost.
+    select (cfg ->> 'premium')::numeric / nullif((cfg ->> 'pro')::numeric, 0) into ratio from public.ttm_billing where id = 'main';
+    update public.ttm_profiles set plan = 'pro', plan_note = 'Referral reward (Pro upgrade)',
+      plan_until = now() + make_interval(days => floor(extract(epoch from (r.plan_until - now())) / 86400 * coalesce(ratio, 0.3))::int) + make_interval(months => months)
+      where id = ref;
+    return;
+  end if;
   plan_now := case when r.plan in ('premium','pro') and r.plan_until > now() then r.plan else 'premium' end;
   perform public.ttm_extend_n(ref, plan_now, months, 'Referral reward');
 end $$;
