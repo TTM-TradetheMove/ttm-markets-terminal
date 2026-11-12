@@ -9,7 +9,7 @@ create table if not exists public.ttm_billing (
   updated_at timestamptz not null default now()
 );
 insert into public.ttm_billing (id, cfg) values ('main',
-  '{"premium":19.95,"pro":65,"year_months":10,"address":"TQ9jFWj43xJC1QM5tAnsDHV1fLnhCfF5Yi","order_minutes":60,"sale":{"on":false,"name":"","pct":0,"ends":null}}'::jsonb)
+  '{"premium":19.95,"pro":65,"year_months":10,"address":"TQ9jFWj43xJC1QM5tAnsDHV1fLnhCfF5Yi","order_minutes":60,"sale":{"on":false,"name":"","pct":0,"starts":null,"ends":null}}'::jsonb)
   on conflict (id) do nothing;
 alter table public.ttm_billing enable row level security;
 drop policy if exists billing_read on public.ttm_billing;
@@ -56,7 +56,7 @@ create policy payments_admin on public.ttm_payments for select using (public.ttm
 -- 4) Price for a plan and term, with any running sale applied. Yearly = monthly x year_months (2 months free). Never above list.
 create or replace function public.ttm_price(p_plan text, p_term text) returns numeric
 language plpgsql stable security definer set search_path = public as $$
-declare c jsonb; base numeric; pct numeric := 0; ends timestamptz;
+declare c jsonb; base numeric; pct numeric := 0; ends timestamptz; starts timestamptz;
 begin
   select cfg into c from public.ttm_billing where id = 'main';
   base := (c ->> p_plan)::numeric;
@@ -64,7 +64,8 @@ begin
   if p_term = 'year' then base := base * coalesce((c ->> 'year_months')::numeric, 10); end if;
   if coalesce((c #>> '{sale,on}')::boolean, false) then
     ends := nullif(c #>> '{sale,ends}', '')::timestamptz;
-    if ends is null or ends > now() then pct := least(90, greatest(0, coalesce((c #>> '{sale,pct}')::numeric, 0))); end if;
+    starts := nullif(c #>> '{sale,starts}', '')::timestamptz;
+    if (starts is null or starts <= now()) and (ends is null or ends > now()) then pct := least(90, greatest(0, coalesce((c #>> '{sale,pct}')::numeric, 0))); end if;
   end if;
   return round(base * (1 - pct / 100), 2);
 end $$;
@@ -97,12 +98,23 @@ end $$;
 grant execute on function public.ttm_new_order(text, text) to authenticated;
 
 -- 6) Give someone paid time. If they are already on that plan, the new period is added after their current end date.
+create or replace function public.ttm_tier(p text) returns int language sql immutable as $$ select case p when 'pro' then 2 when 'premium' then 1 else 0 end $$;
+
 create or replace function public.ttm_extend_n(p_user uuid, p_plan text, p_months int, p_note text) returns timestamptz
 language plpgsql security definer set search_path = public as $$
-declare cur record; start_at timestamptz; new_until timestamptz;
+declare cur record; start_at timestamptz; new_until timestamptz; rem interval;
 begin
-  select plan, plan_until into cur from public.ttm_profiles where id = p_user for update;
+  select plan, plan_until, ref_grant_plan, ref_base_plan, ref_base_remaining into cur from public.ttm_profiles where id = p_user for update;
   if not found then raise exception 'no such member'; end if;
+  if cur.ref_grant_plan is not null then
+    -- They are on a free referral grant: their paid time is paused. Add the new time to the paused balance.
+    rem := case when cur.ref_base_plan = p_plan then coalesce(cur.ref_base_remaining, interval '0') else interval '0' end + make_interval(months => p_months);
+    update public.ttm_profiles set ref_base_plan = p_plan, ref_base_remaining = rem where id = p_user;
+    if public.ttm_tier(p_plan) > public.ttm_tier(cur.ref_grant_plan) then
+      update public.ttm_profiles set plan = p_plan, plan_until = now() + rem, plan_note = p_note, ref_grant_plan = null, ref_grant_until = null, ref_base_plan = null, ref_base_remaining = null where id = p_user;
+    end if;
+    return now() + rem;
+  end if;
   start_at := case when cur.plan = p_plan and cur.plan_until is not null and cur.plan_until > now() then cur.plan_until else now() end;
   new_until := start_at + make_interval(months => p_months);
   update public.ttm_profiles set plan = p_plan, plan_until = new_until, plan_note = p_note where id = p_user;
@@ -115,11 +127,12 @@ language sql security definer set search_path = public as $$
   select public.ttm_extend_n(p_user, p_plan, case when p_term = 'year' then 12 else 1 end, p_note) $$;
 revoke all on function public.ttm_extend(uuid, text, text, text) from public, anon, authenticated;
 
--- 6b) Referrals. A member shares a code; only a referred member's FIRST PAID order counts.
---     4 referred members who paid monthly = 1 month free for the referrer.
---     4 referred members who paid yearly  = 12 months free. If the referrer is on Pro and the referred members took Premium, a yearly reward is
---     worth 6 months (a mix of Pro and Premium lands in between). Monthly rewards are always 1 month.
---     A Premium referrer whose 4 referrals all took Pro is upgraded to Pro for the reward period (1 month, or 12 months for yearly).
+-- 6b) Referrals (paid members only).
+--  * A referred member counts while they hold an ACTIVE PAID plan (paid in USDT, not a gift).
+--  * Referrer with 4 active paid referrals: free Premium while those 4 stay. If all 4 are on Pro: free Pro.
+--    The moment one drops out (their plan lapses) or drops down from Pro, the count falls by 1 and the free tier ends or steps down.
+--  * While a free tier is running, the referrer's own paid time is PAUSED and given back afterwards, so nothing they paid for is lost.
+--  * Referrer already on Pro whose referrals are on Premium: no tier gain, so they get time instead: 1 month (monthly referrals) or 6 months (yearly).
 alter table public.ttm_profiles add column if not exists ref_code text;
 alter table public.ttm_profiles add column if not exists referred_by uuid;
 alter table public.ttm_profiles add column if not exists ref_paid boolean not null default false;
@@ -128,13 +141,73 @@ alter table public.ttm_profiles add column if not exists ref_plan text;
 alter table public.ttm_profiles add column if not exists ref_term text;
 alter table public.ttm_profiles add column if not exists ref_rewarded boolean not null default false;
 alter table public.ttm_profiles add column if not exists ref_earned int not null default 0;
+alter table public.ttm_profiles add column if not exists ref_grant_plan text;
+alter table public.ttm_profiles add column if not exists ref_grant_until timestamptz;
+alter table public.ttm_profiles add column if not exists ref_base_plan text;
+alter table public.ttm_profiles add column if not exists ref_base_remaining interval;
 create unique index if not exists ttm_profiles_ref_code on public.ttm_profiles (ref_code);
+
+-- Re-work one referrer's free tier from what their referred members hold right now.
+create or replace function public.ttm_ref_recalc(p_ref uuid) returns void
+language plpgsql security definer set search_path = public as $$
+declare me record; n_all int; n_pro int; gp text; gu timestamptz; in_grant boolean; own_plan text; own_rem interval; own_tier int; want boolean;
+begin
+  select * into me from public.ttm_profiles where id = p_ref for update;
+  if not found or me.is_admin then return; end if;
+  in_grant := me.ref_grant_plan is not null;
+  -- an admin changed their plan by hand while a grant was running: forget the grant, respect the admin
+  if in_grant and me.plan not in (me.ref_grant_plan, 'free') then
+    update public.ttm_profiles set ref_grant_plan = null, ref_grant_until = null, ref_base_plan = null, ref_base_remaining = null where id = p_ref;
+    select * into me from public.ttm_profiles where id = p_ref; in_grant := false;
+  end if;
+  select count(*), count(*) filter (where plan = 'pro') into n_all, n_pro from public.ttm_profiles
+    where referred_by = p_ref and ref_paid and plan in ('premium','pro') and plan_until > now() and plan_note like 'USDT%';
+  if n_pro >= 4 then
+    gp := 'pro';
+    select plan_until into gu from public.ttm_profiles where referred_by = p_ref and ref_paid and plan = 'pro' and plan_until > now() and plan_note like 'USDT%' order by plan_until desc offset 3 limit 1;
+  elsif n_all >= 4 then
+    gp := 'premium';
+    select plan_until into gu from public.ttm_profiles where referred_by = p_ref and ref_paid and plan in ('premium','pro') and plan_until > now() and plan_note like 'USDT%' order by plan_until desc offset 3 limit 1;
+  end if;
+  if in_grant then own_plan := me.ref_base_plan; own_rem := me.ref_base_remaining;
+  elsif me.plan in ('premium','pro') and me.plan_until is not null and me.plan_until > now() then own_plan := me.plan; own_rem := me.plan_until - now();
+  elsif me.plan in ('premium','pro') and me.plan_until is null then return;             -- permanent plan given by admin: leave alone
+  else own_plan := 'free'; own_rem := null; end if;
+  own_tier := public.ttm_tier(own_plan);
+  want := gp is not null and gu is not null and public.ttm_tier(gp) >= own_tier;
+  if want and in_grant then
+    update public.ttm_profiles set plan = gp, plan_until = gu, plan_note = 'Referral reward (free while your referrals stay)', ref_grant_plan = gp, ref_grant_until = gu where id = p_ref;
+  elsif want then
+    update public.ttm_profiles set ref_base_plan = own_plan, ref_base_remaining = own_rem, ref_grant_plan = gp, ref_grant_until = gu,
+      plan = gp, plan_until = gu, plan_note = 'Referral reward (free while your referrals stay)' where id = p_ref;
+  elsif in_grant then
+    if me.ref_base_plan in ('premium','pro') and coalesce(me.ref_base_remaining, interval '0') > interval '0' then
+      update public.ttm_profiles set plan = me.ref_base_plan, plan_until = now() + me.ref_base_remaining, plan_note = 'Restored after referral reward',
+        ref_grant_plan = null, ref_grant_until = null, ref_base_plan = null, ref_base_remaining = null where id = p_ref;
+    else
+      update public.ttm_profiles set plan = 'free', plan_until = null, plan_note = null,
+        ref_grant_plan = null, ref_grant_until = null, ref_base_plan = null, ref_base_remaining = null where id = p_ref;
+    end if;
+  end if;
+end $$;
+revoke all on function public.ttm_ref_recalc(uuid) from public, anon, authenticated;
+
+create or replace function public.ttm_ref_recalc_all() returns void
+language plpgsql security definer set search_path = public as $$
+declare r uuid;
+begin
+  for r in select distinct referred_by from public.ttm_profiles where referred_by is not null union select id from public.ttm_profiles where ref_grant_plan is not null loop
+    perform public.ttm_ref_recalc(r);
+  end loop;
+end $$;
+revoke all on function public.ttm_ref_recalc_all() from public, anon, authenticated;
 
 create or replace function public.ttm_my_referral() returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare uid uuid := auth.uid(); me record; c text; i int; chars text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 begin
   if uid is null then raise exception 'sign in first'; end if;
+  perform public.ttm_ref_recalc(uid);
   select * into me from public.ttm_profiles where id = uid;
   if me.ref_code is null then
     loop
@@ -146,9 +219,11 @@ begin
   return jsonb_build_object('code', me.ref_code,
     'signed', (select count(*) from public.ttm_profiles where referred_by = uid),
     'paid', (select count(*) from public.ttm_profiles where referred_by = uid and ref_paid),
-    'month_progress', (select count(*) from public.ttm_profiles where referred_by = uid and ref_paid and not ref_rewarded and ref_term = 'month'),
-    'year_progress', (select count(*) from public.ttm_profiles where referred_by = uid and ref_paid and not ref_rewarded and ref_term = 'year'),
+    'active', (select count(*) from public.ttm_profiles where referred_by = uid and ref_paid and plan in ('premium','pro') and plan_until > now() and plan_note like 'USDT%'),
+    'active_pro', (select count(*) from public.ttm_profiles where referred_by = uid and ref_paid and plan = 'pro' and plan_until > now() and plan_note like 'USDT%'),
+    'grant_plan', me.ref_grant_plan, 'grant_until', me.ref_grant_until,
     'earned_months', me.ref_earned,
+    'plan', me.plan, 'plan_until', me.plan_until,
     'has_referrer', me.referred_by is not null,
     'can_enter', me.referred_by is null and me.created_at > now() - interval '7 days');
 end $$;
@@ -168,35 +243,30 @@ begin
 end $$;
 grant execute on function public.ttm_use_referral(text) to authenticated;
 
--- Internal: a member just made a real payment. First time only, credit whoever referred them.
+-- Internal: a member just made a real payment. First payment marks them as a paid referral.
 create or replace function public.ttm_referral_credit(p_user uuid, p_plan text, p_term text) returns void
 language plpgsql security definer set search_path = public as $$
-declare ref uuid; r record; ids uuid[]; n_pro int; months int; plan_now text; ratio numeric;
+declare ref uuid; r record; ids uuid[]; n_pro int; months int; own_plan text;
 begin
-  select referred_by into ref from public.ttm_profiles where id = p_user and not ref_paid for update;
+  select referred_by into ref from public.ttm_profiles where id = p_user for update;
   if ref is null then return; end if;
-  update public.ttm_profiles set ref_paid = true, ref_paid_at = now(), ref_plan = p_plan, ref_term = p_term where id = p_user;
-  select array(select id from public.ttm_profiles where referred_by = ref and ref_paid and not ref_rewarded and ref_term = p_term order by ref_paid_at limit 4) into ids;
-  if coalesce(array_length(ids, 1), 0) < 4 then return; end if;
-  update public.ttm_profiles set ref_rewarded = true where id = any(ids);
-  select plan, plan_until into r from public.ttm_profiles where id = ref for update;
-  select count(*) into n_pro from public.ttm_profiles where id = any(ids) and ref_plan = 'pro';
-  months := case when p_term = 'month' then 1
-                 when r.plan = 'pro' then round(12 * (n_pro * 1.0 + (4 - n_pro) * 0.5) / 4)::int
-                 else 12 end;
-  update public.ttm_profiles set ref_earned = ref_earned + months where id = ref;
-  if r.plan in ('premium','pro') and r.plan_until is null then return; end if;   -- already has a permanent plan: nothing to extend
-  if r.plan = 'premium' and r.plan_until > now() and n_pro = 4 then
-    -- Premium referrer whose 4 referrals all took Pro: upgraded to Pro for the reward period.
-    -- Their remaining paid Premium time is converted to Pro at the price ratio, so nothing is lost.
-    select (cfg ->> 'premium')::numeric / nullif((cfg ->> 'pro')::numeric, 0) into ratio from public.ttm_billing where id = 'main';
-    update public.ttm_profiles set plan = 'pro', plan_note = 'Referral reward (Pro upgrade)',
-      plan_until = now() + make_interval(days => floor(extract(epoch from (r.plan_until - now())) / 86400 * coalesce(ratio, 0.3))::int) + make_interval(months => months)
-      where id = ref;
-    return;
+  update public.ttm_profiles set ref_paid = true, ref_paid_at = coalesce(ref_paid_at, now()), ref_plan = coalesce(ref_plan, p_plan), ref_term = coalesce(ref_term, p_term) where id = p_user and not ref_paid;
+  if found then
+    -- Pro referrer, referrals on Premium: a time bonus instead (1 month monthly / 6 months yearly), once per set of 4.
+    select * into r from public.ttm_profiles where id = ref for update;
+    own_plan := case when r.ref_grant_plan is not null then r.ref_base_plan else r.plan end;
+    select array(select id from public.ttm_profiles where referred_by = ref and ref_paid and not ref_rewarded and ref_term = p_term order by ref_paid_at limit 4) into ids;
+    if own_plan = 'pro' and coalesce(array_length(ids, 1), 0) = 4 then
+      select count(*) into n_pro from public.ttm_profiles where id = any(ids) and ref_plan = 'pro';
+      if n_pro < 4 then
+        months := case when p_term = 'month' then 1 else round(12 * (n_pro * 1.0 + (4 - n_pro) * 0.5) / 4)::int end;
+        update public.ttm_profiles set ref_rewarded = true where id = any(ids);
+        update public.ttm_profiles set ref_earned = ref_earned + months where id = ref;
+        if not (r.plan = 'pro' and r.plan_until is null) then perform public.ttm_extend_n(ref, 'pro', months, 'Referral reward (time bonus)'); end if;
+      end if;
+    end if;
   end if;
-  plan_now := case when r.plan in ('premium','pro') and r.plan_until > now() then r.plan else 'premium' end;
-  perform public.ttm_extend_n(ref, plan_now, months, 'Referral reward');
+  perform public.ttm_ref_recalc(ref);
 end $$;
 revoke all on function public.ttm_referral_credit(uuid, text, text) from public, anon, authenticated;
 
@@ -250,3 +320,7 @@ do $$ begin perform cron.unschedule('ttm-usdt-check'); exception when others the
 select cron.schedule('ttm-usdt-check', '* * * * *', $$
   select net.http_post(url := 'https://zqolxnufjsseylzgfztz.supabase.co/functions/v1/usdt-check',
     headers := '{"Content-Type":"application/json"}'::jsonb, body := '{}'::jsonb) $$);
+
+-- 10) Re-check every referrer's free tier every 5 minutes (so a lapsed referral is noticed quickly).
+do $$ begin perform cron.unschedule('ttm-ref-recalc'); exception when others then null; end $$;
+select cron.schedule('ttm-ref-recalc', '*/5 * * * *', $$ select public.ttm_ref_recalc_all() $$);
