@@ -97,26 +97,35 @@ end $$;
 grant execute on function public.ttm_new_order(text, text) to authenticated;
 
 -- 6) Give someone paid time. If they are already on that plan, the new period is added after their current end date.
-create or replace function public.ttm_extend(p_user uuid, p_plan text, p_term text, p_note text) returns timestamptz
+create or replace function public.ttm_extend_n(p_user uuid, p_plan text, p_months int, p_note text) returns timestamptz
 language plpgsql security definer set search_path = public as $$
 declare cur record; start_at timestamptz; new_until timestamptz;
 begin
   select plan, plan_until into cur from public.ttm_profiles where id = p_user for update;
   if not found then raise exception 'no such member'; end if;
   start_at := case when cur.plan = p_plan and cur.plan_until is not null and cur.plan_until > now() then cur.plan_until else now() end;
-  new_until := start_at + case when p_term = 'year' then interval '12 months' else interval '1 month' end;
+  new_until := start_at + make_interval(months => p_months);
   update public.ttm_profiles set plan = p_plan, plan_until = new_until, plan_note = p_note where id = p_user;
   return new_until;
 end $$;
+revoke all on function public.ttm_extend_n(uuid, text, int, text) from public, anon, authenticated;
+
+create or replace function public.ttm_extend(p_user uuid, p_plan text, p_term text, p_note text) returns timestamptz
+language sql security definer set search_path = public as $$
+  select public.ttm_extend_n(p_user, p_plan, case when p_term = 'year' then 12 else 1 end, p_note) $$;
 revoke all on function public.ttm_extend(uuid, text, text, text) from public, anon, authenticated;
 
 -- 6b) Referrals. A member shares a code; only a referred member's FIRST PAID order counts.
---     4 referred members who paid monthly = 1 month free for the referrer; 4 who paid yearly = 12 months free.
+--     4 referred members who paid monthly = 1 month free for the referrer.
+--     4 referred members who paid yearly  = 12 months free. If the referrer is on Pro and the referred members took Premium, a yearly reward is
+--     worth 6 months (a mix of Pro and Premium lands in between). Monthly rewards are always 1 month.
 alter table public.ttm_profiles add column if not exists ref_code text;
 alter table public.ttm_profiles add column if not exists referred_by uuid;
 alter table public.ttm_profiles add column if not exists ref_paid boolean not null default false;
-alter table public.ttm_profiles add column if not exists ref_month int not null default 0;
-alter table public.ttm_profiles add column if not exists ref_year int not null default 0;
+alter table public.ttm_profiles add column if not exists ref_paid_at timestamptz;
+alter table public.ttm_profiles add column if not exists ref_plan text;
+alter table public.ttm_profiles add column if not exists ref_term text;
+alter table public.ttm_profiles add column if not exists ref_rewarded boolean not null default false;
 alter table public.ttm_profiles add column if not exists ref_earned int not null default 0;
 create unique index if not exists ttm_profiles_ref_code on public.ttm_profiles (ref_code);
 
@@ -136,7 +145,9 @@ begin
   return jsonb_build_object('code', me.ref_code,
     'signed', (select count(*) from public.ttm_profiles where referred_by = uid),
     'paid', (select count(*) from public.ttm_profiles where referred_by = uid and ref_paid),
-    'month_progress', me.ref_month, 'year_progress', me.ref_year, 'earned_months', me.ref_earned,
+    'month_progress', (select count(*) from public.ttm_profiles where referred_by = uid and ref_paid and not ref_rewarded and ref_term = 'month'),
+    'year_progress', (select count(*) from public.ttm_profiles where referred_by = uid and ref_paid and not ref_rewarded and ref_term = 'year'),
+    'earned_months', me.ref_earned,
     'has_referrer', me.referred_by is not null,
     'can_enter', me.referred_by is null and me.created_at > now() - interval '7 days');
 end $$;
@@ -157,26 +168,27 @@ end $$;
 grant execute on function public.ttm_use_referral(text) to authenticated;
 
 -- Internal: a member just made a real payment. First time only, credit whoever referred them.
-create or replace function public.ttm_referral_credit(p_user uuid, p_term text) returns void
+create or replace function public.ttm_referral_credit(p_user uuid, p_plan text, p_term text) returns void
 language plpgsql security definer set search_path = public as $$
-declare ref uuid; r record; plan_now text; add_term text;
+declare ref uuid; r record; ids uuid[]; n_pro int; months int; plan_now text;
 begin
   select referred_by into ref from public.ttm_profiles where id = p_user and not ref_paid for update;
   if ref is null then return; end if;
-  update public.ttm_profiles set ref_paid = true where id = p_user;
-  if p_term = 'year' then update public.ttm_profiles set ref_year = ref_year + 1 where id = ref;
-  else update public.ttm_profiles set ref_month = ref_month + 1 where id = ref; end if;
-  select plan, plan_until, ref_month, ref_year into r from public.ttm_profiles where id = ref for update;
-  for add_term in select x from (select 'year' as x where r.ref_year >= 4 union all select 'month' where r.ref_month >= 4) q loop
-    if add_term = 'year' then update public.ttm_profiles set ref_year = ref_year - 4, ref_earned = ref_earned + 12 where id = ref;
-    else update public.ttm_profiles set ref_month = ref_month - 4, ref_earned = ref_earned + 1 where id = ref; end if;
-    select plan, plan_until into r from public.ttm_profiles where id = ref;
-    if r.plan in ('premium','pro') and r.plan_until is null then continue; end if;   -- already has a permanent plan: nothing to extend
-    plan_now := case when r.plan in ('premium','pro') and r.plan_until > now() then r.plan else 'premium' end;
-    perform public.ttm_extend(ref, plan_now, add_term, 'Referral reward');
-  end loop;
+  update public.ttm_profiles set ref_paid = true, ref_paid_at = now(), ref_plan = p_plan, ref_term = p_term where id = p_user;
+  select array(select id from public.ttm_profiles where referred_by = ref and ref_paid and not ref_rewarded and ref_term = p_term order by ref_paid_at limit 4) into ids;
+  if coalesce(array_length(ids, 1), 0) < 4 then return; end if;
+  update public.ttm_profiles set ref_rewarded = true where id = any(ids);
+  select plan, plan_until into r from public.ttm_profiles where id = ref for update;
+  select count(*) into n_pro from public.ttm_profiles where id = any(ids) and ref_plan = 'pro';
+  months := case when p_term = 'month' then 1
+                 when r.plan = 'pro' then round(12 * (n_pro * 1.0 + (4 - n_pro) * 0.5) / 4)::int
+                 else 12 end;
+  update public.ttm_profiles set ref_earned = ref_earned + months where id = ref;
+  if r.plan in ('premium','pro') and r.plan_until is null then return; end if;   -- already has a permanent plan: nothing to extend
+  plan_now := case when r.plan in ('premium','pro') and r.plan_until > now() then r.plan else 'premium' end;
+  perform public.ttm_extend_n(ref, plan_now, months, 'Referral reward');
 end $$;
-revoke all on function public.ttm_referral_credit(uuid, text) from public, anon, authenticated;
+revoke all on function public.ttm_referral_credit(uuid, text, text) from public, anon, authenticated;
 
 -- 7) Called by the payment checker (service role only): a matching deposit arrived for an order.
 create or replace function public.ttm_activate_order(p_order uuid, p_txid text, p_from text, p_amount numeric, p_time timestamptz) returns jsonb
@@ -187,7 +199,7 @@ begin
   if not found or o.status = 'paid' then return jsonb_build_object('ok', false); end if;
   until_at := public.ttm_extend(o.user_id, o.plan, o.term, 'USDT order ' || left(o.id::text, 8));
   update public.ttm_orders set status = 'paid', txid = p_txid, paid_at = now() where id = o.id;
-  perform public.ttm_referral_credit(o.user_id, o.term);
+  perform public.ttm_referral_credit(o.user_id, o.plan, o.term);
   insert into public.ttm_payments (txid, from_addr, amount, tx_time, status, order_id, user_id, note)
     values (p_txid, p_from, p_amount, p_time, 'applied', o.id, o.user_id, o.plan || ' ' || o.term)
     on conflict (txid) do nothing;
@@ -208,7 +220,7 @@ begin
   if not exists (select 1 from public.ttm_payments where txid = p_txid and status = 'unmatched') then raise exception 'payment not found or already used'; end if;
   until_at := public.ttm_extend(uid, p_plan, p_term, 'USDT manual ' || left(p_txid, 8));
   update public.ttm_payments set status = 'assigned', user_id = uid, note = p_plan || ' ' || p_term || ' (manual)' where txid = p_txid;
-  perform public.ttm_referral_credit(uid, p_term);
+  perform public.ttm_referral_credit(uid, p_plan, p_term);
   return jsonb_build_object('ok', true, 'until', until_at);
 end $$;
 grant execute on function public.ttm_admin_assign_payment(text, text, text, text) to authenticated;
