@@ -137,7 +137,7 @@ async function boot(){
     const t = await token();
     if(t){ const u = await raw('/auth/v1/user', {}, t); if(u.ok && u.json && u.json.id){ USER = {id: u.json.id, email: u.json.email}; let p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email,plan_until,beta,team,tg_handle,badges`); if(!p.ok) p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email,plan_until,beta,tg_handle,badges`); if(!p.ok) p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email,plan_until,beta,tg_handle`); if(!p.ok) p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email,plan_until,beta`); if(!p.ok) p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email,plan_until`); if(!p.ok) p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email`); PROF = (p.ok && p.json && p.json[0]) || {plan: 'free', is_admin: false}; PROF.plan = normPlan(PROF.plan); if(PROF.plan_until && !PROF.is_admin && new Date(PROF.plan_until) < new Date()){ PROF.expiredPlan = PROF.plan; PROF.plan = 'free'; PROF.plan_until = null; api('/rest/v1/rpc/ttm_expire_me', {method: 'POST', body: '{}'}).catch(() => {}); } } }
   }
-  ui(); billLoad(); if(USER){ syncInit(); tgInit(); fbLoad(true); prefLoad(); discCheck(); } trkStart(); trkNote();
+  ui(); billLoad(); if(USER){ refLoad(); syncInit(); tgInit(); fbLoad(true); prefLoad(); discCheck(); } trkStart(); trkNote();
 }
 // access: does the current visitor get this section or feature?
 const lensOK = () => !!(PROF && (PROF.is_admin || (PROF.team && PROF.plan === 'pro')));
@@ -419,7 +419,7 @@ function ui(){ try{ chatUi(); liveBanner(); commBtn(); guideLink(); engineInit()
   if(tv){ const ok = can('indicators'); tv.innerHTML = ok ? (CFG.tv && CFG.tv.length ? CFG.tv : [{name: 'TTM Indicator Suite', desc: 'Trend, momentum and cycle tools built for the TTM method.'}, {name: 'TTM Signals & Alerts', desc: 'Chart overlays that line up with the terminal.'}, {name: 'TTM Risk Tools', desc: 'Position-sizing helpers on the chart.'}]).map(x => `<div class="mem-card"><b>${e(x.name)}</b><p>${e(x.desc || '')}</p>${x.url ? `<a class="rr-btn sm" style="text-decoration:none;display:inline-block" href="${e(x.url)}" target="_blank" rel="noopener noreferrer">Open on TradingView ↗</a>` : '<span class="rr-pill be">Coming soon</span>'}</div>`).join('')
     : `<div class="mem-card" style="grid-column:1/-1"><b>🔒 TTM indicators on TradingView</b><p>The TTM TradingView indicators are included with the <b>${e(needText('indicators'))}</b> plan. They are coming soon.</p></div>`; }
   const pl = $('memPlans'); if(pl) pl.innerHTML = (!on() || !SET.charging ? '<p style="margin:0 0 12px">Everything in the terminal is <b>free right now</b>. These are the planned plans; they will be announced before anything changes.</p>' : '') + planCards();
-  adminUi(); insUi();
+  adminUi(); insUi(); try{ refPaint(); }catch(err){}
 }
 
 // ---------- USDT payments, renewals and sales
@@ -501,6 +501,33 @@ document.addEventListener('click', ev => {
 setInterval(() => { try{ saleBanner(); }catch(err){} }, 60000); setInterval(billLoad, 600000);
 (function(){ const c = document.createElement('style'); c.textContent = `#ttmSale,#ttmRenew{padding:9px 16px;display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;font-size:14px;color:var(--text,#eee);text-align:center}#ttmSale{background:linear-gradient(90deg,rgba(229,83,75,.28),rgba(219,161,24,.2));border-bottom:1px solid #e5534b}#ttmRenew{background:linear-gradient(90deg,rgba(142,162,255,.22),rgba(142,162,255,.08));border-bottom:1px solid #8ea2ff}#ttmSale a,#ttmRenew a{background:var(--gold,#dba118);color:#111;border-radius:8px;padding:5px 12px;font-weight:800;text-decoration:none}#ttmRenewX{background:none;border:0;color:inherit;font-size:20px;cursor:pointer;opacity:.7}
 #ttmPay{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.72);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:24px 14px}.pay-box{position:relative;background:#141416;border:1px solid var(--line,#333);border-radius:18px;max-width:470px;width:100%;padding:22px 20px;box-shadow:0 20px 60px rgba(0,0,0,.6);margin:auto}.pay-box h3{margin:0 0 12px;font-size:20px}.pay-x{position:absolute;right:12px;top:8px;background:none;border:0;color:var(--mute,#999);font-size:26px;cursor:pointer}.pay-tabs{display:flex;gap:6px;margin:0 0 10px}.pay-tabs button{flex:1;padding:10px 6px;border-radius:10px;border:1px solid var(--line,#333);background:rgba(255,255,255,.04);color:var(--text,#eee);font:inherit;font-weight:700;cursor:pointer}.pay-tabs button.on{background:var(--gold,#dba118);color:#111;border-color:var(--gold,#dba118)}.pay-price{font-size:15px;margin:12px 0 4px}.pay-price b{font-size:34px;letter-spacing:-.02em}.pay-price span{color:var(--mute,#999)}.pay-price s{color:var(--mute,#999)}.pay-sale{color:#3fb97a;font-size:13px;font-weight:700;margin:2px 0}.pay-ul{margin:12px 0;padding-left:18px;font-size:13px;color:var(--mute,#aaa);line-height:1.5}.pay-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.pay-acts .rr-btn{flex:1}.pay-lab{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute,#999);margin:12px 0 4px}.pay-big{font-size:18px}.pay-big b{font-size:40px;letter-spacing:-.02em;color:var(--gold2,#f0b929)}.pay-net{font-weight:800;font-size:16px}.pay-addr{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.pay-addr code{word-break:break-all;font-size:13px;background:rgba(255,255,255,.06);padding:8px 10px;border-radius:8px;flex:1;min-width:200px}.pay-cp{background:rgba(255,255,255,.08);border:1px solid var(--line,#333);color:var(--text,#eee);border-radius:8px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}.pay-wait{display:flex;gap:8px;align-items:center;font-size:14px;margin-top:6px}.pay-dot{width:10px;height:10px;border-radius:50%;background:#3fb97a;animation:payP 1.2s ease-out infinite}@keyframes payP{0%{box-shadow:0 0 0 0 rgba(63,185,122,.7)}100%{box-shadow:0 0 0 12px transparent}}`; document.head.appendChild(c); })();
+
+// ---------- Referrals (only PAID referrals earn the reward)
+(function(){ try{ const q = new URLSearchParams(location.search).get('ref'); if(q) localStorage.setItem('ttm_ref', q.replace(/[^A-Za-z0-9]/g, '').slice(0, 12)); }catch(err){} })();
+let REF = null;
+async function refLoad(){
+  if(!USER || !on()) return;
+  let c = ''; try{ c = localStorage.getItem('ttm_ref') || ''; }catch(err){}
+  if(c){ await api('/rest/v1/rpc/ttm_use_referral', {method: 'POST', body: JSON.stringify({p_code: c})}); try{ localStorage.removeItem('ttm_ref'); }catch(err){} }
+  const r = await api('/rest/v1/rpc/ttm_my_referral', {method: 'POST', body: '{}'});
+  if(r.ok && r.json && r.json.code){ REF = r.json; refPaint(); }
+}
+function refPaint(){
+  const pl = $('memPlans'); if(!pl || !REF || !USER || !(SET.charging || (PROF && PROF.is_admin))) return;
+  let b = $('memRef'); if(!b){ b = document.createElement('div'); b.id = 'memRef'; b.className = 'rr-card'; b.style.marginTop = '14px'; pl.insertAdjacentElement('afterend', b); }
+  const link = new URL(BASE, location.href).href.replace(/[#?].*$/, '') + '?ref=' + REF.code;
+  b.innerHTML = `<h3>Refer &amp; earn</h3><p style="margin:0 0 10px;font-size:14px">Share your link. When <b>4 people you refer pay</b> for a <b>monthly</b> plan, you get <b>1 month free</b>. When <b>4 pay for a yearly</b> plan, you get <b>12 months free</b>. Only paid members count, and each person counts once (their first payment).</p>
+    <div class="pay-addr"><code>${e(link)}</code> <button type="button" class="pay-cp" data-pcopy="${e(link)}">Copy</button>${navigator.share ? ` <button type="button" class="pay-cp" data-pshare="${e(link)}">Share</button>` : ''}</div>
+    <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;font-size:13px;color:var(--mute)"><span>Joined with your link: <b style="color:var(--text)">${REF.signed}</b></span><span>Paid: <b style="color:var(--text)">${REF.paid}</b></span><span>Monthly payers toward next reward: <b style="color:var(--text)">${REF.month_progress}/4</b></span><span>Yearly payers toward next reward: <b style="color:var(--text)">${REF.year_progress}/4</b></span><span>Free months earned: <b style="color:var(--gold2)">${REF.earned_months}</b></span></div>
+    ${REF.can_enter ? `<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input id="refIn" placeholder="Got a code from a friend?" style="width:210px;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:8px 10px;font:inherit"><button type="button" class="rr-btn sm" id="refApply">Apply</button><span id="refMsg" class="calendar-note"></span></div>` : ''}`;
+}
+document.addEventListener('click', async ev => {
+  const t = ev.target.closest && ev.target.closest('#refApply,[data-pshare]'); if(!t) return;
+  if(t.dataset.pshare){ try{ await navigator.share({title: 'TTM', text: 'Join me on Trade The Move', url: t.dataset.pshare}); }catch(err){} return; }
+  const v = ($('refIn').value || '').trim(); if(!v) return;
+  const r = await api('/rest/v1/rpc/ttm_use_referral', {method: 'POST', body: JSON.stringify({p_code: v})});
+  $('refMsg').textContent = r.ok && r.json === true ? 'Code applied. Thank you!' : 'That code was not accepted (wrong code, your own code, or you joined more than 7 days ago).'; if(r.ok && r.json === true) refLoad();
+});
 
 // ---------- Admin: billing (prices, sale, unmatched payments)
 async function billAdminLoad(){
