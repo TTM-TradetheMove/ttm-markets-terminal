@@ -137,7 +137,7 @@ async function boot(){
     const t = await token();
     if(t){ const u = await raw('/auth/v1/user', {}, t); if(u.ok && u.json && u.json.id){ USER = {id: u.json.id, email: u.json.email}; let p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email,plan_until,beta,team,tg_handle,badges`); if(!p.ok) p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email,plan_until,beta,tg_handle,badges`); if(!p.ok) p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email,plan_until,beta,tg_handle`); if(!p.ok) p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email,plan_until,beta`); if(!p.ok) p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email,plan_until`); if(!p.ok) p = await api(`/rest/v1/ttm_profiles?id=eq.${USER.id}&select=plan,is_admin,email`); PROF = (p.ok && p.json && p.json[0]) || {plan: 'free', is_admin: false}; PROF.plan = normPlan(PROF.plan); if(PROF.plan_until && !PROF.is_admin && new Date(PROF.plan_until) < new Date()){ PROF.expiredPlan = PROF.plan; PROF.plan = 'free'; PROF.plan_until = null; api('/rest/v1/rpc/ttm_expire_me', {method: 'POST', body: '{}'}).catch(() => {}); } } }
   }
-  ui(); if(USER){ syncInit(); tgInit(); fbLoad(true); prefLoad(); discCheck(); } trkStart(); trkNote();
+  ui(); billLoad(); if(USER){ syncInit(); tgInit(); fbLoad(true); prefLoad(); discCheck(); } trkStart(); trkNote();
 }
 // access: does the current visitor get this section or feature?
 const lensOK = () => !!(PROF && (PROF.is_admin || (PROF.team && PROF.plan === 'pro')));
@@ -387,7 +387,7 @@ function fxTxt(usd){
 // ---------- UI
 function untilTxt(){
   if(PROF && PROF.plan_until && PROF.plan !== 'free'){ const d = new Date(PROF.plan_until), left = Math.max(0, Math.ceil((d - Date.now()) / 864e5)); return ` <span style="color:var(--gold2)">until ${d.toLocaleDateString(undefined, {day: 'numeric', month: 'short', year: 'numeric'})} (${left} ${left === 1 ? 'day' : 'days'} left)</span><br><span class="calendar-note">After that your account returns to Free. Your saved data is kept.</span>`; }
-  if(PROF && PROF.expiredPlan) return ` <span class="calendar-note">Your ${e(pname(PROF.expiredPlan))} access has ended and you are back on Free. Ask TTM on Telegram to continue.</span>`;
+  if(PROF && PROF.expiredPlan) return ` <span class="calendar-note">Your ${e(pname(PROF.expiredPlan))} access has ended and you are back on Free. <a href="#" data-pay="${e(PROF.expiredPlan)}" style="color:var(--gold2)">Renew</a> to get it back.</span>`;
   return '';
 }
 function planBadge(){ return PROF ? `<span class="rr-pill be">${e(pname(PROF.plan))}${PROF.is_admin ? ' · admin' : ''}</span>` : ''; }
@@ -395,9 +395,11 @@ function planCards(){
   const inPlan = (k, p) => { const a = SET.access[k] || []; return a.indexOf(p) >= 0; }, free = CAT.filter(c => inPlan(c[0], 'free')), lab = c => c[1].replace(/ \(.*\)$/, '');
   const only = p => CAT.filter(c => inPlan(c[0], p) && !inPlan(c[0], 'free'));
   const pro = CAT.filter(c => inPlan(c[0], 'pro') && !inPlan(c[0], 'free') && !inPlan(c[0], 'premium'));
-  const price = p => { const x = (CFG.plans || {})[p]; if(!(x && (x.monthly || x.annual))) return p === 'free' ? 'Free' : 'Price to be confirmed';
+  const payBtn = p => (p !== 'free' && BILL && (SET.charging || (PROF && PROF.is_admin))) ? `<button type="button" class="rr-btn sm" data-pay="${p}" style="margin-top:8px">${PROF && PROF.plan === p ? 'Renew' : 'Subscribe'}</button>` : '';
+  const price = p => { if(BILL && p !== 'free'){ const one = t => { const x = priceOf(p, t); return x ? `${x.pct ? `<s style="color:var(--mute)">${money(x.list)}</s> ` : ''}<b>${money(x.final)} USDT</b> / ${t === 'year' ? 'year' : 'month'}${fxTxt(x.final)}` : ''; }; return one('month') + '<br>' + one('year') + '<div style="font-size:11px;color:var(--gold2);margin-top:2px">Yearly = 10 months, 2 months free</div>'; }
+    const x = (CFG.plans || {})[p]; if(!(x && (x.monthly || x.annual))) return p === 'free' ? 'Free' : 'Price to be confirmed';
     const one = (v, t) => `<b>${e(v)} USDT</b> / ${t}${fxTxt(+v)}`; return [x.monthly ? one(x.monthly, 'month') : '', x.annual ? one(x.annual, 'year') : ''].filter(Boolean).join('<br>'); };
-  const card = (p, head, items) => `<div class="plan-card ${PROF && PROF.plan === p ? 'me' : ''}"><h4>${pname(p)}</h4><div class="pr">${price(p)}${PROF && PROF.plan === p ? ' · <b style="color:var(--gold2)">your plan</b>' : ''}</div><div style="font-size:12px;color:var(--mute);margin-bottom:4px">${head}</div><ul>${items.map(c => `<li>${e(lab(c))}</li>`).join('') || '<li>—</li>'}</ul></div>`;
+  const card = (p, head, items) => `<div class="plan-card ${PROF && PROF.plan === p ? 'me' : ''}"><h4>${pname(p)}</h4><div class="pr">${price(p)}${PROF && PROF.plan === p ? ' · <b style="color:var(--gold2)">your plan</b>' : ''}${payBtn(p)}</div><div style="font-size:12px;color:var(--mute);margin-bottom:4px">${head}</div><ul>${items.map(c => `<li>${e(lab(c))}</li>`).join('') || '<li>—</li>'}</ul></div>`;
   return `<div class="plan-grid">${card('free', 'Includes', free)}${card('premium', 'Everything in Free, plus (Crypto and TradFi together)', only('premium'))}${card('pro', 'Everything in Premium, plus', pro.concat([['c:ttmcharts', 'TTM LENS - Charting Tools (Team members on Pro)']]))}</div>`;
 }
 function guideLink(){ const f = document.querySelector('footer'); if(!f || f.querySelector('#ttmGuideLink')) return; const p = document.createElement('p'); p.style.cssText = 'text-align:center;margin:10px 0 0'; p.innerHTML = `<a id="ttmShopLink" href="https://ttm-shop.fourthwall.com" target="_blank" rel="noopener" style="color:var(--gold2)">TTM Shop</a> &nbsp;·&nbsp; <a id="ttmGuideLink" href="${BASE}phone-guide.html" target="_blank" rel="noopener" style="color:var(--gold2)">Add TTM to your phone</a><span id="ttmLensGuideSep" style="display:none"> &nbsp;·&nbsp; </span><a id="ttmLensGuideLink" href="${BASE}lens-guide.html" target="_blank" rel="noopener" style="color:var(--gold2);display:none">Add TTM LENS to your phone (Team + Pro)</a>`; f.appendChild(p); try{ tviewInit(); }catch(x){} }
@@ -419,6 +421,121 @@ function ui(){ try{ chatUi(); liveBanner(); commBtn(); guideLink(); engineInit()
   const pl = $('memPlans'); if(pl) pl.innerHTML = (!on() || !SET.charging ? '<p style="margin:0 0 12px">Everything in the terminal is <b>free right now</b>. These are the planned plans; they will be announced before anything changes.</p>' : '') + planCards();
   adminUi(); insUi();
 }
+
+// ---------- USDT payments, renewals and sales
+let BILL = null, PAY = null;
+const r2 = x => Math.round(x * 100) / 100, money = x => (+x).toFixed(2);
+function saleNow(){ const x = BILL && BILL.sale; return x && x.on && (!x.ends || new Date(x.ends) > new Date()) && +x.pct > 0 ? x : null; }
+function priceOf(plan, term){ if(!BILL || BILL[plan] == null) return null; const base = +BILL[plan] * (term === 'year' ? (+BILL.year_months || 10) : 1), sl = saleNow(), pct = sl ? Math.min(90, +sl.pct) : 0; return {list: r2(base), final: r2(base * (1 - pct / 100)), pct}; }
+async function billLoad(){ if(!on()) return; const r = await raw('/rest/v1/ttm_billing?id=eq.main&select=cfg'); if(r.ok && Array.isArray(r.json) && r.json[0]) BILL = r.json[0].cfg || null; try{ saleBanner(); renewBanner(); const pl = $('memPlans'); if(pl && BILL) pl.innerHTML = (!SET.charging ? '<p style="margin:0 0 12px">Everything in the terminal is <b>free right now</b>. These are the planned plans; they will be announced before anything changes.</p>' : '') + planCards(); }catch(err){} }
+function saleBanner(){
+  let b = $('ttmSale'); const sl = saleNow();
+  if(!sl || !SET.charging){ if(b) b.remove(); return; }
+  if(!b){ b = document.createElement('div'); b.id = 'ttmSale'; const live = $('ttmLive'); document.body.insertBefore(b, live ? live.nextSibling : document.body.firstChild); }
+  const left = sl.ends ? Math.max(0, new Date(sl.ends) - Date.now()) : 0, d = Math.floor(left / 864e5), h = Math.floor(left % 864e5 / 36e5), m = Math.floor(left % 36e5 / 6e4);
+  b.innerHTML = `<b>🔥 ${e(sl.name || 'Sale')}: ${e(+sl.pct)}% off every plan</b>${sl.ends ? `<span>ends in ${d ? d + 'd ' : ''}${h}h ${m}m</span>` : ''}<a href="#" data-pay="premium">Get the deal</a>`;
+}
+function renewBanner(){
+  let b = $('ttmRenew'); const show = () => { if(b) b.remove(); };
+  if(!USER || !PROF || PROF.is_admin || !SET.charging) return show();
+  const until = PROF.plan !== 'free' && PROF.plan_until ? new Date(PROF.plan_until) : null, days = until ? Math.ceil((until - Date.now()) / 864e5) : null;
+  let txt = '', key = '';
+  if(until && days <= 7 && days >= 0){ txt = `Your <b>${e(pname(PROF.plan))}</b> plan ${days <= 0 ? 'ends today' : days === 1 ? 'ends tomorrow' : 'ends in ' + days + ' days'} (${until.toLocaleDateString(undefined, {day: 'numeric', month: 'short'})}). Renew to keep access.`; key = 'r' + PROF.plan_until + new Date().toDateString(); }
+  else if(PROF.expiredPlan){ txt = `Your <b>${e(pname(PROF.expiredPlan))}</b> access has ended. Renew to get it back.`; key = 'x' + PROF.expiredPlan + new Date().toDateString(); }
+  if(!txt || ls('ttm_renew_dismiss', '') === key) return show();
+  if(!b){ b = document.createElement('div'); b.id = 'ttmRenew'; const a = $('ttmSale') || $('ttmLive'); document.body.insertBefore(b, a ? a.nextSibling : document.body.firstChild); }
+  b.innerHTML = `<span>${txt}</span><a href="#" data-pay="${e(PROF.plan !== 'free' ? PROF.plan : (PROF.expiredPlan || 'premium'))}">Renew now</a><button type="button" id="ttmRenewX" aria-label="Dismiss">×</button>`; b.dataset.k = key;
+}
+function payClose(){ if(PAY && PAY.t) clearInterval(PAY.t); if(PAY && PAY.p) clearInterval(PAY.p); PAY = null; const m = $('ttmPay'); if(m) m.remove(); }
+function payOpen(plan, term){
+  if(!USER){ openAuth(); return; }
+  if(!BILL){ alert('Payments are not set up yet.'); return; }
+  payClose(); PAY = {plan: plan === 'pro' ? 'pro' : 'premium', term: term || 'month', order: null, err: ''};
+  const m = document.createElement('div'); m.id = 'ttmPay'; document.body.appendChild(m); payPaint();
+}
+function payPaint(){
+  const m = $('ttmPay'); if(!m || !PAY) return; const o = PAY.order;
+  const tabs = (key, opts) => `<div class="pay-tabs">${opts.map(x => `<button type="button" class="${PAY[key] === x[0] ? 'on' : ''}" data-ppick="${key}:${x[0]}">${x[1]}</button>`).join('')}</div>`;
+  let body = '';
+  if(!o){
+    const pr = priceOf(PAY.plan, PAY.term), mo = priceOf(PAY.plan, 'month'), yr = priceOf(PAY.plan, 'year'), saved = mo && yr ? r2(mo.final * 12 - yr.final) : 0;
+    body = `<h3>Subscribe</h3>${tabs('plan', [['premium', 'Premium'], ['pro', 'Pro']])}${tabs('term', [['month', 'Monthly'], ['year', 'Yearly · 2 months free']])}
+      <div class="pay-price">${pr.pct ? `<s>${money(pr.list)}</s> ` : ''}<b>${money(pr.final)}</b> USDT <span>/ ${PAY.term === 'year' ? 'year' : 'month'}</span>${fxTxt(pr.final)}</div>
+      ${pr.pct ? `<div class="pay-sale">${e((saleNow() || {}).name || 'Sale')}: ${pr.pct}% off</div>` : ''}${PAY.term === 'year' && saved > 0 ? `<div class="pay-sale">You save ${money(saved)} USDT compared with paying monthly.</div>` : ''}
+      <ul class="pay-ul"><li>Pay in <b>USDT on the TRON network (TRC20)</b> from any exchange or wallet.</li><li>Your plan switches on by itself, usually within a few minutes of the payment.</li><li>${PAY.term === 'year' ? '12 months of access' : '1 month of access'}, then it ends automatically unless you renew. We remind you 7 days before.</li></ul>
+      ${PAY.err ? `<div class="rr-warn y">${e(PAY.err)}</div>` : ''}<div class="pay-acts"><button type="button" class="rr-btn" data-pgo="1">Continue to payment</button><button type="button" class="rr-btn ghost" data-pclose="1">Cancel</button></div>`;
+  } else if(o.status === 'paid'){
+    body = `<h3>✅ Payment received</h3><p style="margin:6px 0 14px">Thank you. Your <b>${e(pname(o.plan))}</b> plan is now active.</p><div class="pay-acts"><button type="button" class="rr-btn" data-pdone="1">Done</button></div>`;
+  } else if(new Date(o.expires_at) < new Date() || o.status === 'expired' || o.status === 'cancelled'){
+    body = `<h3>This payment window has ended</h3><p style="margin:6px 0 14px">If you already sent the payment, message TTM on Telegram with the transaction ID and we will switch you on. Otherwise start again.</p><div class="pay-acts"><button type="button" class="rr-btn" data-pagain="1">Start again</button><button type="button" class="rr-btn ghost" data-pclose="1">Close</button></div>`;
+  } else {
+    const left = Math.max(0, new Date(o.expires_at) - Date.now()), mm = Math.floor(left / 60000), ss = String(Math.floor(left % 60000 / 1000)).padStart(2, '0'), addr = (BILL && BILL.address) || '';
+    body = `<h3>Send ${e(pname(o.plan))} · ${o.term === 'year' ? 'yearly' : 'monthly'}</h3>
+      <div class="pay-lab">Send exactly</div><div class="pay-big"><b id="payAmt">${money(o.amount)}</b> USDT <button type="button" class="pay-cp" data-pcopy="${money(o.amount)}">Copy</button></div>
+      <div class="pay-lab">Network</div><div class="pay-net">TRON (TRC20)</div>
+      <div class="pay-lab">To this address</div><div class="pay-addr"><code>${e(addr)}</code> <button type="button" class="pay-cp" data-pcopy="${e(addr)}">Copy</button></div>
+      <div class="rr-warn y" style="margin:12px 0"><b>Use TRC20 only.</b> Sending on any other network (ERC20, BEP20…) loses the money. Make sure the amount that <b>arrives</b> is exactly ${money(o.amount)}: some exchanges take their fee out of what you send, so add the fee on top. The exact cents are how we know it is you.</div>
+      <div class="pay-wait"><span class="pay-dot"></span> Waiting for your payment… <b id="payLeft">${mm}:${ss}</b> left</div>
+      <div class="pay-acts"><button type="button" class="rr-btn ghost" data-pclose="1">Close (we keep watching)</button></div>`;
+  }
+  m.innerHTML = `<div class="pay-box"><button type="button" class="pay-x" data-pclose="1" aria-label="Close">×</button>${body}</div>`;
+}
+async function payGo(){
+  PAY.err = ''; const r = await api('/rest/v1/rpc/ttm_new_order', {method: 'POST', body: JSON.stringify({p_plan: PAY.plan, p_term: PAY.term})});
+  if(!r.ok || !r.json || !r.json.id){ PAY.err = r.json && r.json.message ? r.json.message : 'Could not start the payment. Run supabase/payments.sql first, or try again.'; payPaint(); return; }
+  PAY.order = r.json; payPaint();
+  PAY.t = setInterval(() => { const o = PAY && PAY.order; if(!o || o.status !== 'open'){ return; } if(new Date(o.expires_at) < new Date()){ payPaint(); return; } const l = $('payLeft'); if(l){ const left = Math.max(0, new Date(o.expires_at) - Date.now()); l.textContent = Math.floor(left / 60000) + ':' + String(Math.floor(left % 60000 / 1000)).padStart(2, '0'); } }, 1000);
+  PAY.p = setInterval(async () => { const o = PAY && PAY.order; if(!o || o.status === 'paid') return; const q = await api(`/rest/v1/ttm_orders?id=eq.${o.id}&select=status,expires_at`); if(q.ok && q.json && q.json[0] && q.json[0].status !== o.status){ o.status = q.json[0].status; payPaint(); } }, 8000);
+}
+document.addEventListener('click', ev => {
+  const t = ev.target.closest && ev.target.closest('[data-pay],[data-ppick],[data-pgo],[data-pclose],[data-pdone],[data-pagain],[data-pcopy],#ttmRenewX'); if(!t) return;
+  if(t.dataset.pay){ ev.preventDefault(); payOpen(t.dataset.pay); }
+  else if(t.dataset.ppick){ const [k, v] = t.dataset.ppick.split(':'); if(PAY && !PAY.order){ PAY[k] = v; payPaint(); } }
+  else if(t.dataset.pgo) payGo();
+  else if(t.dataset.pclose) payClose();
+  else if(t.dataset.pdone){ payClose(); location.reload(); }
+  else if(t.dataset.pagain){ const pl = PAY.plan, tm = PAY.term; payClose(); payOpen(pl, tm); }
+  else if(t.dataset.pcopy){ try{ navigator.clipboard.writeText(t.dataset.pcopy); t.textContent = 'Copied'; setTimeout(() => { t.textContent = 'Copy'; }, 1500); }catch(err){} }
+  else if(t.id === 'ttmRenewX'){ const b = $('ttmRenew'); if(b){ try{ localStorage.setItem('ttm_renew_dismiss', JSON.stringify(b.dataset.k)); }catch(err){} b.remove(); } }
+});
+setInterval(() => { try{ saleBanner(); }catch(err){} }, 60000); setInterval(billLoad, 600000);
+(function(){ const c = document.createElement('style'); c.textContent = `#ttmSale,#ttmRenew{padding:9px 16px;display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;font-size:14px;color:var(--text,#eee);text-align:center}#ttmSale{background:linear-gradient(90deg,rgba(229,83,75,.28),rgba(219,161,24,.2));border-bottom:1px solid #e5534b}#ttmRenew{background:linear-gradient(90deg,rgba(142,162,255,.22),rgba(142,162,255,.08));border-bottom:1px solid #8ea2ff}#ttmSale a,#ttmRenew a{background:var(--gold,#dba118);color:#111;border-radius:8px;padding:5px 12px;font-weight:800;text-decoration:none}#ttmRenewX{background:none;border:0;color:inherit;font-size:20px;cursor:pointer;opacity:.7}
+#ttmPay{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.72);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:24px 14px}.pay-box{position:relative;background:#141416;border:1px solid var(--line,#333);border-radius:18px;max-width:470px;width:100%;padding:22px 20px;box-shadow:0 20px 60px rgba(0,0,0,.6);margin:auto}.pay-box h3{margin:0 0 12px;font-size:20px}.pay-x{position:absolute;right:12px;top:8px;background:none;border:0;color:var(--mute,#999);font-size:26px;cursor:pointer}.pay-tabs{display:flex;gap:6px;margin:0 0 10px}.pay-tabs button{flex:1;padding:10px 6px;border-radius:10px;border:1px solid var(--line,#333);background:rgba(255,255,255,.04);color:var(--text,#eee);font:inherit;font-weight:700;cursor:pointer}.pay-tabs button.on{background:var(--gold,#dba118);color:#111;border-color:var(--gold,#dba118)}.pay-price{font-size:15px;margin:12px 0 4px}.pay-price b{font-size:34px;letter-spacing:-.02em}.pay-price span{color:var(--mute,#999)}.pay-price s{color:var(--mute,#999)}.pay-sale{color:#3fb97a;font-size:13px;font-weight:700;margin:2px 0}.pay-ul{margin:12px 0;padding-left:18px;font-size:13px;color:var(--mute,#aaa);line-height:1.5}.pay-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.pay-acts .rr-btn{flex:1}.pay-lab{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute,#999);margin:12px 0 4px}.pay-big{font-size:18px}.pay-big b{font-size:40px;letter-spacing:-.02em;color:var(--gold2,#f0b929)}.pay-net{font-weight:800;font-size:16px}.pay-addr{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.pay-addr code{word-break:break-all;font-size:13px;background:rgba(255,255,255,.06);padding:8px 10px;border-radius:8px;flex:1;min-width:200px}.pay-cp{background:rgba(255,255,255,.08);border:1px solid var(--line,#333);color:var(--text,#eee);border-radius:8px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}.pay-wait{display:flex;gap:8px;align-items:center;font-size:14px;margin-top:6px}.pay-dot{width:10px;height:10px;border-radius:50%;background:#3fb97a;animation:payP 1.2s ease-out infinite}@keyframes payP{0%{box-shadow:0 0 0 0 rgba(63,185,122,.7)}100%{box-shadow:0 0 0 12px transparent}}`; document.head.appendChild(c); })();
+
+// ---------- Admin: billing (prices, sale, unmatched payments)
+async function billAdminLoad(){
+  const host = $('admBody'); if(!host || !PROF || !PROF.is_admin) return;
+  let box = $('admBill'); if(!box){ box = document.createElement('div'); box.id = 'admBill'; host.insertBefore(box, host.firstChild); }
+  const b = await api('/rest/v1/ttm_billing?id=eq.main&select=cfg');
+  if(!b.ok || !b.json || !b.json[0]){ box.innerHTML = '<div class="rr-warn y"><b>One database step is missing.</b> In Supabase open SQL Editor, New query, paste the contents of supabase/payments.sql and press Run, then refresh.</div>'; return; }
+  const c = b.json[0].cfg || {}, sl = c.sale || {}, inp = (id, v, w) => `<input id="${id}" value="${e(v == null ? '' : v)}" style="width:${w || 110}px;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 9px;font:inherit">`;
+  const [pay, ord] = await Promise.all([api('/rest/v1/ttm_payments?select=*&order=seen_at.desc&limit=30'), api('/rest/v1/ttm_orders?select=id,user_id,plan,term,amount,status,created_at,paid_at&order=created_at.desc&limit=15')]);
+  const un = (pay.json || []).filter(x => x.status === 'unmatched'), done = (pay.json || []).filter(x => x.status !== 'unmatched').slice(0, 8);
+  const ends = sl.ends ? new Date(sl.ends) : null, loc = ends ? new Date(ends - ends.getTimezoneOffset() * 6e4).toISOString().slice(0, 16) : '';
+  box.innerHTML = `<div class="rr-card"><h3>Billing</h3>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
+      <label style="font-size:12px;color:var(--mute)">Premium / month (USDT)<br>${inp('bPrem', c.premium)}</label><label style="font-size:12px;color:var(--mute)">Pro / month (USDT)<br>${inp('bPro', c.pro)}</label><label style="font-size:12px;color:var(--mute)">Yearly = monthly ×<br>${inp('bYm', c.year_months, 70)}</label><label style="font-size:12px;color:var(--mute)">Order window (min)<br>${inp('bMin', c.order_minutes, 70)}</label></div>
+    <label style="font-size:12px;color:var(--mute)">USDT (TRC20) deposit address<br>${inp('bAddr', c.address, 380)}</label>
+    <h3 style="margin:16px 0 8px;font-size:15px">Sale</h3>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end"><label style="font-size:12px;color:var(--mute)">Name (shown on the banner)<br>${inp('bSName', sl.name, 190)}</label><label style="font-size:12px;color:var(--mute)">% off<br>${inp('bSPct', sl.pct, 60)}</label><label style="font-size:12px;color:var(--mute)">Ends (your time)<br><input id="bSEnd" type="datetime-local" value="${loc}" style="background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 9px;font:inherit"></label><label style="display:flex;gap:6px;align-items:center;font-size:14px"><input type="checkbox" id="bSOn" ${sl.on ? 'checked' : ''} style="width:auto"> <b>Sale is on</b></label></div>
+    <div class="rr-acts" style="margin-top:14px"><button class="rr-btn" id="bSave">Save billing</button><span id="bMsg" class="calendar-note"></span></div>
+    <div class="calendar-note" style="margin-top:8px">Sale prices apply to monthly and yearly. Members always pay the sale price shown on the Pay screen minus a few cents (that is how we tell payments apart), never more.</div></div>
+    <div class="rr-card"><h3>Unmatched USDT payments (${un.length})</h3>${un.length ? `<div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>When</th><th>Amount</th><th>From</th><th>Give to member</th><th></th></tr></thead><tbody>${un.map(x => `<tr><td>${e(new Date(x.tx_time).toLocaleString())}</td><td><b>${money(x.amount)}</b></td><td style="font-size:11px;word-break:break-all">${e(String(x.from_addr || '').slice(0, 12))}…</td><td><input data-ae="${e(x.txid)}" placeholder="member email" style="width:170px;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:6px 8px;font:inherit"> <select data-ap2="${e(x.txid)}"><option value="premium">Premium</option><option value="pro">Pro</option></select> <select data-at2="${e(x.txid)}"><option value="month">Monthly</option><option value="year">Yearly</option></select></td><td><button class="rr-btn sm" data-aas="${e(x.txid)}">Give access</button> <button class="rr-btn sm ghost" data-aig="${e(x.txid)}">Ignore</button></td></tr>`).join('')}</tbody></table></div>` : '<p style="margin:0;color:var(--mute)">None. Every deposit so far matched an order.</p>'}</div>
+    <div class="rr-card"><h3>Recent orders and deposits</h3><div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Created</th><th>Plan</th><th>Amount</th><th>Status</th></tr></thead><tbody>${(ord.json || []).map(x => `<tr><td>${e(new Date(x.created_at).toLocaleString())}</td><td>${e(pname(x.plan))} · ${x.term === 'year' ? 'yearly' : 'monthly'}</td><td>${money(x.amount)}</td><td>${e(x.status)}</td></tr>`).join('') || '<tr><td colspan="4" style="color:var(--mute)">No orders yet.</td></tr>'}</tbody></table></div>${done.length ? `<div class="calendar-note" style="margin-top:8px">Latest deposits: ${done.map(x => `${money(x.amount)} (${e(x.status)})`).join(' · ')}</div>` : ''}</div>`;
+}
+document.addEventListener('click', async ev => {
+  const t = ev.target.closest && ev.target.closest('#bSave,[data-aas],[data-aig]'); if(!t) return;
+  if(t.id === 'bSave'){
+    const v = id => $(id).value.trim(), num = (id, d) => { const n = parseFloat(v(id)); return isFinite(n) ? n : d; };
+    const cfg = {premium: num('bPrem', 19.95), pro: num('bPro', 65), year_months: num('bYm', 10), order_minutes: Math.max(15, Math.round(num('bMin', 60))), address: v('bAddr'), sale: {on: $('bSOn').checked, name: v('bSName'), pct: Math.min(90, Math.max(0, num('bSPct', 0))), ends: $('bSEnd').value ? new Date($('bSEnd').value).toISOString() : null}};
+    if(!/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(cfg.address)){ $('bMsg').textContent = 'That does not look like a TRON address (starts with T, 34 characters).'; return; }
+    const r = await api('/rest/v1/ttm_billing?id=eq.main', {method: 'PATCH', body: JSON.stringify({cfg, updated_at: new Date().toISOString()})}); $('bMsg').textContent = r.ok ? 'Saved.' : 'Could not save.'; if(r.ok){ BILL = cfg; try{ saleBanner(); }catch(err){} }
+  } else if(t.dataset.aas){
+    const id = t.dataset.aas, em = document.querySelector(`[data-ae="${id}"]`).value.trim(); if(!em){ alert('Type the member email first.'); return; }
+    const r = await api('/rest/v1/rpc/ttm_admin_assign_payment', {method: 'POST', body: JSON.stringify({p_txid: id, p_email: em, p_plan: document.querySelector(`[data-ap2="${id}"]`).value, p_term: document.querySelector(`[data-at2="${id}"]`).value})});
+    if(!r.ok){ alert((r.json && r.json.message) || 'Could not assign.'); return; } billAdminLoad();
+  } else if(t.dataset.aig){ const r = await api('/rest/v1/rpc/ttm_admin_ignore_payment', {method: 'POST', body: JSON.stringify({p_txid: t.dataset.aig})}); if(r.ok) billAdminLoad(); }
+});
 
 // ---------- Telegram name
 const FBSQL = `-- TTM: Telegram name on accounts + beta tester feedback. Safe to run more than once.
@@ -559,7 +676,7 @@ async function adminUi(){ await fbLoad(true);
     <div class="rr-card"><h3>Founding Member badge</h3><p class="calendar-note" style="margin:0 0 10px">Gives the <b>Founding Member</b> badge to the first people who signed up. Use the Badges buttons on a member below to add or remove any badge one by one. The TTM badge is automatic for admins.</p><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span>First</span><input id="bdgN" type="number" min="1" value="100" style="width:90px"><span>sign-ups</span><button class="rr-btn sm" id="bdgFound">Give Founding Member</button></div><p class="calendar-note" id="bdgNote" style="margin:8px 0 0"></p></div>
     <div class="rr-card"><h3>Members (${users.length})</h3><div class="rr-wrap"><table class="rr-tbl"><thead><tr><th>Email</th><th>Telegram</th><th>Joined</th><th>Plan</th><th>Until</th><th>Beta</th><th title="Your own team">Team</th><th title="Shown next to their name in the chat rooms">Badges</th><th></th></tr></thead><tbody>${users.map(u => `<tr><td>${e(u.email)}${u.is_admin ? ' <span class="rr-pill be">admin</span>' : ''}</td><td>${u.tg_handle ? '@' + e(u.tg_handle) : '<span class="ins-sub">—</span>'}</td><td>${new Date(u.created_at).toLocaleDateString()}</td><td>${sel('data-uid="' + u.id + '"', normPlan(u.plan))}</td><td style="white-space:nowrap">${u.plan_until ? (new Date(u.plan_until) < new Date() ? '<span style="color:#e0554d">ended ' : '<span style="color:var(--gold2)">') + new Date(u.plan_until).toLocaleDateString(undefined, {day: 'numeric', month: 'short'}) + '</span>' + (u.plan_note ? ' <span class="ins-sub">' + e(u.plan_note) + '</span>' : '') : '<span class="ins-sub">no end</span>'}</td><td style="text-align:center"><input type="checkbox" data-beta="${u.id}" ${u.beta ? 'checked' : ''}></td><td style="text-align:center"><input type="checkbox" data-team="${u.id}" ${u.team ? 'checked' : ''}></td><td style="min-width:210px">${u.is_admin ? '<span class="rr-pill be">TTM</span> ' : ''}${BDG.map(b => `<button type="button" class="bdg-chip ${(u.badges || []).indexOf(b[0]) >= 0 ? 'on' : ''}" data-bu="${u.id}" data-bk="${b[0]}" ${hasTeam ? '' : 'disabled title="Run supabase/badges2.sql first"'}>${b[2]}</button>`).join('')}</td><td>${USER && u.id === USER.id ? '' : `<button class="rr-btn ghost sm" data-delu="${e(u.id)}" data-em="${e(u.email)}" style="border-color:#e0554d;color:#e0554d">Delete</button>`}</td></tr>`).join('') || '<tr><td colspan="8" style="color:var(--mute)">No members yet.</td></tr>'}</tbody></table></div></div>
     <div class="rr-card"><h3>Usage insights</h3><p class="calendar-note" style="margin:0 0 10px">An executive summary of what people open and click: trends against the previous period, what is useful and what is not, where visitors are, and charts you can click into.</p><a class="rr-btn" style="text-decoration:none;display:inline-block" href="#insights">Open Insights →</a></div>`;
-  lvLoad(); rmMutesLoad(); discAdminLoad();
+  lvLoad(); rmMutesLoad(); discAdminLoad(); billAdminLoad();
 }
 
 // ---------- Insights page (admin only): #insights
