@@ -54,7 +54,7 @@ def getj(url, tries=4):
             code = getattr(ex, "code", None)
             ERRS[str(code or type(ex).__name__)] = ERRS.get(str(code or type(ex).__name__), 0) + 1
             print(f"fetch failed {url[:90]} ({type(ex).__name__} {code}), try {i + 1}", flush=True)
-            time.sleep(30 * (i + 1) if code == 429 else 5 * (i + 1))
+            time.sleep(20 * (i + 1) if code == 429 else 5 * (i + 1))
     return None
 
 
@@ -83,46 +83,76 @@ def r6(v):
     return float("%.6g" % v)
 
 
+def shift(arr, old_dates, dates, last=None):
+    """Re-align a previously saved series onto today's date grid, forward-fill, set today's slot to the live value."""
+    m = {d: k for k, d in enumerate(old_dates)}
+    out = [arr[m[d]] if d in m and m[d] < len(arr) else None for d in dates]
+    lastv = None
+    for k in range(len(out)):
+        if out[k] is not None:
+            lastv = out[k]
+        elif lastv is not None:
+            out[k] = lastv
+    if last is not None:
+        out[-1] = last
+    return out
+
+
 def main():
+    started = time.time()
     ids = list(dict.fromkeys(BENCH + [c for s in SECTORS for c in s[2]]))
-    fx = os.environ.get("DRY_FILE")
-    fix = json.load(open(fx)) if fx else None
+    LIMIT = int(os.environ.get("LIMIT") or (110 if KEY else 40))
+    try:
+        prev = json.load(open(OUT))
+    except Exception:
+        prev = {}
+    pc, pd = prev.get("coins", {}), prev.get("dates", [])
     meta = {}
-    if not fix:
-        for k in range(0, len(ids), 100):
-            m = getj("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=250&ids=" + ",".join(ids[k:k + 100]))
-            for c in (m or []):
-                meta[c["id"]] = c
-        if len(meta) < 30:
-            status("could not load the coin list from CoinGecko (rate-limited or blocked); no file written", loaded=len(meta))
-            sys.exit(0)
-    else:
-        meta = {i: {"id": i, "symbol": i[:4], "name": i, "market_cap": 1e9} for i in fix}
+    for k in range(0, len(ids), 100):
+        m = getj("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=250&ids=" + ",".join(ids[k:k + 100]), tries=3)
+        for c in (m or []):
+            meta[c["id"]] = c
+        time.sleep(2)
+    if len(meta) < 30:
+        status("could not load the coin list from CoinGecko (rate-limited or blocked); kept the old file", loaded=len(meta))
+        sys.exit(0)
     now = int(time.time() * 1000)
     t0 = (now // D) * D - (DAYS - 1) * D
     dates = [datetime.fromtimestamp((t0 + j * D) / 1000, timezone.utc).strftime("%Y-%m-%d") for j in range(DAYS)]
     coins = {}
     for cid in ids:
         if cid not in meta:
-            print("unknown on CoinGecko:", cid)
             continue
-        d = fix.get(cid) if fix else getj(f"https://api.coingecko.com/api/v3/coins/{cid}/market_chart?vs_currency=usd&days={DAYS}&interval=daily")
+        m = meta[cid]
+        if cid in pc:
+            o = pc[cid]
+            coins[cid] = {"sym": o.get("sym"), "name": o.get("name"), "mc": m.get("market_cap") or o.get("mc") or 0, "ts": o.get("ts", 0),
+                          "p": [r6(v) for v in shift(o["p"], pd, dates, m.get("current_price"))], "v": shift(o["v"], pd, dates, None)}
+            coins[cid]["v"][-1] = int(m.get("total_volume") or 0) or coins[cid]["v"][-1]
+    todo = sorted([c for c in ids if c in meta], key=lambda c: coins[c]["ts"] if c in coins else -1)[:LIMIT]
+    got = 0
+    for cid in todo:
+        if time.time() - started > 24 * 60:
+            print("time budget reached; will continue next run")
+            break
+        d = getj(f"https://api.coingecko.com/api/v3/coins/{cid}/market_chart?vs_currency=usd&days={DAYS}&interval=daily", tries=2)
+        time.sleep(2.2 if KEY else 3.6)
         if not d or not d.get("prices"):
             print("no data for", cid)
             continue
+        m = meta[cid]
         px = day_grid(d["prices"], t0, DAYS)
         vol = day_grid(d.get("total_volumes") or [], t0, DAYS, fill=False)
-        m = meta[cid]
-        coins[cid] = {"sym": (m.get("symbol") or cid).upper(), "name": m.get("name") or cid, "mc": m.get("market_cap") or 0, "p": [r6(v) for v in px], "v": [None if v is None else int(v) for v in vol]}
-        if not fix:
-            time.sleep(2.2 if KEY else 3.6)
-    if len(coins) < 60 or "bitcoin" not in coins:
-        status("too few coins returned history (CoinGecko rate limit); no file written", coins=len(coins))
+        coins[cid] = {"sym": (m.get("symbol") or cid).upper(), "name": m.get("name") or cid, "mc": m.get("market_cap") or 0, "ts": now,
+                      "p": [r6(v) for v in px], "v": [None if v is None else int(v) for v in vol]}
+        got += 1
+    if len(coins) < 40 or "bitcoin" not in coins:
+        status("too few coins have history yet (CoinGecko rate limit); will keep filling on the next runs", coins=len(coins), refreshed=got)
         sys.exit(0)
     out = {"generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(), "source": "TTM Markets data", "dates": dates,
            "sectors": [{"id": s[0], "desc": s[1], "coins": [c for c in s[2] if c in coins]} for s in SECTORS], "coins": coins}
     json.dump(out, open(OUT, "w"), separators=(",", ":"))
-    status("ok", coins=len(coins), bytes=os.path.getsize(OUT))
+    status("ok", coins=len(coins), refreshed=got, bytes=os.path.getsize(OUT))
 
 
 if __name__ == "__main__":

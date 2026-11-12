@@ -2,7 +2,7 @@ name: Update Crypto Rotation data
 
 on:
   schedule:
-    - cron: "43 */6 * * *"
+    - cron: "43 */2 * * *"
   workflow_dispatch:
   push:
     paths:
