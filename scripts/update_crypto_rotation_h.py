@@ -27,7 +27,7 @@ def status(msg, **kw):
 def main():
     started = time.time()
     ids = list(dict.fromkeys(R.BENCH + [c for s in R.SECTORS for c in s[2]]))
-    LIMIT = int(os.environ.get("LIMIT") or (100 if R.KEY else 40))
+    LIMIT = int(os.environ.get("LIMIT") or 40)
     try:
         prev = json.load(open(OUT))
     except Exception:

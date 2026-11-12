@@ -101,7 +101,7 @@ def shift(arr, old_dates, dates, last=None):
 def main():
     started = time.time()
     ids = list(dict.fromkeys(BENCH + [c for s in SECTORS for c in s[2]]))
-    LIMIT = int(os.environ.get("LIMIT") or (110 if KEY else 40))
+    LIMIT = int(os.environ.get("LIMIT") or 40)
     try:
         prev = json.load(open(OUT))
     except Exception:
