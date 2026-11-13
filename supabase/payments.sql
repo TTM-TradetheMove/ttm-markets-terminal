@@ -81,6 +81,12 @@ begin
   if uid is null then raise exception 'sign in first'; end if;
   if p_plan not in ('premium','pro','lens') or p_term not in ('month','year') or (p_plan = 'lens' and p_term <> 'year') then raise exception 'unknown plan'; end if;
   update public.ttm_orders set status = 'expired' where status = 'open' and expires_at < now();
+  -- membership cap: new paying members are refused once the cap is reached; people who are already paying (or paid before) can always renew
+  if p_plan in ('premium','pro') and (select count(*) from public.ttm_profiles where plan in ('premium','pro') and plan_until > now() and plan_note like 'USDT%') >= coalesce((select (cfg ->> 'member_cap')::int from public.ttm_billing where id = 'main'), 350)
+     and not exists (select 1 from public.ttm_orders where user_id = uid and status = 'paid' and plan in ('premium','pro'))
+     and not exists (select 1 from public.ttm_profiles where id = uid and plan in ('premium','pro') and plan_until > now()) then
+    raise exception 'Memberships are full right now. Message TTM on Telegram to join the waiting list.';
+  end if;
   lp := public.ttm_price(p_plan, p_term);
   select * into o from public.ttm_orders where user_id = uid and status = 'open' and plan = p_plan and term = p_term and list_price = lp limit 1;
   if found then return o; end if;
@@ -483,3 +489,27 @@ begin
   end if;
 end $$;
 grant execute on function public.ttm_lens_admin(uuid, text) to authenticated;
+
+
+-- 13) Paid-member cap (default 350, change "member_cap" in the billing row). Anyone can read the count to show "full".
+create or replace function public.ttm_member_cap() returns jsonb
+language sql stable security definer set search_path = public as $$
+  select jsonb_build_object('cap', coalesce((select (cfg ->> 'member_cap')::int from public.ttm_billing where id = 'main'), 350),
+    'paid', (select count(*) from public.ttm_profiles where plan in ('premium','pro') and plan_until > now() and plan_note like 'USDT%'),
+    'full', (select count(*) from public.ttm_profiles where plan in ('premium','pro') and plan_until > now() and plan_note like 'USDT%') >= coalesce((select (cfg ->> 'member_cap')::int from public.ttm_billing where id = 'main'), 350)) $$;
+grant execute on function public.ttm_member_cap() to anon, authenticated;
+
+-- 14) Free members can read and react in the community rooms but cannot post, reply, vote or start polls.
+create or replace function public.ttm_room_free_ro() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare p record;
+begin
+  select * into p from public.ttm_profiles where id = new.user_id;
+  if found and not coalesce(p.is_admin, false) and coalesce(to_jsonb(p) ->> 'beta', 'false') <> 'true' and coalesce(to_jsonb(p) ->> 'team', 'false') <> 'true'
+     and (coalesce(p.plan, 'free') = 'free' or (p.plan_until is not null and p.plan_until < now())) then
+    raise exception 'Free members can react to posts. Upgrade to post and reply.';
+  end if;
+  return new;
+end $$;
+drop trigger if exists ttm_room_free_ro_ins on public.ttm_room_msgs;
+create trigger ttm_room_free_ro_ins before insert on public.ttm_room_msgs for each row execute function public.ttm_room_free_ro();
