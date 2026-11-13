@@ -504,7 +504,7 @@ document.addEventListener('click', ev => {
   else if(t.dataset.pclose) payClose();
   else if(t.dataset.pdone){ payClose(); location.reload(); }
   else if(t.dataset.pagain){ const pl = PAY.plan, tm = PAY.term; payClose(); payOpen(pl, tm); }
-  else if(t.dataset.pcopy){ try{ navigator.clipboard.writeText(t.dataset.pcopy); t.textContent = 'Copied'; setTimeout(() => { t.textContent = 'Copy'; }, 1500); }catch(err){} }
+  else if(t.dataset.pcopy){ try{ navigator.clipboard.writeText(t.dataset.pcopy); const o0 = t.textContent; t.textContent = 'Copied'; setTimeout(() => { t.textContent = o0; }, 1500); }catch(err){} }
   else if(t.id === 'ttmRenewX'){ const b = $('ttmRenew'); if(b){ try{ localStorage.setItem('ttm_renew_dismiss', JSON.stringify(b.dataset.k)); }catch(err){} b.remove(); } }
 });
 setInterval(() => { try{ saleBanner(); }catch(err){} }, 60000); setInterval(billLoad, 600000);
