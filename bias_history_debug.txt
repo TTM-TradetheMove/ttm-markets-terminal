@@ -1,14 +1,13 @@
-bias history run 2026-11-12T20:24:19.842604+00:00
-incremental: scraping 2 month(s); 1098 existing records
-FF 2026-11: 199 rows scraped, 12 tracked events kept
+bias history run 2026-11-13T02:06:43.095155+00:00
+incremental: scraping 2 month(s); 1099 existing records
+FF 2026-11: 251 rows scraped, 14 tracked events kept
 FF 2026-10: 0 rows scraped, 0 tracked events kept | title='Just a moment...'
-  body snippet: www.forexfactory.com Performing security verification  This website uses a security service to protect against malicious bots. This page is displayed while the website verifies you are not a bot.  Ray ID: a598435269fc5fe3 Performance and Security by Cloudflare Privacy
+  body snippet: www.forexfactory.com Performing security verification  This website uses a security service to protect against malicious bots. This page is displayed while the website verifies you are not a bot.  Ray ID: a59a38db7cf4b268 Performance and Security by Cloudflare Privacy
 seed file: 1061 tracked rows
 1099 records after merge
-fetching prices 2022-12-29 -> 2026-11-12 for 172 releases
-  GET fail (1/3) https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=900&start=2026-08-1 -> URLError: <urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in vio
-btc: 135697 candles from coinbase
-eth: 135696 candles from coinbase
-xrp: 116869 candles from coinbase
-sol: 135694 candles from coinbase
+fetching prices 2022-12-29 -> 2026-11-13 for 169 releases
+btc: 135720 candles from coinbase
+eth: 135719 candles from coinbase
+xrp: 116892 candles from coinbase
+sol: 135717 candles from coinbase
 wrote /home/runner/work/ttm-markets-terminal/ttm-markets-terminal/crypto_bias_history.json: 1099 events with price reactions
