@@ -332,3 +332,21 @@ select cron.schedule('ttm-usdt-check', '* * * * *', $$
 -- 10) Re-check every referrer's free tier every 5 minutes (so a lapsed referral is noticed quickly).
 do $$ begin perform cron.unschedule('ttm-ref-recalc'); exception when others then null; end $$;
 select cron.schedule('ttm-ref-recalc', '*/5 * * * *', $$ select public.ttm_ref_recalc_all() $$);
+
+-- 11) Scheduled price rise: at 00:00 Sydney on 1 Feb 2027 both plan prices go up by 120% (x2.2), once only.
+-- Change the date or percent here before it happens, or set "rise_done" to true in ttm_billing.cfg to cancel it.
+create or replace function public.ttm_price_rise_apply() returns void
+language plpgsql security definer set search_path = public as $$
+declare c jsonb; k numeric := 1 + 120 / 100.0; at timestamptz := timestamptz '2027-02-01 00:00:00+11';
+begin
+  if now() < at then return; end if;
+  select cfg into c from public.ttm_billing where id = 'main';
+  if c is null or coalesce((c ->> 'rise_done')::boolean, false) then return; end if;
+  update public.ttm_billing set cfg = c
+      || jsonb_build_object('premium', round((c ->> 'premium')::numeric * k, 2), 'pro', round((c ->> 'pro')::numeric * k, 2),
+                            'rise_done', true, 'rise_at', now())
+    where id = 'main';
+end $$;
+revoke all on function public.ttm_price_rise_apply() from public, anon, authenticated;
+do $$ begin perform cron.unschedule('ttm-price-rise'); exception when others then null; end $$;
+select cron.schedule('ttm-price-rise', '*/10 * * * *', $$ select public.ttm_price_rise_apply() $$);
