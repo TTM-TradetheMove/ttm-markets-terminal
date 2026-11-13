@@ -57,10 +57,13 @@ create policy payments_admin on public.ttm_payments for select using (public.ttm
 -- 4) Price for a plan and term, with any running sale applied. Yearly = monthly x year_months (2 months free). Never above list.
 create or replace function public.ttm_price(p_plan text, p_term text) returns numeric
 language plpgsql stable security definer set search_path = public as $$
-declare c jsonb; base numeric; pct numeric := 0; ends timestamptz; starts timestamptz;
+declare c jsonb; base numeric; pct numeric := 0; ends timestamptz; starts timestamptz; mp text;
 begin
   select cfg into c from public.ttm_billing where id = 'main';
-  if p_plan = 'lens' then return coalesce((c ->> 'lens_price')::numeric, 350); end if;   -- LENS pass: flat yearly price, never on sale
+  if p_plan = 'lens' then   -- LENS pass: yearly, never on sale. Premium and Pro members get their own lower price.
+    select plan into mp from public.ttm_profiles where id = auth.uid() and plan in ('premium','pro') and (plan_until is null or plan_until > now());
+    return case mp when 'pro' then coalesce((c ->> 'lens_price_pro')::numeric, 200) when 'premium' then coalesce((c ->> 'lens_price_premium')::numeric, 350) else coalesce((c ->> 'lens_price')::numeric, 500) end;
+  end if;
   base := (c ->> p_plan)::numeric;
   if base is null then raise exception 'unknown plan'; end if;
   if p_term = 'year' then base := base * coalesce((c ->> 'year_months')::numeric, 10); end if;
@@ -296,7 +299,7 @@ begin
   if o.plan = 'lens' then until_at := public.ttm_lens_extend(o.user_id, 12, 'usdt');
   else until_at := public.ttm_extend(o.user_id, o.plan, o.term, 'USDT order ' || left(o.id::text, 8)); end if;
   update public.ttm_orders set status = 'paid', txid = p_txid, paid_at = now() where id = o.id;
-  if o.plan <> 'lens' then perform public.ttm_referral_credit(o.user_id, o.plan, o.term); end if;
+  if o.plan <> 'lens' then perform public.ttm_referral_credit(o.user_id, o.plan, o.term); perform public.ttm_founders_check(); end if;
   insert into public.ttm_payments (txid, from_addr, amount, tx_time, status, order_id, user_id, note)
     values (p_txid, p_from, p_amount, p_time, 'applied', o.id, o.user_id, o.plan || ' ' || o.term)
     on conflict (txid) do nothing;
@@ -318,7 +321,7 @@ begin
   if p_plan = 'lens' then until_at := public.ttm_lens_extend(uid, 12, 'usdt');
   else until_at := public.ttm_extend(uid, p_plan, p_term, 'USDT manual ' || left(p_txid, 8)); end if;
   update public.ttm_payments set status = 'assigned', user_id = uid, note = p_plan || ' ' || p_term || ' (manual)' where txid = p_txid;
-  if p_plan <> 'lens' then perform public.ttm_referral_credit(uid, p_plan, p_term); end if;
+  if p_plan <> 'lens' then perform public.ttm_referral_credit(uid, p_plan, p_term); perform public.ttm_founders_check(); end if;
   return jsonb_build_object('ok', true, 'until', until_at);
 end $$;
 grant execute on function public.ttm_admin_assign_payment(text, text, text, text) to authenticated;
@@ -345,11 +348,12 @@ select cron.schedule('ttm-ref-recalc', '*/5 * * * *', $$ select public.ttm_ref_r
 
 -- 11) Scheduled price rise: at 00:00 Sydney on 1 Feb 2027 both plan prices go up by 120% (x2.2), once only.
 -- Change the date or percent here before it happens, or set "rise_done" to true in ttm_billing.cfg to cancel it.
-create or replace function public.ttm_price_rise_apply() returns void
+drop function if exists public.ttm_price_rise_apply();
+create or replace function public.ttm_price_rise_apply(p_force boolean default false) returns void
 language plpgsql security definer set search_path = public as $$
 declare c jsonb; k numeric := 1 + 120 / 100.0; at timestamptz := timestamptz '2027-02-01 00:00:00+11';
 begin
-  if now() < at then return; end if;
+  if not p_force and now() < at then return; end if;
   select cfg into c from public.ttm_billing where id = 'main';
   if c is null or coalesce((c ->> 'rise_done')::boolean, false) then return; end if;
   update public.ttm_billing set cfg = c
@@ -357,9 +361,9 @@ begin
                             'rise_done', true, 'rise_at', now())
     where id = 'main';
 end $$;
-revoke all on function public.ttm_price_rise_apply() from public, anon, authenticated;
+revoke all on function public.ttm_price_rise_apply(boolean) from public, anon, authenticated;
 do $$ begin perform cron.unschedule('ttm-price-rise'); exception when others then null; end $$;
-select cron.schedule('ttm-price-rise', '*/10 * * * *', $$ select public.ttm_price_rise_apply() $$);
+select cron.schedule('ttm-price-rise', '*/10 * * * *', $$ select public.ttm_price_rise_apply(false) $$);
 
 
 -- 12) TTM LENS access: a member gets LENS in one of two ways.
@@ -513,3 +517,35 @@ begin
 end $$;
 drop trigger if exists ttm_room_free_ro_ins on public.ttm_room_msgs;
 create trigger ttm_room_free_ro_ins before insert on public.ttm_room_msgs for each row execute function public.ttm_room_free_ro();
+
+
+-- 15) Founding members: the first 50 people who pay for Premium or Pro lock in the launch price. When the 50th pays, prices rise 120% straight away
+-- (otherwise they rise on 1 Feb 2027, see section 11). Counts each paying person once.
+create or replace function public.ttm_founders() returns int
+language sql stable security definer set search_path = public as $$
+  select count(*)::int from (
+    select user_id from public.ttm_orders where status = 'paid' and plan in ('premium','pro')
+    union select user_id from public.ttm_payments where status = 'assigned' and user_id is not null and (note like 'premium%' or note like 'pro%')) x $$;
+revoke all on function public.ttm_founders() from public, anon, authenticated;
+
+create or replace function public.ttm_founders_check() returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if public.ttm_founders() >= 50 then perform public.ttm_price_rise_apply(true); end if;
+end $$;
+revoke all on function public.ttm_founders_check() from public, anon, authenticated;
+
+create or replace function public.ttm_member_cap() returns jsonb
+language sql stable security definer set search_path = public as $$
+  select jsonb_build_object('cap', coalesce((select (cfg ->> 'member_cap')::int from public.ttm_billing where id = 'main'), 350),
+    'paid', (select count(*) from public.ttm_profiles where plan in ('premium','pro') and plan_until > now() and plan_note like 'USDT%'),
+    'full', (select count(*) from public.ttm_profiles where plan in ('premium','pro') and plan_until > now() and plan_note like 'USDT%') >= coalesce((select (cfg ->> 'member_cap')::int from public.ttm_billing where id = 'main'), 350),
+    'founders', public.ttm_founders(),
+    'founding_open', not coalesce((select (cfg ->> 'rise_done')::boolean from public.ttm_billing where id = 'main'), false) and now() < timestamptz '2027-02-01 00:00:00+11') $$;
+grant execute on function public.ttm_member_cap() to anon, authenticated;
+
+-- 16) Invitation page: show who invited you. Returns only the public display name for a referral code.
+create or replace function public.ttm_ref_name(p_code text) returns text
+language sql stable security definer set search_path = public as $$
+  select nullif(trim(both '@' from coalesce(tg_handle, '')), '') from public.ttm_profiles where ref_code = upper(regexp_replace(coalesce(p_code,''), '[^A-Za-z0-9]', '', 'g')) limit 1 $$;
+grant execute on function public.ttm_ref_name(text) to anon, authenticated;

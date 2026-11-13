@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>You're invited · Trade The Move</title>
+<meta name="theme-color" content="#050505"><link rel="icon" href="../favicon.png">
+<style>
+:root{--bg:#050505;--card:#111113;--line:#2a2418;--text:#f3efe4;--mute:#9a968c;--gold:#dba118;--gold2:#f0c14b}
+*{box-sizing:border-box}html,body{margin:0}body{background:radial-gradient(1200px 600px at 50% -10%,#2a1f06 0,#050505 60%) fixed;color:var(--text);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100vh}
+.wrap{max-width:760px;margin:0 auto;padding:28px 16px 60px}
+.logo{display:block;margin:6px auto 22px;height:74px}
+.hero{border:1px solid var(--gold);border-radius:20px;padding:34px 22px;text-align:center;background:linear-gradient(180deg,rgba(219,161,24,.12),rgba(17,17,19,.9));box-shadow:0 0 60px rgba(219,161,24,.12)}
+.kick{letter-spacing:.18em;font-size:12px;color:var(--gold2);font-weight:800;text-transform:uppercase}
+h1{margin:10px 0 8px;font-size:clamp(26px,6vw,40px);line-height:1.15}
+h1 b{color:var(--gold2)}
+.sub{color:var(--mute);max-width:520px;margin:0 auto 22px}
+.btn{display:inline-block;background:var(--gold);color:#111;font-weight:800;border-radius:12px;padding:14px 28px;text-decoration:none;font-size:17px;box-shadow:0 6px 24px rgba(219,161,24,.35)}
+.btn.g{background:transparent;color:var(--gold2);border:1px solid var(--gold);box-shadow:none;margin-left:8px;font-size:15px;padding:12px 20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:22px 0}
+.c{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.c b{display:block;color:var(--gold2);margin-bottom:4px}.c span{color:var(--mute);font-size:14px}
+.note{text-align:center;color:var(--mute);font-size:13px;margin-top:20px}
+.from{display:inline-block;border:1px solid var(--line);background:#000;border-radius:999px;padding:6px 14px;margin:0 0 14px;font-weight:700}
+.from i{color:var(--gold2);font-style:normal}
+</style></head><body><div class="wrap">
+<img class="logo" src="../img/logo0.png" alt="Trade The Move">
+<div class="hero">
+  <div class="from" id="from">You've been invited</div>
+  <div class="kick">Trade The Move · Markets Terminal</div>
+  <h1>Crypto and global markets,<br><b>in one terminal.</b></h1>
+  <p class="sub">Live research, macro and crypto tools, a trading community and a charting terminal built by traders. Creating an account is free.</p>
+  <a class="btn" id="join" href="../index.html?join=1">Join free</a><a class="btn g" href="../index.html">Look around first</a>
+</div>
+<div class="grid">
+  <div class="c"><b>Free to start</b><span>Trading hours, FOMO finder, market pulse, macro watch and the community chat.</span></div>
+  <div class="c"><b>Premium and Pro</b><span>Heatmaps, risk calculators, trade tracker, reports library and more as you grow.</span></div>
+  <div class="c"><b>TTM LENS</b><span>Our own charting terminal with paper trading and member competitions.</span></div>
+</div>
+<p class="note">Not financial advice. Educational research only.</p>
+</div>
+<script>
+(function(){
+  var q = new URLSearchParams(location.search).get('ref') || '', code = q.replace(/[^A-Za-z0-9]/g, '').slice(0, 12).toUpperCase();
+  try{ if(code) localStorage.setItem('ttm_ref', code); }catch(e){}
+  var j = document.getElementById('join'); if(code) j.href = '../index.html?join=1&ref=' + code;
+  if(!code) return;
+  fetch('../ttm_config.json').then(function(r){ return r.json(); }).then(function(c){
+    return fetch(c.supabase_url.replace(/\/$/, '') + '/rest/v1/rpc/ttm_ref_name', {method: 'POST', headers: {apikey: c.supabase_anon_key, 'Content-Type': 'application/json'}, body: JSON.stringify({p_code: code})});
+  }).then(function(r){ return r.json(); }).then(function(n){
+    if(n && typeof n === 'string'){ var el = document.getElementById('from'); el.textContent = ''; var i = document.createElement('i'); i.textContent = '@' + n.replace(/^@/, ''); el.appendChild(i); el.appendChild(document.createTextNode(' invited you')); }
+  }).catch(function(){});
+})();
+</script></body></html>
