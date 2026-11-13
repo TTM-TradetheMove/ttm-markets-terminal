@@ -209,6 +209,12 @@ begin
   if uid is null then raise exception 'sign in first'; end if;
   perform public.ttm_ref_recalc(uid);
   select * into me from public.ttm_profiles where id = uid;
+  -- only Premium and Pro members (and admins) can give out a code; Free members can still ENTER one
+  if me.ref_code is null and not (coalesce(me.is_admin,false) or (me.plan in ('premium','pro') and me.plan_until > now())) then
+    return jsonb_build_object('code', null, 'paid_only', true, 'signed', 0, 'paid', 0, 'active', 0, 'active_pro', 0, 'earned_months', 0,
+      'plan', me.plan, 'plan_until', me.plan_until, 'has_referrer', me.referred_by is not null,
+      'can_enter', me.referred_by is null and me.created_at > now() - interval '7 days');
+  end if;
   if me.ref_code is null then
     loop
       c := ''; for i in 1..7 loop c := c || substr(chars, 1 + floor(random() * length(chars))::int, 1); end loop;
@@ -237,6 +243,8 @@ begin
   if uid is null then raise exception 'sign in first'; end if;
   select id into owner from public.ttm_profiles where ref_code = upper(trim(p_code));
   if owner is null or owner = uid then return false; end if;
+  -- the code must belong to a paying (Premium / Pro) member or an admin
+  if not exists (select 1 from public.ttm_profiles o where o.id = owner and (o.is_admin or (o.plan in ('premium','pro') and o.plan_until > now()) or o.ref_grant_plan is not null)) then return false; end if;
   update public.ttm_profiles set referred_by = owner
     where id = uid and referred_by is null and created_at > now() - interval '7 days' and plan_until is null;
   return found;
