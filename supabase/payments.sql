@@ -21,7 +21,7 @@ create policy billing_admin on public.ttm_billing for all using (public.ttm_is_a
 create table if not exists public.ttm_orders (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
-  plan text not null check (plan in ('premium','pro')),
+  plan text not null check (plan in ('premium','pro','lens')),
   term text not null check (term in ('month','year')),
   list_price numeric(12,2) not null,
   amount numeric(12,2) not null,
@@ -32,6 +32,7 @@ create table if not exists public.ttm_orders (
   paid_at timestamptz,
   note text
 );
+do $$ begin alter table public.ttm_orders drop constraint if exists ttm_orders_plan_check; alter table public.ttm_orders add constraint ttm_orders_plan_check check (plan in ('premium','pro','lens')); exception when others then null; end $$;
 create index if not exists ttm_orders_open on public.ttm_orders (status, amount);
 alter table public.ttm_orders enable row level security;
 drop policy if exists orders_read on public.ttm_orders;
@@ -59,6 +60,7 @@ language plpgsql stable security definer set search_path = public as $$
 declare c jsonb; base numeric; pct numeric := 0; ends timestamptz; starts timestamptz;
 begin
   select cfg into c from public.ttm_billing where id = 'main';
+  if p_plan = 'lens' then return coalesce((c ->> 'lens_price')::numeric, 350); end if;   -- LENS pass: flat yearly price, never on sale
   base := (c ->> p_plan)::numeric;
   if base is null then raise exception 'unknown plan'; end if;
   if p_term = 'year' then base := base * coalesce((c ->> 'year_months')::numeric, 10); end if;
@@ -77,7 +79,7 @@ language plpgsql security definer set search_path = public as $$
 declare uid uuid := auth.uid(); lp numeric; k int; amt numeric; o public.ttm_orders; mins int;
 begin
   if uid is null then raise exception 'sign in first'; end if;
-  if p_plan not in ('premium','pro') or p_term not in ('month','year') then raise exception 'unknown plan'; end if;
+  if p_plan not in ('premium','pro','lens') or p_term not in ('month','year') or (p_plan = 'lens' and p_term <> 'year') then raise exception 'unknown plan'; end if;
   update public.ttm_orders set status = 'expired' where status = 'open' and expires_at < now();
   lp := public.ttm_price(p_plan, p_term);
   select * into o from public.ttm_orders where user_id = uid and status = 'open' and plan = p_plan and term = p_term and list_price = lp limit 1;
@@ -285,9 +287,10 @@ declare o public.ttm_orders; until_at timestamptz;
 begin
   select * into o from public.ttm_orders where id = p_order for update;
   if not found or o.status = 'paid' then return jsonb_build_object('ok', false); end if;
-  until_at := public.ttm_extend(o.user_id, o.plan, o.term, 'USDT order ' || left(o.id::text, 8));
+  if o.plan = 'lens' then until_at := public.ttm_lens_extend(o.user_id, 12, 'usdt');
+  else until_at := public.ttm_extend(o.user_id, o.plan, o.term, 'USDT order ' || left(o.id::text, 8)); end if;
   update public.ttm_orders set status = 'paid', txid = p_txid, paid_at = now() where id = o.id;
-  perform public.ttm_referral_credit(o.user_id, o.plan, o.term);
+  if o.plan <> 'lens' then perform public.ttm_referral_credit(o.user_id, o.plan, o.term); end if;
   insert into public.ttm_payments (txid, from_addr, amount, tx_time, status, order_id, user_id, note)
     values (p_txid, p_from, p_amount, p_time, 'applied', o.id, o.user_id, o.plan || ' ' || o.term)
     on conflict (txid) do nothing;
@@ -302,13 +305,14 @@ language plpgsql security definer set search_path = public as $$
 declare uid uuid; until_at timestamptz;
 begin
   if not public.ttm_is_admin() then raise exception 'admins only'; end if;
-  if p_plan not in ('premium','pro') or p_term not in ('month','year') then raise exception 'unknown plan'; end if;
+  if p_plan not in ('premium','pro','lens') or p_term not in ('month','year') then raise exception 'unknown plan'; end if;
   select id into uid from public.ttm_profiles where lower(email) = lower(trim(p_email));
   if uid is null then raise exception 'no member with that email'; end if;
   if not exists (select 1 from public.ttm_payments where txid = p_txid and status = 'unmatched') then raise exception 'payment not found or already used'; end if;
-  until_at := public.ttm_extend(uid, p_plan, p_term, 'USDT manual ' || left(p_txid, 8));
+  if p_plan = 'lens' then until_at := public.ttm_lens_extend(uid, 12, 'usdt');
+  else until_at := public.ttm_extend(uid, p_plan, p_term, 'USDT manual ' || left(p_txid, 8)); end if;
   update public.ttm_payments set status = 'assigned', user_id = uid, note = p_plan || ' ' || p_term || ' (manual)' where txid = p_txid;
-  perform public.ttm_referral_credit(uid, p_plan, p_term);
+  if p_plan <> 'lens' then perform public.ttm_referral_credit(uid, p_plan, p_term); end if;
   return jsonb_build_object('ok', true, 'until', until_at);
 end $$;
 grant execute on function public.ttm_admin_assign_payment(text, text, text, text) to authenticated;
@@ -350,3 +354,132 @@ end $$;
 revoke all on function public.ttm_price_rise_apply() from public, anon, authenticated;
 do $$ begin perform cron.unschedule('ttm-price-rise'); exception when others then null; end $$;
 select cron.schedule('ttm-price-rise', '*/10 * * * *', $$ select public.ttm_price_rise_apply() $$);
+
+
+-- 12) TTM LENS access: a member gets LENS in one of two ways.
+--   (a) BTCC: they join BTCC through your affiliate link, enter their BTCC UID here, and their trading volume
+--       (from your BTCC affiliate export, imported in Admin -> Billing) is at or above the minimum you set.
+--   (b) Pay a LENS pass in USDT (default 350 USDT for 12 months). Same payment flow as the plans.
+-- Settings live in the billing row: lens_price (default 350), lens_min_volume (default 10000, in USDT), lens_btcc_link (your affiliate link).
+alter table public.ttm_profiles add column if not exists lens_until timestamptz;
+alter table public.ttm_profiles add column if not exists lens_via text;
+
+create table if not exists public.ttm_btcc_users (
+  uid text primary key,
+  volume numeric not null default 0,
+  updated_at timestamptz not null default now()
+);
+alter table public.ttm_btcc_users enable row level security;
+drop policy if exists btcc_admin on public.ttm_btcc_users;
+create policy btcc_admin on public.ttm_btcc_users for select using (public.ttm_is_admin());
+
+create table if not exists public.ttm_lens_req (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  btcc_uid text not null,
+  status text not null default 'pending' check (status in ('pending','approved','rejected')),
+  volume numeric not null default 0,
+  requested_at timestamptz not null default now(),
+  decided_at timestamptz,
+  note text
+);
+create unique index if not exists ttm_lens_req_uid on public.ttm_lens_req (btcc_uid);
+alter table public.ttm_lens_req enable row level security;
+drop policy if exists lensreq_read on public.ttm_lens_req;
+create policy lensreq_read on public.ttm_lens_req for select using (user_id = auth.uid() or public.ttm_is_admin());
+
+create or replace function public.ttm_lens_min() returns numeric
+language sql stable security definer set search_path = public as $$
+  select coalesce((select (cfg ->> 'lens_min_volume')::numeric from public.ttm_billing where id = 'main'), 10000) $$;
+
+-- Add paid LENS time (12 months for a pass). Time is added after any current end date.
+create or replace function public.ttm_lens_extend(p_user uuid, p_months int, p_via text) returns timestamptz
+language plpgsql security definer set search_path = public as $$
+declare cur timestamptz; nu timestamptz;
+begin
+  select lens_until into cur from public.ttm_profiles where id = p_user for update;
+  if not found then raise exception 'no such member'; end if;
+  nu := greatest(coalesce(cur, now()), now()) + make_interval(months => p_months);
+  update public.ttm_profiles set lens_until = nu, lens_via = p_via where id = p_user;
+  return nu;
+end $$;
+revoke all on function public.ttm_lens_extend(uuid, int, text) from public, anon, authenticated;
+
+-- Check one member's request against the imported BTCC volumes. Qualifies = approved with no end date.
+create or replace function public.ttm_lens_eval(p_user uuid) returns void
+language plpgsql security definer set search_path = public as $$
+declare r record; v numeric;
+begin
+  select * into r from public.ttm_lens_req where user_id = p_user;
+  if not found or r.status = 'rejected' then return; end if;
+  select volume into v from public.ttm_btcc_users where uid = r.btcc_uid;
+  if v is null then return; end if;
+  update public.ttm_lens_req set volume = v where user_id = p_user;
+  if v >= public.ttm_lens_min() and r.status <> 'approved' then
+    update public.ttm_lens_req set status = 'approved', decided_at = now(), note = 'auto: volume ' || v where user_id = p_user;
+    update public.ttm_profiles set lens_until = greatest(coalesce(lens_until, now()), timestamptz '2099-12-31'), lens_via = 'btcc' where id = p_user;
+  end if;
+end $$;
+revoke all on function public.ttm_lens_eval(uuid) from public, anon, authenticated;
+
+-- Member: enter or change their BTCC UID.
+create or replace function public.ttm_lens_request(p_uid text) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare uid uuid := auth.uid(); u text := upper(regexp_replace(coalesce(p_uid,''), '[^A-Za-z0-9]', '', 'g'));
+begin
+  if uid is null then raise exception 'sign in first'; end if;
+  if length(u) < 4 or length(u) > 24 then raise exception 'Enter your BTCC UID (the number shown in your BTCC profile).'; end if;
+  if exists (select 1 from public.ttm_lens_req where btcc_uid = u and user_id <> uid) then raise exception 'That BTCC UID is already linked to another TTM account.'; end if;
+  insert into public.ttm_lens_req (user_id, btcc_uid) values (uid, u)
+    on conflict (user_id) do update set btcc_uid = excluded.btcc_uid,
+      status = case when public.ttm_lens_req.status = 'approved' and public.ttm_lens_req.btcc_uid = excluded.btcc_uid then 'approved' else 'pending' end, requested_at = now();
+  perform public.ttm_lens_eval(uid);
+  return public.ttm_lens_status();
+end $$;
+grant execute on function public.ttm_lens_request(text) to authenticated;
+
+create or replace function public.ttm_lens_status() returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare uid uuid := auth.uid(); p record; r record;
+begin
+  if uid is null then return null; end if;
+  select lens_until, lens_via into p from public.ttm_profiles where id = uid;
+  select * into r from public.ttm_lens_req where user_id = uid;
+  return jsonb_build_object('active', coalesce(p.lens_until > now(), false), 'until', p.lens_until, 'via', p.lens_via,
+    'req_status', r.status, 'btcc_uid', r.btcc_uid, 'volume', coalesce(r.volume, 0), 'min', public.ttm_lens_min());
+end $$;
+grant execute on function public.ttm_lens_status() to authenticated;
+
+-- Admin: import the BTCC affiliate export. p_rows = [{"uid":"123456","volume":15000.5}, ...]. Adds or updates volumes, then approves everyone now qualifying.
+create or replace function public.ttm_lens_import(p_rows jsonb) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare x jsonb; n int := 0; a int := 0; r record; was text;
+begin
+  if not public.ttm_is_admin() then raise exception 'admins only'; end if;
+  for x in select * from jsonb_array_elements(p_rows) loop
+    if coalesce(x ->> 'uid','') = '' then continue; end if;
+    insert into public.ttm_btcc_users (uid, volume) values (upper(regexp_replace(x ->> 'uid', '[^A-Za-z0-9]', '', 'g')), coalesce((x ->> 'volume')::numeric, 0))
+      on conflict (uid) do update set volume = excluded.volume, updated_at = now();
+    n := n + 1;
+  end loop;
+  for r in select user_id, status from public.ttm_lens_req where status <> 'rejected' loop
+    was := r.status; perform public.ttm_lens_eval(r.user_id);
+    if was <> 'approved' and (select status from public.ttm_lens_req where user_id = r.user_id) = 'approved' then a := a + 1; end if;
+  end loop;
+  return jsonb_build_object('imported', n, 'approved', a);
+end $$;
+grant execute on function public.ttm_lens_import(jsonb) to authenticated;
+
+-- Admin: approve, reject or revoke one member by hand.
+create or replace function public.ttm_lens_admin(p_user uuid, p_action text) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not public.ttm_is_admin() then raise exception 'admins only'; end if;
+  if p_action = 'approve' then
+    update public.ttm_lens_req set status = 'approved', decided_at = now(), note = 'approved by hand' where user_id = p_user;
+    update public.ttm_profiles set lens_until = greatest(coalesce(lens_until, now()), timestamptz '2099-12-31'), lens_via = 'btcc' where id = p_user;
+  elsif p_action in ('reject','revoke') then
+    update public.ttm_lens_req set status = 'rejected', decided_at = now() where user_id = p_user;
+    update public.ttm_profiles set lens_until = case when lens_via = 'usdt' then lens_until else null end where id = p_user;
+  end if;
+end $$;
+grant execute on function public.ttm_lens_admin(uuid, text) to authenticated;
