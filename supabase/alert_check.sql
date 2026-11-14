@@ -27,3 +27,8 @@ select count(*) filter (where prefs->>'live' = 'false') as live_off,
        count(*) filter (where prefs->>'s_warn' = 'true') as session_warn_on,
        count(*) as people_with_saved_settings
 from public.ttm_prefs;
+
+-- 8. Trade watch: are your open trades saved on the server (it can only watch what has synced)? Expect updated_at to be recent and open_trades > 0.
+select updated_at, jsonb_array_length(data->'saved') as saved_trades,
+       (select count(*) from jsonb_array_elements(data->'saved') t where t->>'status' = 'open') as open_trades
+from public.ttm_user_data where user_id = (select id from public.ttm_profiles where is_admin limit 1);

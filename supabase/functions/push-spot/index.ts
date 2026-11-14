@@ -160,7 +160,7 @@ async function srvCandles(a: string, perp: boolean, iv: "5m" | "1h"): Promise<Cd
   cdCache.set(key, rows); return rows;
 }
 function replayTrade(x: any, rows: Cd[], step: number, now: number): {key: string, title: string, body: string}[] {
-  const sn = x.snap, A = sn.asset, ev: {key: string, title: string, body: string}[] = [], recent = now - 45 * 60000;
+  const sn = x.snap, A = sn.asset, ev: {key: string, title: string, body: string}[] = [], recent = now - 12 * 3600000; // wide on purpose: every alert key is sent once only, so a late run still delivers a missed alert
   const ords: any[] = Array.isArray(x.orders) ? x.orders : [];
   let filled = ords.length ? ords.some((o) => o.filled) : x.fill !== "pending";
   let from = filled ? Math.max(x.filledAt || x.opened || x.t || 0, now - 24 * 3600000) : (x.t || now - 3600000);
@@ -170,7 +170,7 @@ function replayTrade(x: any, rows: Cd[], step: number, now: number): {key: strin
     const end = c.t + step; if (c.t < from) continue; if (end > now) break;
     if (!filled) {
       let got = false;
-      if (ords.length) { for (const o of ords) if (!o.filled && o.side != null && (o.side > 0 ? c.l <= o.p : c.h >= o.p)) got = true; }
+      if (ords.length) { for (const o of ords) { const os = o.side != null ? o.side : side; if (!o.filled && (os > 0 ? c.l <= o.p : c.h >= o.p)) got = true; } }
       else got = side > 0 ? c.l <= sn.E : c.h >= sn.E;
       if (got) { filled = true; fillEnd = end; if (end >= recent) ev.push({key: "filled:" + x.id, title: A + " · Limit order filled", body: "Your limit order filled at " + prFmt(ords.length ? ords[0].p : sn.E)}); }
       continue;
