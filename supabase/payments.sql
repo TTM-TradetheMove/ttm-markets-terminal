@@ -145,6 +145,7 @@ revoke all on function public.ttm_extend(uuid, text, text, text) from public, an
 --  * While a free tier is running, the referrer's own paid time is PAUSED and given back afterwards, so nothing they paid for is lost.
 --  * Referrer already on Pro whose referrals are on Premium: no tier gain, so they get time instead: 1 month (monthly referrals) or 6 months (yearly).
 alter table public.ttm_profiles add column if not exists ref_code text;
+alter table public.ttm_profiles add column if not exists ref_paused boolean not null default false;
 alter table public.ttm_profiles add column if not exists referred_by uuid;
 alter table public.ttm_profiles add column if not exists ref_paid boolean not null default false;
 alter table public.ttm_profiles add column if not exists ref_paid_at timestamptz;
@@ -221,7 +222,7 @@ begin
   perform public.ttm_ref_recalc(uid);
   select * into me from public.ttm_profiles where id = uid;
   -- only Premium and Pro members (and admins) can give out a code; Free members can still ENTER one
-  if me.ref_code is null and not (coalesce(me.is_admin,false) or (me.plan in ('premium','pro') and (me.plan_until is null or me.plan_until > now()))) then
+  if not (coalesce(me.is_admin,false) or me.ref_grant_plan is not null or (me.plan in ('premium','pro') and (me.plan_until is null or me.plan_until > now()))) then
     return jsonb_build_object('code', null, 'paid_only', true, 'signed', 0, 'paid', 0, 'active', 0, 'active_pro', 0, 'earned_months', 0,
       'plan', me.plan, 'plan_until', me.plan_until, 'has_referrer', me.referred_by is not null,
       'can_enter', me.referred_by is null and me.created_at > now() - interval '7 days');
@@ -233,7 +234,7 @@ begin
     end loop;
     me.ref_code := c;
   end if;
-  return jsonb_build_object('code', me.ref_code,
+  return jsonb_build_object('paused', coalesce(me.ref_paused, false), 'code', me.ref_code,
     'signed', (select count(*) from public.ttm_profiles where referred_by = uid),
     'paid', (select count(*) from public.ttm_profiles where referred_by = uid and ref_paid),
     'active', (select count(*) from public.ttm_profiles where referred_by = uid and ref_paid and plan in ('premium','pro') and plan_until > now() and plan_note like 'USDT%'),
@@ -255,7 +256,7 @@ begin
   select id into owner from public.ttm_profiles where ref_code = upper(trim(p_code));
   if owner is null or owner = uid then return false; end if;
   -- the code must belong to a paying (Premium / Pro) member or an admin
-  if not exists (select 1 from public.ttm_profiles o where o.id = owner and (o.is_admin or (o.plan in ('premium','pro') and (o.plan_until is null or o.plan_until > now())) or o.ref_grant_plan is not null)) then return false; end if;
+  if not exists (select 1 from public.ttm_profiles o where o.id = owner and (o.is_admin or (o.plan in ('premium','pro') and (o.plan_until is null or o.plan_until > now())) or o.ref_grant_plan is not null) and not coalesce(o.ref_paused, false)) then return false; end if;
   -- no loops: if the code owner was themselves referred (directly or through a chain) by the person entering it, refuse
   if exists (with recursive up(id, depth) as (select owner, 0 union all select p.referred_by, up.depth + 1 from public.ttm_profiles p join up on p.id = up.id where p.referred_by is not null and up.depth < 20) select 1 from up where id = uid) then return false; end if;
   update public.ttm_profiles set referred_by = owner
@@ -586,3 +587,14 @@ begin
 end $$;
 revoke all on function public.ttm_revoke_lens(text[]) from public, anon;
 grant execute on function public.ttm_revoke_lens(text[]) to authenticated;
+
+
+-- 18) Admin can pause or restore a member's referring. Paused: no new people can join on their code; rewards already earned stay counted.
+create or replace function public.ttm_ref_pause(p_user uuid, p_paused boolean) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not public.ttm_is_admin() then raise exception 'admins only'; end if;
+  update public.ttm_profiles set ref_paused = coalesce(p_paused, false) where id = p_user;
+end $$;
+revoke all on function public.ttm_ref_pause(uuid, boolean) from public, anon;
+grant execute on function public.ttm_ref_pause(uuid, boolean) to authenticated;
