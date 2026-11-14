@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-14T10:45:16.376565+00:00",
+  "generated_at": "2026-11-14T16:48:35.413133+00:00",
   "window_hours": 24,
   "sources": [
     "wss://fstream.binance.com/ws/!forceOrder@arr",
@@ -7,70 +7,112 @@
   ],
   "totals": {
     "BTCUSDT": {
-      "longUsd": 342518.17,
-      "shortUsd": 1751.74,
-      "count": 8
+      "longUsd": 4114250.62,
+      "shortUsd": 714446.28,
+      "count": 127
     },
     "ETHUSDT": {
-      "longUsd": 5428.65,
-      "shortUsd": 58238.04,
-      "count": 11
+      "longUsd": 1446209.67,
+      "shortUsd": 1225581.49,
+      "count": 200
     }
   },
   "buckets": {
     "BTCUSDT": {
-      "mark": 67125.46,
+      "mark": 65407.24,
       "buckets": [
         {
+          "pricePct": -1.0,
+          "price": 64753.17,
+          "longUsd": 0.0,
+          "shortUsd": 526637.61
+        },
+        {
+          "pricePct": -0.5,
+          "price": 65080.2,
+          "longUsd": 3713898.61,
+          "shortUsd": 186056.94
+        },
+        {
           "pricePct": 0.0,
-          "price": 67125.46,
-          "longUsd": 471.0,
+          "price": 65407.24,
+          "longUsd": 57833.84,
+          "shortUsd": 0.0
+        },
+        {
+          "pricePct": 2.5,
+          "price": 67042.42,
+          "longUsd": 0.0,
           "shortUsd": 201.14
         },
         {
-          "pricePct": 0.5,
-          "price": 67461.09,
-          "longUsd": 0.0,
+          "pricePct": 3.0,
+          "price": 67369.46,
+          "longUsd": 471.0,
           "shortUsd": 1550.6
         },
         {
-          "pricePct": 1.0,
-          "price": 67796.71,
+          "pricePct": 4.0,
+          "price": 68023.53,
           "longUsd": 342047.17,
           "shortUsd": 0.0
         }
       ]
     },
     "ETHUSDT": {
-      "mark": 1905.54,
+      "mark": 1828.26,
       "buckets": [
         {
+          "pricePct": -1.5,
+          "price": 1800.84,
+          "longUsd": 0.0,
+          "shortUsd": 152971.77
+        },
+        {
+          "pricePct": -1.0,
+          "price": 1809.98,
+          "longUsd": 1144828.4,
+          "shortUsd": 1000332.13
+        },
+        {
           "pricePct": -0.5,
-          "price": 1896.01,
-          "longUsd": 285.08,
-          "shortUsd": 57441.02
+          "price": 1819.12,
+          "longUsd": 266087.29,
+          "shortUsd": 14039.55
         },
         {
           "pricePct": 0.0,
-          "price": 1905.54,
-          "longUsd": 3102.71,
+          "price": 1828.26,
+          "longUsd": 29865.33,
           "shortUsd": 0.0
         },
         {
-          "pricePct": 0.5,
-          "price": 1915.07,
-          "longUsd": 1020.55,
+          "pricePct": 3.5,
+          "price": 1892.25,
+          "longUsd": 0.0,
+          "shortUsd": 57441.02
+        },
+        {
+          "pricePct": 4.0,
+          "price": 1901.39,
+          "longUsd": 3387.78,
+          "shortUsd": 0.0
+        },
+        {
+          "pricePct": 4.5,
+          "price": 1910.53,
+          "longUsd": 0.0,
           "shortUsd": 797.02
         },
         {
-          "pricePct": 1.0,
-          "price": 1924.6,
-          "longUsd": 545.43,
+          "pricePct": 5.0,
+          "price": 1919.67,
+          "longUsd": 1565.98,
           "shortUsd": 0.0
         },
         {
-          "pricePct": 1.5,
-          "price": 1934.12,
+          "pricePct": 6.0,
+          "price": 1937.96,
           "longUsd": 474.89,
           "shortUsd": 0.0
         }
@@ -94,6 +136,10 @@
       {
         "time": 1794653116163.018,
         "price": 67125.46
+      },
+      {
+        "time": 1794674915097.2998,
+        "price": 65407.24
       }
     ],
     "ETHUSDT": [
@@ -112,6 +158,10 @@
       {
         "time": 1794653116163.018,
         "price": 1905.54
+      },
+      {
+        "time": 1794674915097.2998,
+        "price": 1828.26
       }
     ]
   },
@@ -120,10 +170,172 @@
       "exchange": "Binance",
       "symbol": "BTCUSDT",
       "side": "long",
+      "price": 65001.09,
+      "qty": 44.321,
+      "usd": 2880913.3098899997,
+      "time": 1794674787162
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
       "price": 67893.4,
       "qty": 5.022,
       "usd": 340960.65479999996,
       "time": 1794611587086
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65022.71,
+      "qty": 5.0,
+      "usd": 325113.55,
+      "time": 1794674786131
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1808.38,
+      "qty": 165.19,
+      "usd": 298726.2922,
+      "time": 1794674783255
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1810.56,
+      "qty": 145.492,
+      "usd": 263421.99552,
+      "time": 1794674785203
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1810.99,
+      "qty": 115.76,
+      "usd": 209640.2024,
+      "time": 1794674802368
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1810.31,
+      "qty": 87.5,
+      "usd": 158402.125,
+      "time": 1794674778751
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1811.1,
+      "qty": 80.0,
+      "usd": 144888.0,
+      "time": 1794674787088
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1812.78,
+      "qty": 71.567,
+      "usd": 129735.22625999998,
+      "time": 1794674784096
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64818.1,
+      "qty": 2.0,
+      "usd": 129636.2,
+      "time": 1794674786407
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1811.11,
+      "qty": 64.586,
+      "usd": 116972.35045999999,
+      "time": 1794674786247
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1807.18,
+      "qty": 49.5,
+      "usd": 89455.41,
+      "time": 1794674783096
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64897.4,
+      "qty": 1.335,
+      "usd": 86638.029,
+      "time": 1794674783821
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65089.17,
+      "qty": 1.118,
+      "usd": 72769.69206,
+      "time": 1794674782177
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1812.83,
+      "qty": 38.838,
+      "usd": 70406.69154,
+      "time": 1794674784126
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65132.6,
+      "qty": 1.023,
+      "usd": 66630.6498,
+      "time": 1794674780097
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64857.0,
+      "qty": 1.001,
+      "usd": 64921.856999999996,
+      "time": 1794674785406
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65123.8,
+      "qty": 0.908,
+      "usd": 59132.41040000001,
+      "time": 1794674781124
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1810.95,
+      "qty": 32.541,
+      "usd": 58930.123949999994,
+      "time": 1794674805176
     },
     {
       "exchange": "Bybit",
@@ -138,157 +350,2821 @@
       "exchange": "Binance",
       "symbol": "ETHUSDT",
       "side": "long",
-      "price": 1901.17,
-      "qty": 1.632,
-      "usd": 3102.70944,
-      "time": 1794626226228
-    },
-    {
-      "exchange": "Binance",
-      "symbol": "BTCUSDT",
-      "side": "short",
-      "price": 67417.4,
-      "qty": 0.023,
-      "usd": 1550.6001999999999,
-      "time": 1794626430084
-    },
-    {
-      "exchange": "Binance",
-      "symbol": "ETHUSDT",
-      "side": "long",
-      "price": 1918.33,
-      "qty": 0.521,
-      "usd": 999.44993,
-      "time": 1794611586158
-    },
-    {
-      "exchange": "Binance",
-      "symbol": "ETHUSDT",
-      "side": "short",
-      "price": 1911.32,
-      "qty": 0.417,
-      "usd": 797.0204399999999,
-      "time": 1794652978172
-    },
-    {
-      "exchange": "Bybit",
-      "symbol": "ETHUSDT",
-      "side": "short",
-      "price": 1895.04,
-      "qty": 0.29,
-      "usd": 549.5616,
-      "time": 1794626227232
-    },
-    {
-      "exchange": "Binance",
-      "symbol": "ETHUSDT",
-      "side": "long",
-      "price": 1920.52,
-      "qty": 0.284,
-      "usd": 545.4276799999999,
-      "time": 1794611470558
-    },
-    {
-      "exchange": "Binance",
-      "symbol": "BTCUSDT",
-      "side": "long",
-      "price": 67893.4,
-      "qty": 0.008,
-      "usd": 543.1472,
-      "time": 1794611588255
-    },
-    {
-      "exchange": "Binance",
-      "symbol": "ETHUSDT",
-      "side": "long",
-      "price": 1938.33,
-      "qty": 0.234,
-      "usd": 453.56922000000003,
-      "time": 1794592594128
-    },
-    {
-      "exchange": "Binance",
-      "symbol": "BTCUSDT",
-      "side": "long",
-      "price": 67290.9,
-      "qty": 0.006,
-      "usd": 403.74539999999996,
-      "time": 1794626226165
-    },
-    {
-      "exchange": "Binance",
-      "symbol": "BTCUSDT",
-      "side": "long",
-      "price": 67925.0,
-      "qty": 0.005,
-      "usd": 339.625,
-      "time": 1794611577156
-    },
-    {
-      "exchange": "Binance",
-      "symbol": "BTCUSDT",
-      "side": "long",
-      "price": 67913.9,
-      "qty": 0.003,
-      "usd": 203.74169999999998,
-      "time": 1794611581133
+      "price": 1816.03,
+      "qty": 30.756,
+      "usd": 55853.81868,
+      "time": 1794674780097
     },
     {
       "exchange": "Bybit",
       "symbol": "BTCUSDT",
       "side": "short",
-      "price": 67045.1,
-      "qty": 0.003,
-      "usd": 201.13530000000003,
-      "time": 1794626257772
+      "price": 64964.2,
+      "qty": 0.844,
+      "usd": 54829.784799999994,
+      "time": 1794674743045
     },
     {
-      "exchange": "Binance",
-      "symbol": "ETHUSDT",
-      "side": "long",
-      "price": 1900.5,
-      "qty": 0.1,
-      "usd": 190.05,
-      "time": 1794626258108
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64904.3,
+      "qty": 0.807,
+      "usd": 52377.77010000001,
+      "time": 1794674782929
     },
     {
-      "exchange": "Binance",
+      "exchange": "Bybit",
       "symbol": "ETHUSDT",
-      "side": "long",
-      "price": 1900.5,
-      "qty": 0.05,
-      "usd": 95.025,
-      "time": 1794626259105
+      "side": "short",
+      "price": 1804.89,
+      "qty": 28.05,
+      "usd": 50627.164500000006,
+      "time": 1794674786246
     },
     {
       "exchange": "Binance",
       "symbol": "BTCUSDT",
       "side": "long",
-      "price": 67258.0,
-      "qty": 0.001,
-      "usd": 67.258,
-      "time": 1794626258080
-    },
-    {
-      "exchange": "Binance",
-      "symbol": "ETHUSDT",
-      "side": "long",
-      "price": 1938.03,
-      "qty": 0.011,
-      "usd": 21.31833,
-      "time": 1794592621079
-    },
-    {
-      "exchange": "Binance",
-      "symbol": "ETHUSDT",
-      "side": "long",
-      "price": 1918.0,
-      "qty": 0.011,
-      "usd": 21.098,
-      "time": 1794611593120
+      "price": 65037.56,
+      "qty": 0.75,
+      "usd": 48778.17,
+      "time": 1794674805097
     }
   ],
   "events": [
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65060.7,
+      "qty": 0.001,
+      "usd": 65.0607,
+      "time": 1794674844123
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1811.43,
+      "qty": 0.03,
+      "usd": 54.3429,
+      "time": 1794674843791
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1815.88,
+      "qty": 0.201,
+      "usd": 364.99188000000004,
+      "time": 1794674823098
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65060.7,
+      "qty": 0.072,
+      "usd": 4684.3704,
+      "time": 1794674808208
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1811.94,
+      "qty": 4.376,
+      "usd": 7929.049440000001,
+      "time": 1794674807626
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1811.43,
+      "qty": 11.297,
+      "usd": 20463.724710000002,
+      "time": 1794674807203
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.44,
+      "qty": 0.05,
+      "usd": 90.272,
+      "time": 1794674807161
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.25,
+      "qty": 1.0,
+      "usd": 1805.25,
+      "time": 1794674806796
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.35,
+      "qty": 0.6,
+      "usd": 1083.2099999999998,
+      "time": 1794674806446
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64827.6,
+      "qty": 0.025,
+      "usd": 1620.69,
+      "time": 1794674806446
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65040.7,
+      "qty": 0.003,
+      "usd": 195.1221,
+      "time": 1794674806084
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1810.95,
+      "qty": 32.541,
+      "usd": 58930.123949999994,
+      "time": 1794674805176
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65037.56,
+      "qty": 0.75,
+      "usd": 48778.17,
+      "time": 1794674805097
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.11,
+      "qty": 2.9,
+      "usd": 5234.8189999999995,
+      "time": 1794674804010
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1810.99,
+      "qty": 115.76,
+      "usd": 209640.2024,
+      "time": 1794674802368
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65055.1,
+      "qty": 0.058,
+      "usd": 3773.1958,
+      "time": 1794674801616
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1811.43,
+      "qty": 1.758,
+      "usd": 3184.4939400000003,
+      "time": 1794674801164
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65050.54,
+      "qty": 0.5,
+      "usd": 32525.27,
+      "time": 1794674801141
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65053.4,
+      "qty": 0.112,
+      "usd": 7285.9808,
+      "time": 1794674801116
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1811.71,
+      "qty": 8.014,
+      "usd": 14519.04394,
+      "time": 1794674801109
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.99,
+      "qty": 0.02,
+      "usd": 36.1198,
+      "time": 1794674800520
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.57,
+      "qty": 0.1,
+      "usd": 180.55700000000002,
+      "time": 1794674800400
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.21,
+      "qty": 5.33,
+      "usd": 9621.7693,
+      "time": 1794674800278
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64838.3,
+      "qty": 0.004,
+      "usd": 259.3532,
+      "time": 1794674800238
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64852.5,
+      "qty": 0.02,
+      "usd": 1297.05,
+      "time": 1794674800167
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.51,
+      "qty": 0.8,
+      "usd": 1444.4080000000001,
+      "time": 1794674800167
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.34,
+      "qty": 1.29,
+      "usd": 2328.8885999999998,
+      "time": 1794674799976
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1811.64,
+      "qty": 1.352,
+      "usd": 2449.33728,
+      "time": 1794674799129
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65077.6,
+      "qty": 0.003,
+      "usd": 195.2328,
+      "time": 1794674791578
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1812.44,
+      "qty": 3.189,
+      "usd": 5779.871160000001,
+      "time": 1794674791552
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1811.52,
+      "qty": 15.5,
+      "usd": 28078.56,
+      "time": 1794674791172
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65057.6,
+      "qty": 0.56,
+      "usd": 36432.256,
+      "time": 1794674791172
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65278.7,
+      "qty": 0.528,
+      "usd": 34467.1536,
+      "time": 1794674791162
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1804.95,
+      "qty": 24.0,
+      "usd": 43318.8,
+      "time": 1794674791162
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65037.6,
+      "qty": 0.008,
+      "usd": 520.3008,
+      "time": 1794674790194
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1810.61,
+      "qty": 0.031,
+      "usd": 56.12891,
+      "time": 1794674790185
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64824.4,
+      "qty": 0.004,
+      "usd": 259.2976,
+      "time": 1794674788430
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1811.49,
+      "qty": 13.043,
+      "usd": 23627.264069999997,
+      "time": 1794674788154
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65034.7,
+      "qty": 0.103,
+      "usd": 6698.574099999999,
+      "time": 1794674788147
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65001.09,
+      "qty": 44.321,
+      "usd": 2880913.3098899997,
+      "time": 1794674787162
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1811.1,
+      "qty": 80.0,
+      "usd": 144888.0,
+      "time": 1794674787088
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64822.3,
+      "qty": 0.275,
+      "usd": 17826.132500000003,
+      "time": 1794674786908
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64813.9,
+      "qty": 0.07,
+      "usd": 4536.973000000001,
+      "time": 1794674786755
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64812.7,
+      "qty": 0.006,
+      "usd": 388.8762,
+      "time": 1794674786544
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.07,
+      "qty": 0.05,
+      "usd": 90.2535,
+      "time": 1794674786497
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.77,
+      "qty": 0.09,
+      "usd": 162.5193,
+      "time": 1794674786441
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64816.2,
+      "qty": 0.021,
+      "usd": 1361.1402,
+      "time": 1794674786439
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.12,
+      "qty": 7.24,
+      "usd": 13069.0688,
+      "time": 1794674786420
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64818.1,
+      "qty": 2.0,
+      "usd": 129636.2,
+      "time": 1794674786407
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.2,
+      "qty": 0.01,
+      "usd": 18.052,
+      "time": 1794674786400
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64807.6,
+      "qty": 0.03,
+      "usd": 1944.2279999999998,
+      "time": 1794674786393
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.45,
+      "qty": 1.0,
+      "usd": 1805.45,
+      "time": 1794674786373
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.0,
+      "qty": 2.25,
+      "usd": 4061.25,
+      "time": 1794674786372
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64808.6,
+      "qty": 0.022,
+      "usd": 1425.7892,
+      "time": 1794674786363
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1804.72,
+      "qty": 0.2,
+      "usd": 360.944,
+      "time": 1794674786292
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1811.11,
+      "qty": 64.586,
+      "usd": 116972.35045999999,
+      "time": 1794674786247
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1804.89,
+      "qty": 28.05,
+      "usd": 50627.164500000006,
+      "time": 1794674786246
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.24,
+      "qty": 0.07,
+      "usd": 126.36680000000001,
+      "time": 1794674786194
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64810.8,
+      "qty": 0.007,
+      "usd": 453.67560000000003,
+      "time": 1794674786148
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65022.71,
+      "qty": 5.0,
+      "usd": 325113.55,
+      "time": 1794674786131
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64817.6,
+      "qty": 0.003,
+      "usd": 194.4528,
+      "time": 1794674786098
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1804.84,
+      "qty": 1.23,
+      "usd": 2219.9532,
+      "time": 1794674786070
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64814.3,
+      "qty": 0.103,
+      "usd": 6675.8729,
+      "time": 1794674786070
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.44,
+      "qty": 0.7,
+      "usd": 1263.808,
+      "time": 1794674786039
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64813.3,
+      "qty": 0.044,
+      "usd": 2851.7852,
+      "time": 1794674786019
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.59,
+      "qty": 0.14,
+      "usd": 252.7826,
+      "time": 1794674786000
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64827.0,
+      "qty": 0.016,
+      "usd": 1037.232,
+      "time": 1794674785981
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64877.8,
+      "qty": 0.7,
+      "usd": 45414.46,
+      "time": 1794674785978
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.62,
+      "qty": 0.04,
+      "usd": 72.2248,
+      "time": 1794674785977
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64810.0,
+      "qty": 0.004,
+      "usd": 259.24,
+      "time": 1794674785967
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.64,
+      "qty": 1.13,
+      "usd": 2040.3732,
+      "time": 1794674785944
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64854.1,
+      "qty": 0.002,
+      "usd": 129.7082,
+      "time": 1794674785923
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64882.0,
+      "qty": 0.195,
+      "usd": 12651.99,
+      "time": 1794674785880
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1804.89,
+      "qty": 6.0,
+      "usd": 10829.34,
+      "time": 1794674785851
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64842.8,
+      "qty": 0.039,
+      "usd": 2528.8692,
+      "time": 1794674785817
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.22,
+      "qty": 0.86,
+      "usd": 1552.4892,
+      "time": 1794674785817
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64830.5,
+      "qty": 0.032,
+      "usd": 2074.576,
+      "time": 1794674785810
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64834.2,
+      "qty": 0.001,
+      "usd": 64.8342,
+      "time": 1794674785801
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1804.98,
+      "qty": 0.05,
+      "usd": 90.24900000000001,
+      "time": 1794674785801
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1804.89,
+      "qty": 0.69,
+      "usd": 1245.3741,
+      "time": 1794674785777
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64850.1,
+      "qty": 0.08,
+      "usd": 5188.008,
+      "time": 1794674785755
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.44,
+      "qty": 3.08,
+      "usd": 5560.7552000000005,
+      "time": 1794674785755
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1804.8,
+      "qty": 1.32,
+      "usd": 2382.3360000000002,
+      "time": 1794674785744
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1804.95,
+      "qty": 0.14,
+      "usd": 252.69300000000004,
+      "time": 1794674785723
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.09,
+      "qty": 0.24,
+      "usd": 433.22159999999997,
+      "time": 1794674785719
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64857.2,
+      "qty": 0.001,
+      "usd": 64.85719999999999,
+      "time": 1794674785674
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.42,
+      "qty": 0.65,
+      "usd": 1174.173,
+      "time": 1794674785648
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.79,
+      "qty": 0.01,
+      "usd": 18.0679,
+      "time": 1794674785645
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.52,
+      "qty": 0.54,
+      "usd": 975.5208,
+      "time": 1794674785645
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64843.7,
+      "qty": 0.329,
+      "usd": 21333.5773,
+      "time": 1794674785631
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.6,
+      "qty": 1.0,
+      "usd": 1806.6,
+      "time": 1794674785610
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64849.6,
+      "qty": 0.02,
+      "usd": 1296.992,
+      "time": 1794674785610
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64826.2,
+      "qty": 0.011,
+      "usd": 713.0881999999999,
+      "time": 1794674785577
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64826.7,
+      "qty": 0.032,
+      "usd": 2074.4544,
+      "time": 1794674785508
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64845.8,
+      "qty": 0.009,
+      "usd": 583.6122,
+      "time": 1794674785507
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.94,
+      "qty": 0.27,
+      "usd": 487.60380000000004,
+      "time": 1794674785490
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64859.3,
+      "qty": 0.01,
+      "usd": 648.5930000000001,
+      "time": 1794674785467
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.9,
+      "qty": 8.26,
+      "usd": 14924.994,
+      "time": 1794674785452
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.85,
+      "qty": 4.0,
+      "usd": 7223.4,
+      "time": 1794674785440
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64823.2,
+      "qty": 0.1,
+      "usd": 6482.32,
+      "time": 1794674785440
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.9,
+      "qty": 3.65,
+      "usd": 6595.185,
+      "time": 1794674785430
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.27,
+      "qty": 0.67,
+      "usd": 1210.2009,
+      "time": 1794674785413
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.79,
+      "qty": 14.44,
+      "usd": 26090.047599999998,
+      "time": 1794674785406
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64857.0,
+      "qty": 1.001,
+      "usd": 64921.856999999996,
+      "time": 1794674785406
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.04,
+      "qty": 0.01,
+      "usd": 18.0604,
+      "time": 1794674785396
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.77,
+      "qty": 0.25,
+      "usd": 451.6925,
+      "time": 1794674785376
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.63,
+      "qty": 0.4,
+      "usd": 722.2520000000001,
+      "time": 1794674785363
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.76,
+      "qty": 0.39,
+      "usd": 704.6364,
+      "time": 1794674785356
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.67,
+      "qty": 1.5,
+      "usd": 2710.005,
+      "time": 1794674785343
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.88,
+      "qty": 2.33,
+      "usd": 4207.700400000001,
+      "time": 1794674785342
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.67,
+      "qty": 5.77,
+      "usd": 10418.7159,
+      "time": 1794674785218
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.4,
+      "qty": 2.42,
+      "usd": 4371.488,
+      "time": 1794674785217
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.03,
+      "qty": 0.08,
+      "usd": 144.4824,
+      "time": 1794674785212
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1810.56,
+      "qty": 145.492,
+      "usd": 263421.99552,
+      "time": 1794674785203
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.08,
+      "qty": 0.5,
+      "usd": 903.04,
+      "time": 1794674785186
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64835.6,
+      "qty": 0.002,
+      "usd": 129.6712,
+      "time": 1794674785182
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64879.2,
+      "qty": 0.029,
+      "usd": 1881.4968000000001,
+      "time": 1794674785155
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1807.42,
+      "qty": 0.5,
+      "usd": 903.71,
+      "time": 1794674785155
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65004.35,
+      "qty": 0.497,
+      "usd": 32307.161949999998,
+      "time": 1794674785146
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.12,
+      "qty": 1.78,
+      "usd": 3214.8936,
+      "time": 1794674785137
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.44,
+      "qty": 2.0,
+      "usd": 3612.88,
+      "time": 1794674785132
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.32,
+      "qty": 5.1,
+      "usd": 9212.231999999998,
+      "time": 1794674785082
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.74,
+      "qty": 3.04,
+      "usd": 5489.4496,
+      "time": 1794674785073
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64819.5,
+      "qty": 0.1,
+      "usd": 6481.950000000001,
+      "time": 1794674785073
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64878.2,
+      "qty": 0.039,
+      "usd": 2530.2498,
+      "time": 1794674785067
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64821.8,
+      "qty": 0.141,
+      "usd": 9139.8738,
+      "time": 1794674785054
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64879.2,
+      "qty": 0.021,
+      "usd": 1362.4632,
+      "time": 1794674785047
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.92,
+      "qty": 1.6,
+      "usd": 2891.072,
+      "time": 1794674785046
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64872.0,
+      "qty": 0.025,
+      "usd": 1621.8000000000002,
+      "time": 1794674785032
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.59,
+      "qty": 0.72,
+      "usd": 1300.7448,
+      "time": 1794674785022
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.17,
+      "qty": 0.28,
+      "usd": 505.72760000000005,
+      "time": 1794674785018
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64823.9,
+      "qty": 0.1,
+      "usd": 6482.39,
+      "time": 1794674785014
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.28,
+      "qty": 0.23,
+      "usd": 415.44440000000003,
+      "time": 1794674785003
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.32,
+      "qty": 0.19,
+      "usd": 343.2008,
+      "time": 1794674785001
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.7,
+      "qty": 0.02,
+      "usd": 36.114000000000004,
+      "time": 1794674784964
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.32,
+      "qty": 0.19,
+      "usd": 343.2008,
+      "time": 1794674784963
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.1,
+      "qty": 1.23,
+      "usd": 2220.2729999999997,
+      "time": 1794674784945
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1807.13,
+      "qty": 0.01,
+      "usd": 18.0713,
+      "time": 1794674784942
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.44,
+      "qty": 0.32,
+      "usd": 578.0608000000001,
+      "time": 1794674784929
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64908.5,
+      "qty": 0.01,
+      "usd": 649.085,
+      "time": 1794674784929
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.81,
+      "qty": 0.01,
+      "usd": 18.0681,
+      "time": 1794674784883
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.97,
+      "qty": 0.55,
+      "usd": 993.2835000000001,
+      "time": 1794674784861
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.75,
+      "qty": 0.02,
+      "usd": 36.135,
+      "time": 1794674784858
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.97,
+      "qty": 0.35,
+      "usd": 632.4395,
+      "time": 1794674784848
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.98,
+      "qty": 0.05,
+      "usd": 90.349,
+      "time": 1794674784848
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.84,
+      "qty": 0.32,
+      "usd": 577.8688,
+      "time": 1794674784820
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.95,
+      "qty": 0.19,
+      "usd": 343.32050000000004,
+      "time": 1794674784810
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.59,
+      "qty": 0.02,
+      "usd": 36.1318,
+      "time": 1794674784810
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64886.3,
+      "qty": 0.005,
+      "usd": 324.4315,
+      "time": 1794674784764
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1805.8,
+      "qty": 0.14,
+      "usd": 252.812,
+      "time": 1794674784764
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1806.97,
+      "qty": 0.05,
+      "usd": 90.3485,
+      "time": 1794674784735
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64888.2,
+      "qty": 0.188,
+      "usd": 12198.9816,
+      "time": 1794674784270
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65076.0,
+      "qty": 0.539,
+      "usd": 35075.964,
+      "time": 1794674784128
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1812.83,
+      "qty": 38.838,
+      "usd": 70406.69154,
+      "time": 1794674784126
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1812.78,
+      "qty": 71.567,
+      "usd": 129735.22625999998,
+      "time": 1794674784096
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65084.1,
+      "qty": 0.436,
+      "usd": 28376.6676,
+      "time": 1794674784060
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64887.4,
+      "qty": 0.005,
+      "usd": 324.437,
+      "time": 1794674783994
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64897.4,
+      "qty": 1.335,
+      "usd": 86638.029,
+      "time": 1794674783821
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1808.31,
+      "qty": 0.02,
+      "usd": 36.166199999999996,
+      "time": 1794674783531
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1808.17,
+      "qty": 1.19,
+      "usd": 2151.7223,
+      "time": 1794674783484
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1808.93,
+      "qty": 21.65,
+      "usd": 39163.3345,
+      "time": 1794674783475
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1809.56,
+      "qty": 0.57,
+      "usd": 1031.4491999999998,
+      "time": 1794674783475
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1807.68,
+      "qty": 2.07,
+      "usd": 3741.8976,
+      "time": 1794674783468
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1807.89,
+      "qty": 7.15,
+      "usd": 12926.4135,
+      "time": 1794674783455
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1808.95,
+      "qty": 0.84,
+      "usd": 1519.518,
+      "time": 1794674783405
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1807.13,
+      "qty": 2.37,
+      "usd": 4282.8981,
+      "time": 1794674783399
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1809.01,
+      "qty": 4.16,
+      "usd": 7525.4816,
+      "time": 1794674783360
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1809.0,
+      "qty": 0.06,
+      "usd": 108.53999999999999,
+      "time": 1794674783352
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1807.87,
+      "qty": 0.42,
+      "usd": 759.3054,
+      "time": 1794674783337
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1808.66,
+      "qty": 0.04,
+      "usd": 72.3464,
+      "time": 1794674783282
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1807.78,
+      "qty": 0.21,
+      "usd": 379.6338,
+      "time": 1794674783281
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1808.38,
+      "qty": 165.19,
+      "usd": 298726.2922,
+      "time": 1794674783255
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64895.5,
+      "qty": 0.071,
+      "usd": 4607.5805,
+      "time": 1794674783219
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1807.56,
+      "qty": 0.5,
+      "usd": 903.78,
+      "time": 1794674783208
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1808.14,
+      "qty": 1.14,
+      "usd": 2061.2796,
+      "time": 1794674783187
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1809.25,
+      "qty": 0.98,
+      "usd": 1773.065,
+      "time": 1794674783172
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64907.3,
+      "qty": 0.002,
+      "usd": 129.8146,
+      "time": 1794674783168
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1807.7,
+      "qty": 0.01,
+      "usd": 18.077,
+      "time": 1794674783168
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1807.18,
+      "qty": 49.5,
+      "usd": 89455.41,
+      "time": 1794674783096
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1807.3,
+      "qty": 0.64,
+      "usd": 1156.672,
+      "time": 1794674783079
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1808.61,
+      "qty": 0.51,
+      "usd": 922.3910999999999,
+      "time": 1794674783044
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1809.08,
+      "qty": 0.37,
+      "usd": 669.3596,
+      "time": 1794674783039
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1808.59,
+      "qty": 1.3,
+      "usd": 2351.167,
+      "time": 1794674783026
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1808.63,
+      "qty": 0.05,
+      "usd": 90.43150000000001,
+      "time": 1794674783015
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1808.55,
+      "qty": 0.26,
+      "usd": 470.223,
+      "time": 1794674782998
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1809.0,
+      "qty": 0.18,
+      "usd": 325.62,
+      "time": 1794674782988
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1807.88,
+      "qty": 2.6,
+      "usd": 4700.488,
+      "time": 1794674782967
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1807.44,
+      "qty": 0.27,
+      "usd": 488.00880000000006,
+      "time": 1794674782957
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64904.3,
+      "qty": 0.807,
+      "usd": 52377.77010000001,
+      "time": 1794674782929
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1807.32,
+      "qty": 0.87,
+      "usd": 1572.3683999999998,
+      "time": 1794674782881
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1807.79,
+      "qty": 15.55,
+      "usd": 28111.1345,
+      "time": 1794674782871
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1807.78,
+      "qty": 1.65,
+      "usd": 2982.837,
+      "time": 1794674782853
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1808.13,
+      "qty": 0.38,
+      "usd": 687.0894000000001,
+      "time": 1794674782843
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1808.99,
+      "qty": 0.39,
+      "usd": 705.5061000000001,
+      "time": 1794674782829
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1808.35,
+      "qty": 1.05,
+      "usd": 1898.7675,
+      "time": 1794674782829
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1808.12,
+      "qty": 0.48,
+      "usd": 867.8975999999999,
+      "time": 1794674782807
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1808.04,
+      "qty": 0.02,
+      "usd": 36.1608,
+      "time": 1794674782804
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64924.6,
+      "qty": 0.1,
+      "usd": 6492.46,
+      "time": 1794674782796
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1807.44,
+      "qty": 7.5,
+      "usd": 13555.800000000001,
+      "time": 1794674782796
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1808.63,
+      "qty": 0.26,
+      "usd": 470.2438,
+      "time": 1794674782755
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1809.0,
+      "qty": 3.24,
+      "usd": 5861.160000000001,
+      "time": 1794674782749
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1808.47,
+      "qty": 14.0,
+      "usd": 25318.58,
+      "time": 1794674782700
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1807.45,
+      "qty": 14.86,
+      "usd": 26858.707,
+      "time": 1794674782688
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1807.97,
+      "qty": 0.61,
+      "usd": 1102.8617,
+      "time": 1794674782686
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64911.3,
+      "qty": 0.002,
+      "usd": 129.82260000000002,
+      "time": 1794674782677
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1807.33,
+      "qty": 0.05,
+      "usd": 90.3665,
+      "time": 1794674782676
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1807.65,
+      "qty": 4.0,
+      "usd": 7230.6,
+      "time": 1794674782647
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1808.39,
+      "qty": 11.0,
+      "usd": 19892.29,
+      "time": 1794674782637
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1807.57,
+      "qty": 0.01,
+      "usd": 18.0757,
+      "time": 1794674782575
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1807.43,
+      "qty": 0.02,
+      "usd": 36.1486,
+      "time": 1794674782566
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64910.2,
+      "qty": 0.007,
+      "usd": 454.3714,
+      "time": 1794674782426
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1811.96,
+      "qty": 24.665,
+      "usd": 44691.9934,
+      "time": 1794674782188
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65089.17,
+      "qty": 1.118,
+      "usd": 72769.69206,
+      "time": 1794674782177
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65100.0,
+      "qty": 0.059,
+      "usd": 3840.8999999999996,
+      "time": 1794674782144
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64907.0,
+      "qty": 0.015,
+      "usd": 973.605,
+      "time": 1794674781965
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1809.86,
+      "qty": 1.49,
+      "usd": 2696.6913999999997,
+      "time": 1794674781848
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1815.63,
+      "qty": 8.184,
+      "usd": 14859.11592,
+      "time": 1794674781243
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64921.1,
+      "qty": 0.089,
+      "usd": 5777.9779,
+      "time": 1794674781131
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1816.17,
+      "qty": 23.481,
+      "usd": 42645.48777000001,
+      "time": 1794674781124
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65123.8,
+      "qty": 0.908,
+      "usd": 59132.41040000001,
+      "time": 1794674781124
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65132.6,
+      "qty": 1.023,
+      "usd": 66630.6498,
+      "time": 1794674780097
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1816.03,
+      "qty": 30.756,
+      "usd": 55853.81868,
+      "time": 1794674780097
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64923.9,
+      "qty": 0.035,
+      "usd": 2272.3365000000003,
+      "time": 1794674779835
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1810.01,
+      "qty": 1.68,
+      "usd": 3040.8168,
+      "time": 1794674779835
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64926.2,
+      "qty": 0.006,
+      "usd": 389.55719999999997,
+      "time": 1794674779655
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1810.06,
+      "qty": 0.18,
+      "usd": 325.8108,
+      "time": 1794674779591
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64928.1,
+      "qty": 0.005,
+      "usd": 324.6405,
+      "time": 1794674779591
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1810.73,
+      "qty": 0.01,
+      "usd": 18.107300000000002,
+      "time": 1794674779244
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1810.08,
+      "qty": 0.49,
+      "usd": 886.9391999999999,
+      "time": 1794674778920
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64926.0,
+      "qty": 0.008,
+      "usd": 519.408,
+      "time": 1794674778920
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1810.3,
+      "qty": 0.01,
+      "usd": 18.103,
+      "time": 1794674778783
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1810.45,
+      "qty": 8.0,
+      "usd": 14483.6,
+      "time": 1794674778768
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1810.31,
+      "qty": 87.5,
+      "usd": 158402.125,
+      "time": 1794674778751
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1810.73,
+      "qty": 0.57,
+      "usd": 1032.1161,
+      "time": 1794674778616
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65145.3,
+      "qty": 0.03,
+      "usd": 1954.359,
+      "time": 1794674778111
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1816.8,
+      "qty": 0.124,
+      "usd": 225.2832,
+      "time": 1794674777131
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1810.59,
+      "qty": 8.76,
+      "usd": 15860.768399999999,
+      "time": 1794674776880
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65152.6,
+      "qty": 0.005,
+      "usd": 325.763,
+      "time": 1794674776469
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1816.8,
+      "qty": 17.243,
+      "usd": 31327.082399999996,
+      "time": 1794674776088
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65162.6,
+      "qty": 0.025,
+      "usd": 1629.065,
+      "time": 1794674752173
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1817.65,
+      "qty": 9.187,
+      "usd": 16698.75055,
+      "time": 1794674752087
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64941.6,
+      "qty": 0.014,
+      "usd": 909.1824,
+      "time": 1794674751767
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65151.0,
+      "qty": 0.001,
+      "usd": 65.151,
+      "time": 1794674750495
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65171.7,
+      "qty": 0.367,
+      "usd": 23918.013899999998,
+      "time": 1794674746215
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1818.28,
+      "qty": 9.906,
+      "usd": 18011.881680000002,
+      "time": 1794674746150
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64961.4,
+      "qty": 0.201,
+      "usd": 13057.2414,
+      "time": 1794674744793
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64949.9,
+      "qty": 0.026,
+      "usd": 1688.6974,
+      "time": 1794674744626
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1811.03,
+      "qty": 0.4,
+      "usd": 724.412,
+      "time": 1794674744483
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64945.3,
+      "qty": 0.005,
+      "usd": 324.72650000000004,
+      "time": 1794674744443
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1810.97,
+      "qty": 0.25,
+      "usd": 452.7425,
+      "time": 1794674744363
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1817.68,
+      "qty": 1.0,
+      "usd": 1817.68,
+      "time": 1794674744193
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65167.9,
+      "qty": 0.017,
+      "usd": 1107.8543000000002,
+      "time": 1794674744172
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1810.85,
+      "qty": 0.35,
+      "usd": 633.7974999999999,
+      "time": 1794674744155
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1817.68,
+      "qty": 2.0,
+      "usd": 3635.36,
+      "time": 1794674744145
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65167.9,
+      "qty": 0.073,
+      "usd": 4757.2567,
+      "time": 1794674744145
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64957.1,
+      "qty": 0.002,
+      "usd": 129.9142,
+      "time": 1794674744128
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64940.2,
+      "qty": 0.36,
+      "usd": 23378.471999999998,
+      "time": 1794674744124
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1811.69,
+      "qty": 5.0,
+      "usd": 9058.45,
+      "time": 1794674744114
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1810.93,
+      "qty": 0.01,
+      "usd": 18.1093,
+      "time": 1794674744114
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64956.1,
+      "qty": 0.001,
+      "usd": 64.9561,
+      "time": 1794674744114
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1810.87,
+      "qty": 0.38,
+      "usd": 688.1306,
+      "time": 1794674744043
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64947.8,
+      "qty": 0.014,
+      "usd": 909.2692000000001,
+      "time": 1794674744043
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1811.54,
+      "qty": 0.99,
+      "usd": 1793.4246,
+      "time": 1794674743879
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1811.45,
+      "qty": 8.11,
+      "usd": 14690.859499999999,
+      "time": 1794674743867
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1811.52,
+      "qty": 0.45,
+      "usd": 815.184,
+      "time": 1794674743799
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64964.2,
+      "qty": 0.844,
+      "usd": 54829.784799999994,
+      "time": 1794674743045
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1817.7,
+      "qty": 11.506,
+      "usd": 20914.4562,
+      "time": 1794674742202
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65188.0,
+      "qty": 0.037,
+      "usd": 2411.9559999999997,
+      "time": 1794674742103
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1812.09,
+      "qty": 8.13,
+      "usd": 14732.291700000002,
+      "time": 1794674741531
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64975.3,
+      "qty": 0.532,
+      "usd": 34566.8596,
+      "time": 1794674741531
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64973.3,
+      "qty": 0.034,
+      "usd": 2209.0922,
+      "time": 1794674741480
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64969.7,
+      "qty": 0.204,
+      "usd": 13253.8188,
+      "time": 1794674741474
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1818.5,
+      "qty": 1.639,
+      "usd": 2980.5215,
+      "time": 1794674740104
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65185.6,
+      "qty": 0.06,
+      "usd": 3911.136,
+      "time": 1794674740090
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64984.5,
+      "qty": 0.002,
+      "usd": 129.969,
+      "time": 1794674739710
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1812.19,
+      "qty": 0.01,
+      "usd": 18.1219,
+      "time": 1794674739485
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64988.6,
+      "qty": 0.068,
+      "usd": 4419.2248,
+      "time": 1794674739345
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1812.51,
+      "qty": 3.19,
+      "usd": 5781.9069,
+      "time": 1794674739345
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1818.17,
+      "qty": 14.0,
+      "usd": 25454.38,
+      "time": 1794674738194
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65178.3,
+      "qty": 0.072,
+      "usd": 4692.8376,
+      "time": 1794674738098
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64993.5,
+      "qty": 0.017,
+      "usd": 1104.8895,
+      "time": 1794674736841
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 64994.5,
+      "qty": 0.261,
+      "usd": 16963.5645,
+      "time": 1794674736825
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1813.5,
+      "qty": 4.99,
+      "usd": 9049.365,
+      "time": 1794674736825
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1819.85,
+      "qty": 1.0,
+      "usd": 1819.85,
+      "time": 1794674736103
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 65012.0,
+      "qty": 0.002,
+      "usd": 130.024,
+      "time": 1794674735953
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65220.6,
+      "qty": 0.039,
+      "usd": 2543.6034,
+      "time": 1794674735543
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 65022.2,
+      "qty": 0.023,
+      "usd": 1495.5105999999998,
+      "time": 1794674734968
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65239.42,
+      "qty": 0.232,
+      "usd": 15135.54544,
+      "time": 1794674734621
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1821.21,
+      "qty": 5.41,
+      "usd": 9852.7461,
+      "time": 1794674734621
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1820.76,
+      "qty": 1.891,
+      "usd": 3443.05716,
+      "time": 1794674733137
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 65019.1,
+      "qty": 0.004,
+      "usd": 260.0764,
+      "time": 1794674732624
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65229.2,
+      "qty": 0.006,
+      "usd": 391.3752,
+      "time": 1794674732257
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1821.42,
+      "qty": 3.57,
+      "usd": 6502.4694,
+      "time": 1794674731177
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65237.0,
+      "qty": 0.088,
+      "usd": 5740.856,
+      "time": 1794674731177
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "ETHUSDT",
+      "side": "short",
+      "price": 1816.01,
+      "qty": 7.53,
+      "usd": 13674.5553,
+      "time": 1794674729496
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1822.12,
+      "qty": 5.513,
+      "usd": 10045.347559999998,
+      "time": 1794674729220
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65247.9,
+      "qty": 0.032,
+      "usd": 2087.9328,
+      "time": 1794674729170
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 65039.5,
+      "qty": 0.003,
+      "usd": 195.1185,
+      "time": 1794674728866
+    },
+    {
+      "exchange": "Bybit",
+      "symbol": "BTCUSDT",
+      "side": "short",
+      "price": 65041.5,
+      "qty": 0.004,
+      "usd": 260.166,
+      "time": 1794674727555
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65246.6,
+      "qty": 0.083,
+      "usd": 5415.4678,
+      "time": 1794674727069
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1823.99,
+      "qty": 0.37,
+      "usd": 674.8763,
+      "time": 1794674725146
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65280.0,
+      "qty": 0.037,
+      "usd": 2415.3599999999997,
+      "time": 1794674722147
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1824.37,
+      "qty": 15.0,
+      "usd": 27365.55,
+      "time": 1794674721123
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65280.0,
+      "qty": 0.2,
+      "usd": 13056.0,
+      "time": 1794674721123
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1824.42,
+      "qty": 0.319,
+      "usd": 581.9899800000001,
+      "time": 1794674687124
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1825.06,
+      "qty": 0.5,
+      "usd": 912.53,
+      "time": 1794674652116
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "ETHUSDT",
+      "side": "long",
+      "price": 1825.33,
+      "qty": 0.181,
+      "usd": 330.38473,
+      "time": 1794674649142
+    },
+    {
+      "exchange": "Binance",
+      "symbol": "BTCUSDT",
+      "side": "long",
+      "price": 65320.8,
+      "qty": 0.006,
+      "usd": 391.9248,
+      "time": 1794674649142
+    },
     {
       "exchange": "Binance",
       "symbol": "ETHUSDT",
