@@ -76,6 +76,17 @@ async function sessionAlerts(now: number) {
   }
 }
 
+// daily market brief: the GitHub Action writes daily_brief.json at 7am Melbourne; once the site serves today's file, everyone with phone alerts gets one push (members can switch it off: "brief")
+async function briefAlert(now: number) {
+  const site = Deno.env.get("SITE_URL") || "https://ttm-tradethemove.github.io/ttm-markets-terminal/";
+  const r = await fetch(site + "daily_brief.json?t=" + now, {headers: {"User-Agent": "ttm-brief"}}); if (!r.ok) return;
+  const b = await r.json(); const gen = Date.parse(b.generated_at); if (!b.date || !gen || now - gen > 4 * 3600000) return;
+  const today = new Intl.DateTimeFormat("en-CA", {timeZone: "Australia/Melbourne"}).format(new Date(now)); if (b.date !== today) return;
+  const c = await rest("ttm_session_fired?on_conflict=ukey", {method: "POST", headers: {Prefer: "resolution=ignore-duplicates,return=representation"}, body: JSON.stringify({ukey: "brief-" + b.date})});
+  const j = await c.json(); if (!Array.isArray(j) || !j.length) return;   // already sent
+  await send(await subsFor(null), {title: "☀️ " + b.title, body: b.headline || "Your morning market brief is ready", tag: "brief-" + b.date, url: "./crypto/index.html"}, "brief");
+}
+
 // token unlocks (beta): a heads-up 7 days and 24 hours before
 async function unlockAlerts(now: number) {
   for (const [col, ms, label] of [["alerted7", 7 * 864e5, "7 days"], ["alerted1", 864e5, "24 hours"]] as [string, number, string][]) {
@@ -238,6 +249,7 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response("msg " + n);
   }
 
+  try { await briefAlert(now); } catch (e) { console.log("brief alert failed:", String(e)); }
   try { await unlockAlerts(now); } catch (e) { console.log("unlock alerts failed:", String(e)); }
   // cron tick: market session alerts, new community room messages, then live sessions
   try { await sessionAlerts(now); } catch (e) { console.log("session alerts failed:", String(e)); }
