@@ -3,7 +3,8 @@
 TTM daily market brief: written from the terminal's own data files (no AI, no extra feeds), saved to daily_brief.json for the
 terminal and sent to Telegram.
 
-Secrets: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID. Optional: TELEGRAM_BRIEF_THREAD_ID (own topic; falls back to TELEGRAM_NEWS_THREAD_ID, then TELEGRAM_THREAD_ID),
+The brief is always saved to daily_brief.json for the terminal. Telegram is OFF unless SEND_TELEGRAM=1.
+Secrets (only if Telegram is on): TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID. Optional: TELEGRAM_BRIEF_THREAD_ID (own topic; falls back to TELEGRAM_NEWS_THREAD_ID, then TELEGRAM_THREAD_ID),
 TELEGRAM_NEWS_CHAT_ID (separate group).
 Env: DRY_RUN=1 (print only, write nothing), FORCE=1 (ignore the 7am Melbourne check and the sent-today check).
 It runs twice a day in UTC so it lands at 7am Melbourne in summer and winter; the script only goes ahead in the 7am Melbourne hour, once per day.
@@ -180,7 +181,7 @@ def send(text):
     token = (env("TELEGRAM_BOT_TOKEN") or "").strip()
     chat = (env("TELEGRAM_NEWS_CHAT_ID") or env("TELEGRAM_CHAT_ID") or "").strip()
     thread = (env("TELEGRAM_BRIEF_THREAD_ID") or env("TELEGRAM_NEWS_THREAD_ID") or env("TELEGRAM_THREAD_ID") or "").strip()
-    if DRY or not token or not chat:
+    if DRY or os.environ.get("SEND_TELEGRAM", "0") != "1" or not token or not chat:
         print("[dry/unsent]\n" + text)
         return DRY
     params = {"chat_id": chat, "text": text, "parse_mode": "HTML", "disable_web_page_preview": "true"}
@@ -200,16 +201,16 @@ def main():
         if MNOW.hour != 7:
             print("Not 7am in Melbourne, skipping.")
             return
-        if prev.get("date") == MNOW.strftime("%Y-%m-%d") and prev.get("sent"):
+        if prev.get("date") == MNOW.strftime("%Y-%m-%d") and prev.get("sent") is not None:
             print("Already sent today.")
             return
     b = build()
-    ok = send(telegram_text(b))
+    ok = send(telegram_text(b))   # Telegram is off unless SEND_TELEGRAM=1; the brief always goes to the terminal
     b["sent"] = bool(ok)
     if DRY:
         return
     json.dump(b, open(os.path.join(ROOT, "daily_brief.json"), "w"), indent=1, ensure_ascii=False)
-    print("brief saved; telegram", "sent" if ok else "NOT sent")
+    print("brief saved for the terminal; telegram", "sent" if ok else "off")
 
 
 if __name__ == "__main__":

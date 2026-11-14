@@ -28,14 +28,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Write and send the brief
+      - name: Write the brief
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
-          TELEGRAM_NEWS_THREAD_ID: ${{ secrets.TELEGRAM_NEWS_THREAD_ID }}
-          TELEGRAM_BRIEF_THREAD_ID: ${{ secrets.TELEGRAM_BRIEF_THREAD_ID }}
-          TELEGRAM_NEWS_CHAT_ID: ${{ secrets.TELEGRAM_NEWS_CHAT_ID }}
           FORCE: ${{ inputs.force && '1' || '0' }}
         run: python3 scripts/daily_brief.py
       - name: Save brief
