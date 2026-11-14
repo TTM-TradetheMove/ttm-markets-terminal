@@ -980,6 +980,21 @@ body.rm-full #rmIn{font-size:17px}
       <p>Crypto Fear &amp; Greed Index, BTC/ETH perpetual funding rate + open interest, and total liquidations, a modelled liquidation heatmap and map, and real liquidation events from Binance/Bybit's public feeds — refreshed every 15–30 minutes. Funding spikes often track macro prints, so read this alongside Macro Watch.</p>
       <p id="pulseUpdated" class="calendar-note" style="margin-top:8px">Loading live market data…</p>
     </div>
+    <div id="dailyBrief" class="rr-card" style="display:none;margin-bottom:18px;border-color:rgba(212,175,55,.45)"></div>
+    <script>
+    (function(){
+      var box = document.getElementById('dailyBrief'); if(!box) return;
+      var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+      fetch('../daily_brief.json', {cache: 'no-store'}).then(function(r){ return r.ok ? r.json() : Promise.reject(); }).then(function(b){
+        if(!b || !b.sections) return;
+        var ageH = (Date.now() - Date.parse(b.generated_at)) / 36e5, old = ageH > 36;
+        box.innerHTML = '<h3 style="margin:0 0 2px">☀️ ' + esc(b.title) + '</h3><div class="calendar-note" style="margin:0 0 10px">' + esc(b.headline) + (old ? ' · <b style="color:#e0554d">older brief, the next one is written at 7am Melbourne time</b>' : '') + '</div>' +
+          '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">' + b.sections.map(function(s){ return '<div><b style="color:var(--gold2)">' + esc(s.h) + '</b><ul style="margin:4px 0 0;padding-left:18px;font-size:13px;line-height:1.55">' + s.lines.map(function(l){ return '<li>' + esc(l) + '</li>'; }).join('') + '</ul></div>'; }).join('') + '</div>' +
+          '<div class="calendar-note" style="margin-top:10px">Written automatically every morning from the data feeds in this terminal. Not financial advice.</div>';
+        box.style.display = '';
+      }).catch(function(){});
+    })();
+    </script>
 
     <div class="pulse-grid">
       <div class="fg-card">
