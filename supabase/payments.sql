@@ -551,3 +551,38 @@ create or replace function public.ttm_ref_name(p_code text) returns text
 language sql stable security definer set search_path = public as $$
   select nullif(trim(both '@' from coalesce(tg_handle, '')), '') from public.ttm_profiles where ref_code = upper(regexp_replace(coalesce(p_code,''), '[^A-Za-z0-9]', '', 'g')) limit 1 $$;
 grant execute on function public.ttm_ref_name(text) to anon, authenticated;
+
+
+-- 17) Give TTM LENS for a limited time (giveaways and trials), like the plan giveaway. It ends by itself: access is "lens_until is in the future".
+create or replace function public.ttm_grant_lens(p_emails text[], p_hours int, p_note text default 'giveaway') returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare v_until timestamptz; v_ok text[]; v_kept text[]; v_none text[];
+begin
+  if not public.ttm_is_admin() then raise exception 'admins only'; end if;
+  if p_hours is null or p_hours < 1 or p_hours > 24 * 3650 then raise exception 'bad length'; end if;
+  v_until := now() + make_interval(hours => p_hours);
+  with em as (select distinct lower(btrim(x)) as e from unnest(p_emails) x where btrim(x) <> ''),
+       up as (update public.ttm_profiles p set lens_until = v_until, lens_via = 'gift'
+              from em where lower(p.email) = em.e and not p.is_admin and (p.lens_until is null or p.lens_until < v_until) returning p.email)
+  select coalesce(array_agg(email), '{}') into v_ok from up;
+  select coalesce(array_agg(p.email), '{}') into v_kept from public.ttm_profiles p
+   where lower(p.email) in (select distinct lower(btrim(x)) from unnest(p_emails) x) and not (p.email = any(v_ok)) and not p.is_admin;
+  select coalesce(array_agg(e), '{}') into v_none from (select distinct lower(btrim(x)) as e from unnest(p_emails) x where btrim(x) <> '') em
+   where e not in (select lower(email) from public.ttm_profiles);
+  return jsonb_build_object('granted', v_ok, 'kept', v_kept, 'no_account', v_none, 'until', v_until);
+end $$;
+revoke all on function public.ttm_grant_lens(text[], int, text) from public, anon;
+grant execute on function public.ttm_grant_lens(text[], int, text) to authenticated;
+
+-- Take back gifted LENS time early (paid and BTCC access is never touched)
+create or replace function public.ttm_revoke_lens(p_emails text[]) returns int
+language plpgsql security definer set search_path = public as $$
+declare n int;
+begin
+  if not public.ttm_is_admin() then raise exception 'admins only'; end if;
+  update public.ttm_profiles set lens_until = null, lens_via = null
+   where lens_via = 'gift' and lower(email) in (select distinct lower(btrim(x)) from unnest(p_emails) x);
+  get diagnostics n = row_count; return n;
+end $$;
+revoke all on function public.ttm_revoke_lens(text[]) from public, anon;
+grant execute on function public.ttm_revoke_lens(text[]) to authenticated;
