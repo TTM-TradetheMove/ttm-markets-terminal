@@ -3999,6 +3999,7 @@ const accName = id => (ACCS.find(a => a[0] === id) || ACCS[1])[1];
 const tfName = id => (TFS.find(a => a[0] === id) || [0, 'Not set'])[1];
 const accOf = x => (x.snap && x.snap.acc) || (x.s && x.s.acc) || 'lev';
 const tfOf = x => (x.snap && x.snap.tf) || (x.s && x.s.tf) || '';
+function isPartOf(y, x){ if(!y || y.status !== 'closed' || !y.res || !x || y === x || y.name.indexOf(x.name + ' (') !== 0 || !/% closed\)$/.test(y.name)) return false; if(y.parent) return y.parent === x.id; return (y.res.closed || y.t || 0) >= (x.opened || x.t || 0); }
 function loadSaved(){ const l = lsGet(SKEY, []); return Array.isArray(l) ? l : []; }
 function saveAll(l){ return lsSet(SKEY, l.slice(0, 500)); }
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -4272,7 +4273,7 @@ function wireJournal(){
     else if(e.target.id === 'rrConfirm'){ const m = modalCalc(), list = loadSaved(), x = list[cur.i];
       if(m.bad){ const o = $('rrCalcOut'); if(o) o.querySelector('p').style.color = '#e0554d'; return; }
       if(cur.mode === 'price' && m.f < 1){ // part close: book the closed share as its own trade, shrink the open one
-        const f = m.f, part = JSON.parse(JSON.stringify(x)); part.id = uid(); part.name = x.name + ' (' + Math.round(f * 1000) / 10 + '% closed)'; part.status = 'closed'; part.snap = Object.assign({}, x.snap);
+        const f = m.f, part = JSON.parse(JSON.stringify(x)); part.id = uid(); part.parent = x.id; part.name = x.name + ' (' + Math.round(f * 1000) / 10 + '% closed)'; part.status = 'closed'; part.snap = Object.assign({}, x.snap);
         ['units', 'notional', 'margin', 'riskUsd'].forEach(k => { part.snap[k] = x.snap[k] * f; x.snap[k] = x.snap[k] * (1 - f); });
         if(x.orders){ part.orders = x.orders.filter(o => o.filled).map(o => Object.assign({}, o, {m: o.m * f})); x.orders.forEach(o => { o.m = o.m * (1 - f); }); }
         part.res = {pnl: Math.round(m.pnl * 100) / 100, r: m.pnl / part.snap.riskUsd, how: m.how, closed: Date.now()}; delete part.hit; delete part.sent; x.booked = Math.round(((x.booked || 0) + m.pnl) * 100) / 100;
@@ -4552,7 +4553,7 @@ function openTbl(items, noteEmpty){
   const list = loadSaved();
   if(!items.length) o += `<tr><td colspan="14" style="color:var(--mute)">${noteEmpty || 'No open trades. Open one from the Risk-to-Reward calculator and it appears here at live prices.'}</td></tr>`;
   const c = v => v > 0.005 ? '#3fb47a' : v < -0.005 ? '#e0554d' : 'var(--text)';
-  items.forEach(x => { const s = openState(x), i = list.findIndex(y => y.id === x.id), anyHit = s.hits && s.hits.some(Boolean), moved = x.snap.SL === x.snap.E, bk = x.booked != null ? x.booked : list.filter(y => y.status === 'closed' && y.res && y.name.indexOf(x.name + ' (') === 0 && /% closed\)$/.test(y.name)).reduce((t, y) => t + y.res.pnl, 0);
+  items.forEach(x => { const s = openState(x), i = list.findIndex(y => y.id === x.id), anyHit = s.hits && s.hits.some(Boolean), moved = x.snap.SL === x.snap.E, bk = x.booked != null ? x.booked : list.filter(y => y.status === 'closed' && y.res && isPartOf(y, x)).reduce((t, y) => t + y.res.pnl, 0);
     o += `<tr><td><button class="tkr" data-j="chart" data-i="${i}" title="Open chart, orders and average entry"><b>${esc(x.name)}</b></button><br><small style="color:var(--mute)">${x.snap.mkt === 'spot' ? 'Spot' : x.snap.lev + '×'} · ${esc(tfName(tfOf(x)))}</small></td><td>${esc(accName(accOf(x)))}</td><td><button class="tkr" data-j="chart" data-i="${i}" title="Open chart, orders and average entry">${esc(x.snap.asset)} ▸</button></td><td style="color:${x.snap.long ? '#3fb47a' : '#e0554d'}">${x.snap.long ? 'Long' : 'Short'}</td><td>${pr(x.snap.E)}${x.orders ? `<br><small style="color:var(--mute)">${x.orders.filter(q => q.filled).length} of ${x.orders.length} orders filled</small>` : ''}</td><td><b>${usd(x.snap.margin)}</b><br><small style="color:var(--mute)">${x.snap.mkt === 'spot' ? 'full cost' : 'size ' + usd(x.snap.notional)}</small></td><td>${s.pp ? pr(s.pp.p) + (s.pp.live ? '' : s.pp.manual ? ' <small style="color:var(--mute)">(typed)</small>' : ' <small style="color:var(--mute)">(snapshot)</small>') : '—'}</td>` +
       `<td style="color:${c(s.move)}">${s.move == null ? '—' : (s.move >= 0 ? '+' : '') + s.move.toFixed(2) + '%'}</td><td style="color:${c(s.real + bk)}">${s.pp && !s.pending ? usd(s.real + bk) : (bk ? usd(bk) : '—')}${bk ? `<br><small style="color:var(--mute)">incl. ${usd(bk)} booked</small>` : ''}</td><td style="color:${c(s.open)}">${s.pp && !s.pending ? usd(s.open) : '—'}</td><td style="color:${c(s.pnl + bk)}"><b>${s.pp && !s.pending ? usd(s.pnl + bk) : (bk ? usd(bk) : '—')}</b></td><td>${barHtml(x, s)}</td>` +
       `<td style="color:${s.pending ? 'var(--gold2)' : s.stopped ? '#e0554d' : anyHit ? '#3fb47a' : 'var(--mute)'}">${s.label}${s.pending && s.away != null ? `<br><small style="color:var(--mute)">entry ${pr(x.snap.E)} is ${Math.abs(s.away).toFixed(2)}% ${s.away < 0 ? 'below' : 'above'} live</small>` : ''}${moved ? '<br><small style="color:var(--gold2)">Stop at entry</small>' : ''}</td>` +
@@ -4650,7 +4651,7 @@ function spotEv(x, kind, ukey, pct){ if(!x || !x.snap || x.snap.mkt !== 'spot' |
 const feedPct = x => { const A = acct(accOf(x)); return A.equity > 0 ? Math.round(x.snap.margin / A.equity * 1000) / 10 : null; };
 function holdingsSnap(accId){
   const A = acct(accId), L = loadSaved(), pos = {}, pend = {}, sold = []; let extra = 0, unreal = 0;
-  const partsOf = x => L.filter(y => y.status === 'closed' && y.res && y.snap && y.name.indexOf(x.name + ' (') === 0 && /% closed\)$/.test(y.name));
+  const partsOf = x => L.filter(y => y.status === 'closed' && y.res && y.snap && isPartOf(y, x));
   L.forEach(x => { if(!x.snap || accOf(x) !== accId) return; const sn = x.snap;
     if(x.status === 'open'){
       let pm = 0, pp = [];
@@ -5291,7 +5292,7 @@ fill(); paint();
 })();
 </script>
 <script src="../chartpro.js?v=2"></script>
-<script src="../ttmcharts.js?v=42"></script>
+<script src="../ttmcharts.js?v=43"></script>
 <script src="../ttmind.js?v=13"></script>
 <script src="../ttmpaper.js?v=13"></script>
 <script src="../accounts.js?v=1794605375"></script>

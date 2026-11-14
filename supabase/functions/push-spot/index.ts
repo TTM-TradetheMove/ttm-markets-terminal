@@ -256,6 +256,14 @@ const handler = async (req: Request): Promise<Response> => {
     } catch (e) { console.log("sweep " + t + " failed:", String(e)); }
   }
   const soon = new Date(now + 15 * 60000).toISOString(), back = new Date(now - 10 * 60000).toISOString();
+  // Zoom links are tier-gated: only members on the needed plan (or admins) get the push that carries the link
+  const liveAud = async (s: any) => {
+    const t = String(s.min_tier || "free");
+    if (t === "free") return await subsFor(null);
+    const plans = t === "pro" ? "pro" : "premium,pro", iso = new Date().toISOString();
+    const people = await get(`ttm_profiles?select=id&or=(is_admin.eq.true,and(plan.in.(${plans}),plan_until.is.null),and(plan.in.(${plans}),plan_until.gt.${iso}))`);
+    return await subsFor(idsOf(people));
+  };
   const due = await get(`ttm_live?select=*&reminded=eq.false&starts_at=lte.${soon}&starts_at=gt.${back}`);
   for (const s of due) {
     const c = await claim("ttm_live", s.id, "reminded"); if (!c) continue;
@@ -265,17 +273,17 @@ const handler = async (req: Request): Promise<Response> => {
       let next = addDays(s.starts_at, s.repeat_days > 0 ? s.repeat_days : 7);
       if (dows.length) { for (let k = 1; k <= 7; k++) { const c = addDays(s.starts_at, k); if (dows.includes(new Date(wall(new Date(c).getTime())).getUTCDay())) { next = c; break; } } }
       if (!(await get(`ttm_live?select=id&starts_at=eq.${encodeURIComponent(next)}&title=eq.${encodeURIComponent(s.title)}`)).length)
-        await rest("ttm_live", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({title: s.title, starts_at: next, zoom_url: s.zoom_url, note: s.note, repeat_days: s.repeat_days || 7, repeat_dow: dows, announced: true})});
+        await rest("ttm_live", {method: "POST", headers: {Prefer: "return=minimal"}, body: JSON.stringify({title: s.title, starts_at: next, zoom_url: s.zoom_url, note: s.note, repeat_days: s.repeat_days || 7, repeat_dow: dows, announced: true, min_tier: s.min_tier || "free"})});
     }
     const mins = Math.max(1, Math.round((new Date(s.starts_at).getTime() - now) / 60000));
-    await send(await subsFor(null), {title: "Live in " + mins + " minutes", body: s.title, tag: "live-" + s.id, url: s.zoom_url}, "live");
+    await send(await liveAud(s), {title: "Live in " + mins + " minutes", body: s.title, tag: "live-" + s.id, url: s.zoom_url}, "live");
   }
   // "Live now": a second push when the session actually starts (needs supabase/live_now.sql once)
   try {
     const startedRows = await get(`ttm_live?select=*&live_sent=eq.false&starts_at=lte.${new Date(now + 30000).toISOString()}&starts_at=gt.${new Date(now - 10 * 60000).toISOString()}`);
     for (const s of startedRows) {
       const c = await claim("ttm_live", s.id, "live_sent"); if (!c) continue;
-      await send(await subsFor(null), {title: "🔴 We are live now", body: s.title + " · tap to join on Zoom", tag: "live-now-" + s.id, url: s.zoom_url}, "live");
+      await send(await liveAud(s), {title: "🔴 We are live now", body: s.title + " · tap to join on Zoom", tag: "live-now-" + s.id, url: s.zoom_url}, "live");
     }
   } catch (e) { console.log("live-now alert failed (run supabase/live_now.sql):", String(e)); }
   const fresh = await get(`ttm_live?select=*&announced=eq.false&starts_at=gt.${new Date(now).toISOString()}`);
