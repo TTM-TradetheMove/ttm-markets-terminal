@@ -1,0 +1,38 @@
+name: Update TradFi commodities
+
+on:
+  schedule:
+    - cron: "12 */2 * * 1-5"
+  workflow_dispatch:
+  push:
+    paths:
+      - scripts/update_commodities.py
+      - scripts/tf_common.py
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-commodities
+  cancel-in-progress: false
+
+jobs:
+  commodities:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build commodities data
+        run: timeout 12m python3 -u scripts/update_commodities.py || echo "failed; keeping previous"
+      - name: Commit
+        run: |
+          git config user.name "ttm-calendar-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add tradfi_commodities.json tradfi_commodities_status.json 2>/dev/null || true
+          if git diff --cached --quiet; then echo "No changes"; else
+            git commit -m "Auto-update TradFi commodities"
+            for i in 1 2 3 4; do git pull --rebase -X theirs origin main && git push && break; sleep 5; done
+          fi
