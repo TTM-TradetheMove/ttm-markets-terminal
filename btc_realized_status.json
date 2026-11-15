@@ -1,6 +1,17 @@
 {
  "from_api": "failed: HTTP Error 403: Forbidden",
- "from_csv": "0 rows",
- "from_bitcoin_data": "1455 rows",
- "when": "2026-11-15T02:48:51+00:00"
+ "csv_columns": [
+  "time",
+  "CapMVRVCur",
+  "CapMrktCurUSD",
+  "CapMrktEstUSD",
+  "PriceBTC",
+  "PriceUSD",
+  "SplyCur",
+  "SplyExNtv",
+  "SplyExUSD",
+  "SplyExpFut10yr"
+ ],
+ "from_csv": "5789 rows",
+ "when": "2026-11-15T02:59:06+00:00"
 }
