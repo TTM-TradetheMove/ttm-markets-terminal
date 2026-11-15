@@ -352,7 +352,10 @@ const handler = async (req: Request): Promise<Response> => {
     for (const an of await get("ttm_announce?select=*&sent=eq.false&order=id.asc&limit=5")) {
       if (!(await claim("ttm_announce", an.id, "sent"))) continue;
       const aud = String(an.audience || "beta");
-      const people = aud === "all" ? null : await get(aud === "admin" ? "ttm_profiles?select=id&is_admin=eq.true" : "ttm_profiles?select=id&or=(is_admin.eq.true,beta.eq.true)");
+      const nowIso = encodeURIComponent(new Date().toISOString());
+      const people = aud === "all" ? null : await get(aud === "admin" ? "ttm_profiles?select=id&is_admin=eq.true"
+        : aud === "pro" ? `ttm_profiles?select=id&or=(is_admin.eq.true,and(plan.eq.pro,or(plan_until.is.null,plan_until.gt.${nowIso})))`   // Pro members (and you)
+        : "ttm_profiles?select=id&or=(is_admin.eq.true,beta.eq.true)");
       const n = await send(await subsFor(people === null ? null : idsOf(people)), {title: an.title, body: an.body || "", tag: "ann-" + an.id, url: an.url || "./index.html"});
       await rest(`ttm_announce?id=eq.${an.id}`, {method: "PATCH", body: JSON.stringify({sent_to: n || 0})});
     }

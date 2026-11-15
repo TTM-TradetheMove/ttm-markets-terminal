@@ -1,5 +1,5 @@
 -- One-off phone announcements. Insert a row and the minute-by-minute tick in push-spot sends it once.
--- audience: 'beta' (beta testers + admin, default), 'admin' (just you), 'all' (everyone with alerts on)
+-- audience: 'beta' (beta testers + admin, default), 'admin' (just you), 'pro' (Pro members + you), 'all' (everyone with alerts on)
 create table if not exists public.ttm_announce (
   id bigserial primary key,
   title text not null,

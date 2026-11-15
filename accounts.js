@@ -17,7 +17,7 @@ const CAT = [
   ['c:lunacycles', 'Crypto · Eclipse (BTC and the eclipse cycles)', ['beta'], 'off'],  ['c:cryptorotation', 'Crypto · Crypto Rotation (10 sectors vs Bitcoin, rotation score, cycle ladder)', [], 'off'], ['c:painzones', 'Crypto · Pain Zones (any coin: average cost, support / resistance, RSI)', [], 'off'], ['c:maxpain', 'Crypto · Max Pain (options, with RSI confluence)', ['premium']], ['c:volume', 'Crypto · Volume Heatmap', ['premium']], ['c:socialpulse', 'Crypto · Social Pulse', ['premium']],
   ['c:riskreward', 'Crypto · Risk / Reward calculator', ['premium']], ['c:tradejournal', 'Crypto · Trade Tracker & win ratio', []], ['c:pnlcal', 'Crypto · P&L Calendar', []], ['c:portfolio', 'Crypto · Portfolio Forecast', []],
   ['t:calendar', 'TradFi · Macro Watch', ['free']], ['t:tradinghours', 'TradFi · Trading Hours', ['free']], ['t:congress', 'TradFi · Congress Watch', []],
-  ['t:globalmarkets', 'TradFi · Global Markets', ['premium']], ['t:bonds', 'TradFi · Bonds & Rates', ['premium']], ['t:macrointel', 'TradFi · Macro Intel', ['premium']], ['t:newsrisk', 'TradFi · News & Risk', ['premium']], ['t:tfcalc', 'TradFi · Risk / Reward calculator', ['premium']],
+  ['t:globalmarkets', 'TradFi · Global Markets', ['premium']], ['t:bonds', 'TradFi · Bonds & Rates', ['premium']], ['t:macrointel', 'TradFi · Macro Intel', ['premium']], ['t:newsrisk', 'TradFi · News & Risk', ['premium']], ['t:tfcalc', 'TradFi · Risk / Reward calculator', ['premium']], ['t:earnings', 'TradFi · Earnings calendar & reactions', ['pro']],
   ['indicators', 'TTM indicators on TradingView', []], ['sync', 'Cloud sync of trades', []], ['excel', 'Excel export', []]
 ];
 // Free means "everyone who is signed in or not"; paid lists add the plan (Crypto items are also in Pro, etc.)
