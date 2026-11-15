@@ -48,16 +48,42 @@ def from_csv():
     return rows
 
 
+def from_bitcoin_data():
+    """Third source: realized price from bitcoin-data.com, daily BTC price from Bitstamp."""
+    raw = json.loads(fetch("https://bitcoin-data.com/v1/realized-price"))
+    rp = {}
+    for d in raw if isinstance(raw, list) else raw.get("data", []):
+        k = str(d.get("d") or d.get("theDay") or "")[:10]
+        v = d.get("realizedPrice") or d.get("realized_price")
+        if k and v is not None:
+            rp[k] = float(v)
+    px, end = {}, int(time.time())
+    for _ in range(8):
+        j = json.loads(fetch(f"https://www.bitstamp.net/api/v2/ohlc/btcusd/?step=86400&limit=1000&end={end}"))
+        c = j.get("data", {}).get("ohlc", [])
+        if not c:
+            break
+        for x in c:
+            px[datetime.fromtimestamp(int(x["timestamp"]), timezone.utc).strftime("%Y-%m-%d")] = float(x["close"])
+        end = int(c[0]["timestamp"]) - 1
+    return [(d, px[d], rp[d]) for d in sorted(rp) if d in px and rp[d] > 0]
+
+
 def main():
+    status = {}
     rows = []
-    for fn in (from_api, from_csv):
+    for fn, need in ((from_api, 2000), (from_csv, 2000), (from_bitcoin_data, 1000)):
         try:
             rows = fn()
-            if len(rows) > 2000:
+            status[fn.__name__] = f"{len(rows)} rows"
+            if len(rows) > need:
                 break
         except Exception as e:  # noqa
+            status[fn.__name__] = "failed: " + str(e)[:160]
             print(fn.__name__, "failed:", e)
-    if len(rows) < 2000:
+    status["when"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    json.dump(status, open(os.path.join(ROOT, "btc_realized_status.json"), "w"), indent=1)
+    if len(rows) < 1000:
         print("No usable data, keeping the old file.")
         return
     rows.sort()

@@ -34,7 +34,7 @@ jobs:
         run: |
           git config user.name "ttm-calendar-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add btc_realized.json 2>/dev/null || true
+          git add btc_realized.json btc_realized_status.json 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "No changes to btc_realized.json"
           else
