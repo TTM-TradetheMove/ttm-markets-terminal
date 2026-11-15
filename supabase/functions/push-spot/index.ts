@@ -87,6 +87,34 @@ async function briefAlert(now: number) {
   await send(await subsFor(null), {title: "☀️ " + b.title, body: b.headline || "Your morning market brief is ready", tag: "brief-" + b.date, url: "./crypto/index.html"}, "brief");
 }
 
+// BTC realized price: when live price crosses it, Premium and Pro members get one alert (0.5% buffer so a wobble around the line doesn't repeat)
+async function realizedAlert(now: number) {
+  const site = Deno.env.get("SITE_URL") || "https://ttm-tradethemove.github.io/ttm-markets-terminal/";
+  const r = await fetch(site + "btc_realized.json?t=" + Math.floor(now / 600000)); if (!r.ok) return;
+  const d = await r.json(); const rp = +d.realized; if (!(rp > 0)) return;
+  let px = 0;
+  for (const u of ["https://api.bybit.com/v5/market/tickers?category=linear&symbol=BTCUSDT", "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"]) {
+    try { const q = await (await fetch(u)).json(); px = +(q?.result?.list?.[0]?.lastPrice ?? q?.price); if (px > 0) break; } catch (_) { /* try next */ }
+  }
+  if (!(px > 0)) return;
+  const st = (await get("ttm_settings?select=value&key=eq.rp_state"))[0]?.value || null;
+  const side = st?.side as string | undefined;
+  const save = (s: string) => rest("ttm_settings?on_conflict=key", {method: "POST", headers: {Prefer: "resolution=merge-duplicates,return=minimal"}, body: JSON.stringify({key: "rp_state", value: {side: s, ts: now, rp, px}})});
+  if (!side) { await save(px < rp ? "below" : "above"); return; }
+  let next = side;
+  if (side === "above" && px < rp * 0.995) next = "below"; else if (side === "below" && px > rp * 1.005) next = "above";
+  if (next === side) return;
+  await save(next);
+  const f = (n: number) => "$" + Math.round(n).toLocaleString("en-US");
+  const iso = new Date().toISOString();
+  const people = await get(`ttm_profiles?select=id&or=(is_admin.eq.true,and(plan.in.(premium,pro),plan_until.is.null),and(plan.in.(premium,pro),plan_until.gt.${iso}))`);
+  const subs = await subsFor(idsOf(people));
+  const payload = next === "below"
+    ? {title: "BTC is below its realized price", body: `BTC ${f(px)} is under the realized price (${f(rp)}). Historically this is where bear-market lows form. Prep for the bear low buys now.`, tag: "realized-below", url: "./crypto/index.html#btcrealized"}
+    : {title: "BTC reclaimed its realized price", body: `BTC ${f(px)} is back above the realized price (${f(rp)}). Often the first sign the bear-market low is behind.`, tag: "realized-above", url: "./crypto/index.html#btcrealized"};
+  await send(subs, payload, "realized");
+}
+
 // token unlocks (beta): a heads-up 7 days and 24 hours before
 async function unlockAlerts(now: number) {
   for (const [col, ms, label] of [["alerted7", 7 * 864e5, "7 days"], ["alerted1", 864e5, "24 hours"]] as [string, number, string][]) {
@@ -249,6 +277,7 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response("msg " + n);
   }
 
+  try { await realizedAlert(now); } catch (e) { console.log("realized alert failed:", String(e)); }
   try { await briefAlert(now); } catch (e) { console.log("brief alert failed:", String(e)); }
   try { await unlockAlerts(now); } catch (e) { console.log("unlock alerts failed:", String(e)); }
   // cron tick: market session alerts, new community room messages, then live sessions
