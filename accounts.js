@@ -150,6 +150,11 @@ function can(key){
   if(PROF && PROF.is_admin) return true;
   if(SET.wall && !USER) return false;
   const a = SET.access[key]; if(!a) return true;
+  if(key.indexOf('room:') === 0 && USER){   // chat rooms follow the plan ladder: a plan can enter its own room and every room below it
+    const rk = p => p === 'pro' ? 2 : (!p || p === 'free') ? 0 : 1, lst = a.filter(x => x === 'free' || x === 'premium' || x === 'pro'), need = lst.length ? Math.min.apply(null, lst.map(rk)) : 2;
+    let mine = rk(PROF && PROF.plan); if(PROF && PROF.plan_until && new Date(PROF.plan_until) < new Date()) mine = 0;
+    if(mine >= need) return true;
+  }
   const plan = PROF ? PROF.plan : 'free';
   if(PROF && PROF.beta && a.indexOf('beta') >= 0) return true;
   if(PROF && PROF.team && a.indexOf('team') >= 0) return true;
