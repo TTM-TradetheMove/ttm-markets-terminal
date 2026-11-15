@@ -85,7 +85,7 @@ begin
   if p_plan not in ('premium','pro','lens') or p_term not in ('month','year') or (p_plan = 'lens' and p_term <> 'year') then raise exception 'unknown plan'; end if;
   update public.ttm_orders set status = 'expired' where status = 'open' and expires_at < now();
   -- membership cap: new paying members are refused once the cap is reached; people who are already paying (or paid before) can always renew
-  if p_plan in ('premium','pro') and (select count(*) from public.ttm_profiles where plan in ('premium','pro') and plan_until > now() and plan_note like 'USDT%') >= coalesce((select (cfg ->> 'member_cap')::int from public.ttm_billing where id = 'main'), 350)
+  if p_plan in ('premium','pro') and (select count(*) from public.ttm_profiles where plan in ('premium','pro') and plan_until > now() and plan_note like 'USDT%') >= coalesce((select (cfg ->> 'member_cap')::int from public.ttm_billing where id = 'main'), 500)
      and not exists (select 1 from public.ttm_orders where user_id = uid and status = 'paid' and plan in ('premium','pro'))
      and not exists (select 1 from public.ttm_profiles where id = uid and plan in ('premium','pro') and plan_until > now()) then
     raise exception 'Memberships are full right now. Message TTM on Telegram to join the waiting list.';
@@ -498,12 +498,12 @@ end $$;
 grant execute on function public.ttm_lens_admin(uuid, text) to authenticated;
 
 
--- 13) Paid-member cap (default 350, change "member_cap" in the billing row). Anyone can read the count to show "full".
+-- 13) Paid-member cap (default 500, change "member_cap" in the billing row). Anyone can read the count to show "full".
 create or replace function public.ttm_member_cap() returns jsonb
 language sql stable security definer set search_path = public as $$
-  select jsonb_build_object('cap', coalesce((select (cfg ->> 'member_cap')::int from public.ttm_billing where id = 'main'), 350),
+  select jsonb_build_object('cap', coalesce((select (cfg ->> 'member_cap')::int from public.ttm_billing where id = 'main'), 500),
     'paid', (select count(*) from public.ttm_profiles where plan in ('premium','pro') and plan_until > now() and plan_note like 'USDT%'),
-    'full', (select count(*) from public.ttm_profiles where plan in ('premium','pro') and plan_until > now() and plan_note like 'USDT%') >= coalesce((select (cfg ->> 'member_cap')::int from public.ttm_billing where id = 'main'), 350)) $$;
+    'full', (select count(*) from public.ttm_profiles where plan in ('premium','pro') and plan_until > now() and plan_note like 'USDT%') >= coalesce((select (cfg ->> 'member_cap')::int from public.ttm_billing where id = 'main'), 500)) $$;
 grant execute on function public.ttm_member_cap() to anon, authenticated;
 
 -- 14) Free members can read and react in the community rooms but cannot post, reply, vote or start polls.
@@ -540,9 +540,9 @@ revoke all on function public.ttm_founders_check() from public, anon, authentica
 
 create or replace function public.ttm_member_cap() returns jsonb
 language sql stable security definer set search_path = public as $$
-  select jsonb_build_object('cap', coalesce((select (cfg ->> 'member_cap')::int from public.ttm_billing where id = 'main'), 350),
+  select jsonb_build_object('cap', coalesce((select (cfg ->> 'member_cap')::int from public.ttm_billing where id = 'main'), 500),
     'paid', (select count(*) from public.ttm_profiles where plan in ('premium','pro') and plan_until > now() and plan_note like 'USDT%'),
-    'full', (select count(*) from public.ttm_profiles where plan in ('premium','pro') and plan_until > now() and plan_note like 'USDT%') >= coalesce((select (cfg ->> 'member_cap')::int from public.ttm_billing where id = 'main'), 350),
+    'full', (select count(*) from public.ttm_profiles where plan in ('premium','pro') and plan_until > now() and plan_note like 'USDT%') >= coalesce((select (cfg ->> 'member_cap')::int from public.ttm_billing where id = 'main'), 500),
     'founders', public.ttm_founders(),
     'founding_open', not coalesce((select (cfg ->> 'rise_done')::boolean from public.ttm_billing where id = 'main'), false) and now() < timestamptz '2027-02-01 00:00:00+11') $$;
 grant execute on function public.ttm_member_cap() to anon, authenticated;
@@ -598,3 +598,44 @@ begin
 end $$;
 revoke all on function public.ttm_ref_pause(uuid, boolean) from public, anon;
 grant execute on function public.ttm_ref_pause(uuid, boolean) to authenticated;
+
+
+-- 19) Referral rewards keep counting. Every complete set of 4 paying referrals (same term) is one reward set:
+--       * 1st set: free tier while those 4 stay (as before). A Pro referrer gets time instead, since a free tier gives them nothing.
+--       * every later set: banked time. Yearly set = +12 months, monthly set = +1 month (Pro referrer with some Premium referrals: scaled down as before).
+--     So 8 yearly payers = about 2 years free. There is no upper limit on sets. New time stops being added only when the paid-member cap is reached
+--     (cap = "member_cap" in the billing row, default 500; it is not shown to members).
+alter table public.ttm_profiles add column if not exists ref_sets int not null default 0;
+
+create or replace function public.ttm_referral_credit(p_user uuid, p_plan text, p_term text) returns void
+language plpgsql security definer set search_path = public as $$
+declare ref uuid; r record; ids uuid[]; n_pro int; months int; own_plan text; tier text; is_full boolean; set_no int; guard int := 0;
+begin
+  select referred_by into ref from public.ttm_profiles where id = p_user for update;
+  if ref is null then return; end if;
+  update public.ttm_profiles set ref_paid = true, ref_paid_at = coalesce(ref_paid_at, now()), ref_plan = coalesce(ref_plan, p_plan), ref_term = coalesce(ref_term, p_term) where id = p_user and not ref_paid;
+  if found then
+    is_full := coalesce((public.ttm_member_cap() ->> 'full')::boolean, false);
+    loop
+      guard := guard + 1; exit when guard > 100;
+      select array(select id from public.ttm_profiles where referred_by = ref and ref_paid and not ref_rewarded and ref_term = p_term order by ref_paid_at, id limit 4) into ids;
+      exit when coalesce(array_length(ids, 1), 0) < 4;
+      select * into r from public.ttm_profiles where id = ref for update;
+      own_plan := case when r.ref_grant_plan is not null then r.ref_base_plan else r.plan end;
+      select count(*) into n_pro from public.ttm_profiles where id = any(ids) and ref_plan = 'pro';
+      set_no := r.ref_sets;
+      update public.ttm_profiles set ref_rewarded = true where id = any(ids);
+      update public.ttm_profiles set ref_sets = ref_sets + 1 where id = ref;
+      continue when is_full;                                         -- group is full: counted, but no new time
+      continue when set_no = 0 and coalesce(own_plan, 'free') <> 'pro';   -- first set: the free tier (granted by ttm_ref_recalc) is the reward
+      tier := case when own_plan in ('premium', 'pro') then own_plan when n_pro = 4 then 'pro' else 'premium' end;
+      months := case when p_term = 'month' then 1
+                     when own_plan = 'pro' and n_pro < 4 then round(12 * (n_pro * 1.0 + (4 - n_pro) * 0.5) / 4)::int
+                     else 12 end;
+      update public.ttm_profiles set ref_earned = ref_earned + months where id = ref;
+      if not (r.plan = 'pro' and r.plan_until is null) then perform public.ttm_extend_n(ref, tier, months, 'Referral reward (time bonus)'); end if;
+    end loop;
+  end if;
+  perform public.ttm_ref_recalc(ref);
+end $$;
+revoke all on function public.ttm_referral_credit(uuid, text, text) from public, anon, authenticated;
