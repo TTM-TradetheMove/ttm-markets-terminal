@@ -108,22 +108,31 @@ def extend_to_today(rows):
 
 def main():
     status = STATUS
-    rows = []
-    for fn, need in ((from_api, 2000), (from_csv, 2000), (from_bitcoin_data, 1000)):
+    base, fresh = [], []
+    for fn, need in ((from_api, 2000), (from_csv, 2000)):
         try:
-            rows = fn()
-            status[fn.__name__] = f"{len(rows)} rows"
-            if len(rows) > need:
+            base = fn()
+            status[fn.__name__] = f"{len(base)} rows"
+            if len(base) > need:
                 break
         except Exception as e:  # noqa
             status[fn.__name__] = "failed: " + str(e)[:160]
             print(fn.__name__, "failed:", e)
+    try:                                   # newest days (the public CSV can lag by months)
+        fresh = from_bitcoin_data()
+        status["from_bitcoin_data"] = f"{len(fresh)} rows"
+    except Exception as e:  # noqa
+        status["from_bitcoin_data"] = "failed: " + str(e)[:160]
+    m = {d: (p, r) for d, p, r in base}
+    for d, p, r in fresh:                  # fresh data wins where both have the day
+        m[d] = (p, r)
+    rows = sorted((d, p, r) for d, (p, r) in m.items() if p > 0.05 and r > 0.05)
     status["when"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    status["first_day"] = rows[0][0] if rows else None
     json.dump(status, open(os.path.join(ROOT, "btc_realized_status.json"), "w"), indent=1)
     if len(rows) < 1000:
         print("No usable data, keeping the old file.")
         return
-    rows.sort()
     rows = extend_to_today(rows)
     last_date = rows[-1][0]
     cut = max(0, len(rows) - 400)
