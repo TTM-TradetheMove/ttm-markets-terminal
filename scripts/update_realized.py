@@ -12,6 +12,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UA = {"User-Agent": "Mozilla/5.0 (compatible; TTMMarketsTerminalBot/1.0)"}
 
 
+STATUS = {}
+
+
 def fetch(url):
     last = None
     for _ in range(3):
@@ -39,10 +42,18 @@ def from_api():
 
 def from_csv():
     txt = fetch("https://raw.githubusercontent.com/coinmetrics/data/master/csv/btc.csv")
+    rd = csv.DictReader(io.StringIO(txt))
+    cols = rd.fieldnames or []
+    STATUS["csv_columns"] = [c for c in cols if c.startswith(("Cap", "Sply", "Price", "time"))][:30]
     rows = []
-    for d in csv.DictReader(io.StringIO(txt)):
+    for d in rd:
         try:
-            rows.append((d["time"][:10], float(d["PriceUSD"]), float(d["CapRealUSD"]) / float(d["SplyCur"])))
+            price = float(d["PriceUSD"])
+            if d.get("CapRealUSD") and d.get("SplyCur"):
+                real = float(d["CapRealUSD"]) / float(d["SplyCur"])
+            else:                                   # realized price = price / MVRV
+                real = price / float(d["CapMVRVCur"])
+            rows.append((d["time"][:10], price, real))
         except (KeyError, TypeError, ValueError, ZeroDivisionError):
             pass
     return rows
@@ -69,8 +80,34 @@ def from_bitcoin_data():
     return [(d, px[d], rp[d]) for d in sorted(rp) if d in px and rp[d] > 0]
 
 
+def extend_to_today(rows):
+    """The free sources lag by days. Fill the gap with Bitstamp daily closes (realized price carried forward, it moves ~0.1%/day), then today's live price."""
+    try:
+        last_d, _, last_r = rows[-1]
+        STATUS["realized_as_of"] = last_d
+        have = {d for d, _, _ in rows}
+        c = json.loads(fetch("https://www.bitstamp.net/api/v2/ohlc/btcusd/?step=86400&limit=60")).get("data", {}).get("ohlc", [])
+        add = []
+        for x in c:
+            d = datetime.fromtimestamp(int(x["timestamp"]), timezone.utc).strftime("%Y-%m-%d")
+            if d > last_d and d not in have:
+                add.append((d, float(x["close"]), last_r))
+        rows = rows + sorted(add)
+        t = json.loads(fetch("https://www.bitstamp.net/api/v2/ticker/btcusd/"))
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        live = float(t["last"])
+        if rows[-1][0] == today:
+            rows[-1] = (today, live, rows[-1][2])
+        else:
+            rows.append((today, live, rows[-1][2]))
+        STATUS["extended_to"] = today
+    except Exception as e:  # noqa
+        STATUS["extend"] = "failed: " + str(e)[:120]
+    return rows
+
+
 def main():
-    status = {}
+    status = STATUS
     rows = []
     for fn, need in ((from_api, 2000), (from_csv, 2000), (from_bitcoin_data, 1000)):
         try:
@@ -87,12 +124,13 @@ def main():
         print("No usable data, keeping the old file.")
         return
     rows.sort()
+    rows = extend_to_today(rows)
     last_date = rows[-1][0]
     cut = max(0, len(rows) - 400)
     series = [[d, round(p, 2), round(r, 2)] for i, (d, p, r) in enumerate(rows) if i >= cut or i % 7 == 0]
     price, real = rows[-1][1], rows[-1][2]
     out = {"updated": datetime.now(timezone.utc).isoformat(timespec="seconds"), "as_of": last_date, "price": round(price, 2),
-           "realized": round(real, 2), "mvrv": round(price / real, 3), "series": series}
+           "realized": round(real, 2), "realized_as_of": status.get("realized_as_of", last_date), "mvrv": round(price / real, 3), "series": series}
     json.dump(out, open(os.path.join(ROOT, "btc_realized.json"), "w"), separators=(",", ":"))
     print("saved", last_date, out["price"], out["realized"], len(series), "points")
 

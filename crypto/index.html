@@ -5747,8 +5747,10 @@ window.ttmLuna = {cycles: CY, phaseNow};
   window.addEventListener('resize', function(){ draw(null); });
   fetch('../btc_realized.json?t=' + Math.floor(Date.now() / 600000), {cache: 'no-store'}).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }).then(function(d){
     var st = document.getElementById('rpStatus'); if(!d || !d.series){ st.textContent = 'Realized price data is not available yet. It is built automatically every few hours.'; return; } D = d;
-    var rel = (d.price / d.realized - 1) * 100; st.innerHTML = 'BTC <b>' + fmt(d.price) + '</b> &middot; realized price <b style="color:#3fb97a">' + fmt(d.realized) + '</b> &middot; <b style="color:' + (rel < 0 ? '#e0554d' : '#3fb97a') + '">' + (rel >= 0 ? '+' : '') + rel.toFixed(1) + '%</b> vs realized &middot; MVRV ' + d.mvrv.toFixed(2) + ' &middot; as of ' + d.as_of;
-    draw(null); var sec = document.getElementById('btcrealized'); if(window.ResizeObserver) new ResizeObserver(function(){ draw(null); }).observe(cv);
+    function paintStatus(){ var rel = (d.price / d.realized - 1) * 100; st.innerHTML = 'BTC <b>' + fmt(d.price) + '</b> <span style="opacity:.7">(live)</span> &middot; realized price <b style="color:#3fb97a">' + fmt(d.realized) + '</b> &middot; <b style="color:' + (rel < 0 ? '#e0554d' : '#3fb97a') + '">' + (rel >= 0 ? '+' : '') + rel.toFixed(1) + '%</b> vs realized &middot; MVRV ' + (d.price / d.realized).toFixed(2) + ' &middot; realized price as of ' + (d.realized_as_of || d.as_of); }
+    paintStatus(); draw(null); if(window.ResizeObserver) new ResizeObserver(function(){ draw(null); }).observe(cv);
+    function live(){ fetch('https://api.exchange.coinbase.com/products/BTC-USD/ticker').then(function(r){ return r.json(); }).then(function(t){ var px = +t.price; if(!(px > 0)) return; d.price = px; var last = d.series[d.series.length - 1], today = new Date().toISOString().slice(0, 10); if(last[0] === today){ last[1] = px; } else { d.series.push([today, px, last[2]]); } paintStatus(); draw(null); }).catch(function(){}); }
+    live(); setInterval(live, 60000);
   });
 })();
 </script>
