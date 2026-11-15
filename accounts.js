@@ -160,12 +160,13 @@ function can(key){
   if(PROF && PROF.team && a.indexOf('team') >= 0) return true;
   return a.indexOf(plan) >= 0 || a.indexOf('free') >= 0;
 }
+const buyBtn = key => { if(!USER || !BILL) return ''; const p = key === 'c:ttmcharts' ? 'lens' : (needText(key).split(' or ')[0] === 'Premium' ? 'premium' : 'pro'); return `<button class="ttm-btn" id="lockBuy" data-p="${p}">${p === 'lens' ? 'Get TTM LENS' : 'Upgrade to ' + (p === 'pro' ? 'Pro' : 'Premium')}</button> `; };
 const needText = key => { const a = (SET.access[key] || []).filter(x => x !== 'pro' && x !== 'beta'); const l = a.length ? a.map(pname) : []; return (l.length ? l.join(' or ') + ' or ' : '') + 'Pro'; };
 function upsell(key){
   track('lock', TERM + '|feat:' + key);
   const label = (CAT.find(c => c[0] === key) || [0, key, 0])[1].replace(/^(Crypto|TradFi) · /, '');
   if(SET.wall && !USER){ openAuth('<p>Sign in to continue. It is free and takes a minute.</p>' + signInForm()); return; }
-  openAuth(USER ? `<p><b>${e(label)}</b> is included with the <b>${e(needText(key))}</b> plan. You are on <b>${e(pname(PROF.plan))}</b>. Paid plans are not open for self-sign-up yet. Send TTM a direct message to ask.</p><div class="row"><button class="ttm-btn" id="lockDm">Direct Message TTM</button><button class="ttm-btn ghost" id="authClose">Close</button></div>`
+  openAuth(USER ? `<p><b>${e(label)}</b> ${key === 'c:ttmcharts' ? 'is for members with a TTM LENS pass.' : 'is included with the <b>' + e(needText(key)) + '</b> plan.'} You are on <b>${e(pname(PROF.plan))}</b>. ${BILL ? '' : 'Paid plans are not open for self-sign-up yet. '}Send TTM a direct message to ask.</p><div class="row">${buyBtn(key)}<button class="ttm-btn ghost" id="lockDm">Direct Message TTM</button><button class="ttm-btn ghost" id="authClose">Close</button></div>`
     : `<p><b>${e(label)}</b> is included with the <b>${e(needText(key))}</b> plan. Sign in to continue.</p>` + signInForm());
 }
 window.ttmMyPush = async (key, title, body) => { if(!USER) return false; const r = await api('/rest/v1/ttm_my_alerts?on_conflict=user_id,ukey', {method: 'POST', headers: {Prefer: 'resolution=ignore-duplicates,return=minimal'}, body: JSON.stringify({user_id: USER.id, ukey: key, title, body})}); return r.ok; };
@@ -222,6 +223,7 @@ const closeAuth = () => modal.classList.remove('open');
 document.addEventListener('click', async ev => {
   const t = ev.target; if(!t || !t.id && !t.closest) return;
   if(t.id === 'acctBtn'){ if(!USER) openAuth(); else if(TERM === 'home'){ const a = $('account'); if(a) a.scrollIntoView({behavior: 'smooth'}); } else location.href = BASE + 'index.html#account'; }
+  else if(t.id === 'lockBuy'){ closeAuth(); payOpen(t.dataset.p || 'premium'); }
   else if(t.id === 'lockDm'){ closeAuth(); const cb = $('ttmChatBtn'); if(cb) cb.click(); }
   else if(t.id === 'authClose' || t === modal) closeAuth();
   else if(t.id === 'memSignIn' || t.id === 'lockSignIn' || t.id === 'wallSignIn') openAuth();
@@ -368,7 +370,7 @@ function applyGates(){
     if(lock){ const title = (sec.querySelector('h2') || {}).textContent || 'This section';
       if(!lp){ lp = document.createElement('div'); lp.className = 'lock-panel'; wrap.insertBefore(lp, wrap.firstChild); }
       lp.innerHTML = SET.wall && !USER ? `<h3>Sign in to continue</h3><p>Create a free TTM account, or sign in, to open the terminal.</p><button class="ttm-btn" id="lockSignIn">Sign in / create free account</button>`
-        : `<h3>🔒 ${e(title)}</h3><p>This section is included with the <b>${e(needText(key))}</b> plan.${USER ? ` You are on <b>${e(pname(PROF.plan))}</b>. Paid plans are not open for self-sign-up yet.` : ' Sign in to see what your plan includes.'}</p>${USER ? '<button class="ttm-btn" id="lockDm">Direct Message TTM</button>' : '<button class="ttm-btn" id="lockSignIn">Sign in / create free account</button>'}`; }
+        : `<h3>🔒 ${e(title)}</h3><p>${key === 'c:ttmcharts' ? 'TTM LENS is for members with a TTM LENS pass, or members TTM has given access to.' : 'This section is included with the <b>' + e(needText(key)) + '</b> plan.'}${USER ? ` You are on <b>${e(pname(PROF.plan))}</b>.${BILL ? '' : ' Paid plans are not open for self-sign-up yet.'}` : ' Sign in to see what your plan includes.'}</p>${USER ? buyBtn(key) + '<button class="ttm-btn ghost" id="lockDm">Direct Message TTM</button>' : '<button class="ttm-btn" id="lockSignIn">Sign in / create free account</button>'}`; }
     else if(lp) lp.remove();
     betaMark(sec, key, wrap, !lock && betaKey(key));
     const offAll = lock && (SET.access[key] || []).filter(x => x !== 'beta').length === 0; document.querySelectorAll(`a[href="#${sec.id}"]`).forEach(a => { if(lock) a.setAttribute('data-lk', '1'); else a.removeAttribute('data-lk'); if(offAll || (lock && freeHide())) a.setAttribute('data-hid', '1'); else a.removeAttribute('data-hid'); });
