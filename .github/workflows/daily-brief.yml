@@ -2,9 +2,9 @@ name: Daily market brief
 
 on:
   schedule:
-    # 20:05 and 21:05 UTC (summer / winter): the script only sends in the 7am hour Melbourne time (summer and winter)
-    - cron: "5 20 * * *"
-    - cron: "5 21 * * *"
+    # hourly 19:05 to 23:05 UTC: the script only writes once a day, between 7am and 11am Melbourne time (summer and winter),
+    # so if GitHub starts one run late or skips it, the next one catches up
+    - cron: "5 19,20,21,22,23 * * *"
   workflow_dispatch:
     inputs:
       force:

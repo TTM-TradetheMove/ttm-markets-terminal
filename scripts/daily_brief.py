@@ -198,8 +198,8 @@ def send(text):
 def main():
     prev = load("daily_brief.json") or {}
     if not FORCE and not DRY:
-        if MNOW.hour != 7:
-            print("Not 7am in Melbourne, skipping.")
+        if not 7 <= MNOW.hour <= 11:       # 7am on time, or a catch-up run if GitHub started the schedule late
+            print("Not the 7am to 11am window in Melbourne, skipping.")
             return
         if prev.get("date") == MNOW.strftime("%Y-%m-%d") and prev.get("sent") is not None:
             print("Already sent today.")
