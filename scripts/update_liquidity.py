@@ -61,4 +61,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception:
+        import traceback
+        T.keep_old("crashed: " + traceback.format_exc()[-900:], STATUS)
