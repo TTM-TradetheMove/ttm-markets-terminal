@@ -41,17 +41,26 @@ def alt_tga():
 
 
 def alt_rrp():
-    """Overnight reverse repo take-up, daily, $ billions (NY Fed)"""
-    out = {}
-    for y in range(int(START[:4]), date.today().year + 1):
-        j = T.getj(f"https://markets.newyorkfed.org/api/rp/reverserepo/all/results/search.json?startDate={y}-01-01&endDate={y}-12-31", timeout=45)
+    """Overnight reverse repo take-up, daily, $ billions (NY Fed). Tries a few of its address styles."""
+    today = date.today().isoformat()
+    urls = [f"https://markets.newyorkfed.org/api/rp/results/search.json?startDate={START}&endDate={today}&operationTypes=Reverse%20Repo",
+            f"https://markets.newyorkfed.org/api/rp/results/search.json?startDate={START}&endDate={today}",
+            "https://markets.newyorkfed.org/api/rp/reverserepo/all/results/last/2000.json",
+            "https://markets.newyorkfed.org/api/rp/reverserepo/all/results/last/1000.json"]
+    for u in urls:
+        j = T.getj(u, timeout=60, tries=1, headers={"Accept": "application/json"})
+        out = {}
         for o in ((j or {}).get("repo") or {}).get("operations") or []:
             try:
-                out[o["operationDate"]] = out.get(o["operationDate"], 0) + float(o["totalAmtAccepted"]) / 1e9
+                if "everse" in str(o.get("operationType", "Reverse")):
+                    out[o["operationDate"]] = out.get(o["operationDate"], 0) + float(o["totalAmtAccepted"]) / 1e9
             except (KeyError, TypeError, ValueError):
                 pass
-    T.log("nyfed RRP: %d rows" % len(out))
-    return sorted((d, round(v, 1)) for d, v in out.items() if d >= START)
+        if len(out) > 20:
+            T.log("nyfed RRP: %d rows via %s" % (len(out), u[-60:]))
+            return sorted((d, round(v, 1)) for d, v in out.items() if d >= START)
+    T.log("nyfed RRP: no usable response")
+    return []
 
 
 def alt_fed():
@@ -72,15 +81,18 @@ def alt_fed():
 
 def alt_ecb():
     """Eurosystem total assets, weekly, EUR millions (ECB)"""
-    txt = T.get(f"https://data-api.ecb.europa.eu/service/data/ILM/W.U2.C.T000000.Z5.Z01.E?startPeriod={START}&format=csvdata", timeout=45)
-    out = []
-    for r in csv.DictReader(io.StringIO(txt or "")):
-        try:
-            out.append((r["TIME_PERIOD"][:10], float(r["OBS_VALUE"])))
-        except (KeyError, ValueError):
-            pass
-    T.log("ecb assets: %d rows" % len(out))
-    return sorted(out)
+    for key in ("W.U2.C.T000000.Z5.Z01.E", "W.U2.C.T000000.Z5.Z01"):
+        txt = T.get(f"https://data-api.ecb.europa.eu/service/data/ILM/{key}?startPeriod={START}&format=csvdata", timeout=45, tries=2, headers={"Accept": "text/csv"})
+        out = []
+        for r in csv.DictReader(io.StringIO(txt or "")):
+            try:
+                out.append((r["TIME_PERIOD"][:10], float(r["OBS_VALUE"])))
+            except (KeyError, ValueError):
+                pass
+        T.log("ecb assets %s: %d rows%s" % (key, len(out), "" if out else " (reply starts: %r)" % (txt or "")[:120]))
+        if len(out) > 5:
+            return sorted(out)
+    return []
 
 
 def first(*fs):
