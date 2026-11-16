@@ -24,13 +24,15 @@ def chg(vals, n):
 
 
 def main():
-    wal, tga, rrp = T.fred("WALCL", START), T.fred("WTREGEN", START), T.fred("RRPONTSYD", START)
+    got = T.parallel({"WALCL": lambda: T.fred("WALCL", START), "WTREGEN": lambda: T.fred("WTREGEN", START), "RRPONTSYD": lambda: T.fred("RRPONTSYD", START),
+                      "ECB": lambda: T.fred("ECBASSETSW", START), "BOJ": lambda: T.fred("JPNASSETS", START), "M2": lambda: T.fred("M2SL", "2018-01-01"),
+                      "EUR": lambda: T.yahoo_daily("EURUSD=X", "5y"), "JPY": lambda: T.yahoo_daily("JPY=X", "5y"),
+                      "BTC": lambda: T.yahoo_daily("BTC-USD", "max"), "SPX": lambda: T.yahoo_daily("^GSPC", "10y")})
+    T.log("rows: " + ", ".join(f"{k}={len(v)}" for k, v in got.items()))
+    wal, tga, rrp, ecb, boj, m2, eur, jpy, btc, spx = (got[k] for k in ("WALCL", "WTREGEN", "RRPONTSYD", "ECB", "BOJ", "M2", "EUR", "JPY", "BTC", "SPX"))
     if len(wal) < 20 or len(tga) < 20:
-        T.keep_old("FRED liquidity series unavailable; kept previous file", STATUS)
+        T.keep_old("FRED liquidity series unavailable (WALCL %d rows, WTREGEN %d); kept previous file" % (len(wal), len(tga)), STATUS)
         return
-    ecb, boj, m2 = T.fred("ECBASSETSW", START), T.fred("JPNASSETS", START), T.fred("M2SL", "2018-01-01")
-    eur, jpy = T.yahoo_daily("EURUSD=X", "5y"), T.yahoo_daily("JPY=X", "5y")
-    btc, spx = T.yahoo_daily("BTC-USD", "max"), T.yahoo_daily("^GSPC", "10y")
     rows = []
     for d, w in wal:
         if d < FROM:

@@ -53,7 +53,7 @@ def yahoo_daily(sym, rng="1y"):
 
 def fred(sid, start="2020-01-01"):
     """-> [(date, value)] oldest first"""
-    t = get(f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={sid}&cosd={start}")
+    t = get(f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={sid}&cosd={start}", timeout=60, tries=2)   # FRED is slow from cloud IPs
     out = []
     for ln in (t or "").strip().splitlines()[1:]:
         d, _, v = ln.partition(",")
@@ -62,6 +62,21 @@ def fred(sid, start="2020-01-01"):
         except ValueError:
             pass
     return out
+
+
+def parallel(jobs, workers=8):
+    """jobs = {name: callable}; runs them at the same time -> {name: result}"""
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        futs = {k: ex.submit(f) for k, f in jobs.items()}
+        out = {}
+        for k, f in futs.items():
+            try:
+                out[k] = f.result()
+            except Exception as e:
+                log(f"  job {k} failed: {type(e).__name__}")
+                out[k] = []
+        return out
 
 
 def now_iso():
