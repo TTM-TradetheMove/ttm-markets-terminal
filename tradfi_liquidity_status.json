@@ -1,0 +1,20 @@
+{
+ "generated_at": "2026-11-16T09:01:55+00:00",
+ "error": "FRED liquidity series unavailable (WALCL 0 rows, WTREGEN 0); kept previous file",
+ "log_tail": [
+  "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=JPNASSETS&cosd=2019-06-01 (TimeoutError ) try 1",
+  "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=WALCL&cosd=2019-06-01 (TimeoutError ) try 1",
+  "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=ECBASSETSW&cosd=2019-06-01 (TimeoutError ) try 1",
+  "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=M2SL&cosd=2018-01-01 (TimeoutError ) try 1",
+  "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=RRPONTSYD&cosd=2019-06-01 (TimeoutError ) try 1",
+  "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=WTREGEN&cosd=2019-06-01 (TimeoutError ) try 1",
+  "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=WTREGEN&cosd=2019-06-01 (TimeoutError ) try 2",
+  "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=ECBASSETSW&cosd=2019-06-01 (TimeoutError ) try 2",
+  "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=WALCL&cosd=2019-06-01 (TimeoutError ) try 2",
+  "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=JPNASSETS&cosd=2019-06-01 (TimeoutError ) try 2",
+  "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=RRPONTSYD&cosd=2019-06-01 (TimeoutError ) try 2",
+  "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=M2SL&cosd=2018-01-01 (TimeoutError ) try 2",
+  "rows: WALCL=0, WTREGEN=0, RRPONTSYD=0, ECB=0, BOJ=0, M2=0, EUR=1300, JPY=1300, BTC=147, SPX=2514",
+  "FRED liquidity series unavailable (WALCL 0 rows, WTREGEN 0); kept previous file"
+ ]
+}
