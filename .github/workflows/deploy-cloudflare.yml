@@ -1,0 +1,32 @@
+name: Deploy to Cloudflare
+# Publishes the site to Cloudflare (Workers static assets). Runs on every code push, every 15 minutes
+# (so the data files the other jobs commit go live), and by hand. Needs two repo secrets:
+# CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+  workflow_dispatch:
+concurrency:
+  group: cloudflare-deploy
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare site folder
+        run: |
+          mkdir _site
+          rsync -a --exclude '.git' --exclude '.github' --exclude '_site' --exclude 'scripts' --exclude 'node_modules' --exclude 'wrangler.jsonc' ./ _site/
+          printf '/*.json\n  Cache-Control: no-cache\n/*.html\n  Cache-Control: no-cache\n/*.js\n  Cache-Control: public, max-age=300\n' > _site/_headers
+      - name: Deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then echo "Cloudflare secrets not set yet, skipping."; exit 0; fi
+          npx --yes wrangler@4 deploy
