@@ -17,7 +17,14 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MEL = ZoneInfo("Australia/Melbourne")
 DRY = os.environ.get("DRY_RUN", "0") == "1"
 FORCE = os.environ.get("FORCE", "0") == "1"
-SITE = "https://ttm-tradethemove.github.io/ttm-markets-terminal/"
+def _site():
+    try:
+        import os
+        u = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'site.txt')).read().strip()
+        return (u.rstrip('/') + '/') if u.startswith('http') else None
+    except Exception:
+        return None
+SITE = (_site() or "https://ttm-tradethemove.github.io/ttm-markets-terminal/")
 e = html.escape
 NOW = datetime.now(timezone.utc)
 MNOW = NOW.astimezone(MEL)

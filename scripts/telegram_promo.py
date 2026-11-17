@@ -8,7 +8,14 @@ Env: PROMO_THREAD_ID (overrides the topic for this post), PROMO_CAPTION (overrid
 import json, os, sys, uuid, urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SITE = "https://ttm-tradethemove.github.io/ttm-markets-terminal/"
+def _site():
+    try:
+        import os
+        u = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'site.txt')).read().strip()
+        return (u.rstrip('/') + '/') if u.startswith('http') else None
+    except Exception:
+        return None
+SITE = (_site() or "https://ttm-tradethemove.github.io/ttm-markets-terminal/")
 CAPTION = os.environ.get("PROMO_CAPTION") or (
     "🚀 <b>TTM Markets Terminal is open for early access</b>\n\n"
     "Live data, key levels and the events that move price. Crypto and TradFi in one place.\n\n"

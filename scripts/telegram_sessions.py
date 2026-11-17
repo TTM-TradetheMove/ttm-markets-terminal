@@ -21,7 +21,14 @@ from zoneinfo import ZoneInfo
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATE = os.path.join(ROOT, "telegram_state.json")
-SITE = "https://ttm-tradethemove.github.io/ttm-markets-terminal/crypto/?only=tradinghours"
+def _site():
+    try:
+        import os
+        u = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'site.txt')).read().strip()
+        return (u.rstrip('/') + '/') if u.startswith('http') else None
+    except Exception:
+        return None
+SITE = (_site() or "https://ttm-tradethemove.github.io/ttm-markets-terminal/") + "crypto/?only=tradinghours"
 HEADSUP = int(os.environ.get("HEADSUP_MIN", "10"))
 WEEKENDS = os.environ.get("INCLUDE_WEEKENDS", "0") == "1"
 MAX_LOOKBACK = timedelta(hours=3)   # GitHub's cron can skip hours, so catch up on what was missed  # never replay more than this after an outage

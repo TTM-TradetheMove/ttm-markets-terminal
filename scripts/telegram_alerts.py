@@ -18,7 +18,14 @@ from zoneinfo import ZoneInfo
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATE = os.path.join(ROOT, "telegram_alerts_state.json")
-SITE = "https://ttm-tradethemove.github.io/ttm-markets-terminal/"
+def _site():
+    try:
+        import os
+        u = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'site.txt')).read().strip()
+        return (u.rstrip('/') + '/') if u.startswith('http') else None
+    except Exception:
+        return None
+SITE = (_site() or "https://ttm-tradethemove.github.io/ttm-markets-terminal/")
 
 
 def page(sec, area="crypto"):

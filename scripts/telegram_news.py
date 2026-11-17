@@ -23,7 +23,14 @@ SOURCES = set((os.environ.get("NEWS_SOURCES") or "crypto,trump,central,macro").s
 MAX_AGE = float(os.environ.get("MAX_AGE_H") or 12) * 3600
 MAX_PER_RUN = int(os.environ.get("MAX_PER_RUN") or 6)
 e = html.escape
-SITE = "https://ttm-tradethemove.github.io/ttm-markets-terminal/"
+def _site():
+    try:
+        import os
+        u = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'site.txt')).read().strip()
+        return (u.rstrip('/') + '/') if u.startswith('http') else None
+    except Exception:
+        return None
+SITE = (_site() or "https://ttm-tradethemove.github.io/ttm-markets-terminal/")
 
 
 def ttm(sec, area="crypto"):

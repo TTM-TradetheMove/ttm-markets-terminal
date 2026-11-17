@@ -24,7 +24,14 @@ ALL_MEMBERS = _M.lower() == "all"
 MEMBERS = [] if ALL_MEMBERS else [tuple(x.strip().lower() for x in m.split(":", 1)) for m in _M.split(";") if ":" in m]
 MAX_PER_RUN = int(os.environ.get("MAX_PER_RUN") or 8)
 UA = {"User-Agent": "Mozilla/5.0 (compatible; TTMMarketsTerminalBot/1.0)"}
-SITE = "https://ttm-tradethemove.github.io/ttm-markets-terminal/"
+def _site():
+    try:
+        import os
+        u = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'site.txt')).read().strip()
+        return (u.rstrip('/') + '/') if u.startswith('http') else None
+    except Exception:
+        return None
+SITE = (_site() or "https://ttm-tradethemove.github.io/ttm-markets-terminal/")
 e = html.escape
 
 

@@ -8,7 +8,14 @@ import json, os, sys, urllib.parse, urllib.request, datetime as dt
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATE = os.path.join(ROOT, "telegram_spotfeed_state.json")
-SITE = "https://ttm-tradethemove.github.io/ttm-markets-terminal/"
+def _site():
+    try:
+        import os
+        u = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'site.txt')).read().strip()
+        return (u.rstrip('/') + '/') if u.startswith('http') else None
+    except Exception:
+        return None
+SITE = (_site() or "https://ttm-tradethemove.github.io/ttm-markets-terminal/")
 DELAY_DAYS = 14
 ICON = {"buy": "🟢", "lo": "🕒", "fill": "✅", "tp": "🎯", "sell": "🔴", "part": "🟠"}
 
