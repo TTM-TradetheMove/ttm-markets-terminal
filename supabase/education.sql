@@ -47,3 +47,7 @@ language sql stable security definer set search_path = public as $$
   from public.ttm_lessons where id = p_id
 $$;
 grant execute on function public.ttm_lesson_video(bigint) to authenticated;
+
+-- Zoom recording links (added later): lets a lesson be a Zoom share link, still handed out only to the right plan
+alter table public.ttm_lessons drop constraint if exists ttm_lessons_provider_check;
+alter table public.ttm_lessons add constraint ttm_lessons_provider_check check (provider in ('youtube', 'stream', 'zoom'));
