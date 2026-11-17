@@ -195,15 +195,23 @@ def send(text):
         return False
 
 
+def status(result, err=None):
+    try:
+        json.dump({"ran_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(), "melbourne": MNOW.strftime("%Y-%m-%d %H:%M"), "force": bool(FORCE), "dry": bool(DRY), "result": result, "error": err},
+                  open(os.path.join(ROOT, "daily_brief_status.json"), "w"), indent=1)
+    except Exception as ex:
+        print("could not write status:", ex)
+
+
 def main():
     prev = load("daily_brief.json") or {}
     if not FORCE and not DRY:
         if not 7 <= MNOW.hour <= 11:       # 7am on time, or a catch-up run if GitHub started the schedule late
             print("Not the 7am to 11am window in Melbourne, skipping.")
-            return
+            return status("skipped: outside 7-11am Melbourne")
         if prev.get("date") == MNOW.strftime("%Y-%m-%d") and prev.get("sent") is not None:
             print("Already sent today.")
-            return
+            return status("skipped: today's brief already written")
     b = build()
     ok = send(telegram_text(b))   # Telegram is off unless SEND_TELEGRAM=1; the brief always goes to the terminal
     b["sent"] = bool(ok)
@@ -211,7 +219,13 @@ def main():
         return
     json.dump(b, open(os.path.join(ROOT, "daily_brief.json"), "w"), indent=1, ensure_ascii=False)
     print("brief saved for the terminal; telegram", "sent" if ok else "off")
+    status("written for " + str(b.get("date")))
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception:
+        import traceback
+        status("crashed", traceback.format_exc()[-900:])
+        raise
