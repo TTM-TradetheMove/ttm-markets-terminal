@@ -208,10 +208,10 @@ def main():
     if not FORCE and not DRY:
         if not 7 <= MNOW.hour <= 11:       # 7am on time, or a catch-up run if GitHub started the schedule late
             print("Not the 7am to 11am window in Melbourne, skipping.")
-            return status("skipped: outside 7-11am Melbourne")
+            return   # quiet: the hourly catch-up triggers would otherwise commit every time
         if prev.get("date") == MNOW.strftime("%Y-%m-%d") and prev.get("sent") is not None:
             print("Already sent today.")
-            return status("skipped: today's brief already written")
+            return
     b = build()
     ok = send(telegram_text(b))   # Telegram is off unless SEND_TELEGRAM=1; the brief always goes to the terminal
     b["sent"] = bool(ok)

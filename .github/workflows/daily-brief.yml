@@ -6,6 +6,11 @@ on:
     # so if GitHub starts one run late or skips it, the next one catches up
     - cron: "17 19,20,21,22,23 * * *"
     - cron: "47 19,20,21,22,23 * * *"
+  # Backup trigger: GitHub sometimes never starts scheduled runs, so also run after every "Update social pulse" job (about every 10 minutes).
+  # The script only writes once a day, in the 7am to 11am Melbourne window, so the extra runs do nothing the rest of the day.
+  workflow_run:
+    workflows: ["Update social pulse"]
+    types: [completed]
   workflow_dispatch:
     inputs:
       force:
