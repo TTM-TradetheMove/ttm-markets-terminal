@@ -1,7 +1,7 @@
-social run 2026-11-16T23:14:47.963783+00:00
+social run 2026-11-17T05:07:27.263091+00:00
+truth: 80 posts seen, 9 key (crypto/market) kept
   GET fail https://syndication.twitter.com/srv/timeline-profile/screen-name/elonmusk?showReplies=fals -> HTTPError: HTTP Error 429: Too Many Requests
   rate limited (429) - waiting 25s then one retry
-truth: 80 posts seen, 10 key (crypto/market) kept
 news Decrypt: 39 items
 news Cointelegraph: 30 items
 news The Block: 20 items
@@ -27,4 +27,4 @@ x @saylor: via None, 0 fetched, 0 key, 8 kept
   rate limited (429) - waiting 25s then one retry
   GET fail https://cdn.syndication.twimg.com/srv/timeline-profile/screen-name/VitalikButerin?showRepl -> HTTPError: HTTP Error 429: Too Many Requests
 x @VitalikButerin: via None, 0 fetched, 0 key, 8 kept
-wrote social_data.json: truth=10, x accounts with posts=0/9; 164s
+wrote social_data.json: truth=9, x accounts with posts=0/9; 164s
