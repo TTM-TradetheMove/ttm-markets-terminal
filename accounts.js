@@ -1348,7 +1348,7 @@ function rmFiltPaint(){ document.querySelectorAll('#rmFilt [data-rmf]').forEach(
 function rmTabs(){ rmFiltPaint(); document.querySelectorAll('#rmTabs [data-rmtab]').forEach(b => { const k = b.dataset.rmtab; b.classList.toggle('active', k === RM.room); const lab = (ROOMS.find(r => r[0] === k) || [0, k])[1] + (rmCan(k) ? '' : ' 🔒') + (RMU[k] && k !== RM.room ? ` (${RMU[k]})` : ''); if(b.textContent !== lab) b.textContent = lab; }); }
 function rmPick(r){ if(!rmCan(r)){ const n = $('rmNote'); if(n) n.textContent = 'The ' + (ROOMS.find(x => x[0] === r) || [0, r])[1] + ' room is for ' + needText('room:' + r) + ' members.'; return; } RM.room = r; RM.sig = ''; document.querySelectorAll('.rmToBox').forEach(c => { c.checked = c.value === r; }); rmTabs(); const l = $('rmList'); if(l) l.innerHTML = ''; rmLoad(true); }
 async function rmLoad(force){
-  if(!rmBuild()) return; if(!RM.room){ RM.room = (ROOMS.find(r => rmCan(r[0])) || ['free'])[0]; document.querySelectorAll('.rmToBox').forEach(c => { c.checked = c.value === RM.room; }); rmTabs(); }
+  if(!rmBuild()) return; if(!RM.room){ RM.room = (ROOMS.slice().reverse().find(r => rmCan(r[0])) || ['free'])[0]; document.querySelectorAll('.rmToBox').forEach(c => { c.checked = c.value === RM.room; }); rmTabs(); }
   if(RM.busy || RM.editing) return; RM.busy = true;
   try{
     const r = await api(`/rest/v1/ttm_room_msgs?select=*&room=eq.${RM.room}&order=id.desc&limit=80`);
