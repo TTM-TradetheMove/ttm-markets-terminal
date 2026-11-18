@@ -387,7 +387,8 @@ const LVLRANK = {free: 0, premium: 1, pro: 2, team: 3, beta: 4, soon: 5, off: 5}
 function lvlBadges(){
   if(TERM !== 'crypto' && TERM !== 'tradfi') return; const pre = TERM === 'crypto' ? 'c:' : 't:', show = on() && SET.charging;
   document.querySelectorAll('.lvl, .lvl-head').forEach(x => x.remove());
-  const grid = (Array.from(document.querySelectorAll('#menuHome h2')).find(h => /choose a section/i.test(h.textContent)) || {}).nextElementSibling;
+  let grid = (Array.from(document.querySelectorAll('#menuHome h2')).find(h => /choose a section/i.test(h.textContent)) || {}).nextElementSibling;
+  if(grid && TERM === 'crypto'){ const gs = Array.from(document.querySelectorAll('#menuHome .menu-grid')); if(gs.length > 1 && !grid.dataset.merged){ let o = 0; gs.filter(g => g !== grid).concat([grid]).forEach(g => Array.from(g.querySelectorAll(':scope > .menu-tile')).forEach(x => { if(x.dataset.ord == null || g !== grid) x.dataset.ord = o; o++; if(g !== grid) grid.appendChild(x); })); grid.dataset.merged = 1; gs.forEach(g => { if(g === grid) return; const h = g.previousElementSibling; if(h && h.tagName === 'H2' && !h.classList.contains('mkt-h2')) h.style.display = 'none'; g.style.display = 'none'; }); } }
   if(grid){ const t = Array.from(grid.querySelectorAll(':scope > .menu-tile')); t.forEach((x, i) => { if(x.dataset.ord == null) x.dataset.ord = i; }); t.sort((x, y) => x.dataset.ord - y.dataset.ord).forEach(x => grid.appendChild(x)); }
   if(!show) return;
   const mk = (t, c) => { const s = document.createElement('small'); s.className = 'lvl lvl-' + c; s.textContent = t; return s; };
