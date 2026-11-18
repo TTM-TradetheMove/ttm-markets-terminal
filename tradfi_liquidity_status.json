@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-17T16:20:10+00:00",
- "bytes": 38118,
+ "generated_at": "2026-11-18T01:06:14+00:00",
+ "bytes": 38104,
  "log_tail": [
   "nyfed SOMA: 389 rows",
-  "nyfed RRP: 1862 rows via =2019-06-01&endDate=2026-11-17&operationTypes=Reverse%20Repo",
-  "fiscaldata TGA: 1735 rows",
+  "nyfed RRP: 1863 rows via =2019-06-01&endDate=2026-11-18&operationTypes=Reverse%20Repo",
+  "fiscaldata TGA: 1736 rows",
   "  fetch failed https://data-api.ecb.europa.eu/service/data/ILM/W.U2.C.T000000.Z5.Z01.E?startPeriod=2019-0 (HTTPError 400) try 1",
   "  fetch failed https://data-api.ecb.europa.eu/service/data/ILM/W.U2.C.T000000.Z5.Z01.E?startPeriod=2019-0 (HTTPError 400) try 2",
   "ecb assets W.U2.C.T000000.Z5.Z01.E: 0 rows (reply starts: '')",
@@ -13,12 +13,12 @@
   "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=M2SL&cosd=2018-01-01 (TimeoutError ) try 1",
   "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=M2SL&cosd=2018-01-01 (TimeoutError ) try 2",
   "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=JPNASSETS&cosd=2019-06-01 (TimeoutError ) try 2",
-  "rows: WALCL=389, WTREGEN=1735, RRPONTSYD=1862, ECB=389, BOJ=0, M2=0, EUR=1300, JPY=1300, BTC=3653, SPX=2513"
+  "rows: WALCL=389, WTREGEN=1736, RRPONTSYD=1863, ECB=389, BOJ=0, M2=0, EUR=1300, JPY=1300, BTC=3652, SPX=2512"
  ],
  "weeks": 358,
  "last": "2026-11-10",
  "fed_src": "soma",
- "rrp_rows": 1862,
+ "rrp_rows": 1863,
  "have_ecb": true,
  "have_boj": false,
  "have_m2": false,
