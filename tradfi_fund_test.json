@@ -1,0 +1,87 @@
+{
+ "yahoo_crumb": {
+  "ok": false,
+  "secs": 0.3,
+  "error": "HTTP Error 429: Too Many Requests"
+ },
+ "yahoo_timeseries_AAPL": {
+  "ok": false,
+  "secs": 0.1,
+  "error": "HTTP Error 429: Too Many Requests"
+ },
+ "yahoo_timeseries_CBA.AX": {
+  "ok": false,
+  "secs": 0.0,
+  "error": "HTTP Error 429: Too Many Requests"
+ },
+ "yahoo_quote_batch": {
+  "ok": false,
+  "secs": 0.0,
+  "error": "no crumb"
+ },
+ "sec_companyfacts": {
+  "ok": true,
+  "secs": 0.2,
+  "sample": {
+   "entity": "Apple Inc.",
+   "tags": 512,
+   "hasGrossProfit": true
+  }
+ },
+ "sec_tickers": {
+  "ok": true,
+  "secs": 0.2,
+  "sample": {
+   "count": 10400
+  }
+ },
+ "nasdaq_screener_list": {
+  "ok": true,
+  "secs": 1.2,
+  "sample": {
+   "rows": 7278,
+   "first": {
+    "symbol": "A",
+    "name": "Agilent Technologies Inc. Common Stock",
+    "lastsale": "$172.97",
+    "netchange": "-0.99",
+    "pctchange": "-0.569%",
+    "volume": "1825512",
+    "marketCap": "48765233876.00",
+    "country": "United States",
+    "ipoyear": "1999",
+    "industry": "Biotechnology: Laboratory Analytical Instruments",
+    "sector": "Industrials",
+    "url": "/market-activity/stocks/a"
+   }
+  }
+ },
+ "wikipedia_sp500": {
+  "ok": true,
+  "secs": 0.2,
+  "sample": {
+   "len": 572422,
+   "hasAAPL": true
+  }
+ },
+ "asx_listed_csv": {
+  "ok": true,
+  "secs": 1.9,
+  "sample": {
+   "len": 106107,
+   "head": "ASX listed companies as at Wed Nov 18 18:22:54 AEDT 2026\n\nCompany name,ASX code,GICS industry group\n\"1414 DEGREES LIMITED\",\"14D\",\"Capital Goods\"\n\"29METALS LIMITED\",\"29M\",\"Materials\"\n\"333D LIMITED\",\"T3"
+  }
+ },
+ "congress_house": {
+  "ok": false,
+  "secs": 0.2,
+  "error": "HTTP Error 403: Forbidden"
+ },
+ "sec_form4_feed": {
+  "ok": true,
+  "secs": 0.2,
+  "sample": {
+   "len": 6060
+  }
+ }
+}
