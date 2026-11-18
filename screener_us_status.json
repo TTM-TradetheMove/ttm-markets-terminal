@@ -1,0 +1,33 @@
+{
+ "generated_at": "2026-11-18T07:30:32+00:00",
+ "bytes": 1029316,
+ "log_tail": [
+  "  CashAndCashEquivalentsAtCarryingValue CY2025Q4I: 5008",
+  "  Revenues CY2024: 2513",
+  "  RevenueFromContractWithCustomerExcludingAssessedTax CY2024: 2975",
+  "  fetch failed https://data.sec.gov/api/xbrl/frames/us-gaap/SalesRevenueNet/USD/CY2024.json (HTTPError 404) try 1",
+  "  fetch failed https://data.sec.gov/api/xbrl/frames/us-gaap/SalesRevenueNet/USD/CY2024.json (HTTPError 404) try 2",
+  "  SalesRevenueNet CY2024: 0",
+  "  RevenueFromContractWithCustomerIncludingAssessedTax CY2024: 759",
+  "  GrossProfit CY2024: 2637",
+  "  OperatingIncomeLoss CY2024: 5037",
+  "  NetIncomeLoss CY2024: 6085",
+  "  NetCashProvidedByUsedInOperatingActivities CY2024: 6208",
+  "  PaymentsToAcquirePropertyPlantAndEquipment CY2024: 3960",
+  "  PaymentsToAcquireProductiveAssets CY2024: 598",
+  "  InterestExpense CY2024: 1341",
+  "  InterestExpenseNonoperating CY2024: 443",
+  "  InterestExpenseDebt CY2024: 801",
+  "  InterestAndDebtExpense CY2024: 229",
+  "  PaymentsOfDividendsCommonStock CY2024: 1162",
+  "  PaymentsOfDividends CY2024: 946",
+  "  EarningsPerShareDiluted CY2024: 5551",
+  "  StockholdersEquity CY2024Q4I: 6045",
+  "  LongTermDebtNoncurrent CY2024Q4I: 1821",
+  "  LongTermDebt CY2024Q4I: 2219",
+  "  CashAndCashEquivalentsAtCarryingValue CY2024Q4I: 5162",
+  "screener rows 3095; skipped (no usable financials) 1450"
+ ],
+ "rows": 3095,
+ "skipped": 1450
+}
