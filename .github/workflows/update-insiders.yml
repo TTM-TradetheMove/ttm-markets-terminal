@@ -1,0 +1,39 @@
+name: Update insider trades
+
+on:
+  schedule:
+    - cron: "25 */4 * * *"
+  workflow_dispatch:
+  push:
+    paths:
+      - scripts/update_insiders.py
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-insiders
+  cancel-in-progress: false
+
+jobs:
+  insiders:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Read new Form 4 filings
+        run: timeout 26m python3 -u scripts/update_insiders.py || echo "failed; keeping previous"
+      - name: Commit
+        run: |
+          git config user.name "ttm-calendar-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add insiders_us.json 2>/dev/null || true
+          git add insiders_us_state.json 2>/dev/null || true
+          git add insiders_us_status.json 2>/dev/null || true
+          if git diff --cached --quiet; then echo "No changes"; else
+            git commit -m "Auto-update insider trades"
+            for i in 1 2 3 4; do git pull --rebase -X theirs origin main && git push && break; sleep 5; done
+          fi
