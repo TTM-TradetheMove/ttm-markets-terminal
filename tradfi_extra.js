@@ -133,7 +133,7 @@ loaders.screener = async function(){ const box = $('scBody'); let D; try{ D = aw
     draw2(); };
   draw(); };
 /* show admin-only links once we know who is signed in */
-(() => { let n = 0; const t = setInterval(() => { n++; try{ const w = window.ttmWho && window.ttmWho(); if(w && (w.admin || w.team)){ document.querySelectorAll('.adm-only').forEach(e => { e.style.display = ''; }); clearInterval(t); } }catch(e){} if(n > 40) clearInterval(t); }, 500); })();
+(() => { let n = 0; const t = setInterval(() => { n++; try{ const w = window.ttmWho && window.ttmWho(); if(w && (w.admin || w.team)){ document.querySelectorAll('.adm-only').forEach(e => { e.style.display = ''; }); if(window.ttmLvl) window.ttmLvl(); clearInterval(t); } }catch(e){} if(n > 40) clearInterval(t); }, 500); })();
 /* open a section's loader when its page is shown */
 Object.keys(loaders).forEach(k => {});
 const SEC = {screener: 'screener', earnings: 'earnings', liquidity: 'liquidity', crypto: 'crypto', commodities: 'commodities'}; window.TFX.SEC = SEC;
