@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-11-18T02:07:55.705227+00:00",
+  "generated_at": "2026-11-18T10:08:30.671668+00:00",
   "source": "https://nfs.faireconomy.media/ff_calendar_thisweek.json",
   "live_actuals_source": "https://www.forexfactory.com/calendar",
-  "months_scraped_at": "2026-11-18T02:07:55.705227+00:00",
+  "months_scraped_at": "2026-11-18T10:08:30.671668+00:00",
   "month_ahead_source": "https://www.financecalendar.com",
   "events": [
     {
@@ -6323,36 +6323,6 @@
     {
       "date": "09 Nov 2026",
       "dt": "2026-11-09",
-      "time": "MEL 5:00pm AEDT \u00b7 NY 1:00am EST \u00b7 LDN 6:00am GMT \u00b7 EU 7:00am CET",
-      "country": "EU",
-      "event": "ECOFIN Meetings",
-      "impact": "low",
-      "actual": "\u2014",
-      "forecast": "\u2014",
-      "previous": "\u2014",
-      "miss": false,
-      "bias": "neutral",
-      "upcoming": true,
-      "ts": 1794204000
-    },
-    {
-      "date": "09 Nov 2026",
-      "dt": "2026-11-09",
-      "time": "MEL 5:00pm AEDT \u00b7 NY 1:00am EST \u00b7 LDN 6:00am GMT \u00b7 EU 7:00am CET",
-      "country": "EU",
-      "event": "Eurogroup Meetings",
-      "impact": "low",
-      "actual": "\u2014",
-      "forecast": "\u2014",
-      "previous": "\u2014",
-      "miss": false,
-      "bias": "neutral",
-      "upcoming": true,
-      "ts": 1794204000
-    },
-    {
-      "date": "09 Nov 2026",
-      "dt": "2026-11-09",
       "time": "MEL 6:00pm AEDT \u00b7 NY 2:00am EST \u00b7 LDN 7:00am GMT \u00b7 EU 8:00am CET",
       "country": "EU",
       "event": "German Trade Balance",
@@ -6364,6 +6334,36 @@
       "bias": "neutral",
       "upcoming": false,
       "ts": 1794207600
+    },
+    {
+      "date": "09 Nov 2026",
+      "dt": "2026-11-09",
+      "time": "MEL 7:00pm AEDT \u00b7 NY 3:00am EST \u00b7 LDN 8:00am GMT \u00b7 EU 9:00am CET",
+      "country": "EU",
+      "event": "ECOFIN Meetings",
+      "impact": "low",
+      "actual": "\u2014",
+      "forecast": "\u2014",
+      "previous": "\u2014",
+      "miss": false,
+      "bias": "neutral",
+      "upcoming": true,
+      "ts": 1794211200
+    },
+    {
+      "date": "09 Nov 2026",
+      "dt": "2026-11-09",
+      "time": "MEL 7:00pm AEDT \u00b7 NY 3:00am EST \u00b7 LDN 8:00am GMT \u00b7 EU 9:00am CET",
+      "country": "EU",
+      "event": "Eurogroup Meetings",
+      "impact": "low",
+      "actual": "\u2014",
+      "forecast": "\u2014",
+      "previous": "\u2014",
+      "miss": false,
+      "bias": "neutral",
+      "upcoming": true,
+      "ts": 1794211200
     },
     {
       "date": "09 Nov 2026",
@@ -6563,7 +6563,7 @@
     {
       "date": "10 Nov 2026",
       "dt": "2026-11-10",
-      "time": "MEL 5:00pm AEDT \u00b7 NY 1:00am EST \u00b7 LDN 6:00am GMT \u00b7 EU 7:00am CET",
+      "time": "MEL 7:00pm AEDT \u00b7 NY 3:00am EST \u00b7 LDN 8:00am GMT \u00b7 EU 9:00am CET",
       "country": "US",
       "event": "ADP Weekly Employment Change",
       "impact": "low",
@@ -6573,7 +6573,7 @@
       "miss": false,
       "bias": "neutral",
       "upcoming": false,
-      "ts": 1794290400
+      "ts": 1794297600
     },
     {
       "date": "10 Nov 2026",
@@ -8127,12 +8127,12 @@
       "country": "UK",
       "event": "CPI y/y",
       "impact": "high",
-      "actual": "\u2014",
+      "actual": "3.6%",
       "forecast": "3.6%",
       "previous": "3.5%",
       "miss": false,
       "bias": "neutral",
-      "upcoming": true,
+      "upcoming": false,
       "ts": 1794985200
     },
     {
@@ -8142,12 +8142,12 @@
       "country": "UK",
       "event": "Core CPI y/y",
       "impact": "low",
-      "actual": "\u2014",
+      "actual": "2.8%",
       "forecast": "2.8%",
       "previous": "2.8%",
       "miss": false,
       "bias": "neutral",
-      "upcoming": true,
+      "upcoming": false,
       "ts": 1794985200
     },
     {
@@ -8157,12 +8157,12 @@
       "country": "UK",
       "event": "PPI Input m/m",
       "impact": "low",
-      "actual": "\u2014",
+      "actual": "2.2%",
       "forecast": "0.8%",
       "previous": "1.5%",
       "miss": false,
       "bias": "neutral",
-      "upcoming": true,
+      "upcoming": false,
       "ts": 1794985200
     },
     {
@@ -8172,12 +8172,12 @@
       "country": "UK",
       "event": "PPI Output m/m",
       "impact": "low",
-      "actual": "\u2014",
+      "actual": "0.4%",
       "forecast": "0.6%",
       "previous": "0.8%",
-      "miss": false,
+      "miss": true,
       "bias": "neutral",
-      "upcoming": true,
+      "upcoming": false,
       "ts": 1794985200
     },
     {
@@ -8187,12 +8187,12 @@
       "country": "UK",
       "event": "RPI y/y",
       "impact": "low",
-      "actual": "\u2014",
+      "actual": "4.2%",
       "forecast": "4.1%",
       "previous": "3.9%",
       "miss": false,
       "bias": "neutral",
-      "upcoming": true,
+      "upcoming": false,
       "ts": 1794985200
     },
     {
@@ -8232,12 +8232,12 @@
       "country": "UK",
       "event": "HPI y/y",
       "impact": "low",
-      "actual": "\u2014",
+      "actual": "1.2%",
       "forecast": "0.7%",
       "previous": "0.9%",
       "miss": false,
       "bias": "neutral",
-      "upcoming": true,
+      "upcoming": false,
       "ts": 1794994200
     },
     {
@@ -8247,12 +8247,12 @@
       "country": "EU",
       "event": "Final Core CPI y/y",
       "impact": "low",
-      "actual": "\u2014",
+      "actual": "2.6%",
       "forecast": "2.5%",
       "previous": "2.5%",
       "miss": false,
       "bias": "neutral",
-      "upcoming": true,
+      "upcoming": false,
       "ts": 1794996000
     },
     {
@@ -8262,12 +8262,12 @@
       "country": "EU",
       "event": "Final CPI y/y",
       "impact": "low",
-      "actual": "\u2014",
+      "actual": "4.0%",
       "forecast": "4.0%",
       "previous": "4.0%",
       "miss": false,
       "bias": "neutral",
-      "upcoming": true,
+      "upcoming": false,
       "ts": 1794996000
     },
     {
@@ -8468,7 +8468,7 @@
     {
       "date": "19 Nov 2026",
       "dt": "2026-11-19",
-      "time": "MEL 5:00pm AEDT \u00b7 NY 1:00am EST \u00b7 LDN 6:00am GMT \u00b7 EU 7:00am CET",
+      "time": "MEL 7:00pm AEDT \u00b7 NY 3:00am EST \u00b7 LDN 8:00am GMT \u00b7 EU 9:00am CET",
       "country": "US",
       "event": "Mortgage Delinquencies",
       "impact": "low",
@@ -8478,7 +8478,7 @@
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
-      "ts": 1795068000
+      "ts": 1795075200
     },
     {
       "date": "19 Nov 2026",
@@ -8903,21 +8903,6 @@
     {
       "date": "23 Nov 2026",
       "dt": "2026-11-23",
-      "time": "MEL 5:00pm AEDT \u00b7 NY 1:00am EST \u00b7 LDN 6:00am GMT \u00b7 EU 7:00am CET",
-      "country": "EU",
-      "event": "German Final GDP q/q",
-      "impact": "low",
-      "actual": "\u2014",
-      "forecast": "\u2014",
-      "previous": "\u2014",
-      "miss": false,
-      "bias": "neutral",
-      "upcoming": true,
-      "ts": 1795413600
-    },
-    {
-      "date": "23 Nov 2026",
-      "dt": "2026-11-23",
       "time": "MEL 7:15pm AEDT \u00b7 NY 3:15am EST \u00b7 LDN 8:15am GMT \u00b7 EU 9:15am CET",
       "country": "EU",
       "event": "French Flash Manufacturing PMI",
@@ -9248,7 +9233,7 @@
     {
       "date": "25 Nov 2026",
       "dt": "2026-11-25",
-      "time": "MEL 5:00pm AEDT \u00b7 NY 1:00am EST \u00b7 LDN 6:00am GMT \u00b7 EU 7:00am CET",
+      "time": "MEL 7:00pm AEDT \u00b7 NY 3:00am EST \u00b7 LDN 8:00am GMT \u00b7 EU 9:00am CET",
       "country": "EU",
       "event": "German 10-y Bond Auction",
       "impact": "low",
@@ -9258,7 +9243,7 @@
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
-      "ts": 1795586400
+      "ts": 1795593600
     },
     {
       "date": "26 Nov 2026",
@@ -9443,21 +9428,6 @@
     {
       "date": "26 Nov 2026",
       "dt": "2026-11-26",
-      "time": "MEL 5:00pm AEDT \u00b7 NY 1:00am EST \u00b7 LDN 6:00am GMT \u00b7 EU 7:00am CET",
-      "country": "EU",
-      "event": "Italian 10-y Bond Auction",
-      "impact": "low",
-      "actual": "\u2014",
-      "forecast": "\u2014",
-      "previous": "\u2014",
-      "miss": false,
-      "bias": "neutral",
-      "upcoming": true,
-      "ts": 1795672800
-    },
-    {
-      "date": "26 Nov 2026",
-      "dt": "2026-11-26",
       "time": "MEL 6:00pm AEDT \u00b7 NY 2:00am EST \u00b7 LDN 7:00am GMT \u00b7 EU 8:00am CET",
       "country": "EU",
       "event": "German GfK Consumer Climate",
@@ -9469,6 +9439,21 @@
       "bias": "neutral",
       "upcoming": true,
       "ts": 1795676400
+    },
+    {
+      "date": "26 Nov 2026",
+      "dt": "2026-11-26",
+      "time": "MEL 7:00pm AEDT \u00b7 NY 3:00am EST \u00b7 LDN 8:00am GMT \u00b7 EU 9:00am CET",
+      "country": "EU",
+      "event": "Italian 10-y Bond Auction",
+      "impact": "low",
+      "actual": "\u2014",
+      "forecast": "\u2014",
+      "previous": "\u2014",
+      "miss": false,
+      "bias": "neutral",
+      "upcoming": true,
+      "ts": 1795680000
     },
     {
       "date": "26 Nov 2026",
@@ -9696,6 +9681,36 @@
       "ts": 1795786200
     },
     {
+      "date": "29 Nov 2026",
+      "dt": "2026-11-29",
+      "time": "MEL 7:00pm AEDT \u00b7 NY 3:00am EST \u00b7 LDN 8:00am GMT \u00b7 EU 9:00am CET",
+      "country": "UK",
+      "event": "Nationwide HPI m/m",
+      "impact": "low",
+      "actual": "\u2014",
+      "forecast": "\u2014",
+      "previous": "\u2014",
+      "miss": false,
+      "bias": "neutral",
+      "upcoming": true,
+      "ts": 1795939200
+    },
+    {
+      "date": "29 Nov 2026",
+      "dt": "2026-11-29",
+      "time": "MEL 7:00pm AEDT \u00b7 NY 3:00am EST \u00b7 LDN 8:00am GMT \u00b7 EU 9:00am CET",
+      "country": "EU",
+      "event": "German Prelim CPI m/m",
+      "impact": "medium",
+      "actual": "\u2014",
+      "forecast": "\u2014",
+      "previous": "\u2014",
+      "miss": false,
+      "bias": "neutral",
+      "upcoming": true,
+      "ts": 1795939200
+    },
+    {
       "date": "30 Nov 2026",
       "dt": "2026-11-30",
       "time": "MEL 10:50am AEDT \u00b7 NY 6:50pm EST \u00b7 LDN 11:50pm GMT \u00b7 EU 12:50am CET",
@@ -9739,36 +9754,6 @@
       "bias": "neutral",
       "upcoming": true,
       "ts": 1796014800
-    },
-    {
-      "date": "30 Nov 2026",
-      "dt": "2026-11-30",
-      "time": "MEL 5:00pm AEDT \u00b7 NY 1:00am EST \u00b7 LDN 6:00am GMT \u00b7 EU 7:00am CET",
-      "country": "UK",
-      "event": "Nationwide HPI m/m",
-      "impact": "low",
-      "actual": "\u2014",
-      "forecast": "\u2014",
-      "previous": "\u2014",
-      "miss": false,
-      "bias": "neutral",
-      "upcoming": true,
-      "ts": 1796018400
-    },
-    {
-      "date": "30 Nov 2026",
-      "dt": "2026-11-30",
-      "time": "MEL 5:00pm AEDT \u00b7 NY 1:00am EST \u00b7 LDN 6:00am GMT \u00b7 EU 7:00am CET",
-      "country": "EU",
-      "event": "German Prelim CPI m/m",
-      "impact": "medium",
-      "actual": "\u2014",
-      "forecast": "\u2014",
-      "previous": "\u2014",
-      "miss": false,
-      "bias": "neutral",
-      "upcoming": true,
-      "ts": 1796018400
     },
     {
       "date": "30 Nov 2026",
