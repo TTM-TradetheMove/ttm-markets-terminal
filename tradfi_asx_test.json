@@ -1,0 +1,90 @@
+{
+ "asx_markit_header": {
+  "ok": true,
+  "status": 200,
+  "len": 375,
+  "head": "{\"data\":{\"dateListed\":\"1991-09-12\",\"displayName\":\"COMMONWEALTH BANK OF AUSTRALIA.\",\"priceAsk\":170.89000000000001,\"priceBid\":170.22,\"priceChange\":0.4399999999999977,\"priceChangePercent\":0.25815536259093974,\"priceLast\":170.88,\"sector\":\"Financials\",\"industryGroup\":\"Banks\",\"securityType\":1,\"symbol\":\"CBA\",\"volume\":1775841,\"xid\":\"70547\",\"marketCap\":285224924298,\"statusCode\":\"\"}}"
+ },
+ "asx_markit_key-statistics": {
+  "ok": true,
+  "status": 200,
+  "len": 1237,
+  "head": "{\"data\":{\"isin\":\"AU000000CBA7\",\"priceAsk\":170.89000000000001,\"priceBid\":170.22,\"priceClose\":170.44,\"priceDayHigh\":170.88,\"priceDayLow\":167.56,\"priceFiftyTwoWeekHigh\":185.59,\"priceFiftyTwoWeekLow\":146.98,\"volumeAverage\":2067606.255556,\"dateExDate\":\"2026-08-19\",\"datePayDate\":\"2026-09-29\",\"dateRecordDate\":\"2026-08-20\",\"dividend\":2.7,\"dividendCurrency\":\"AUD\",\"dividendType\":\"F\",\"frankingPercent\":100,\"foreignCurrencyAmount\":0,\"cashFlow\":-14787,\"earningsPerShare\":6.51792,\"freeCashFlowYield\":0.043449923"
+ },
+ "asx_markit_about": {
+  "ok": true,
+  "status": 200,
+  "len": 2826,
+  "head": "{\"data\":{\"displayName\":\"COMMONWEALTH BANK OF AUSTRALIA.\",\"issueType\":\"CS\",\"symbol\":\"CBA\",\"xid\":\"70547\",\"addressContact\":{\"address\":\"Commonwealth Bank of Australia, Commonwealth Bank Place South, Level 1, 11 Harbour Street, Sydney, NSW, AUSTRALIA, 2000\",\"fax\":\"(02) 8251 5647\",\"phone\":\"(02) 9262 8200\"},\"addressShareRegistry\":{\"address\":\"LIBERTY PLACE, LEVEL 41, 161 CASTLEREAGH ST, SYDNEY, NSW, AUSTRALIA, 2000\",\"attention\":\"MUFG CORPORATE MARKETS (AU) LTD\",\"phone\":\"1800 022 440\"},\"description\":\"Ban"
+ },
+ "asx_markit_financial-statements": {
+  "ok": false,
+  "error": "HTTP Error 404: Not Found"
+ },
+ "asx_markit_dividends": {
+  "ok": false,
+  "error": "HTTP Error 404: Not Found"
+ },
+ "asx_markit_financials": {
+  "ok": false,
+  "error": "HTTP Error 404: Not Found"
+ },
+ "asx_markit_statistics": {
+  "ok": false,
+  "error": "HTTP Error 404: Not Found"
+ },
+ "asx_markit_bhp_header": {
+  "ok": true,
+  "status": 200,
+  "len": 352,
+  "head": "{\"data\":{\"dateListed\":\"1885-08-13\",\"displayName\":\"BHP GROUP LIMITED\",\"priceAsk\":54.44,\"priceBid\":54.34,\"priceChange\":-0.03999999999999915,\"priceChangePercent\":-0.07355645457888772,\"priceLast\":54.34,\"sector\":\"Materials\",\"industryGroup\":\"Materials\",\"securityType\":1,\"symbol\":\"BHP\",\"volume\":9783123,\"xid\":\"60947\",\"marketCap\":276477839456,\"statusCode\":\"\"}}"
+ },
+ "asx_markit_bhp_key-statistics": {
+  "ok": true,
+  "status": 200,
+  "len": 1226,
+  "head": "{\"data\":{\"isin\":\"AU000000BHP4\",\"priceAsk\":54.44,\"priceBid\":54.34,\"priceClose\":54.38,\"priceDayHigh\":55.76,\"priceDayLow\":54.34,\"priceFiftyTwoWeekHigh\":68.77,\"priceFiftyTwoWeekLow\":40.175,\"volumeAverage\":7633500.011111,\"dateExDate\":\"2026-09-03\",\"datePayDate\":\"2026-09-23\",\"dateRecordDate\":\"2026-09-04\",\"dividend\":1.3799,\"dividendCurrency\":\"USD\",\"dividendType\":\"F\",\"frankingPercent\":100,\"foreignCurrencyAmount\":0.99,\"cashFlow\":7073.928,\"earningsPerShare\":2.86847,\"freeCashFlowYield\":0.10324019347212257,\""
+ },
+ "asx_directory_json": {
+  "ok": true,
+  "status": 200,
+  "len": 134586,
+  "head": "\"ASX code\",\"Company name\",\"GICs industry group\",\"Listing date\",\"Market Cap\"\n\"10X\",\"EXULTANT MINING LIMITED\",\"Materials\",\"11/12/2025\",4301000\n\"14D\",\"1414 DEGREES LIMITED\",\"Capital Goods\",\"12/09/2018\",1"
+ },
+ "yahoo_summary_nocrumb": {
+  "ok": false,
+  "error": "HTTP Error 429: Too Many Requests"
+ },
+ "yahoo_chart_ok": {
+  "ok": false,
+  "error": "HTTP Error 429: Too Many Requests"
+ },
+ "yahoo_html_stats": {
+  "ok": false,
+  "error": "HTTP Error 404: Not Found"
+ },
+ "stooq_csv": {
+  "ok": false,
+  "error": "HTTP Error 404: Not Found"
+ },
+ "google_finance": {
+  "ok": true,
+  "status": 200,
+  "len": 1343322,
+  "head": "<!doctype html><html lang=\"en-US\" dir=\"ltr\"><head><base href=\"https://www.google.com/finance/\"><link rel=\"preconnect\" href=\"//www.gstatic.com\"><meta name=\"referrer\" content=\"origin\"><script nonce=\"3RmX9bA67bw-XKRbRdoUSg\">window['ppConfig'] = {productName: 'FinHubUi', deleteIsEnforced:  true , sealIs"
+ },
+ "fmp_demo": {
+  "ok": false,
+  "error": "HTTP Error 401: Unauthorized"
+ },
+ "eodhd_demo": {
+  "ok": false,
+  "error": "HTTP Error 403: Forbidden"
+ },
+ "asx_announce_cba": {
+  "ok": true,
+  "status": 200,
+  "len": 1256,
+  "head": "{\"data\":{\"displayName\":\"COMMONWEALTH BANK OF AUSTRALIA.\",\"issueType\":\"CS\",\"items\":[{\"announcementType\":\"SECURITY HOLDER DETAILS\",\"date\":\"2026-11-17T02:40:43.000Z\",\"documentKey\":\"2924-03162615-2A1711030\",\"fileSize\":\"840KB\",\"headline\":\"Ceasing to be a substantial holder from CBA\",\"isPriceSensitive\":fa"
+ }
+}
