@@ -17,7 +17,7 @@ const CAT = [
   ['c:lunacycles', 'Crypto · Eclipse (BTC and the eclipse cycles)', ['beta'], 'off'],  ['c:cryptorotation', 'Crypto · Crypto Rotation (10 sectors vs Bitcoin, rotation score, cycle ladder)', [], 'off'], ['c:painzones', 'Crypto · Pain Zones (any coin: average cost, support / resistance, RSI)', [], 'off'], ['c:maxpain', 'Crypto · Max Pain (options, with RSI confluence)', ['premium']], ['c:volume', 'Crypto · Volume Heatmap', ['premium']], ['c:socialpulse', 'Crypto · Social Pulse', ['premium']],
   ['c:riskreward', 'Crypto · Risk / Reward calculator', ['premium']], ['c:tradejournal', 'Crypto · Trade Tracker & win ratio', []], ['c:pnlcal', 'Crypto · P&L Calendar', []], ['c:portfolio', 'Crypto · Portfolio Forecast', []],
   ['t:calendar', 'TradFi · Macro Watch', ['free']], ['t:tradinghours', 'TradFi · Trading Hours', ['free']], ['t:congress', 'TradFi · Congress Watch', []],
-  ['t:globalmarkets', 'TradFi · Global Markets', ['premium']], ['t:bonds', 'TradFi · Bonds & Rates', ['premium']], ['t:macrointel', 'TradFi · Macro Intel', ['premium']], ['t:newsrisk', 'TradFi · News & Risk', ['premium']], ['t:tfcalc', 'TradFi · Risk / Reward calculator', ['premium']], ['t:earnings', 'TradFi · Earnings calendar & reactions', ['pro']], ['t:liquidity', 'TradFi · Liquidity dashboard', ['pro']], ['t:crypto', 'TradFi · Crypto vs TradFi', ['pro']], ['t:commodities', 'TradFi · Commodities & energy', ['pro']], ['t:screener', 'TradFi · Stock screener (team preview)', ['team']],
+  ['t:globalmarkets', 'TradFi · Global Markets', ['premium']], ['t:bonds', 'TradFi · Bonds & Rates', ['premium']], ['t:macrointel', 'TradFi · Macro Intel', ['premium']], ['t:newsrisk', 'TradFi · News & Risk', ['premium']], ['t:tfcalc', 'TradFi · Risk / Reward calculator', ['premium']], ['t:earnings', 'TradFi · Earnings calendar & reactions', ['pro']], ['t:liquidity', 'TradFi · Liquidity dashboard', ['pro']], ['t:crypto', 'TradFi · Crypto vs TradFi', ['pro']], ['t:commodities', 'TradFi · Commodities & energy', ['pro']], ['t:screener', 'TradFi · Stock screener (team preview)', ['team'], 'off'],
   ['indicators', 'TTM indicators on TradingView', []], ['sync', 'Cloud sync of trades', []], ['excel', 'Excel export', []]
 ];
 // Free means "everyone who is signed in or not"; paid lists add the plan (Crypto items are also in Pro, etc.)
@@ -362,6 +362,32 @@ async function syncInit(){
 }
 setInterval(() => { if(USER && !document.hidden && can('sync') && !dirtyT) syncInit(); }, 90000);
 
+
+// ---------- level badges: shows on every section link which plan unlocks it (from the admin access ticks)
+const LVLCSS = document.createElement('style');
+LVLCSS.textContent = '.lvl{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.04em;border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:middle;line-height:1.5;white-space:nowrap}nav .lvl,a .lvl{font-size:8px;padding:1px 4px}.lvl-free{background:#2f9e6e;color:#fff}.lvl-premium{background:#4aa3df;color:#08121c}.lvl-pro{background:#dba118;color:#111}.lvl-team{background:#8b6fe0;color:#fff}.lvl-beta{background:#e8742a;color:#fff}.lvl-off{background:#555;color:#fff}';
+document.head.appendChild(LVLCSS);
+function lvlOf(key){
+  const a = SET.access[key] || DEF[key]; if(!a) return ['FREE', 'free'];
+  const l = a.filter(x => x !== 'beta');
+  if(l.indexOf('free') >= 0) return ['FREE', 'free'];
+  if(l.indexOf('premium') >= 0) return ['PREMIUM', 'premium'];
+  if(l.indexOf('pro') >= 0) return ['PRO', 'pro'];
+  if(l.indexOf('team') >= 0) return ['TEAM · DEV', 'team'];
+  if(a.indexOf('beta') >= 0) return ['BETA', 'beta'];
+  return ['SOON', 'off'];
+}
+function lvlBadges(){
+  if(TERM !== 'crypto' && TERM !== 'tradfi') return; const pre = TERM === 'crypto' ? 'c:' : 't:', show = on() && SET.charging;
+  document.querySelectorAll('.lvl').forEach(x => x.remove());
+  if(!show) return;
+  document.querySelectorAll('body > section[id]').forEach(sec => { const key = pre + sec.id, k2 = lvlOf(key), both = (SET.access[key] || []).indexOf('beta') >= 0 && k2[1] !== 'beta';
+    document.querySelectorAll(`.menu-tile[href="#${sec.id}"], a[href="#${sec.id}"]`).forEach(link => {
+      link.querySelectorAll('small, .beta-tag, .nw').forEach(s => { if(/^(PRO|TEAM|ADMIN|BETA|FREE|PREMIUM)$/.test((s.textContent || '').trim())) s.remove(); });
+      const host = link.querySelector('b') || link, mk = (t, c) => { const s = document.createElement('small'); s.className = 'lvl lvl-' + c; s.textContent = t; return s; };
+      host.appendChild(mk(k2[0], k2[1])); if(both) host.appendChild(mk('BETA', 'beta')); }); });
+}
+
 // ---------- locking sections, links and tool parts
 function applyGates(){
   if(TERM !== 'crypto' && TERM !== 'tradfi') return; const pre = TERM === 'crypto' ? 'c:' : 't:';
@@ -376,6 +402,7 @@ function applyGates(){
     betaMark(sec, key, wrap, !lock && betaKey(key));
     const offAll = lock && (SET.access[key] || []).filter(x => x !== 'beta').length === 0; document.querySelectorAll(`a[href="#${sec.id}"]`).forEach(a => { if(lock) a.setAttribute('data-lk', '1'); else a.removeAttribute('data-lk'); if(offAll || (lock && freeHide())) a.setAttribute('data-hid', '1'); else a.removeAttribute('data-hid'); });
     if(offAll){ const l2 = wrap.querySelector(':scope > .lock-panel'); if(l2) l2.innerHTML = '<h3>Coming soon</h3><p>This section is not available yet.</p>'; } });
+  lvlBadges();
   // the crypto calculator without the tracker: hide the parts that need it
   const rr = $('riskreward'); if(rr) rr.classList.toggle('no-tracker', !can('c:tradejournal'));
 }
