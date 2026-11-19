@@ -1657,3 +1657,5 @@ hidInit();
 fxLoad().then(() => { if(FX) ui(); });
 boot();
 })();
+/* "We've moved" banner on the old GitHub address only */
+(function(){ try{ if(!/github\.io$/.test(location.hostname)) return; const add = () => { if(document.getElementById('ttmMoved')) return; const b = document.createElement('div'); b.id = 'ttmMoved'; b.style.cssText = 'position:sticky;top:0;z-index:99999;background:#dba118;color:#111;padding:10px 14px;text-align:center;font:700 14px/1.4 system-ui,sans-serif'; b.innerHTML = 'TTM has moved to <a href="https://ttm.markets/" style="color:#111;text-decoration:underline">ttm.markets</a>. Sign in there with the same email and password. Forgot it? Use "Forgot password" on the new site. This old address will close soon. <a href="https://ttm.markets/" style="background:#111;color:#dba118;padding:4px 10px;border-radius:99px;text-decoration:none;margin-left:6px;white-space:nowrap">Go to ttm.markets →</a>'; document.body.insertBefore(b, document.body.firstChild); }; if(document.body) add(); else document.addEventListener('DOMContentLoaded', add); }catch(e){} })();
