@@ -397,7 +397,7 @@ function lvlBadges(){
       link.querySelectorAll('small').forEach(s => { if(/^(PRO|TEAM|ADMIN|BETA|NEW|FREE|PREMIUM)$/.test((s.textContent || '').trim())) s.remove(); });
       const host = link.querySelector('b') || link;
       host.appendChild(mk(k2[0], k2[1])); if(both) host.appendChild(mk('BETA', 'beta')); if(nw) host.appendChild(mk('NEW', 'new')); }); });
-  if(grid){ const t = Array.from(grid.querySelectorAll(':scope > .menu-tile')), lv = x => { const m = (x.getAttribute('href') || '').match(/^#(.+)$/); return m ? lvlOf(pre + m[1])[1] : 'free'; };
+  if(grid){ const t = Array.from(grid.querySelectorAll(':scope > .menu-tile')), lv = x => { if(x.hasAttribute('data-engine')) return lvlOf('h:engine')[1]; const m = (x.getAttribute('href') || '').match(/^#(.+)$/); return m ? lvlOf(pre + m[1])[1] : 'free'; };
     t.sort((x, y) => (LVLRANK[lv(x)] - LVLRANK[lv(y)]) || (x.dataset.ord - y.dataset.ord)); let cur = null; const mine = PROF && PROF.plan || 'free';
     t.forEach(x => { const l = lv(x), g = l === 'off' ? 'soon' : l; if(g !== cur){ cur = g; const h = document.createElement('div'); h.className = 'lvl-head'; h.dataset.g = g; h.innerHTML = e(LVLHEAD[g]) + (LVLSUB[g] ? ` <span style="font-weight:600;text-transform:none;letter-spacing:0">· ${e(LVLSUB[g])}</span>` : '') + (USER && g === mine ? ' <em>YOUR PLAN</em>' : ''); grid.appendChild(h); } grid.appendChild(x); });
     grid.querySelectorAll('.lvl-head').forEach(h => { let n = h.nextElementSibling, vis = false; while(n && !n.classList.contains('lvl-head')){ if(getComputedStyle(n).display !== 'none') vis = true; n = n.nextElementSibling; } h.style.display = vis ? '' : 'none'; }); }
