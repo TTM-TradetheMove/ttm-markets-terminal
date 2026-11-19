@@ -23,5 +23,5 @@
 ]
   },
   // Plan gate mode: "off" = never blocks, "report" = never blocks but labels each paid-file request (x-ttm-gate header), "on" = blocks people whose plan does not include it
-  "vars": { "GATE": "report" }
+  "vars": { "GATE": "on" }
 }
