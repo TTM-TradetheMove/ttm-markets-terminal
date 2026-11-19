@@ -53,8 +53,12 @@ jobs:
         with:
           ref: main
       - uses: actions/configure-pages@v5
+      - name: Prepare site folder (paid data lives only on ttm.markets)
+        run: |
+          mkdir _pages
+          rsync -a --exclude '.git' --exclude '.github' --exclude '_pages' --exclude 'scripts' --exclude 'supabase' --exclude 'worker.js' --exclude 'wrangler.jsonc' --exclude '*_debug.txt' --exclude 'debug_ff.*' --exclude 'telegram_*state.json' --exclude 'tradfi_asx_test.json' --exclude 'tradfi_fund_test.json' --exclude 'token_sources_cache.json' --exclude 'tradfi_earnings.json' --exclude 'tradfi_liquidity.json' --exclude 'tradfi_corr.json' --exclude 'tradfi_commodities.json' --exclude 'screener_us.json' --exclude 'insiders_us.json' --exclude 'social_data.json' --exclude 'liquidations_data.json' --exclude 'liquidation_totals.json' --exclude 'liq_heatmap_data.json' --exclude 'funding_data.json' --exclude 'maxpain.json' ./ _pages/
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _pages
       - id: deployment
         uses: actions/deploy-pages@v4
