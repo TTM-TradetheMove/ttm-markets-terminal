@@ -1,0 +1,37 @@
+name: Post founding + Black Friday offer to Telegram
+
+on:
+  workflow_dispatch:
+    inputs:
+      group:
+        description: "Which Telegram group"
+        type: choice
+        options: [main, group2]
+        default: main
+      dry_run:
+        description: "Dry run (do not send)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Send the offer
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ inputs.group == 'group2' && secrets.TELEGRAM_CHAT_ID_GROUP2 || secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_THREAD_ID: ${{ inputs.group == 'group2' && secrets.TELEGRAM_THREAD_ID_GROUP2 || secrets.TELEGRAM_THREAD_ID }}
+          PROMO_IMAGE: promo/ttm_offer.png
+          PROMO_CAPTION_FILE: promo/offer_caption.txt
+          PROMO_BUTTON: "Get the deal → ttm.markets"
+          DRY_RUN: ${{ inputs.dry_run && '1' || '0' }}
+        run: python3 scripts/telegram_promo.py

@@ -22,6 +22,10 @@ CAPTION = os.environ.get("PROMO_CAPTION") or (
     "📊 Max Pain + RSI confluence\n🔥 RSI &amp; Volume heatmaps\n💧 Liquidation map\n📅 Economic calendar\n"
     "🎯 Risk/reward calculator &amp; trade tracker\n\n"
     "Register a free account to enter the early access giveaway.\n\n<b>SEE THE MOVE. TRADE THE MOVE.</b>")
+_cf = os.environ.get("PROMO_CAPTION_FILE")
+if _cf:
+    CAPTION = open(os.path.join(ROOT, _cf), encoding="utf-8").read().strip()
+IMAGE = os.environ.get("PROMO_IMAGE") or "promo/ttm_terminal_promo.png"
 BUTTON = os.environ.get("PROMO_BUTTON") or "Open the terminal →"
 
 
@@ -47,8 +51,8 @@ def main():
               "reply_markup": json.dumps({"inline_keyboard": [[{"text": BUTTON, "url": SITE}]]})}
     if thread:
         fields["message_thread_id"] = thread
-    data = open(os.path.join(ROOT, "promo", "ttm_terminal_promo.png"), "rb").read()
-    body, ctype = multipart(fields, "ttm_terminal_promo.png", data)
+    data = open(os.path.join(ROOT, IMAGE), "rb").read()
+    body, ctype = multipart(fields, os.path.basename(IMAGE), data)
     try:
         with urllib.request.urlopen(urllib.request.Request(f"https://api.telegram.org/bot{token}/sendPhoto", data=body, headers={"Content-Type": ctype}), timeout=60) as r:
             res = json.loads(r.read())
