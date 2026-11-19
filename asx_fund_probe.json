@@ -1,0 +1,285 @@
+{
+ "generated_at": "2026-11-19 23:42:26 UTC",
+ "markit_key_statistics_CBA": {
+  "ok": true,
+  "status": 200,
+  "secs": 0.5,
+  "len": 1236,
+  "error": null,
+  "keys": {
+   "data": {
+    "isin": "str",
+    "priceAsk": "float",
+    "priceBid": "float",
+    "priceClose": "float",
+    "priceDayHigh": "float",
+    "priceDayLow": "float",
+    "priceFiftyTwoWeekHigh": "float",
+    "priceFiftyTwoWeekLow": "float",
+    "volumeAverage": "float",
+    "dateExDate": "str",
+    "datePayDate": "str",
+    "dateRecordDate": "str",
+    "dividend": "float",
+    "dividendCurrency": "str",
+    "dividendType": "str",
+    "frankingPercent": "int",
+    "foreignCurrencyAmount": "int",
+    "cashFlow": "int",
+    "earningsPerShare": "float",
+    "freeCashFlowYield": "float",
+    "priceEarningsRatio": "float",
+    "priceToCash": "float",
+    "enterprisevalue": "float",
+    "totalAssets": "int",
+    "totalLiabilities": "int",
+    "opCashFlowRevTTM": "float",
+    "currency": "str",
+    "foreignExempt": "bool",
+    "shareDescription": "str",
+    "numOfShares": "int",
+    "yieldAnnual": "float",
+    "incomeStatement": [
+     {
+      "revenue": "int",
+      "netIncome": "int",
+      "period": "str",
+      "fPeriodEndDate": "int",
+      "curCode": "str"
+     }
+    ]
+   }
+  },
+  "sample": "{\"data\": {\"isin\": \"AU000000CBA7\", \"priceAsk\": 170.95000000000002, \"priceBid\": 170.93, \"priceClose\": 171.63, \"priceDayHigh\": 171.29, \"priceDayLow\": 168.6, \"priceFiftyTwoWeekHigh\": 185.59, \"priceFiftyTwoWeekLow\": 146.98, \"volumeAverage\": 2073040.777778, \"dateExDate\": \"2026-08-19\", \"datePayDate\": \"2026-09-29\", \"dateRecordDate\": \"2026-08-20\", \"dividend\": 2.7, \"dividendCurrency\": \"AUD\", \"dividendType\": \"F\", \"frankingPercent\": 100, \"foreignCurrencyAmount\": 0, \"cashFlow\": -14787, \"earningsPerShare\": 6.51792, \"freeCashFlowYield\": 0.0433380340654283, \"priceEarningsRatio\": 26.21695, \"priceToCash\": 23.07442, \"enterprisevalue\": 518689.3, \"totalAssets\": 1452456, \"totalLiabilities\": 1373752, \"opCashFlowRevTTM\": -21.3395, \"currency\": \"AUD\", \"foreignExempt\": false, \"shareDescription\": \"Ordinary Fully Paid\", \"numOfShares\": 1673462358, \"yieldAnnual\": 2.942376041484589, \"incomeStatement\": [{\"revenue\": 30474000000, \"netIncome\": 10866000000, \"period\": \"2026A\", \"fPeriodEndDate\": 46203, \"curCode\": \"AUD\"}, {\"revenue\": 28632000000, \"netIncome\": 10116000000, \"period\": \"2025A\", \"fPeriodEndDate\": 45838, \"curCode\": \"AUD\"}, {\"revenue\": 27314000000, \"netIncome\": 9394000000, \"period\": \"2024A\", \"fPeriodEndDate\": 45473, \"curCode\": \"AUD\"}, {\"revenue\": 27808000000, \"netIncome\": 9998000000, \"period\": \"2023A\", \"fPeriodEndDate\": 45107, \"curCode\": \"AUD\"}]}}"
+ },
+ "markit_header_CBA": {
+  "ok": true,
+  "status": 200,
+  "secs": 0.4,
+  "len": 376,
+  "error": null,
+  "keys": {
+   "data": {
+    "dateListed": "str",
+    "displayName": "str",
+    "priceAsk": "float",
+    "priceBid": "float",
+    "priceChange": "float",
+    "priceChangePercent": "float",
+    "priceLast": "float",
+    "sector": "str",
+    "industryGroup": "str",
+    "securityType": "int",
+    "symbol": "str",
+    "volume": "int",
+    "xid": "str",
+    "marketCap": "int",
+    "statusCode": "str"
+   }
+  },
+  "sample": "{\"data\": {\"dateListed\": \"1991-09-12\", \"displayName\": \"COMMONWEALTH BANK OF AUSTRALIA.\", \"priceAsk\": 170.99, \"priceBid\": 170.95000000000002, \"priceChange\": -0.6399999999999864, \"priceChangePercent\": -0.3728951814950687, \"priceLast\": 170.99, \"sector\": \"Financials\", \"industryGroup\": \"Banks\", \"securityType\": 1, \"symbol\": \"CBA\", \"volume\": 1427396, \"xid\": \"70547\", \"marketCap\": 287216344504, \"statusCode\": \"\"}}"
+ },
+ "markit_about_CBA": {
+  "ok": true,
+  "status": 200,
+  "secs": 0.3,
+  "len": 2688,
+  "error": null,
+  "keys": {
+   "data": {
+    "displayName": "str",
+    "issueType": "str",
+    "symbol": "str",
+    "xid": "str",
+    "addressContact": {
+     "address": "str",
+     "fax": "str",
+     "phone": "str"
+    },
+    "addressShareRegistry": {
+     "address": "str",
+     "attention": "str",
+     "phone": "str"
+    },
+    "description": "str",
+    "directors": [
+     {
+      "name": "str",
+      "title": "str"
+     }
+    ],
+    "foreignExempt": "bool",
+    "websiteUrl": "str",
+    "secretaries": [
+     {
+      "name": "str",
+      "title": "str"
+     }
+    ],
+    "indices": [
+     {
+      "symbol": "str",
+      "xid": "str",
+      "displayName": "str",
+      "issueType": "str",
+      "issueTypeName": "str"
+     }
+    ]
+   }
+  },
+  "sample": "{\"data\": {\"displayName\": \"COMMONWEALTH BANK OF AUSTRALIA.\", \"issueType\": \"CS\", \"symbol\": \"CBA\", \"xid\": \"70547\", \"addressContact\": {\"address\": \"Commonwealth Bank of Australia, Commonwealth Bank Place South, Level 1, 11 Harbour Street, Sydney, NSW, AUSTRALIA, 2000\", \"fax\": \"(02) 8251 5647\", \"phone\": \"(02) 9262 8200\"}, \"addressShareRegistry\": {\"address\": \"LOCKED BAG A14, SYDNEY SOUTH, NSW, AUSTRALIA, 1232\", \"attention\": \"MUFG CORPORATE MARKETS (AU) LTD\", \"phone\": \"1800 022 440\"}, \"description\": \"Banking, financial and related services.\", \"directors\": [{\"name\": \"Mr Paul O'Malley\", \"title\": \"Chair\"}, {\"name\": \"Mr Matthew Comyn\", \"title\": \"Managing Director, CEO, Director\"}, {\"name\": \"Ms Julie Coates\", \"title\": \"Non Exec. Director\"}, {\"name\": \"Ms Lyn Cobley\", \"title\": \"Non Exec. Director\"}, {\"name\": \"Mr Alistair Currie\", \"title\": \"Non Exec. Director\"}, {\"name\": \"Ms Julie Galbo\", \"title\": \"Non Exec. Director\"}, {\"name\": \"Mr Peter Harmer\", \"title\": \"Non Exec. Director\"}, {\"name\": \"Ms Kate Howitt\", \"title\": \"Non Exec. Director\"}, {\"name\": \"Ms Jane McAloon\", \"title\": \"Non Exec. Director\"}, {\"name\": \"Mr Simon Moutter\", \"title\": \"Non Exec. Director\"}, {\"name\": \"Mr Rob Whitfield\", \"title\": \"Non Exec. Director\"}], \"foreignExempt\": false, \"websiteUrl\": \"http://www.commbank.com.au/\", \"secretaries\": [{\"name\": \"Ms Vicki Clarkson\", \"title\": \"Company Secretary\"}, {\"name\": \"Ms Wendy Lee\", \"title\": \"Company Secretary\"}, {\"name\": \"Ms Karen O'Flynn\", \"title\": \"Company Secretary\"}], \"indices\": [{\"symbol\": \"XDI\", \"xid\": \"26533233\", \"displayName\": \"S&P/ASX Dividend Opportunities Index\", \"issueType\": \"IN\", \"issueTypeName\": \"Index\"}, {\"symbol\": \"XFJ\", \"xid\": \"573180\", \"displayName\": \"S&P/ASX 200 Financials (Sector)\", \"issueType\": \"IN\", \"issueTypeName\": \"Index\"}, {\"symbol\": \"XKO\", \"xid\": \"574995\", \""
+ },
+ "markit_directory": {
+  "ok": true,
+  "status": 200,
+  "secs": 0.2,
+  "len": 5836,
+  "error": null,
+  "keys": {
+   "data": {
+    "items": [
+     {
+      "symbol": "str",
+      "displayName": "str",
+      "industry": "str",
+      "dateListed": "str",
+      "marketCap": "int",
+      "xid": "str",
+      "priceChangeFiveDayPercent": "float",
+      "isRecentListing": "bool",
+      "statusCode": "str"
+     }
+    ],
+    "count": "int"
+   }
+  },
+  "sample": "{\"data\": {\"items\": [{\"symbol\": \"14D\", \"displayName\": \"1414 DEGREES LIMITED\", \"industry\": \"Capital Goods\", \"dateListed\": \"2018-09-12\", \"marketCap\": 16111248, \"xid\": \"486191506\", \"priceChangeFiveDayPercent\": -18.518518518518523, \"isRecentListing\": false, \"statusCode\": \"\"}, {\"symbol\": \"29M\", \"displayName\": \"29METALS LIMITED\", \"industry\": \"Materials\", \"dateListed\": \"2021-07-02\", \"marketCap\": 420018371, \"xid\": \"663303162\", \"priceChangeFiveDayPercent\": -7.843137254901957, \"isRecentListing\": false, \"statusCode\": \"\"}, {\"symbol\": \"T3D\", \"displayName\": \"333D LIMITED\", \"industry\": \"Commercial & Professional Services\", \"dateListed\": \"2006-12-27\", \"marketCap\": 5919073, \"xid\": \"5947361\", \"priceChangeFiveDayPercent\": 0, \"isRecentListing\": false, \"statusCode\": \"\"}, {\"symbol\": \"TCF\", \"displayName\": \"360 CAPITAL MORTGAGE REIT\", \"industry\": \"Not Applic\", \"dateListed\": \"2006-10-17\", \"marketCap\": 40997330, \"xid\": \"5457157\", \"priceChangeFiveDayPercent\": -3.0042918454935554, \"isRecentListing\": false, \"statusCode\": \"\"}, {\"symbol\": \"TOT\", \"displayName\": \"360 CAPITAL REIT\", \"industry\": \"Equity Real Estate Investment Trusts (REITs)\", \"dateListed\": \"2015-04-22\", \"marketCap\": 88901016, \"xid\": \"86360650\", \"priceChangeFiveDayPercent\": -1.234567901234569, \"isRecentListing\": false, \"statusCode\": \"\"}, {\"symbol\": \"TDO\", \"displayName\": \"3D ENERGI LIMITED\", \"industry\": \"Energy\", \"dateListed\": \"2007-05-22\", \"marketCap\": \"OTHER\", \"xid\": \"7221947\", \"priceChangeFiveDayPercent\": 0, \"isRecentListing\": false, \"statusCode\": \"\"}, {\"symbol\": \"3PL\", \"displayName\": \"3P LEARNING LIMITED..\", \"industry\": \"Consumer Services\", \"dateListed\": \"2014-07-09\", \"marketCap\": 90059152, \"xid\": \"76419072\", \"priceChangeFiveDayPercent\": 8.196721311475418, \"isRecentListing\": false, \"statusCode\": \"\"}, {\"symbol\": \"49M\", \"displayName\": \"49"
+ },
+ "markit_key_statistics_BHP_noorigin": {
+  "ok": true,
+  "status": 200,
+  "secs": 0.5,
+  "len": 1227,
+  "error": null,
+  "keys": {
+   "data": {
+    "isin": "str",
+    "priceAsk": "float",
+    "priceBid": "float",
+    "priceClose": "float",
+    "priceDayHigh": "float",
+    "priceDayLow": "float",
+    "priceFiftyTwoWeekHigh": "float",
+    "priceFiftyTwoWeekLow": "float",
+    "volumeAverage": "float",
+    "dateExDate": "str",
+    "datePayDate": "str",
+    "dateRecordDate": "str",
+    "dividend": "float",
+    "dividendCurrency": "str",
+    "dividendType": "str",
+    "frankingPercent": "int",
+    "foreignCurrencyAmount": "float",
+    "cashFlow": "float",
+    "earningsPerShare": "float",
+    "freeCashFlowYield": "float",
+    "priceEarningsRatio": "float",
+    "priceToCash": "float",
+    "enterprisevalue": "float",
+    "totalAssets": "float",
+    "totalLiabilities": "float",
+    "opCashFlowRevTTM": "float",
+    "currency": "str",
+    "foreignExempt": "bool",
+    "shareDescription": "str",
+    "numOfShares": "int",
+    "yieldAnnual": "float",
+    "incomeStatement": [
+     {
+      "revenue": "int",
+      "netIncome": "int",
+      "period": "str",
+      "fPeriodEndDate": "int",
+      "curCode": "str"
+     }
+    ]
+   }
+  },
+  "sample": "{\"data\": {\"isin\": \"AU000000BHP4\", \"priceAsk\": 52.04, \"priceBid\": 52.03, \"priceClose\": 52.34, \"priceDayHigh\": 52.47, \"priceDayLow\": 51.92, \"priceFiftyTwoWeekHigh\": 68.77, \"priceFiftyTwoWeekLow\": 40.175, \"volumeAverage\": 7736631.288889, \"dateExDate\": \"2026-09-03\", \"datePayDate\": \"2026-09-23\", \"dateRecordDate\": \"2026-09-04\", \"dividend\": 1.3799, \"dividendCurrency\": \"USD\", \"dividendType\": \"F\", \"frankingPercent\": 100, \"foreignCurrencyAmount\": 0.99, \"cashFlow\": 7079.17, \"earningsPerShare\": 2.87059, \"freeCashFlowYield\": 0.10339272900972513, \"priceEarningsRatio\": 18.92989, \"priceToCash\": 9.67186, \"enterprisevalue\": 296956.3, \"totalAssets\": 180339.8, \"totalLiabilities\": 104685.5, \"opCashFlowRevTTM\": 37.06263, \"currency\": \"USD\", \"foreignExempt\": false, \"shareDescription\": \"Ordinary Fully Paid\", \"numOfShares\": 5084182410, \"yieldAnnual\": 4.620557890714559, \"incomeStatement\": [{\"revenue\": 58760000000, \"netIncome\": 9833000000, \"period\": \"2026A\", \"fPeriodEndDate\": 46203, \"curCode\": \"USD\"}, {\"revenue\": 51262000000, \"netIncome\": 9019000000, \"period\": \"2025A\", \"fPeriodEndDate\": 45838, \"curCode\": \"USD\"}, {\"revenue\": 55658000000, \"netIncome\": 7897000000, \"period\": \"2024A\", \"fPeriodEndDate\": 45473, \"curCode\": \"USD\"}, {\"revenue\": 53817000000, \"netIncome\": 12921000000, \"period\": \"2023A\", \"fPeriodEndDate\": 45107, \"curCode\": \"USD\"}]}}"
+ },
+ "asx_old_share_CBA": {
+  "ok": false,
+  "status": 404,
+  "secs": 1.3,
+  "len": null,
+  "error": "HTTP Error 404: ",
+  "keys": {
+   "error_code": "str",
+   "error_desc": "str"
+  },
+  "sample": "{\"error_code\": \"uri-not-found\", \"error_desc\": \"Unable to find API service call.\"}"
+ },
+ "asx_old_company_CBA": {
+  "ok": false,
+  "status": 404,
+  "secs": 0.3,
+  "len": null,
+  "error": "HTTP Error 404: ",
+  "keys": {
+   "error_code": "str",
+   "error_desc": "str"
+  },
+  "sample": "{\"error_code\": \"uri-not-found\", \"error_desc\": \"Unable to find API service call.\"}"
+ },
+ "yahoo_quoteSummary_CBA": {
+  "ok": false,
+  "status": 401,
+  "secs": 0.1,
+  "len": null,
+  "error": "HTTP Error 401: Unauthorized",
+  "keys": {
+   "finance": {
+    "result": "NoneType",
+    "error": {
+     "code": "str",
+     "description": "str"
+    }
+   }
+  },
+  "sample": "{\"finance\": {\"result\": null, \"error\": {\"code\": \"Unauthorized\", \"description\": \"Invalid Crumb\"}}}"
+ },
+ "yahoo_chart_meta_CBA": {
+  "ok": true,
+  "status": 200,
+  "secs": 0.2,
+  "len": 27695,
+  "error": null,
+  "keys": {
+   "chart": {
+    "result": [
+     {
+      "meta": "dict",
+      "timestamp": "list",
+      "indicators": "dict"
+     }
+    ],
+    "error": "NoneType"
+   }
+  },
+  "sample": "{\"chart\": {\"result\": [{\"meta\": {\"currency\": \"AUD\", \"symbol\": \"CBA.AX\", \"exchangeName\": \"ASX\", \"fullExchangeName\": \"ASX\", \"instrumentType\": \"EQUITY\", \"firstTradeDate\": 686188800, \"regularMarketTime\": 1795130556, \"hasPrePostMarketData\": false, \"gmtoffset\": 39600, \"timezone\": \"AEDT\", \"exchangeTimezoneName\": \"Australia/Sydney\", \"regularMarketPrice\": 170.95, \"regularMarketChangePercent\": -0.396, \"fulldayPrice\": 170.95, \"fulldayChange\": -0.68, \"fulldayChangePercent\": -0.396, \"fiftyTwoWeekHigh\": 185.59, \"fiftyTwoWeekLow\": 146.98, \"regularMarketDayHigh\": 171.29, \"regularMarketDayLow\": 168.6, \"regularMarketVolume\": 1428119, \"longName\": \"Commonwealth Bank of Australia\", \"shortName\": \"CWLTH BANK FPO [CBA]\", \"chartPreviousClose\": 153.0, \"priceHint\": 2, \"currentTradingPeriod\": {\"pre\": {\"timezone\": \"AEDT\", \"start\": 1795118400, \"end\": 1795129200, \"gmtoffset\": 39600}, \"regular\": {\"timezone\": \"AEDT\", \"start\": 1795129200, \"end\": 1795151520, \"gmtoffset\": 39600}, \"post\": {\"timezone\": \"AEDT\", \"start\": 1795151520, \"end\": 1795151520, \"gmtoffset\": 39600}}, \"dataGranularity\": \"1d\", \"range\": \"1y\", \"validRanges\": [\"1d\", \"5d\", \"1mo\", \"3mo\", \"6mo\", \"1y\", \"2y\", \"5y\", \"10y\", \"ytd\", \"max\"]}, \"timestamp\": [1763593200, 1763679600, 1763938800, 1764025200, 1764111600, 1764198000, 1764284400, 1764543600, 1764630000, 1764716400, 1764802800, 1764889200, 1765148400, 1765234800, 1765321200, 1765407600, 1765494000, 1765753200, 1765839600, 1765926000, 1766012400, 1766098800, 1766358000, 1766444400, 1766530800, 1766962800, 1767049200, 1767135600, 1767308400, 1767567600, 1767654000, 1767740400, 1767826800, 1767913200, 1768172400, 1768258800, 1768345200, 1768431600, 1768518000, 1768777200, 1768863600, 1768950000, 1769036400, 1769122800, 1769468400, 1769554800, 1769641200, 1769727600, 1769986800, 1770073200, 1770159"
+ },
+ "markit_burst": [
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200
+ ]
+}
