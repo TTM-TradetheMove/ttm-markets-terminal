@@ -1,5 +1,27 @@
 {
   "name": "ttm-terminal",
+  "main": "worker.js",
   "compatibility_date": "2025-11-01",
-  "assets": { "directory": "./_site", "not_found_handling": "404-page" }
+  "assets": {
+    "directory": "./_site",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    // only the paid data files go through the plan gate (worker.js); everything else is served directly
+    "run_worker_first": [
+      "/tradfi_earnings.json",
+      "/tradfi_liquidity.json",
+      "/tradfi_corr.json",
+      "/tradfi_commodities.json",
+      "/screener_us.json",
+      "/insiders_us.json",
+      "/social_data.json",
+      "/liquidations_data.json",
+      "/liquidation_totals.json",
+      "/liq_heatmap_data.json",
+      "/funding_data.json",
+      "/maxpain.json"
+]
+  },
+  // Plan gate mode: "off" = never blocks, "report" = never blocks but labels each paid-file request (x-ttm-gate header), "on" = blocks people whose plan does not include it
+  "vars": { "GATE": "report" }
 }

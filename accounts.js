@@ -66,6 +66,7 @@ async function token(){
   try{ return await REFRESHING; } finally { REFRESHING = null; }
 }
 async function api(path, opt){ return raw(path, opt, await token()); }
+window.ttmToken = token;   // used by gate.js to attach the sign-in to paid data requests
 
 
 // ---------- anonymous usage tracking (what is opened and clicked, never what is typed). Off for admins, Do Not Track and ?notrack=1.

@@ -21,7 +21,7 @@ jobs:
       - name: Prepare site folder
         run: |
           mkdir _site
-          rsync -a --exclude '.git' --exclude '.github' --exclude '_site' --exclude 'scripts' --exclude 'node_modules' --exclude 'wrangler.jsonc' ./ _site/
+          rsync -a --exclude '.git' --exclude '.github' --exclude '_site' --exclude 'scripts' --exclude 'node_modules' --exclude 'wrangler.jsonc' --exclude 'worker.js' ./ _site/
           printf '/*.json\n  Cache-Control: no-cache\n/*.html\n  Cache-Control: no-cache\n/*.js\n  Cache-Control: public, max-age=300\n' > _site/_headers
       - name: Deploy
         env:
