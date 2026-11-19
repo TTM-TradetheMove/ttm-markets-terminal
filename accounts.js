@@ -1044,8 +1044,9 @@ function uDetail(d, ev, tg){
   <div class="rr-card"><h3>What those visits did as well</h3>${uRows(nxt, 'n', null, null, false)}</div>
   <div class="rr-card"><h3>When</h3>${uHours(d.hours || [])}</div>`;
 }
-async function insUi(){
+async function insUi(force){
   const root = $('insBody'); if(!root || !$('insights') || !$('insights').classList.contains('active')) return;
+  if(!force && root.dataset.ready) return;   /* background refreshes must not redraw the page while it is being read */
   if(!PROF || !PROF.is_admin){ root.innerHTML = '<div class="rr-card"><p style="margin:0">Admins only. Sign in with an admin account.</p></div>'; return; }
   if(INS.busy) return;
   const sel = `<select id="usgRange" style="background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 9px;font:inherit">${[['1', 'Last 24 hours'], ['7', 'Last 7 days'], ['30', 'Last 30 days'], ['90', 'Last 90 days'], ['all', 'All time']].map(o => `<option value="${o[0]}" ${o[0] === INS.days ? 'selected' : ''}>${o[1]}</option>`).join('')}</select>`;
@@ -1053,12 +1054,12 @@ async function insUi(){
   root.innerHTML = head + '<p class="calendar-note">Loading…</p>'; INS.busy = true;
   let tz = 'UTC'; try{ tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; }catch(err){}
   try{ const r = await api('/rest/v1/rpc/ttm_usage_report', {method: 'POST', body: JSON.stringify({p_days: INS.days === 'all' ? null : +INS.days, p_tz: tz})});
-    if(r.ok && r.json && r.json.cur){ INS.data = r.json; INS.head = head; root.innerHTML = head + uInsRender(r.json) + '<div id="insPane"></div>'; }
+    if(r.ok && r.json && r.json.cur){ INS.data = r.json; INS.head = head; root.dataset.ready = '1'; root.innerHTML = head + uInsRender(r.json) + '<div id="insPane"></div>'; }
     else root.innerHTML = head + `<div class="rr-warn y">Usage data is not set up yet (or this account is not an admin). In Supabase open SQL Editor, run supabase/usage.sql from the repo, then press Refresh.${r.json && r.json.message ? ' (' + e(r.json.message) + ')' : ''}</div>`;
   }catch(err){ root.innerHTML = head + '<div class="rr-warn y">Could not load usage data.</div>'; }
   INS.busy = false;
 }
-document.addEventListener('change', ev => { if(ev.target.id === 'usgRange'){ INS.days = ev.target.value; insUi(); } });
+document.addEventListener('change', ev => { if(ev.target.id === 'usgRange'){ INS.days = ev.target.value; insUi(true); } });
 document.addEventListener('click', async ev => {
   const g = ev.target.closest && ev.target.closest('.insbar'); if(g){ const t = g.closest('.rr-card').querySelector('.insread'); if(t) t.textContent = g.dataset.t; return; }
   const row = ev.target.closest && ev.target.closest('.ins-row');
@@ -1072,12 +1073,12 @@ document.addEventListener('click', async ev => {
 });
 document.addEventListener('click', async ev => {
   const id = ev.target.id, note = txt => { const n = $('usgNote'); if(n) n.textContent = txt; };
-  if(id === 'usgRefresh') insUi();
+  if(id === 'usgRefresh') insUi(true);
   else if(id === 'usgClearAll' || id === 'usgClearOld'){
     const old = id === 'usgClearOld'; if(!confirm(old ? 'Delete usage data older than 90 days? This cannot be undone.' : 'Delete ALL usage data? This cannot be undone. Export a CSV first if you want a copy.')) return;
     const q = old ? 'ts=lt.' + encodeURIComponent(new Date(Date.now() - 90 * 864e5).toISOString()) : 'id=gt.0';
     const r = await api('/rest/v1/ttm_events?' + q, {method: 'DELETE', headers: {Prefer: 'count=exact,return=minimal'}});
-    note(r.ok ? 'Cleared.' : 'Could not clear (are you signed in as admin?).'); if(r.ok) insUi();
+    note(r.ok ? 'Cleared.' : 'Could not clear (are you signed in as admin?).'); if(r.ok) insUi(true);
   } else if(id === 'usgCsv'){
     note('Preparing the file…'); let rows = [], from = 0;
     for(let i = 0; i < 200; i++){ const r = await api('/rest/v1/ttm_events?select=*&order=id.asc', {headers: {Range: from + '-' + (from + 999), 'Range-Unit': 'items'}}); if(!r.ok || !Array.isArray(r.json)){ note('Could not export.'); return; } rows = rows.concat(r.json); if(r.json.length < 1000) break; from += 1000; }
@@ -1131,7 +1132,7 @@ document.addEventListener('click', async ev => {
   const ch = $('admCharge').checked, wall = $('admWall').checked;
   const r = await api('/rest/v1/ttm_settings', {method: 'POST', headers: {Prefer: 'resolution=merge-duplicates'}, body: JSON.stringify([{key: 'charging', value: ch}, {key: 'wall', value: wall}, {key: 'track', value: $('admTrack').checked}, {key: 'access', value: acc}])});
   if(r.ok){ SET.charging = ch; SET.wall = wall; SET.track = $('admTrack').checked; SET.newSince = nws; delete acc._new; SET.access = acc; $('admNote').textContent = 'Saved.'; ui(); } else $('admNote').textContent = 'Could not save (are you an admin?).'; });
-window.addEventListener('hashchange', () => { setTimeout(() => { adminUi(); insUi(); ui(); }, 80); });
+window.addEventListener('hashchange', () => { try{ const b = $('insBody'); if(b && location.hash !== '#insights') delete b.dataset.ready; }catch(err){} setTimeout(() => { adminUi(); insUi(); ui(); }, 80); });
 
 // ---------- Message TTM (every signed-in member, private) and live sessions ----------
 const css2 = document.createElement('style');
