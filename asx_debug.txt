@@ -1,6 +1,2 @@
-  GET fail (1/2) https://query1.finance.yahoo.com/v8/finance/chart/SYD.AX?range=1y&interval=1d&includePrePost=false -> HTTPError: HTTP Error 404: Not Found
-  GET fail (2/2) https://query1.finance.yahoo.com/v8/finance/chart/SYD.AX?range=1y&interval=1d&includePrePost=false -> HTTPError: HTTP Error 404: Not Found
-  GET fail (1/2) https://query2.finance.yahoo.com/v8/finance/chart/SYD.AX?range=1y&interval=1d&includePrePost=false -> HTTPError: HTTP Error 404: Not Found
-  GET fail (2/2) https://query2.finance.yahoo.com/v8/finance/chart/SYD.AX?range=1y&interval=1d&includePrePost=false -> HTTPError: HTTP Error 404: Not Found
-quotes ok: 69/70
-wrote asx_snapshot.json: sectors 11 (11 from indices), stocks 53, aud ['audusd', 'gold', 'oil', 'copper']
+quotes ok: 70/70
+wrote asx_snapshot.json: sectors 11 (11 from indices), stocks 54, aud ['audusd', 'gold', 'oil', 'copper']
