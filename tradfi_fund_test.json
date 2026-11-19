@@ -1,12 +1,12 @@
 {
  "yahoo_crumb": {
   "ok": false,
-  "secs": 0.3,
+  "secs": 0.1,
   "error": "HTTP Error 429: Too Many Requests"
  },
  "yahoo_timeseries_AAPL": {
   "ok": false,
-  "secs": 0.1,
+  "secs": 0.0,
   "error": "HTTP Error 429: Too Many Requests"
  },
  "yahoo_timeseries_CBA.AX": {
@@ -21,7 +21,7 @@
  },
  "sec_companyfacts": {
   "ok": true,
-  "secs": 0.2,
+  "secs": 0.1,
   "sample": {
    "entity": "Apple Inc.",
    "tags": 512,
@@ -30,24 +30,24 @@
  },
  "sec_tickers": {
   "ok": true,
-  "secs": 0.2,
+  "secs": 0.1,
   "sample": {
-   "count": 10400
+   "count": 10398
   }
  },
  "nasdaq_screener_list": {
   "ok": true,
   "secs": 1.2,
   "sample": {
-   "rows": 7278,
+   "rows": 7298,
    "first": {
     "symbol": "A",
     "name": "Agilent Technologies Inc. Common Stock",
-    "lastsale": "$172.97",
-    "netchange": "-0.99",
-    "pctchange": "-0.569%",
-    "volume": "1825512",
-    "marketCap": "48765233876.00",
+    "lastsale": "$177.26",
+    "netchange": "5.04",
+    "pctchange": "2.926%",
+    "volume": "2489376",
+    "marketCap": "49974708660.00",
     "country": "United States",
     "ipoyear": "1999",
     "industry": "Biotechnology: Laboratory Analytical Instruments",
@@ -58,7 +58,7 @@
  },
  "wikipedia_sp500": {
   "ok": true,
-  "secs": 0.2,
+  "secs": 0.1,
   "sample": {
    "len": 572422,
    "hasAAPL": true
@@ -66,22 +66,22 @@
  },
  "asx_listed_csv": {
   "ok": true,
-  "secs": 1.9,
+  "secs": 1.2,
   "sample": {
-   "len": 106107,
-   "head": "ASX listed companies as at Wed Nov 18 18:22:54 AEDT 2026\n\nCompany name,ASX code,GICS industry group\n\"1414 DEGREES LIMITED\",\"14D\",\"Capital Goods\"\n\"29METALS LIMITED\",\"29M\",\"Materials\"\n\"333D LIMITED\",\"T3"
+   "len": 106026,
+   "head": "ASX listed companies as at Fri Nov 20 10:32:46 AEDT 2026\n\nCompany name,ASX code,GICS industry group\n\"1414 DEGREES LIMITED\",\"14D\",\"Capital Goods\"\n\"29METALS LIMITED\",\"29M\",\"Materials\"\n\"333D LIMITED\",\"T3"
   }
  },
  "congress_house": {
   "ok": false,
-  "secs": 0.2,
+  "secs": 0.3,
   "error": "HTTP Error 403: Forbidden"
  },
  "sec_form4_feed": {
   "ok": true,
-  "secs": 0.2,
+  "secs": 6.7,
   "sample": {
-   "len": 6060
+   "len": 6027
   }
  }
 }
