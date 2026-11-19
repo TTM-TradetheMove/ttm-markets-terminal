@@ -32,7 +32,7 @@ STOCKS = {
  "Health Care": ["CSL", "RMD", "COH", "SHL", "PME"],
  "Cons. Disc.": ["WES", "JBH", "ALL", "LNW", "TLC"],
  "Cons. Staples": ["WOW", "COL", "TWE"],
- "Industrials": ["TCL", "BXB", "QAN", "ALQ", "SYD"],
+ "Industrials": ["TCL", "BXB", "QAN", "ALQ", "ALX"],
  "Comm. Svcs": ["TLS", "REA"],
  "Utilities": ["AGL", "APA"],
  "A-REITs": ["GMG", "SCG", "GPT", "MGR", "DXS"],
