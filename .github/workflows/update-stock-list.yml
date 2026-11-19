@@ -1,0 +1,44 @@
+name: Update stock list (LENS tickers)
+
+on:
+  schedule:
+    - cron: "40 19 * * *"
+  workflow_dispatch: {}
+  push:
+    paths:
+      - scripts/update_stock_list.py
+      - .github/workflows/update-stock-list.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-stock-list
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build the list
+        run: python3 scripts/update_stock_list.py
+      - name: Commit and push if changed
+        run: |
+          git config user.name "ttm-calendar-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add stock_list.json
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Auto-update stock list"
+            for i in 1 2 3; do
+              git pull --rebase -X theirs origin main && git push && break
+              echo "Push attempt $i failed, retrying..."
+              sleep 5
+            done
+          fi
