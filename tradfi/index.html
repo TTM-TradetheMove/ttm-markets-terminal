@@ -639,6 +639,9 @@ select,select option{color-scheme:dark}select option{background:#16161a;color:#e
     <nav class="site-nav">
       <a href="#calendar">Macro Watch</a>
       <a href="#tradinghours">Trading Hours</a>
+      <a href="#riskgauge">Risk On / Off</a>
+      <a href="#heatmap">Sector Heatmap</a>
+      <a href="#asx">ASX Snapshot</a>
       <a href="#congress">Congress Watch</a>
       <a href="#globalmarkets">Global Markets</a>
       <a href="#rotation">Sector Rotation <small style="background:var(--gold);color:#111;border-radius:4px;padding:1px 4px;font-size:8px;font-weight:800">NEW</small></a>
@@ -663,7 +666,7 @@ select,select option{color-scheme:dark}select option{background:#16161a;color:#e
   <h1>Traditional markets, <em>the TTM way.</em></h1>
   <p>Same macro calendar and session clock as the Crypto terminal, built out here for forex, indices, commodities and stocks. Global market coverage below is actively being built — calendar and trading hours are live now.</p>
 </div>
-<div id="menuHome"><div class="wrap"><div id="m60" class="m60" style="display:none"></div><h2>TTM Investments</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#holdings"><b>TTM Spot</b><span>What TTM holds in TradFi, as % of the portfolio, plus cash</span></a></div><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tfcalc"><b>Risk / Reward Tooling</b><span>Position size, risk and targets for forex, indices, commodities and stocks</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#congress"><b>Congress Watch</b><span>Congress trading disclosures</span></a><a class="menu-tile" href="#globalmarkets"><b>Global Markets</b><span>Indices, FX, metals and energy</span></a><a class="menu-tile" href="#rotation"><b>Sector Rotation </b><span>Where money is rotating between the 11 US sectors, with scores and stages</span></a><a class="menu-tile" href="#bonds"><b>Bonds &amp; Rates</b><span>Yields, curves and policy rates</span></a><a class="menu-tile adm-only" style="display:none" href="#screener"><b>Stock screener </b><span>US stocks scored on profit, cash, stability, value and growth</span></a><a class="menu-tile" href="#commodities"><b>Commodities </b><span>Gold, oil, copper and grains, plus the ratios traders watch</span></a><a class="menu-tile" href="#crypto"><b>Crypto vs TradFi </b><span>Is Bitcoin moving with stocks, gold, the dollar or yields?</span></a><a class="menu-tile" href="#liquidity"><b>Liquidity </b><span>Fed, Treasury cash, reverse repo and global central banks vs Bitcoin</span></a><a class="menu-tile" href="#earnings"><b>Earnings </b><span>Who reports, beat or miss, and how the share price moved</span></a><a class="menu-tile" href="#propertycycle"><b>Property Cycle </b><span>The 18-year real estate cycle across the US, AU, UK and more</span></a><a class="menu-tile" href="#macrointel"><b>Macro Intel</b><span>Central banks and financial conditions</span></a><a class="menu-tile" href="#newsrisk"><b>News &amp; Risk</b><span>Headlines and risk watch</span></a></div></div></div>
+<div id="menuHome"><div class="wrap"><div id="m60" class="m60" style="display:none"></div><h2>TTM Investments</h2><div class="menu-grid" style="margin-bottom:30px"><a class="menu-tile" href="#holdings"><b>TTM Spot</b><span>What TTM holds in TradFi, as % of the portfolio, plus cash</span></a></div><h2>Choose a section</h2><div class="menu-grid"><a class="menu-tile" href="#calendar"><b>Macro Watch</b><span>Economic calendar and bias history</span></a><a class="menu-tile" href="#tfcalc"><b>Risk / Reward Tooling</b><span>Position size, risk and targets for forex, indices, commodities and stocks</span></a><a class="menu-tile" href="#riskgauge"><b>Risk On / Off</b><span>One dial: is the market leaning risk-on or risk-off, and why</span></a><a class="menu-tile" href="#heatmap"><b>Sector Heatmap</b><span>Which sectors are leading and lagging, US and ASX</span></a><a class="menu-tile" href="#asx"><b>ASX Snapshot</b><span>ASX 200, sectors, top movers, gold and oil in AUD</span></a><a class="menu-tile" href="#tradinghours"><b>Trading Hours</b><span>Market sessions and open/close times</span></a><a class="menu-tile" href="#congress"><b>Congress Watch</b><span>Congress trading disclosures</span></a><a class="menu-tile" href="#globalmarkets"><b>Global Markets</b><span>Indices, FX, metals and energy</span></a><a class="menu-tile" href="#rotation"><b>Sector Rotation </b><span>Where money is rotating between the 11 US sectors, with scores and stages</span></a><a class="menu-tile" href="#bonds"><b>Bonds &amp; Rates</b><span>Yields, curves and policy rates</span></a><a class="menu-tile adm-only" style="display:none" href="#screener"><b>Stock screener </b><span>US stocks scored on profit, cash, stability, value and growth</span></a><a class="menu-tile" href="#commodities"><b>Commodities </b><span>Gold, oil, copper and grains, plus the ratios traders watch</span></a><a class="menu-tile" href="#crypto"><b>Crypto vs TradFi </b><span>Is Bitcoin moving with stocks, gold, the dollar or yields?</span></a><a class="menu-tile" href="#liquidity"><b>Liquidity </b><span>Fed, Treasury cash, reverse repo and global central banks vs Bitcoin</span></a><a class="menu-tile" href="#earnings"><b>Earnings </b><span>Who reports, beat or miss, and how the share price moved</span></a><a class="menu-tile" href="#propertycycle"><b>Property Cycle </b><span>The 18-year real estate cycle across the US, AU, UK and more</span></a><a class="menu-tile" href="#macrointel"><b>Macro Intel</b><span>Central banks and financial conditions</span></a><a class="menu-tile" href="#newsrisk"><b>News &amp; Risk</b><span>Headlines and risk watch</span></a></div></div></div>
 <button id="backFab" type="button">&larr; Menu</button>
 <div id="backBar"><div class="wrap"><button id="backBtn" type="button">&larr; Back to menu</button><span id="backTitle"></span></div></div>
 <section id="calendar">
@@ -1188,6 +1191,42 @@ window.addEventListener('hashchange', () => { if(location.hash === '#holdings') 
       <p id="ccUpd" class="calendar-note" style="margin-top:8px">Loading…</p>
     </div>
     <div id="ccBody"><div class="tf-card tf-empty">Loading…</div></div>
+  </div>
+</section>
+
+<section id="riskgauge">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">Free</span>
+      <h2>Risk on / Risk off</h2>
+      <p>One dial that combines five market signals: stocks vs their 50-day average, volatility (VIX), the US dollar, copper vs gold, and how broad the rally is. Risk-on tends to help stocks and crypto together. Risk-off tends to hurt both.</p>
+      <p id="rgUpd" class="calendar-note" style="margin-top:8px">Loading…</p>
+    </div>
+    <div id="rgBody"><div class="tf-card tf-empty">Loading…</div></div>
+  </div>
+</section>
+
+<section id="heatmap">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">Free</span>
+      <h2>Sector heatmap</h2>
+      <p>Which parts of the market are leading and which are lagging. Green is up, red is down. Switch between today and the last month, and between US and ASX sectors.</p>
+      <p id="hmUpd" class="calendar-note" style="margin-top:8px">Loading…</p>
+    </div>
+    <div id="hmBody"><div class="tf-card tf-empty">Loading…</div></div>
+  </div>
+</section>
+
+<section id="asx">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">Free</span>
+      <h2>ASX snapshot</h2>
+      <p>The ASX 200, how its sectors are doing, the biggest movers among the large stocks, and gold, oil and copper priced in Australian dollars.</p>
+      <p id="axUpd" class="calendar-note" style="margin-top:8px">Loading…</p>
+    </div>
+    <div id="axBody"><div class="tf-card tf-empty">Loading…</div></div>
   </div>
 </section>
 
@@ -2456,8 +2495,8 @@ function usOpen(){ const p = new Intl.DateTimeFormat('en-US', {timeZone: 'Americ
 load();
 })();
 </script>
-<script src="../tradfi_extra.js?v=9"></script>
-<script src="../accounts.js?v=1795091840"></script>
+<script src="../tradfi_extra.js?v=10"></script>
+<script src="../accounts.js?v=1795093953"></script>
 <script>
 (function(){
   const secs = Array.from(document.querySelectorAll('body > section[id]'));
@@ -2545,10 +2584,17 @@ Promise.all([J('tradfi_markets.json'), J('calendar_data.json')]).then(([m, cal])
   const col = sc > 20 ? '#3ddc97' : sc < -20 ? '#ff8a82' : '#c9ccd4';
   const read = sc <= -20 ? 'Markets are leaning defensive. ' + (neg.length ? 'Weighing on markets: ' + neg.slice(0, 2).map(c => c.name + ' (' + c.detail + ')').join('; ') + '.' : '') + ' Risk-off conditions tend to pressure stocks and crypto together, so position size matters more than conviction today.' : sc >= 20 ? 'Markets are leaning risk-on. ' + (pos.length ? 'Supporting markets: ' + pos.slice(0, 2).map(c => c.name + ' (' + c.detail + ')').join('; ') + '.' : '') + ' Risk-on conditions have usually helped stocks and crypto move together, but watch the events below for a change of tone.' : 'Signals are mixed, with no clear lean. ' + (pos.length && neg.length ? 'Supportive: ' + pos[0].name + '. Not supportive: ' + neg[0].name + '.' : '') + ' Mixed readings suit smaller size and patience.';
   const evs = ((cal && cal.events) || []).filter(e => e.dt >= new Date().toISOString().slice(0, 10) && e.impact === 'high').sort((a, b) => (a.dt + (a.time || '')).localeCompare(b.dt + (b.time || ''))).slice(0, 3);
-  box.innerHTML = `<div class="m60h"><div><h2>Market in 60 seconds</h2><div style="font-size:12px;color:var(--mute)">TTM risk read, free for everyone</div></div><div style="text-align:right"><div class="m60l" style="color:${col}">${E(r.label)}</div><div style="font-size:12px;color:var(--mute)">score ${sc} (−100 to +100)</div></div></div><div class="m60g"><i style="left:calc(${(sc + 100) / 2}% - 2px)"></i></div><div class="m60c">${chips.join('')}</div><p>${E(read)}</p>` + (evs.length ? '<div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-top:10px">Next high-impact events</div><ul>' + evs.map(e => `<li>${E(e.date.slice(0, 6))} ${E((e.time || '').split('·')[0].replace(/^MEL\s*/, '').trim())} · ${E(e.country)} ${E(e.event)}${e.forecast && e.forecast !== '—' ? ' · forecast ' + E(e.forecast) : ''}</li>`).join('') + '</ul>' : '') + `<div class="m60n">Delayed data, updated through the day${m.generated_at ? ' · last update ' + new Date(m.generated_at).toLocaleString([], {dateStyle: 'medium', timeStyle: 'short'}) : ''}. General information only, not financial advice.</div>`;
+  box.innerHTML = `<div class="m60h"><div><h2>Market in 60 seconds</h2><div style="font-size:12px;color:var(--mute)">TTM risk read, free for everyone</div></div><div style="text-align:right"><div class="m60l" style="color:${col}">${E(r.label)}</div><div style="font-size:12px;color:var(--mute)">score ${sc} (−100 to +100)</div></div></div><div class="m60g"><i style="left:calc(${(sc + 100) / 2}% - 2px)"></i></div><div class="m60c">${chips.join('')}</div><p>${E(read)}</p>` + (evs.length ? '<div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-top:10px">Next high-impact events</div><ul>' + evs.map(e => `<li>${E(e.date.slice(0, 6))} ${E((e.time || '').split('·')[0].replace(/^MEL\s*/, '').trim())} · ${E(e.country)} ${E(e.event)}${e.forecast && e.forecast !== '—' ? ' · forecast ' + E(e.forecast) : ''}</li>`).join('') + '</ul>' : '') + `<div class="m60n"><a href="#riskgauge" style="color:var(--gold)">See the full risk gauge →</a> · Delayed data, updated through the day${m.generated_at ? ' · last update ' + new Date(m.generated_at).toLocaleString([], {dateStyle: 'medium', timeStyle: 'short'}) : ''}. General information only, not financial advice.</div>`;
   box.style.display = '';
 });
 })();
 </script>
+<style>
+.hm-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:12px 0}.hm-t{border-radius:12px;padding:14px 12px;min-height:84px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid rgba(255,255,255,.06)}.hm-t b{font-size:13px;font-weight:700;color:#f2f2f4}.hm-t span{font-size:22px;font-weight:800;color:#fff}
+.hm-b{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}.hm-b button{background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:99px;padding:6px 14px;cursor:pointer;font-weight:700;font-size:13px}.hm-b button.on{background:var(--gold);color:#111;border-color:var(--gold)}
+.rg-c{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-top:14px}.rg-c div{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px 14px}.rg-c b{display:block;margin-bottom:4px;font-size:14px}.rg-c small{color:var(--mute);font-size:12px}
+.ax-k{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:12px 0}.ax-k div{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:12px;color:var(--mute)}.ax-k b{display:block;font-size:20px;color:var(--text);margin:2px 0}
+.ax-m{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}.ax-m table{width:100%;border-collapse:collapse;font-size:14px}.ax-m td{padding:7px 4px;border-bottom:1px solid var(--line)}.ax-m td:last-child{text-align:right;font-weight:700}
+</style>
 </body>
 </html>
