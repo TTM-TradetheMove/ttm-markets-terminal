@@ -1,7 +1,7 @@
 {
  "yahoo_crumb": {
   "ok": false,
-  "secs": 0.1,
+  "secs": 0.2,
   "error": "HTTP Error 429: Too Many Requests"
  },
  "yahoo_timeseries_AAPL": {
@@ -21,7 +21,7 @@
  },
  "sec_companyfacts": {
   "ok": true,
-  "secs": 0.1,
+  "secs": 0.2,
   "sample": {
    "entity": "Apple Inc.",
    "tags": 512,
@@ -37,7 +37,7 @@
  },
  "nasdaq_screener_list": {
   "ok": true,
-  "secs": 1.2,
+  "secs": 1.1,
   "sample": {
    "rows": 7298,
    "first": {
@@ -58,15 +58,15 @@
  },
  "wikipedia_sp500": {
   "ok": true,
-  "secs": 0.1,
+  "secs": 0.0,
   "sample": {
-   "len": 572422,
+   "len": 572393,
    "hasAAPL": true
   }
  },
  "asx_listed_csv": {
   "ok": true,
-  "secs": 1.2,
+  "secs": 1.6,
   "sample": {
    "len": 106026,
    "head": "ASX listed companies as at Fri Nov 20 10:32:46 AEDT 2026\n\nCompany name,ASX code,GICS industry group\n\"1414 DEGREES LIMITED\",\"14D\",\"Capital Goods\"\n\"29METALS LIMITED\",\"29M\",\"Materials\"\n\"333D LIMITED\",\"T3"
@@ -74,14 +74,14 @@
  },
  "congress_house": {
   "ok": false,
-  "secs": 0.3,
+  "secs": 0.1,
   "error": "HTTP Error 403: Forbidden"
  },
  "sec_form4_feed": {
   "ok": true,
-  "secs": 6.7,
+  "secs": 5.3,
   "sample": {
-   "len": 6027
+   "len": 6050
   }
  }
 }
