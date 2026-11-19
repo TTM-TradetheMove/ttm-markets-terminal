@@ -23,7 +23,7 @@ jobs:
           mkdir _site
           rsync -a --exclude '.git' --exclude '.github' --exclude '_site' --exclude 'scripts' --exclude 'node_modules' --exclude 'wrangler.jsonc' --exclude 'worker.js' --exclude '*_debug.txt' --exclude 'debug_ff.*' --exclude 'telegram_*state.json' --exclude 'tradfi_asx_test.json' --exclude 'tradfi_fund_test.json' --exclude 'token_sources_cache.json' ./ _site/
           printf '/*.json\n  Cache-Control: no-cache\n/*.html\n  Cache-Control: no-cache\n/*.js\n  Cache-Control: public, max-age=300\n' > _site/_headers
-      - name: Shrink scripts (safe: any file that fails a syntax check keeps its original)
+      - name: Shrink scripts (any file that fails a syntax check keeps its original)
         run: |
           for f in accounts.js ttmcharts.js ttmpaper.js tradfi_extra.js ttmind.js chartpro.js education.js; do
             [ -f "_site/$f" ] || continue
