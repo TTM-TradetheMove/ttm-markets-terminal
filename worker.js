@@ -78,7 +78,22 @@ async function decide(env, keys, auth){
   return keys.some(k => allowed(k, s, p)) ? {ok: true, why: p ? 'plan-ok' : 'public'} : {ok: false, why: p ? 'plan-too-low' : 'signed-out'};
 }
 
+// Reliable timer: GitHub's own scheduler sometimes never starts a run, so Cloudflare's timer asks GitHub to start these jobs instead.
+// Needs a GitHub token saved as the secret GH_DISPATCH_TOKEN (Actions: read and write, this repository only). Without it, this does nothing.
+const REPO = 'TTM-TradetheMove/ttm-markets-terminal';
+const KICK = [{wf: 'daily-brief.yml', inputs: {force: 'false'}}];   // the brief script only writes once a day, 7am to 11am Melbourne
+async function kick(env){
+  if(!env.GH_DISPATCH_TOKEN) return;
+  for(const k of KICK){
+    try{
+      const r = await fetch('https://api.github.com/repos/' + REPO + '/actions/workflows/' + k.wf + '/dispatches', {method: 'POST', headers: {Authorization: 'Bearer ' + env.GH_DISPATCH_TOKEN, Accept: 'application/vnd.github+json', 'User-Agent': 'ttm-timer', 'X-GitHub-Api-Version': '2022-11-28'}, body: JSON.stringify({ref: 'main', inputs: k.inputs || {}})});
+      if(!r.ok) console.log('dispatch', k.wf, r.status, (await r.text()).slice(0, 200));
+    }catch(e){ console.log('dispatch failed', k.wf, String(e)); }
+  }
+}
+
 export default {
+  async scheduled(event, env, ctx){ ctx.waitUntil(kick(env)); },
   async fetch(request, env){
     const url = new URL(request.url), file = url.pathname.split('/').pop(), keys = FILES[file], mode = String(env.GATE || 'off');
     if(!keys || mode === 'off' || (request.method !== 'GET' && request.method !== 'HEAD')) return env.ASSETS.fetch(request);
