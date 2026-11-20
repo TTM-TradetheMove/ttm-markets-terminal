@@ -1330,6 +1330,12 @@ body.rm-full #rmIn{font-size:17px}
     <div class="rr-card"><h3>Best results by time frame</h3><div id="jTfBest" style="margin-bottom:10px"></div><div class="rr-wrap"><table class="rr-tbl" id="jTf"></table></div></div>
         <div class="rr-grid" style="align-items:stretch"><div class="rr-card"><h3>By asset</h3><div class="rr-wrap"><table class="rr-tbl" id="jAsset"></table></div></div><div class="rr-card"><h3>By direction &amp; leverage</h3><div class="rr-wrap"><table class="rr-tbl" id="jDir"></table></div></div></div>
     <div class="rr-card"><h3>Journal insights</h3><p class="calendar-note" style="margin:0 0 10px">Tag each trade with its setup, any mistakes and whether you followed your rules (press <b>Journal</b> on a trade below). Once a few trades are tagged, this shows what really makes and loses you money.</p><div id="jIns"></div></div>
+    <div class="rr-card" id="coachCard"><h3>Ask the TTM Coach <span style="float:right;color:var(--mute);text-transform:none;letter-spacing:0;font-size:12px">AI review of your closed trades</span></h3>
+      <p class="calendar-note" style="margin:0 0 10px">Ask what is working, what keeps costing you, or how to improve. The coach reads your closed trades, tags, ratings and notes. The more you journal, the better it gets.</p>
+      <div class="filter-row" id="coachChips" style="margin-bottom:10px"><button class="filter-chip" data-q="What is working best for me?">What's working?</button><button class="filter-chip" data-q="What mistakes or habits are costing me the most?">What's costing me?</button><button class="filter-chip" data-q="Where am I strongest and weakest by setup, asset and time frame?">Strengths &amp; weaknesses</button><button class="filter-chip" data-q="Give me a plan to improve my trading over the next 4 weeks, based on my journal.">4-week plan</button></div>
+      <div style="display:flex;gap:8px"><input id="coachQ" maxlength="500" placeholder="Ask about your trading…" style="flex:1"><button type="button" class="rr-btn" id="coachGo">Ask</button></div>
+      <div id="coachA" style="margin-top:12px"></div>
+      <p class="calendar-note" style="margin:10px 0 0">Your closed trades are sent to TTM's AI to answer. Education only, not financial advice. Answers rest on your data, so small samples mislead.</p></div>
     <div class="rr-card"><h3>Trade history</h3>
       <div class="filter-row" id="jFilter" style="margin-bottom:10px"><button class="filter-chip active" data-f="all">All</button><button class="filter-chip" data-f="open">Open</button><button class="filter-chip" data-f="win">Wins</button><button class="filter-chip" data-f="loss">Losses</button><button class="filter-chip" data-f="be">Break-even</button></div>
       <div class="rr-wrap"><table class="rr-tbl" id="jHist"></table></div>
@@ -4185,6 +4191,23 @@ document.addEventListener('click', e => { if(!jcur || !e.target.id) return;
   if(e.target.id === 'jnCancel'){ $('rrModal').classList.remove('open'); jcur = null; }
   else if(e.target.id === 'jnAddRule'){ const v = $('jnNewRule').value.trim().slice(0, 80); if(!v || jcur.rules.indexOf(v) >= 0) return; const g = grab(); g.rules.push(v); jcur.rules.push(v); const base = pbRules(); base.push(v); lsSet('ttm_playbook_v1', base); drawJournal(g); }
   else if(e.target.id === 'jnSave'){ const list = loadSaved(), x = list[jcur.i]; if(!x) return; const g = grab(); g.offered = jcur.rules.slice(); x.j = g; saveAll(list); $('rrModal').classList.remove('open'); jcur = null; renderJournal(); } });
+// ---- AI coach: sends a compact copy of the member's closed trades with the question; answer comes back as text
+const coachMd = t => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').split('\n').map(l => /^\s*[-•*]\s+/.test(l) ? '<div style="margin:3px 0 3px 14px;text-indent:-12px">• ' + l.replace(/^\s*[-•*]\s+/, '') + '</div>' : l.trim() ? '<p style="margin:0 0 8px">' + l + '</p>' : '').join('');
+async function coachAsk(q){
+  const a = $('coachA'), go = $('coachGo'); if(window.ttmCan && !ttmCan('coach')){ ttmUpsell('coach'); return; }
+  q = (q || '').trim(); if(!q){ a.innerHTML = '<p class="calendar-note" style="margin:0">Type a question or tap one above.</p>'; return; }
+  const closed = closedOf(jAccF); if(!closed.length){ a.innerHTML = '<p class="calendar-note" style="margin:0">Close a few trades first (and journal them), then ask again.</p>'; return; }
+  const st = tstats(closed), trades = closed.slice(0, 150).map(x => { const j = x.j || {}; return {asset: x.snap.asset, dir: x.snap.long ? 'long' : 'short', mkt: x.snap.mkt === 'spot' ? 'spot' : 'leverage', lev: x.snap.mkt === 'spot' ? 1 : x.snap.lev, tf: tfName(tfOf(x)), r: x.res.r, pnl: x.res.pnl, closed: new Date(x.res.closed || x.t).toISOString().slice(0, 10), setup: j.setup || '', mist: j.mist || [], rules: j.offered && j.offered.length ? ((j.rules || []).length === j.offered.length ? 'followed' : 'broke') : '', rate: j.rate || '', how: x.res.how || '', note: j.note || ''}; });
+  go.disabled = true; a.innerHTML = '<p class="calendar-note" style="margin:0">The coach is reading your trades… about 10 to 20 seconds.</p>';
+  try{ const cfg = window.ttmCfg(), tk = await window.ttmWho().token(); if(!tk){ a.innerHTML = '<p class="calendar-note" style="margin:0">Sign in to use the coach.</p>'; go.disabled = false; return; }
+    const r = await fetch(cfg.url + '/functions/v1/trade-coach', {method: 'POST', headers: {apikey: cfg.key, Authorization: 'Bearer ' + tk, 'Content-Type': 'application/json'}, body: JSON.stringify({question: q, trades, stats: {closed: st.n, win_rate_pct: st.wr == null ? null : Math.round(st.wr * 1000) / 10, net_pnl_usd: Math.round(st.net), avg_r: st.avgR == null ? null : Math.round(st.avgR * 100) / 100, profit_factor: st.pf == null ? null : Math.round(st.pf * 100) / 100}})});
+    const j = await r.json().catch(() => ({}));
+    a.innerHTML = j.answer ? `<div style="border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:10px;padding:12px 14px;background:rgba(255,255,255,.02)">${coachMd(j.answer)}${j.left != null ? `<small style="color:var(--mute)">${j.left} question${j.left === 1 ? '' : 's'} left today</small>` : ''}</div>` : `<p class="calendar-note" style="margin:0;color:#e0554d">${esc(j.error || (r.status === 404 ? 'The coach is not set up yet (function not deployed).' : 'Problem ' + r.status))}</p>`;
+  }catch(e){ a.innerHTML = '<p class="calendar-note" style="margin:0;color:#e0554d">Could not reach the coach. Check your connection and try again.</p>'; }
+  go.disabled = false;
+}
+document.addEventListener('click', e => { if(e.target.id === 'coachGo') coachAsk($('coachQ').value); const c = e.target.closest && e.target.closest('#coachChips [data-q]'); if(c){ $('coachQ').value = c.dataset.q; coachAsk(c.dataset.q); } });
+document.addEventListener('keydown', e => { if(e.key === 'Enter' && e.target.id === 'coachQ') coachAsk(e.target.value); });
 function jInsights(closed){ const el = $('jIns'); if(!el) return; const tagged = closed.filter(x => x.j && (x.j.rate || x.j.setup || (x.j.mist || []).length || (x.j.offered || []).length));
   if(tagged.length < 2){ el.innerHTML = '<p class="calendar-note" style="margin:0">Tag at least two closed trades to see results by setup, by mistake and by rule-following.</p>'; return; }
   const bySetup = tagged.filter(x => x.j.setup), byMist = tagged.flatMap(x => (x.j.mist || []).map(m => Object.assign({}, x, {__k: m}))), byRule = tagged.filter(x => x.j.offered && x.j.offered.length);
@@ -5419,7 +5442,7 @@ fill(); paint();
 <script src="../education.js?v=2"></script>
 <script src="../ttmind.js?v=14"></script>
 <script src="../ttmpaper.js?v=15"></script>
-<script src="../accounts.js?v=1795159166"></script>
+<script src="../accounts.js?v=1795165207"></script>
 <script>
 (function(){
   const secs = Array.from(document.querySelectorAll('body > section[id]'));
