@@ -1254,8 +1254,8 @@ const LIVE = {rows: [], t: 0};
 const LVCOLS = 'id,title,starts_at,note,announced,reminded,repeat_days,repeat_dow', LVT = ['free', 'premium', 'pro'], LVTN = {free: 'Free', premium: 'Premium', pro: 'Pro'};
 const myTier = () => { if(!PROF) return 0; if(PROF.is_admin) return 2; if(PROF.plan_until && new Date(PROF.plan_until) < new Date()) return 0; return PROF.plan === 'pro' ? 2 : PROF.plan === 'premium' ? 1 : 0; };
 const lvNeed = s => Math.max(0, LVT.indexOf(s && s.min_tier || 'free'));
-async function liveSel(q){ let r = await api('/rest/v1/ttm_live?select=' + LVCOLS + ',min_tier&' + q); if(!r.ok) r = await api('/rest/v1/ttm_live?select=' + LVCOLS + '&' + q); return r; }   // second try works before live_tiers.sql has been run
-async function liveLoad(){ if(!on() || !USER) return; const r = await liveSel('starts_at=gt.' + encodeURIComponent(new Date(Date.now() - 3600e3).toISOString()) + '&order=starts_at.asc&limit=20'); if(r.ok && Array.isArray(r.json)){ LIVE.rows = r.json; liveBanner(); } }
+async function liveSel(q){ let r = await api('/rest/v1/ttm_live?select=' + LVCOLS + ',min_tier,ended_at&' + q); if(!r.ok) r = await api('/rest/v1/ttm_live?select=' + LVCOLS + ',min_tier&' + q); if(!r.ok) r = await api('/rest/v1/ttm_live?select=' + LVCOLS + '&' + q); return r; }   // second try works before live_tiers.sql has been run
+async function liveLoad(){ if(!on() || !USER) return; const r = await liveSel('starts_at=gt.' + encodeURIComponent(new Date(Date.now() - 6 * 3600e3).toISOString()) + '&order=starts_at.asc&limit=20'); if(r.ok && Array.isArray(r.json)){ LIVE.rows = r.json; liveBanner(); } }
 async function liveJoin(id){
   const s = LIVE.rows.find(x => String(x.id) === String(id)); if(!s) return;
   const need = lvNeed(s);
@@ -1265,14 +1265,14 @@ async function liveJoin(id){
   if(/^https?:\/\//i.test(u)){ if(w) w.location.href = u; else location.href = u; } else { if(w) w.close(); openAuth('<p>Your plan does not include this live session, or the link is not available yet. Try again in a moment.</p><div class="row"><button class="ttm-btn ghost" id="authClose">Close</button></div>'); }
 }
 function liveBanner(){
-  let b = $('ttmLive'); const now = Date.now(), s = LIVE.rows.find(x => new Date(x.starts_at).getTime() > now - 3600e3 && new Date(x.starts_at).getTime() < now + 7 * 864e5);
+  let b = $('ttmLive'); const now = Date.now(), s = LIVE.rows.find(x => !x.ended_at && new Date(x.starts_at).getTime() > now - 6 * 3600e3 && new Date(x.starts_at).getTime() < now + 7 * 864e5);
   if(!USER || !s){ if(b) b.remove(); return; }
   if(!b){ b = document.createElement('div'); b.id = 'ttmLive'; document.body.insertBefore(b, document.body.firstChild); }
   const t = new Date(s.starts_at).getTime(), mins = Math.round((t - now) / 60000), when = new Date(t).toLocaleString([], {weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit'});
   const st = mins <= 0 ? 'LIVE NOW' : mins <= 60 ? 'LIVE IN ' + mins + ' MIN' : 'LIVE SESSION';
   const need = lvNeed(s), lock = myTier() < need;
-  b.innerHTML = `<b>${st}</b><span>${e(s.title)} · ${e(when)}${need ? ` · ${e(LVTN[LVT[need]])}${need === 1 ? '+' : ' only'}` : ''}</span><a href="#" data-lvjoin="${e(s.id)}">${lock ? '🔒 Join on Zoom' : 'Join on Zoom'}</a>`;
-  if(!b.dataset.wired){ b.dataset.wired = '1'; b.addEventListener('click', ev => { const a = ev.target.closest('[data-lvjoin]'); if(!a) return; ev.preventDefault(); liveJoin(a.dataset.lvjoin); }); }
+  b.innerHTML = `<b>${st}</b><span>${e(s.title)} · ${e(when)}${need ? ` · ${e(LVTN[LVT[need]])}${need === 1 ? '+' : ' only'}` : ''}</span><a href="#" data-lvjoin="${e(s.id)}">${lock ? '🔒 Join on Zoom' : 'Join on Zoom'}</a>${PROF && PROF.is_admin && mins <= 15 ? `<a href="#" data-lvend="${e(s.id)}" style="margin-left:10px;opacity:.85">End session</a>` : ''}`;
+  if(!b.dataset.wired){ b.dataset.wired = '1'; b.addEventListener('click', async ev => { const z = ev.target.closest('[data-lvend]'); if(z){ ev.preventDefault(); const id = z.dataset.lvend, r = await api('/rest/v1/ttm_live?id=eq.' + id, {method: 'PATCH', headers: {Prefer: 'return=minimal'}, body: JSON.stringify({ended_at: new Date().toISOString()})}); if(r.ok){ const row = LIVE.rows.find(x => String(x.id) === String(id)); if(row) row.ended_at = new Date().toISOString(); liveBanner(); } else alert('Could not end the session. Run supabase/live_end.sql in Supabase first.'); return; } const a = ev.target.closest('[data-lvjoin]'); if(!a) return; ev.preventDefault(); liveJoin(a.dataset.lvjoin); }); }
 }
 setInterval(liveLoad, 60000); setInterval(liveBanner, 30000); setTimeout(liveLoad, 2500);
 const LVD = [[1, 'Mon'], [2, 'Tue'], [3, 'Wed'], [4, 'Thu'], [5, 'Fri'], [6, 'Sat'], [0, 'Sun']], LV = {edit: null};
