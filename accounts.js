@@ -44,7 +44,8 @@ const modal = document.createElement('div'); modal.id = 'authModal'; modal.inner
 
 async function raw(path, opt, token){
   const h = Object.assign({apikey: CFG.key, 'Content-Type': 'application/json'}, (opt && opt.headers) || {}); if(token) h.Authorization = 'Bearer ' + token; else if(CFG.key.indexOf('eyJ') === 0) h.Authorization = 'Bearer ' + CFG.key;
-  const r = await fetch(CFG.url.replace(/\/$/, '') + path, Object.assign({}, opt, {headers: h}));
+  const ac = new AbortController(), tm = setTimeout(() => ac.abort(), (opt && opt.timeout) || 20000);   // a request that hangs must fail, not freeze the page
+  let r; try{ r = await fetch(CFG.url.replace(/\/$/, '') + path, Object.assign({}, opt, {headers: h, signal: ac.signal})); } finally { clearTimeout(tm); }
   let j = null; try{ j = await r.json(); }catch(err){} return {ok: r.ok, status: r.status, json: j};
 }
 let REFRESHING = null;
