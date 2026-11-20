@@ -24,6 +24,6 @@
   },
   // Plan gate mode: "off" = never blocks, "report" = never blocks but labels each paid-file request (x-ttm-gate header), "on" = blocks people whose plan does not include it
   "vars": { "GATE": "on" },
-  // Cloudflare timer, UTC: 7 minutes past the hour from 20:00 to 01:00 UTC (that is 7am to noon Melbourne in summer, 6am to 11am in winter)
-  "triggers": { "crons": ["7 20,21,22,23,0 * * *"] }
+  // Cloudflare timers (UTC): (1) 7 minutes past the hour from 20:00 to 01:00 starts the daily brief (7am to noon Melbourne in summer), (2) every 15 minutes starts the site deploy so new data goes live
+  "triggers": { "crons": ["7 20,21,22,23,0 * * *", "*/15 * * * *"] }
 }

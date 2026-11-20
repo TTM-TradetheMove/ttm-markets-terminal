@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 concurrency:
   group: cloudflare-deploy
-  cancel-in-progress: true
+  cancel-in-progress: false
 permissions:
   contents: read
 jobs:
