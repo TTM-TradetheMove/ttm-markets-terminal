@@ -1338,6 +1338,7 @@ body.rm-full #rmIn{font-size:17px}
     </div>
   </div>
 </section>
+<style id="jtidy">#jHist td{padding-top:7px;padding-bottom:7px;vertical-align:middle}#jHist .jhow{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:12px}#jHist .jact{display:flex;gap:6px;align-items:center;justify-content:flex-end;flex-wrap:nowrap}#jHist .jact .rr-btn{white-space:nowrap}#jHist .jic{padding-left:9px;padding-right:9px;min-width:0;list-style:none;cursor:pointer}#jHist .jic::-webkit-details-marker{display:none}#jHist .jmore{position:relative}#jHist .jmenu{position:absolute;right:0;top:100%;margin-top:4px;z-index:20;display:flex;flex-direction:column;gap:4px;background:#16161a;border:1px solid var(--line);border-radius:10px;padding:6px;min-width:90px;box-shadow:0 8px 24px rgba(0,0,0,.5)}</style>
 <div class="rr-modal" id="rrModal"><div id="rrModalBody"></div></div>
 
 <section id="pnlcal">
@@ -4216,8 +4217,8 @@ function renderJournal(){
   if(!rows.length) t += '<tr><td colspan="13" style="color:var(--mute)">Nothing here yet.</td></tr>';
   rows.forEach(x => { const i = list.indexOf(x), r = x.res;
     t += `<tr><td>${new Date(r ? r.closed : (x.opened || x.t)).toLocaleDateString()}</td><td><b>${esc(x.name)}</b></td><td>${esc(accName(accOf(x)))}</td><td>${esc(x.snap.asset)}</td><td style="color:${x.snap.long ? '#3fb47a' : '#e0554d'}">${x.snap.long ? 'Long' : 'Short'}</td><td>${x.snap.mkt === 'spot' ? 1 : x.snap.lev}×</td><td>${esc(tfName(tfOf(x)))}</td><td>${pr(x.snap.E)}</td><td>${pill(x)}</td>` +
-      (r ? `<td style="color:${r.pnl >= 0 ? '#3fb47a' : '#e0554d'}"><b>${usd(r.pnl)}</b></td><td>${r.r.toFixed(2)}R</td><td style="white-space:normal;min-width:150px;color:var(--mute)">${esc(r.how || '')}${jTagH(x)}</td>` : '<td>—</td><td>—</td><td style="color:var(--mute)">In play</td>') +
-      `<td><div class="rr-acts" style="margin:0">${x.status === 'open' ? `<button class="rr-btn sm" data-j="close" data-i="${i}">Close / update</button>` : `<button class="rr-btn ghost sm" data-j="reopen" data-i="${i}">Reopen</button>`}<button class="rr-btn ghost sm" data-j="journal" data-i="${i}">Journal</button><button class="rr-btn ghost sm" data-j="load" data-i="${i}">Load</button><button class="rr-btn ghost sm" data-j="del" data-i="${i}">Delete</button></div></td></tr>`; });
+      (r ? `<td style="color:${r.pnl >= 0 ? '#3fb47a' : '#e0554d'}"><b>${usd(r.pnl)}</b></td><td>${r.r.toFixed(2)}R</td><td style="white-space:normal;min-width:150px;max-width:260px;color:var(--mute)"><div class="jhow" title="${esc(r.how || '')}">${esc(r.how || '')}</div>${jTagH(x)}</td>` : '<td>—</td><td>—</td><td style="color:var(--mute)">In play</td>') +
+      `<td><div class="jact">${x.status === 'open' ? `<button class="rr-btn sm" data-j="close" data-i="${i}">Close</button>` : `<button class="rr-btn ghost sm" data-j="reopen" data-i="${i}">Reopen</button>`}<button class="rr-btn ghost sm jic" data-j="journal" data-i="${i}" title="Journal this trade">📝</button><details class="jmore"><summary class="rr-btn ghost sm jic" title="More">⋯</summary><div class="jmenu"><button class="rr-btn ghost sm" data-j="load" data-i="${i}">Load</button><button class="rr-btn ghost sm" data-j="del" data-i="${i}">Delete</button></div></details></div></td></tr>`; });
   $('jHist').innerHTML = t + '</tbody>';
   jInsights(closed);
   renderPortfolio();
@@ -4394,7 +4395,7 @@ function wireJournal(){
     else if(a === 'del'){ if(x.status === 'closed' || x.status === 'open'){ if(!confirm(x.status === 'open' ? 'Cancel this open trade and release its margin?' : 'Delete this closed trade from your history? Your balance will change back.')) return; } list.splice(i, 1); saveAll(list); renderSaved(); render(); } }
   $('rrSaved').addEventListener('click', e => { const b = e.target.closest('button[data-a]'); if(b) act(b); });
   window.__addpos = id => { const i = loadSaved().findIndex(x => x && x.id === id); if(i >= 0) act({dataset: {j: 'addpos', i: String(i)}}); };
-  ['jOpen', 'jHist', 'pfOpen'].forEach(id => $(id).addEventListener('click', e => { const b = e.target.closest('button[data-j]'); if(b) act(b); }));
+  ['jOpen', 'jHist', 'pfOpen'].forEach(id => $(id).addEventListener('click', e => { const b = e.target.closest('button[data-j]'); if(b){ const d = b.closest('details'); if(d) d.open = false; act(b); } }));
   $('jAccF').addEventListener('click', e => { const b = e.target.closest('button[data-a]'); if(!b) return; jAccF = b.dataset.a; lsSet('ttm_jacc_v1', jAccF); renderAcct(); renderJournal(); });
   $('jFilter').addEventListener('click', e => { const c = e.target.closest('.filter-chip'); if(!c) return; document.querySelectorAll('#jFilter .filter-chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); jf = c.dataset.f; renderJournal(); });
   const exp = () => { const blob = new Blob([JSON.stringify({ttm_rr: 3, bals: BALS, setups: loadSaved()}, null, 2)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ttm-risk-reward-backup.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
