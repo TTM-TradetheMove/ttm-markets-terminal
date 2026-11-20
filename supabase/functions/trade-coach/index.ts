@@ -57,6 +57,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({model: MODEL, max_tokens: 1200, system: SYSTEM, messages: [{role: "user", content}]})});
     const j = await r.json(); if (!r.ok) return out({error: "The coach could not answer right now. Try again soon."}, 502);
     const answer = (j.content || []).filter((x: any) => x.type === "text").map((x: any) => x.text).join("").trim();
-    return out({answer, left: lim - used - 1});
+    if (!answer) return out({error: "The coach returned an empty answer. Try again."}, 502);
+    return out({answer, left: lim - used - 1, v: 1});
   } catch (_e) { return out({error: "Something went wrong. Try again."}, 500); }
 });
