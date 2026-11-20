@@ -22,6 +22,11 @@ Rules:
 - End with exactly: "Education only, not advice."
 `;
 
+const MODE: Record<string, string> = {
+  rr: "This view is the Risk-to-Reward calculator. You get the member's closed trades grouped by time frame, leverage bucket and the combination of both, plus the trade they are planning now (if any). Say which time frame and leverage have worked best (rank by average R and say how many trades), which have hurt, and whether the planned trade fits their history: risk per trade above about 2% of the account, very high leverage, or a stop close to liquidation are red flags. Do not tell them to take or skip the specific trade.",
+  pnl: "This view is the P&L Calendar. You get the member's results by weekday and month, green-day rate, trades per day, win and loss streaks and heavy trading days. Point out the best and worst weekdays or months only where the sample is big enough, whether heavy trading days made or lost money (overtrading), and what the streaks suggest about discipline.",
+  pf: "This view is Portfolio Forecast. You get the member's accounts (spot, leverage, super), their open positions at live prices, concentration by coin, the loss if every open stop hits, the gain if every target hits, and open exposure relative to their balance. Comment on concentration, how much of the account is at risk, leverage, and how actual compares with the forecast. Never say what a coin will do.",
+};
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", {headers: CORS});
   try {
@@ -42,10 +47,13 @@ Deno.serve(async (req) => {
 
     const b = await req.json().catch(() => ({}));
     const q = s(b.question, 500).trim(); if (!q) return out({error: "Type a question first."}, 400);
-    const trades = (Array.isArray(b.trades) ? b.trades : []).slice(0, 150).map((t: any) => ({
+    const mode = ["rr", "pnl", "pf"].includes(b.mode) ? (b.mode as string) : "journal";
+    const trades = mode !== "journal" ? [] : (Array.isArray(b.trades) ? b.trades : []).slice(0, 150).map((t: any) => ({
       asset: s(t.asset, 12), dir: s(t.dir, 6), market: s(t.mkt, 8), lev: nn(t.lev), timeframe: s(t.tf, 12), r: nn(t.r), pnl_usd: nn(t.pnl), closed: s(t.closed, 10),
       setup: s(t.setup, 40), mistakes: Array.isArray(t.mist) ? t.mist.slice(0, 8).map((m: unknown) => s(m, 30)) : [], rules: s(t.rules, 12), rating: s(t.rate, 5), how_it_ended: s(t.how, 100), note: s(t.note, 240)}));
-    if (!trades.length) return out({error: "Close and journal a few trades first, then ask again."}, 400);
+    const dataStr = mode === "journal" ? "" : JSON.stringify(b.data ?? null).slice(0, 40000);
+    if (mode === "journal" && !trades.length) return out({error: "Close and journal a few trades first, then ask again."}, 400);
+    if (mode !== "journal" && (!b.data || dataStr.length < 5)) return out({error: "Nothing to review yet."}, 400);
 
     const day = new Date().toISOString().slice(0, 10), lim = prof.is_admin ? DAILY_ADMIN : DAILY;
     const used = (await get(`ttm_coach_usage?select=n&user_id=eq.${uid}&day=eq.${day}`))[0]?.n || 0;
@@ -53,9 +61,9 @@ Deno.serve(async (req) => {
     await rest("ttm_coach_usage?on_conflict=user_id,day", {method: "POST", headers: {Prefer: "resolution=merge-duplicates,return=minimal"}, body: JSON.stringify({user_id: uid, day, n: used + 1})});
 
     const k = Deno.env.get("ANTHROPIC_API_KEY"); if (!k) return out({error: "The coach is not set up yet (missing key)."}, 500);
-    const content = JSON.stringify({question: q, summary: b.stats || null, trade_count: trades.length, trades});
+    const content = mode === "journal" ? JSON.stringify({question: q, summary: b.stats || null, trade_count: trades.length, trades}) : `{"question": ${JSON.stringify(q)}, "data": ${dataStr}}`;
     const r = await fetch("https://api.anthropic.com/v1/messages", {method: "POST", headers: {"x-api-key": k, "anthropic-version": "2023-06-01", "content-type": "application/json"},
-      body: JSON.stringify({model: MODEL, max_tokens: 2000, system: SYSTEM, messages: [{role: "user", content}]})});
+      body: JSON.stringify({model: MODEL, max_tokens: 2000, system: SYSTEM + (MODE[mode] ? "\n\nContext: " + MODE[mode] : ""), messages: [{role: "user", content}]})});
     const j = await r.json(); if (!r.ok) return out({error: "The coach could not answer right now. Try again soon."}, 502);
     const answer = (j.content || []).filter((x: any) => x.type === "text").map((x: any) => x.text).join("").trim();
     if (!answer) return out({error: "The coach returned an empty answer (" + s(j.stop_reason, 30) + "; blocks: " + (j.content || []).map((x: any) => x.type).join(",") + "). Try again."}, 502);
