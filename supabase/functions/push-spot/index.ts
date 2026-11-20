@@ -356,7 +356,7 @@ const handler = async (req: Request): Promise<Response> => {
       const people = aud === "all" ? null : await get(aud === "admin" ? "ttm_profiles?select=id&is_admin=eq.true"
         : aud === "pro" ? `ttm_profiles?select=id&or=(is_admin.eq.true,and(plan.eq.pro,or(plan_until.is.null,plan_until.gt.${nowIso})))`   // Pro members (and you)
         : "ttm_profiles?select=id&or=(is_admin.eq.true,beta.eq.true)");
-      const n = await send(await subsFor(people === null ? null : idsOf(people)), {title: an.title, body: an.body || "", tag: "ann-" + an.id, url: an.url || "./index.html"});
+      const n = await send(await subsFor(people === null ? null : idsOf(people)), {title: an.title, body: an.body || "", tag: "ann-" + an.id, url: an.url || "./index.html", image: an.image || undefined});
       await rest(`ttm_announce?id=eq.${an.id}`, {method: "PATCH", body: JSON.stringify({sent_to: n || 0})});
     }
   } catch (e) { console.log("announce failed:", String(e)); }

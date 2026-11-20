@@ -4,7 +4,7 @@ self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 self.addEventListener('push', e => {
   let d = {}; try { d = e.data.json(); } catch (x) { d = {title: 'TTM', body: e.data ? e.data.text() : ''}; }
   e.waitUntil(self.registration.showNotification(d.title || 'TTM', {
-    body: d.body || '', icon: 'icon-192.png', badge: 'icon-192.png', tag: d.tag || 'ttm', data: {url: d.url || './crypto/index.html'}
+    body: d.body || '', icon: 'icon-192.png', badge: 'icon-192.png', image: d.image || undefined, tag: d.tag || 'ttm', data: {url: d.url || './crypto/index.html'}
   }));
 });
 self.addEventListener('notificationclick', e => {
