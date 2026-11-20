@@ -78,6 +78,31 @@
   .footer-brand{ display:flex; align-items:center; gap:12px; margin-bottom:18px; }
   .footer-brand img{ height:52px; opacity:0.85; }
   .footer-brand span{ font-family:'Space Mono',monospace; font-size:11px; color:var(--ink-dim); letter-spacing:0.08em; }
+/*ttm-enh*/
+html,body{overflow-x:hidden}
+img{max-width:100%;height:auto}
+.stat .value,.stat .label,.card h3,.card li,.t-desc,.verdict-box p,section p,.warn,.callout{overflow-wrap:anywhere}
+.card,.stat,.two-col>*,.tech-grid>*{min-width:0}
+.levels{display:block;overflow-x:auto;max-width:100%}
+.glance{margin:0 0 40px;border:1px solid var(--hairline);background:var(--bg-panel)}
+.glance .g-head{padding:12px 18px;border-bottom:1px solid var(--hairline);font:600 11px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+.glance .g-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--hairline)}
+.glance .g-t{background:var(--bg-panel);padding:16px 18px}
+.glance .g-t .k{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim)}
+.glance .g-t .v{margin-top:6px;font-size:19px;font-weight:600;color:var(--gold-bright)}
+.glance .g-sr{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--hairline);border-top:1px solid var(--hairline)}
+.glance .g-sr>div{background:var(--bg-panel);padding:16px 18px;font-size:14px;line-height:1.5;color:var(--ink)}
+.glance .g-sr b{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.glance .g-sr .s b{color:var(--up)}.glance .g-sr .r b{color:var(--down)}
+.glance .g-bars{padding:16px 18px;border-top:1px solid var(--hairline);display:grid;gap:14px}
+.glance .bar-l{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-dim);margin-bottom:6px;gap:12px}
+.glance .bar-l span:last-child{color:var(--ink);text-align:right}
+.glance .bar{height:10px;background:#1d1a17;border:1px solid var(--hairline)}
+.glance .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold-bright))}
+.glance .bar.lock i{background:linear-gradient(90deg,#3d6f55,var(--up))}
+.glance .g-note{padding:10px 18px;border-top:1px solid var(--hairline);font-size:11px;color:var(--ink-dim)}
+@media (max-width:700px){.glance .g-tiles{grid-template-columns:repeat(2,1fr)}.glance .g-sr{grid-template-columns:1fr}.glance .g-t .v{font-size:17px}}
+/*/ttm-enh*/
 </style>
 <style id="ttm-return-css">.ttm-return{position:fixed;top:14px;left:14px;z-index:9999;display:inline-flex;align-items:center;gap:8px;padding:9px 16px;background:rgba(9,8,10,.92);border:1px solid #dba118;color:#f0b929;border-radius:999px;font:600 13px/1 Inter,system-ui,sans-serif;letter-spacing:.04em;text-decoration:none;cursor:pointer;backdrop-filter:blur(6px);box-shadow:0 4px 18px rgba(0,0,0,.5)}.ttm-return:hover{background:#dba118;color:#09080a}@media print{.ttm-return{display:none}}</style><style id="ttm-live-css">.ttm-live{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-family:'Space Mono',monospace;font-size:12.5px;color:var(--ink-dim,#9c9484)}
 .ttm-live b{color:var(--gold-bright,#f0b929);font-weight:700}.ttm-live .up{color:var(--up,#4caf7d)}.ttm-live .dn{color:var(--down,#d9534f)}
@@ -103,6 +128,7 @@
 </div>
 
 <div class="wrap">
+<!--ttm-glance--><div class="glance"><div class="g-head">TTM at a glance</div><div class="g-tiles"><div class="g-t"><div class="k">Market cap</div><div class="v">≈ $4.2–5.2B · Rank #22–35</div></div><div class="g-t"><div class="k">Circulating</div><div class="v">≈ 4.1–4.2B SUI</div></div><div class="g-t"><div class="k">Report</div><div class="v">Deep Dive · 26 Sep 2026</div></div></div><div class="g-sr"><div class="s"><b>Main strength</b>Sui achieved genuinely rare, concrete institutional milestones in 2026 — becoming only the fourth Layer-1 with CME futures access, and gaining three separate U.S.</div><div class="r"><b>Main risk</b>This deep dive found one of the more severe, precisely-quantified usage collapses anywhere in this series — network fees down roughly 86% and daily active addresses down roughly 86% from…</div></div><div class="g-bars"><div><div class="bar-l"><span>Supply in circulation</span><span>41% circulating · 59% locked or unissued</span></div><div class="bar lock"><i style="width:41%"></i></div></div></div><div class="g-note">Summary drawn from this report. Figures are as of the report date; the live price above updates automatically. Educational only, not advice.</div></div><!--/ttm-glance-->
 
   <!-- FRAMEWORK 1: USAGE -->
   <section>
