@@ -1,0 +1,44 @@
+name: Congress Copy agent (paper)
+
+on:
+  schedule:
+    - cron: "41 */3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: congress-copy
+  cancel-in-progress: false
+
+jobs:
+  copy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PDF reader
+        run: sudo apt-get install -y poppler-utils >/dev/null 2>&1 || true
+      - name: Follow new filings with paper trades
+        env:
+          FOLLOW: "Pelosi:Nancy"
+          START: "100000"
+          SIZE_PCT: "5"
+        run: python3 scripts/congress_copy.py
+      - name: Save results
+        if: always()
+        run: |
+          git config user.name "ttm-calendar-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add congress_copy.json 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Congress copy paper results"
+            git pull --rebase -X theirs origin main || true
+            git push origin HEAD:main || true
+          fi
