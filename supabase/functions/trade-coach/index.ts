@@ -54,10 +54,10 @@ Deno.serve(async (req) => {
     const k = Deno.env.get("ANTHROPIC_API_KEY"); if (!k) return out({error: "The coach is not set up yet (missing key)."}, 500);
     const content = JSON.stringify({question: q, summary: b.stats || null, trade_count: trades.length, trades});
     const r = await fetch("https://api.anthropic.com/v1/messages", {method: "POST", headers: {"x-api-key": k, "anthropic-version": "2023-06-01", "content-type": "application/json"},
-      body: JSON.stringify({model: MODEL, max_tokens: 1200, system: SYSTEM, messages: [{role: "user", content}]})});
+      body: JSON.stringify({model: MODEL, max_tokens: 3000, system: SYSTEM, messages: [{role: "user", content}]})});
     const j = await r.json(); if (!r.ok) return out({error: "The coach could not answer right now. Try again soon."}, 502);
     const answer = (j.content || []).filter((x: any) => x.type === "text").map((x: any) => x.text).join("").trim();
-    if (!answer) return out({error: "The coach returned an empty answer. Try again."}, 502);
+    if (!answer) return out({error: "The coach returned an empty answer (" + s(j.stop_reason, 30) + "; blocks: " + (j.content || []).map((x: any) => x.type).join(",") + "). Try again."}, 502);
     return out({answer, left: lim - used - 1, v: 1});
   } catch (_e) { return out({error: "Something went wrong. Try again."}, 500); }
 });
