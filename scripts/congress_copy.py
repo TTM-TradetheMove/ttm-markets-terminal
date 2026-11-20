@@ -8,7 +8,7 @@ so the paper account trades at the price on the day the filing is first seen (wh
 her own trade date and the price then, so the cost of the delay is visible.
 Only plain stock rows ([ST]) are copied. Options, funds, bonds and anything without a ticker are skipped and logged.
 Output: congress_copy.json (read by the Engine page). First run only records existing filings and does not trade.
-Env: FOLLOW="Pelosi:Nancy"  START=100000  SIZE_PCT=5  DRY_RUN=1
+Env: FOLLOW="Pelosi:Nancy"  START=100000  SIZE_PCT=5  RESET=1 (wipe and restart)  DRY_RUN=1
 """
 import json, os, re, sys, time, subprocess, tempfile, urllib.parse
 from datetime import datetime, timezone
@@ -86,7 +86,7 @@ def mark(S):
 
 def main():
     try:
-        S = json.load(open(OUT))
+        S = None if os.environ.get("RESET") == "1" else json.load(open(OUT))
     except Exception:
         S = None
     seeded = S is not None

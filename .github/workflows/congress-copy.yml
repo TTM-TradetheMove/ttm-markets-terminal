@@ -4,6 +4,17 @@ on:
   schedule:
     - cron: "41 */3 * * *"
   workflow_dispatch:
+    inputs:
+      start_balance:
+        description: "Starting balance in US dollars (only used with Reset)"
+        default: "100000"
+      size_pct:
+        description: "Percent of the account per buy"
+        default: "5"
+      reset:
+        description: "Reset: wipe the Congress account and start again with the balance above"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -26,8 +37,9 @@ jobs:
       - name: Follow new filings with paper trades
         env:
           FOLLOW: "Pelosi:Nancy"
-          START: "100000"
-          SIZE_PCT: "5"
+          START: ${{ inputs.start_balance || '100000' }}
+          SIZE_PCT: ${{ inputs.size_pct || '5' }}
+          RESET: ${{ inputs.reset && '1' || '0' }}
         run: python3 scripts/congress_copy.py
       - name: Save results
         if: always()
