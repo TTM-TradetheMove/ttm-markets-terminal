@@ -1,15 +1,58 @@
-cdd fail https://api.blockchain.info/charts/bitcoin-days-destroyed?timespan=20years&sampled=false&format=json&cors=true HTTP Error 404: Not Found
-cdd fail https://api.blockchain.info/charts/bitcoin-days-destroyed?timespan=all&format=json&cors=true HTTP Error 404: Not Found
+fail https://api.blockchain.info/charts/bitcoin-days-destroyed?timespan=all&sampled=false&format=json HTTP Error 404: Not Found
+fail https://api.blockchain.info/charts/bitcoin-days-destroyed?timespan=20years&format=json HTTP Error 404: Not Found
+fail https://api.blockchain.info/charts/bitcoin-days-destroyed?format=json HTTP Error 404: Not Found
+fail https://blockchain.info/charts/bitcoin-days-destroyed?timespan=all&sampled=false&format=json Expecting value: line 1 column 1 (char 0)
+fail https://blockchain.info/charts/bitcoin-days-destroyed?timespan=20years&format=json Expecting value: line 1 column 1 (char 0)
+fail https://blockchain.info/charts/bitcoin-days-destroyed?format=json Expecting value: line 1 column 1 (char 0)
+fail https://api.blockchain.com/charts/bitcoin-days-destroyed?timespan=all&sampled=false&format=json HTTP Error 404: Not Found
+fail https://api.blockchain.com/charts/bitcoin-days-destroyed?timespan=20years&format=json HTTP Error 404: Not Found
+fail https://api.blockchain.com/charts/bitcoin-days-destroyed?format=json HTTP Error 404: Not Found
+fail https://www.blockchain.com/charts/bitcoin-days-destroyed?timespan=all&sampled=false&format=json Expecting value: line 1 column 1 (char 0)
+fail https://www.blockchain.com/charts/bitcoin-days-destroyed?timespan=20years&format=json Expecting value: line 1 column 1 (char 0)
+fail https://www.blockchain.com/charts/bitcoin-days-destroyed?format=json Expecting value: line 1 column 1 (char 0)
+fail https://api.blockchain.info/charts/bitcoin-days-destroyed?timespan=all&sampled=false&format=json HTTP Error 404: Not Found
+fail https://api.blockchain.info/charts/bitcoin-days-destroyed?timespan=20years&format=json HTTP Error 404: Not Found
+fail https://api.blockchain.info/charts/bitcoin-days-destroyed?format=json HTTP Error 404: Not Found
+fail https://api.blockchain.info/charts/bitcoin-days-destroyed-cumulative?timespan=all&sampled=false&format=json HTTP Error 404: Not Found
+fail https://api.blockchain.info/charts/bitcoin-days-destroyed-cumulative?timespan=20years&format=json HTTP Error 404: Not Found
+fail https://api.blockchain.info/charts/bitcoin-days-destroyed-cumulative?format=json HTTP Error 404: Not Found
+fail https://blockchain.info/charts/bitcoin-days-destroyed-cumulative?timespan=all&sampled=false&format=json Expecting value: line 1 column 1 (char 0)
+fail https://blockchain.info/charts/bitcoin-days-destroyed-cumulative?timespan=20years&format=json Expecting value: line 1 column 1 (char 0)
+fail https://blockchain.info/charts/bitcoin-days-destroyed-cumulative?format=json Expecting value: line 1 column 1 (char 0)
+fail https://api.blockchain.com/charts/bitcoin-days-destroyed-cumulative?timespan=all&sampled=false&format=json HTTP Error 404: Not Found
+fail https://api.blockchain.com/charts/bitcoin-days-destroyed-cumulative?timespan=20years&format=json HTTP Error 404: Not Found
+fail https://api.blockchain.com/charts/bitcoin-days-destroyed-cumulative?format=json HTTP Error 404: Not Found
+fail https://www.blockchain.com/charts/bitcoin-days-destroyed-cumulative?timespan=all&sampled=false&format=json Expecting value: line 1 column 1 (char 0)
+fail https://www.blockchain.com/charts/bitcoin-days-destroyed-cumulative?timespan=20years&format=json Expecting value: line 1 column 1 (char 0)
+fail https://www.blockchain.com/charts/bitcoin-days-destroyed-cumulative?format=json Expecting value: line 1 column 1 (char 0)
+fail https://api.blockchain.info/charts/bitcoin-days-destroyed-cumulative?timespan=all&sampled=false&format=json HTTP Error 404: Not Found
+fail https://api.blockchain.info/charts/bitcoin-days-destroyed-cumulative?timespan=20years&format=json HTTP Error 404: Not Found
+fail https://api.blockchain.info/charts/bitcoin-days-destroyed-cumulative?format=json HTTP Error 404: Not Found
+fail https://api.blockchain.info/charts/days-destroyed?timespan=all&sampled=false&format=json HTTP Error 404: Not Found
+fail https://api.blockchain.info/charts/days-destroyed?timespan=20years&format=json HTTP Error 404: Not Found
+fail https://api.blockchain.info/charts/days-destroyed?format=json HTTP Error 404: Not Found
+fail https://blockchain.info/charts/days-destroyed?timespan=all&sampled=false&format=json Expecting value: line 1 column 1 (char 0)
+fail https://blockchain.info/charts/days-destroyed?timespan=20years&format=json Expecting value: line 1 column 1 (char 0)
+fail https://blockchain.info/charts/days-destroyed?format=json Expecting value: line 1 column 1 (char 0)
+fail https://api.blockchain.com/charts/days-destroyed?timespan=all&sampled=false&format=json HTTP Error 404: Not Found
+fail https://api.blockchain.com/charts/days-destroyed?timespan=20years&format=json HTTP Error 404: Not Found
+fail https://api.blockchain.com/charts/days-destroyed?format=json HTTP Error 404: Not Found
+fail https://www.blockchain.com/charts/days-destroyed?timespan=all&sampled=false&format=json Expecting value: line 1 column 1 (char 0)
+fail https://www.blockchain.com/charts/days-destroyed?timespan=20years&format=json Expecting value: line 1 column 1 (char 0)
+fail https://www.blockchain.com/charts/days-destroyed?format=json Expecting value: line 1 column 1 (char 0)
+fail https://api.blockchain.info/charts/days-destroyed?timespan=all&sampled=false&format=json HTTP Error 404: Not Found
+fail https://api.blockchain.info/charts/days-destroyed?timespan=20years&format=json HTTP Error 404: Not Found
+fail https://api.blockchain.info/charts/days-destroyed?format=json HTTP Error 404: Not Found
 Traceback (most recent call last):
-  File "/home/runner/work/ttm-markets-terminal/ttm-markets-terminal/scripts/balanced_test.py", line 79, in <module>
+  File "/home/runner/work/ttm-markets-terminal/ttm-markets-terminal/scripts/balanced_test.py", line 83, in <module>
     main()  # run
     ^^^^^^
-  File "/home/runner/work/ttm-markets-terminal/ttm-markets-terminal/scripts/balanced_test.py", line 45, in main
+  File "/home/runner/work/ttm-markets-terminal/ttm-markets-terminal/scripts/balanced_test.py", line 49, in main
     c = cdd()
         ^^^^^
-  File "/home/runner/work/ttm-markets-terminal/ttm-markets-terminal/scripts/balanced_test.py", line 24, in cdd
+  File "/home/runner/work/ttm-markets-terminal/ttm-markets-terminal/scripts/balanced_test.py", line 28, in cdd
     raise last
-  File "/home/runner/work/ttm-markets-terminal/ttm-markets-terminal/scripts/balanced_test.py", line 15, in cdd
+  File "/home/runner/work/ttm-markets-terminal/ttm-markets-terminal/scripts/balanced_test.py", line 19, in cdd
     j = json.loads(ur.fetch(u))
                    ^^^^^^^^^^^
   File "/home/runner/work/ttm-markets-terminal/ttm-markets-terminal/scripts/update_realized.py", line 27, in fetch
