@@ -127,6 +127,27 @@ def main():
         m = scale.get(k, 1.0)
         dp = 6 if "/" in k else 3
         s[k] = [None if v is None else round(v * m, dp if k not in ("OTHERSBTC",) else 0) for v in s[k]]
+    # Coin Metrics community data can run months behind. Past its last day, carry on with the CoinGecko-based daily series (already on the same scale).
+    try:
+        cur = json.load(open(CUR))["d"]
+        add = {}
+        for k in KEYS:
+            for j, v in enumerate(cur["s"].get(k, [])):
+                i = (cur["t0"] + j * cur["step"] - t0) // D
+                if i >= n and v is not None:
+                    add.setdefault(i, {})[k] = v
+        if add:
+            new_n = max(add) + 1
+            for k in KEYS:
+                last = s[k][-1] if s[k] else None
+                for i in range(n, new_n):
+                    v = add.get(i, {}).get(k, last)
+                    s[k].append(v)
+                    last = v if v is not None else last
+            st["extended_from_coingecko"] = "%d days after %s" % (new_n - n, datetime.fromtimestamp((t0 + (n - 1) * D) / 1000, timezone.utc).date())
+            n = new_n
+    except Exception as ex:
+        st["extend_note"] = "could not extend (%s)" % type(ex).__name__
     out = {"generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(), "source": "Coin Metrics community data, joined to CoinGecko-based series",
            "t0": t0, "step": D, "n": n, "s": s}
     json.dump(out, open(OUT, "w"), separators=(",", ":"))
