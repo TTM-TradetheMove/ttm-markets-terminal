@@ -1,80 +1,11 @@
-fail https://api.blockchain.info/charts/bitcoin-days-destroyed?timespan=all&sampled=false&format=json HTTP Error 404: Not Found
-fail https://api.blockchain.info/charts/bitcoin-days-destroyed?timespan=20years&format=json HTTP Error 404: Not Found
-fail https://api.blockchain.info/charts/bitcoin-days-destroyed?format=json HTTP Error 404: Not Found
-fail https://blockchain.info/charts/bitcoin-days-destroyed?timespan=all&sampled=false&format=json Expecting value: line 1 column 1 (char 0)
-fail https://blockchain.info/charts/bitcoin-days-destroyed?timespan=20years&format=json Expecting value: line 1 column 1 (char 0)
-fail https://blockchain.info/charts/bitcoin-days-destroyed?format=json Expecting value: line 1 column 1 (char 0)
-fail https://api.blockchain.com/charts/bitcoin-days-destroyed?timespan=all&sampled=false&format=json HTTP Error 404: Not Found
-fail https://api.blockchain.com/charts/bitcoin-days-destroyed?timespan=20years&format=json HTTP Error 404: Not Found
-fail https://api.blockchain.com/charts/bitcoin-days-destroyed?format=json HTTP Error 404: Not Found
-fail https://www.blockchain.com/charts/bitcoin-days-destroyed?timespan=all&sampled=false&format=json Expecting value: line 1 column 1 (char 0)
-fail https://www.blockchain.com/charts/bitcoin-days-destroyed?timespan=20years&format=json Expecting value: line 1 column 1 (char 0)
-fail https://www.blockchain.com/charts/bitcoin-days-destroyed?format=json Expecting value: line 1 column 1 (char 0)
-fail https://api.blockchain.info/charts/bitcoin-days-destroyed?timespan=all&sampled=false&format=json HTTP Error 404: Not Found
-fail https://api.blockchain.info/charts/bitcoin-days-destroyed?timespan=20years&format=json HTTP Error 404: Not Found
-fail https://api.blockchain.info/charts/bitcoin-days-destroyed?format=json HTTP Error 404: Not Found
-fail https://api.blockchain.info/charts/bitcoin-days-destroyed-cumulative?timespan=all&sampled=false&format=json HTTP Error 404: Not Found
-fail https://api.blockchain.info/charts/bitcoin-days-destroyed-cumulative?timespan=20years&format=json HTTP Error 404: Not Found
-fail https://api.blockchain.info/charts/bitcoin-days-destroyed-cumulative?format=json HTTP Error 404: Not Found
-fail https://blockchain.info/charts/bitcoin-days-destroyed-cumulative?timespan=all&sampled=false&format=json Expecting value: line 1 column 1 (char 0)
-fail https://blockchain.info/charts/bitcoin-days-destroyed-cumulative?timespan=20years&format=json Expecting value: line 1 column 1 (char 0)
-fail https://blockchain.info/charts/bitcoin-days-destroyed-cumulative?format=json Expecting value: line 1 column 1 (char 0)
-fail https://api.blockchain.com/charts/bitcoin-days-destroyed-cumulative?timespan=all&sampled=false&format=json HTTP Error 404: Not Found
-fail https://api.blockchain.com/charts/bitcoin-days-destroyed-cumulative?timespan=20years&format=json HTTP Error 404: Not Found
-fail https://api.blockchain.com/charts/bitcoin-days-destroyed-cumulative?format=json HTTP Error 404: Not Found
-fail https://www.blockchain.com/charts/bitcoin-days-destroyed-cumulative?timespan=all&sampled=false&format=json Expecting value: line 1 column 1 (char 0)
-fail https://www.blockchain.com/charts/bitcoin-days-destroyed-cumulative?timespan=20years&format=json Expecting value: line 1 column 1 (char 0)
-fail https://www.blockchain.com/charts/bitcoin-days-destroyed-cumulative?format=json Expecting value: line 1 column 1 (char 0)
-fail https://api.blockchain.info/charts/bitcoin-days-destroyed-cumulative?timespan=all&sampled=false&format=json HTTP Error 404: Not Found
-fail https://api.blockchain.info/charts/bitcoin-days-destroyed-cumulative?timespan=20years&format=json HTTP Error 404: Not Found
-fail https://api.blockchain.info/charts/bitcoin-days-destroyed-cumulative?format=json HTTP Error 404: Not Found
-fail https://api.blockchain.info/charts/days-destroyed?timespan=all&sampled=false&format=json HTTP Error 404: Not Found
-fail https://api.blockchain.info/charts/days-destroyed?timespan=20years&format=json HTTP Error 404: Not Found
-fail https://api.blockchain.info/charts/days-destroyed?format=json HTTP Error 404: Not Found
-fail https://blockchain.info/charts/days-destroyed?timespan=all&sampled=false&format=json Expecting value: line 1 column 1 (char 0)
-fail https://blockchain.info/charts/days-destroyed?timespan=20years&format=json Expecting value: line 1 column 1 (char 0)
-fail https://blockchain.info/charts/days-destroyed?format=json Expecting value: line 1 column 1 (char 0)
-fail https://api.blockchain.com/charts/days-destroyed?timespan=all&sampled=false&format=json HTTP Error 404: Not Found
-fail https://api.blockchain.com/charts/days-destroyed?timespan=20years&format=json HTTP Error 404: Not Found
-fail https://api.blockchain.com/charts/days-destroyed?format=json HTTP Error 404: Not Found
-fail https://www.blockchain.com/charts/days-destroyed?timespan=all&sampled=false&format=json Expecting value: line 1 column 1 (char 0)
-fail https://www.blockchain.com/charts/days-destroyed?timespan=20years&format=json Expecting value: line 1 column 1 (char 0)
-fail https://www.blockchain.com/charts/days-destroyed?format=json Expecting value: line 1 column 1 (char 0)
-fail https://api.blockchain.info/charts/days-destroyed?timespan=all&sampled=false&format=json HTTP Error 404: Not Found
-fail https://api.blockchain.info/charts/days-destroyed?timespan=20years&format=json HTTP Error 404: Not Found
-fail https://api.blockchain.info/charts/days-destroyed?format=json HTTP Error 404: Not Found
-Traceback (most recent call last):
-  File "/home/runner/work/ttm-markets-terminal/ttm-markets-terminal/scripts/balanced_test.py", line 83, in <module>
-    main()  # run
-    ^^^^^^
-  File "/home/runner/work/ttm-markets-terminal/ttm-markets-terminal/scripts/balanced_test.py", line 49, in main
-    c = cdd()
-        ^^^^^
-  File "/home/runner/work/ttm-markets-terminal/ttm-markets-terminal/scripts/balanced_test.py", line 28, in cdd
-    raise last
-  File "/home/runner/work/ttm-markets-terminal/ttm-markets-terminal/scripts/balanced_test.py", line 19, in cdd
-    j = json.loads(ur.fetch(u))
-                   ^^^^^^^^^^^
-  File "/home/runner/work/ttm-markets-terminal/ttm-markets-terminal/scripts/update_realized.py", line 27, in fetch
-    raise last
-  File "/home/runner/work/ttm-markets-terminal/ttm-markets-terminal/scripts/update_realized.py", line 22, in fetch
-    with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=60) as r:
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/urllib/request.py", line 215, in urlopen
-    return opener.open(url, data, timeout)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/urllib/request.py", line 521, in open
-    response = meth(req, response)
-               ^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/urllib/request.py", line 630, in http_response
-    response = self.parent.error(
-               ^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/urllib/request.py", line 559, in error
-    return self._call_chain(*args)
-           ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/urllib/request.py", line 492, in _call_chain
-    result = func(*args)
-             ^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/urllib/request.py", line 639, in http_error_default
-    raise HTTPError(req.full_url, code, msg, hdrs, fp)
-urllib.error.HTTPError: HTTP Error 404: Not Found
+OK cdd 83268 [{"d":"2022-11-21","unixTs":1668988800,"cdd":1.287838708E7},{"d":"2022-11-22","unixTs":1669075200,"cdd":1.643196623E7},{"d":"2022-11-23","unixTs":1669161600,"cdd":8.663187806E7},{"d":"2022-11-24","uni
+fail coin-days-destroyed HTTP Error 404: 
+OK balanced-price 92914 [{"d":"2022-11-21","unixTs":1668988800,"balancedPrice":11294.69},{"d":"2022-11-22","unixTs":1669075200,"balancedPrice":11282.27},{"d":"2022-11-23","unixTs":1669161600,"balancedPrice":11287.5},{"d":"20
+OK transfer-price 91461 [{"d":"2022-11-21","unixTs":1668988800,"transferPrice":2298.48},{"d":"2022-11-22","unixTs":1669075200,"transferPrice":2299.04},{"d":"2022-11-23","unixTs":1669161600,"transferPrice":2299.7},{"d":"2022-
+OK cvdd 78677 [{"d":"2022-11-21","unixTs":1668988800,"cvdd":4699.37},{"d":"2022-11-22","unixTs":1669075200,"cvdd":4700.97},{"d":"2022-11-23","unixTs":1669161600,"cvdd":4714.52},{"d":"2022-11-24","unixTs":1669248000
+fail cdd-90d HTTP Error 429: 
+fail reserve-risk HTTP Error 429: 
+fail supply-adj-cdd HTTP Error 429: 
+fail vdd-multiple HTTP Error 429: 
+fail sth-realized-price HTTP Error 429: 
+fail lth-realized-price HTTP Error 429: 
