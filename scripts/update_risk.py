@@ -123,19 +123,26 @@ def sp500():
             return rows
     except Exception as e:  # noqa
         STATUS["sp500_yahoo"] = str(e)[:100]
-    try:
-        t = fetch("https://stooq.com/q/d/l/?s=%5Espx&i=m")
+    try:   # long history to 2023 (Shiller monthly, public dataset) + recent months from FRED SP500
+        t = fetch("https://raw.githubusercontent.com/datasets/s-and-p-500/main/data/data.csv")
         rows = []
         for r in csv.DictReader(io.StringIO(t)):
             try:
-                rows.append((r["Date"][:7] + "-01", float(r["Close"])))
+                rows.append((r["Date"][:7] + "-01", float(r["SP500"])))
             except (KeyError, ValueError):
                 pass
-        if len(rows) > 200:
-            STATUS["sp500"] = "stooq " + str(len(rows))
+        rows.sort()
+        if len(rows) > 500:
+            last = rows[-1][0]
+            try:
+                rows += [(d, v) for d, v in month_avg(fred("SP500", "2015-01-01")) if d > last]
+            except Exception as e:  # noqa
+                STATUS["sp500_fred"] = str(e)[:100]
+            STATUS["sp500"] = "shiller+fred " + str(len(rows))
             return rows
+        STATUS["sp500_shiller"] = "rows " + str(len(rows))
     except Exception as e:  # noqa
-        STATUS["sp500_stooq"] = str(e)[:100]
+        STATUS["sp500_shiller"] = str(e)[:100]
     return []
 
 
@@ -147,13 +154,22 @@ def btc_daily():
             rows.append((r["time"][:10], float(r["PriceUSD"]), float(r.get("CapMrktCurUSD") or 0) or None, float(r.get("CapRealUSD") or 0) or None))
         except (KeyError, ValueError):
             pass
-    # extend to today from the site's own price file (Coinbase) if the CSV is behind
+    # The CSV runs months behind. Fill with our own realized-price file (price + realized price), then the site's price file.
+    sup = (rows[-1][2] / rows[-1][1]) if rows and rows[-1][2] else 19.9e6
+    last_d = rows[-1][0]
+    try:
+        for d, pr, rp in json.load(open(os.path.join(ROOT, "btc_realized.json")))["series"]:
+            if d > last_d:
+                S = sup + 450 * (date.fromisoformat(d) - date.fromisoformat(last_d)).days
+                rows.append((d, float(pr), float(pr) * S, float(rp) * S))
+    except Exception as e:  # noqa
+        STATUS["btc_fill"] = str(e)[:100]
     try:
         recent = json.load(open(os.path.join(ROOT, "btc_price_data.json")))["prices"]
-        have = {d for d, _ in rows}
+        have = {r[0] for r in rows}
         rows += [(p["date"], float(p["price"]), None, None) for p in recent if p["date"] not in have and p["date"] > rows[-1][0]]
-    except Exception:  # noqa
-        pass
+    except Exception as e:  # noqa
+        STATUS["btc_fill2"] = str(e)[:100]
     rows.sort()
     if len(rows) < 3000:
         raise ValueError("BTC history too short")
@@ -179,14 +195,14 @@ def chart_credit(spx):
 
 def chart_curve(spx):
     r = month_avg(fred("T10Y3M"))
-    p = pct_expanding([-v for _, v in r], 60)
+    p = [1 / (1 + math.exp(2.2 * (v + 0.3))) for _, v in r]
     d = [x[0] for x in r]
     return {"id": "curve", "title": "Yield Curve Recession Risk", "kind": "risk", "bands": ["Very low", "Low", "Medium", "High", "Very high"], "freq": "monthly",
-            "sub": "US 10-year minus 3-month Treasury yield; the flatter or more inverted, the higher the score",
+            "sub": "US 10-year minus 3-month Treasury yield; the more inverted it is, the higher the score",
             "series": trim(series_of(d, p), "1987-01-01"), "overlay": {"name": "S&P 500", "log": True, "series": [[a, round(b, 2)] for a, b in spx if a >= "1987-01-01"]},
             "extra": {"name": "10y minus 3m (%)", "series": [[a, round(b, 2)] for a, b in r if a >= "1987-01-01"]},
             "desc": "When short-term rates rise above long-term rates (an inverted curve) it has signalled a US recession ahead in every downturn since the 1970s, usually 6 to 18 months early. High score = curve inverted or very flat compared with its history.",
-            "how": "Source: FRED T10Y3M (monthly average). Score = percentile of the inverted spread (the more inverted, the higher). It is a warning gauge, not a timing tool."}
+            "how": "Source: FRED T10Y3M (monthly average). Score = 1 / (1 + e^(2.2 × (spread + 0.3))): about 0.5 when the curve is slightly inverted (-0.3 points), above 0.8 when clearly inverted (-1 point), near 0.1 when it is a healthy +0.7. A warning gauge, not a timing tool."}
 
 
 def chart_liquidity(spx):
