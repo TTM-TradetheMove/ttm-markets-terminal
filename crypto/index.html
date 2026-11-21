@@ -1112,6 +1112,7 @@ body.rm-full #rmIn{font-size:17px}
         <div class="rk-g"><span>Smooth</span><button data-m="0" class="on">None</button><button data-m="1">Light</button><button data-m="2">Medium</button><button data-m="3">Strong</button></div>
         <div class="rk-g" id="rkColG"><span>Line</span><button data-c="0" class="on">Plain</button><button data-c="1">Colour-coded</button></div>
         <div class="rk-g" id="rkOvG"><button id="rkOv" class="on">Overlay on</button></div>
+        <div class="rk-g" id="rkEtfG" style="display:none"><span>ETF flows</span><button data-e="0" class="on">Off</button><button data-e="1">All ETF tokens</button><button data-e="2">Bitcoin ETFs</button><button data-e="3">Ether ETFs</button></div>
       </div>
       <div id="rkParts" class="rk-parts"></div>
       <div class="rk-cvw"><canvas id="rkCv"></canvas><div id="rkTip" class="rk-tip"></div></div>
@@ -1136,8 +1137,9 @@ body.rm-full #rmIn{font-size:17px}
 <script>
 (function(){
   var sec = document.getElementById('riskcharts'); if(!sec) return;
-  var D = null, cur = 'liquidity', st = {rng: 0, ma: 0, col: 0, ov: true, w: {}}, cv = document.getElementById('rkCv'), geo = null, loaded = false;
+  var D = null, ETF = null, cur = 'liquidity', st = {rng: 0, ma: 0, col: 0, ov: true, etf: 0, w: {}}, cv = document.getElementById('rkCv'), geo = null, loaded = false;
   var $ = function(i){ return document.getElementById(i); };
+  var etfBars = null;
   var BC = ['63,180,122', '140,190,80', '219,161,24', '224,125,60', '224,85,77'];
   var MAP = {monthly: [1, 3, 6, 12], daily: [1, 4, 13, 26]};
   function T(d){ return Date.parse(d + 'T00:00:00Z'); }
@@ -1196,6 +1198,15 @@ body.rm-full #rmIn{font-size:17px}
       if(kind === 'risk' && st.col){ x.lineWidth = 2; for(var i = 1; i < main.length; i++){ x.strokeStyle = colFor((main[i][1] + main[i - 1][1]) / 2); x.beginPath(); x.moveTo(X(T(main[i - 1][0])), Ym(main[i - 1][1])); x.lineTo(X(T(main[i][0])), Ym(main[i][1])); x.stroke(); } }
       else { x.strokeStyle = '#dba118'; x.lineWidth = 1.8; x.beginPath(); main.forEach(function(p, i){ var px = X(T(p[0])), py = Ym(p[1]); i ? x.lineTo(px, py) : x.moveTo(px, py); }); x.stroke(); }
     }
+    if(kind === 'risk' && st.etf && ETF && main.length > 1){
+      var ci = st.etf, bars = [], j = 0, prevT = T(main[0][0]) - 7 * 864e5, mx = 0;
+      for(var q = 0; q < main.length; q++){ var tq = T(main[q][0]), sm = 0, got = false; while(j < ETF.length && T(ETF[j][0]) <= tq){ if(T(ETF[j][0]) > prevT){ sm += ETF[j][ci]; got = true; } j++; } prevT = tq; if(got){ bars.push([main[q][0], sm]); mx = Math.max(mx, Math.abs(sm)); } }
+      if(bars.length && mx > 0){ var zone = ph * 0.24, base = TP + ph - zone / 2 - 2, bw = Math.max(1.5, Math.min(12, pw / main.length * 0.8));
+        x.fillStyle = 'rgba(255,255,255,.04)'; x.fillRect(L, TP + ph - zone - 4, pw, zone + 4); x.strokeStyle = 'rgba(255,255,255,.18)'; x.beginPath(); x.moveTo(L, base); x.lineTo(L + pw, base); x.stroke();
+        bars.forEach(function(b){ var hh = (Math.abs(b[1]) / mx) * (zone / 2 - 2); x.fillStyle = b[1] >= 0 ? 'rgba(63,185,122,.85)' : 'rgba(224,85,77,.85)'; x.fillRect(X(T(b[0])) - bw / 2, b[1] >= 0 ? base - hh : base, bw, Math.max(1, hh)); });
+        x.fillStyle = '#c9c9d0'; x.textAlign = 'left'; x.fillText('ETF net flow per period (up = inflow)', L + 6, TP + ph - zone + 8); }
+      etfBars = bars;
+    } else etfBars = null;
     x.restore();
     geo = {L: L, R: R, TP: TP, pw: pw, ph: ph, tmin: tmin, tmax: tmax, X: X, Ym: Ym, Yo: Yo, main: main, ov: ov, lines: lines, W: W, H: H};
     if(hT != null) hover(hT, x);
@@ -1209,6 +1220,7 @@ body.rm-full #rmIn{font-size:17px}
     if(c.kind === 'lines'){ g.lines.forEach(function(o){ var q = near(o.s, T(p[0])); if(q && Math.abs(T(q[0]) - T(p[0])) < 40 * 864e5) h += '<br><span style="color:' + o.l.c + '">' + esc(o.l.n) + ' $' + fmtP(q[1]) + '</span>'; }); }
     else { var py = g.Ym(p[1]); x.fillStyle = '#dba118'; x.beginPath(); x.arc(px, py, 3.5, 0, 7); x.fill(); h += c.kind === 'risk' ? '<br><span style="color:rgb(' + BC[bandOf(p[1])] + ')">' + esc(c.title.replace(/ Risk$/, '')) + ' ' + p[1].toFixed(3) + ' · ' + esc(c.bands[bandOf(p[1])]) + '</span>' : '<br><span style="color:#dba118">' + p[1].toFixed(2) + '</span>';
       if(c.extra){ var q = near(c.extra.series, T(p[0])); if(q) h += '<br><span style="color:#c9c9d0">' + esc(c.extra.name) + ' ' + q[1] + '</span>'; }
+      if(etfBars){ var eb = null; etfBars.forEach(function(b){ if(b[0] === p[0]) eb = b; }); if(eb) h += '<br><span style="color:' + (eb[1] >= 0 ? '#3fb97a' : '#e0554d') + '">ETF net flow ' + (eb[1] >= 0 ? '+' : '-') + '$' + Math.abs(eb[1]).toFixed(0) + 'M</span>'; }
       if(g.ov.length){ var o = near(g.ov, T(p[0])); if(o) h += '<br><span style="color:#4da3ff">' + esc(c.overlay.name) + ' ' + fmtP(o[1]) + '</span>'; } }
     tip.innerHTML = h; tip.style.display = 'block'; var tw = tip.offsetWidth; tip.style.left = Math.max(4, Math.min(g.W - tw - 4, px + 10)) + 'px'; tip.style.top = (g.TP + 6) + 'px';
   }
@@ -1220,16 +1232,18 @@ body.rm-full #rmIn{font-size:17px}
     $('rkTitle').textContent = c.title; $('rkSub').textContent = c.sub || ''; $('rkDesc').textContent = c.desc || ''; $('rkHow').textContent = c.how || ''; var stl = $('rkStale'); stl.textContent = c.lag ? 'The data source for this chart is behind: it runs to ' + c.lag + ' and will catch up when the source does.' : 'This chart could not refresh on the last update, so it shows older data.'; stl.style.display = (c.stale || c.lag) ? 'block' : 'none';
     var l = c.latest; if(c.kind === 'risk' && l){ var bi = bandOf(l[1]); $('rkNow').innerHTML = '<b style="color:rgb(' + BC[bi] + ')">' + l[1].toFixed(2) + '</b><span style="color:rgb(' + BC[bi] + ');border-color:rgb(' + BC[bi] + ')">' + esc(c.bands[bi]) + '</span><div class="rk-sub" style="margin:3px 0 0">as of ' + esc(l[0]) + '</div>'; }
     else if(l){ $('rkNow').innerHTML = '<b>' + (c.kind === 'lines' ? '$' + fmtP(l[1]) : l[1].toFixed(2)) + '</b><div class="rk-sub" style="margin:3px 0 0">as of ' + esc(l[0]) + '</div>'; } else $('rkNow').innerHTML = '';
-    $('rkColG').style.display = c.kind === 'risk' ? '' : 'none'; $('rkOvG').style.display = c.overlay ? '' : 'none'; $('rkOv').textContent = (c.overlay ? c.overlay.name : '') + (st.ov ? ' on' : ' off'); $('rkOv').classList.toggle('on', st.ov);
+    $('rkColG').style.display = c.kind === 'risk' ? '' : 'none'; $('rkEtfG').style.display = (ETF && (c.id === 'btcrisk' || c.id === 'totalrisk')) ? '' : 'none'; if(!(c.id === 'btcrisk' || c.id === 'totalrisk')) st.etf = 0; $('rkOvG').style.display = c.overlay ? '' : 'none'; $('rkOv').textContent = (c.overlay ? c.overlay.name : '') + (st.ov ? ' on' : ' off'); $('rkOv').classList.toggle('on', st.ov);
     var pr = $('rkParts'); if(c.parts){ pr.className = 'rk-parts show'; pr.innerHTML = c.parts.map(function(p){ var v = st.w[p.k] == null ? 1 : st.w[p.k]; return '<div class="rk-pt"><label><span>' + esc(p.name) + '</span><b>' + (+v).toFixed(1) + '</b></label><input type="range" min="0" max="1" step="0.1" value="' + v + '" data-k="' + p.k + '"></div>'; }).join(''); } else { pr.className = 'rk-parts'; pr.innerHTML = ''; }
-    var leg = []; if(c.kind === 'lines') c.lines.forEach(function(o){ leg.push('<span><i style="background:' + o.c + '"></i>' + esc(o.n) + '</span>'); }); else { leg.push('<span><i style="background:#dba118"></i>' + esc(c.title) + '</span>'); if(st.ov && c.overlay) leg.push('<span><i style="background:#4da3ff"></i>' + esc(c.overlay.name) + ' (left, log scale)</span>'); }
+    var leg = []; if(c.kind === 'lines') c.lines.forEach(function(o){ leg.push('<span><i style="background:' + o.c + '"></i>' + esc(o.n) + '</span>'); }); else { leg.push('<span><i style="background:#dba118"></i>' + esc(c.title) + '</span>'); if(st.etf && ETF) leg.push('<span><i style="background:#3fb97a"></i>ETF inflows / <i style="background:#e0554d;margin-left:6px"></i>outflows (bottom bars)</span>'); if(st.ov && c.overlay) leg.push('<span><i style="background:#4da3ff"></i>' + esc(c.overlay.name) + ' (left, log scale)</span>'); }
     $('rkLeg').innerHTML = leg.join('');
+    sec.querySelectorAll('[data-e]').forEach(function(x){ x.classList.toggle('on', +x.dataset.e === st.etf); });
     document.querySelectorAll('#rkChips .rk-chip').forEach(function(b){ b.classList.toggle('on', b.dataset.id === cur); });
     draw();
   }
   sec.addEventListener('click', function(ev){ var b = ev.target.closest('button'); if(!b) return;
     if(b.dataset.id){ cur = b.dataset.id; ui(); return; } if(b.dataset.r != null){ st.rng = +b.dataset.r; sec.querySelectorAll('[data-r]').forEach(function(x){ x.classList.toggle('on', x === b); }); draw(); return; }
     if(b.dataset.m != null){ st.ma = +b.dataset.m; sec.querySelectorAll('[data-m]').forEach(function(x){ x.classList.toggle('on', x === b); }); draw(); return; }
+    if(b.dataset.e != null){ st.etf = +b.dataset.e; sec.querySelectorAll('[data-e]').forEach(function(x){ x.classList.toggle('on', x === b); }); ui(); return; }
     if(b.dataset.c != null){ st.col = +b.dataset.c; sec.querySelectorAll('[data-c]').forEach(function(x){ x.classList.toggle('on', x === b); }); draw(); return; }
     if(b.id === 'rkOv'){ st.ov = !st.ov; ui(); } });
   sec.addEventListener('input', function(ev){ var i = ev.target; if(i.dataset && i.dataset.k){ st.w[i.dataset.k] = +i.value; i.parentNode.querySelector('b').textContent = (+i.value).toFixed(1); draw(); } });
@@ -1238,6 +1252,7 @@ body.rm-full #rmIn{font-size:17px}
     fetch('../risk_data.json?' + Date.now().toString(36).slice(0, 6)).then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(d){ D = d; if(!d.charts || !d.charts.length) throw 0;
       $('rkChips').innerHTML = d.charts.map(function(c){ var l = c.latest, v = '', col = '#c9c9d0'; if(c.kind === 'risk' && l){ var bi = bandOf(l[1]); v = l[1].toFixed(2) + ' · ' + c.bands[bi]; col = 'rgb(' + BC[bi] + ')'; } return '<button class="rk-chip" data-id="' + c.id + '"><b>' + esc(c.title) + '</b><span style="color:' + col + '">' + esc(v || ' ') + '</span></button>'; }).join('');
       $('rkUpdated').textContent = 'Updated ' + new Date(d.generated_at).toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}) + '. Free data from FRED, Coin Metrics and Yahoo Finance.'; if(!chart()) cur = d.charts[0].id; ui();
+      fetch('../etf_flows_total.json').then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(e){ if(e && e.rows && e.rows.length){ ETF = e.rows; ui(); } }).catch(function(){});
     }).catch(function(){ loaded = false; $('rkUpdated').textContent = 'Risk charts are not available yet. They appear after the first data update.'; }); }
   var obs = new IntersectionObserver(function(es){ if(es.some(function(e){ return e.isIntersecting; })) load(); }, {rootMargin: '300px'}); obs.observe(sec); if(location.hash === '#riskcharts') load();
   window.addEventListener('hashchange', function(){ if(location.hash === '#riskcharts') load(); });

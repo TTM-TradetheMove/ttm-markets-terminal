@@ -66,7 +66,7 @@ def main():
         funds = get("/etfs", {"symbol": sym, "country_code": cc})
         if not isinstance(funds, list) or not funds:
             print("  no funds listed"); continue
-        summ = get("/etfs/summary-history", {"symbol": sym, "country_code": cc, "limit": 120}) or []
+        summ = get("/etfs/summary-history", {"symbol": sym, "country_code": cc, "limit": 1500}) or get("/etfs/summary-history", {"symbol": sym, "country_code": cc, "limit": 300}) or get("/etfs/summary-history", {"symbol": sym, "country_code": cc, "limit": 120}) or []
         rows = [{"d": r.get("date"), "flow": num(r.get("total_net_inflow")), "assets": num(r.get("total_net_assets")), "cum": num(r.get("cum_net_inflow")), "traded": num(r.get("total_value_traded"))} for r in summ if isinstance(r, dict) and r.get("date")]
         rows.sort(key=lambda r: r["d"])
         rows = [r for r in rows if r["flow"] is not None or r["assets"] is not None]
@@ -84,6 +84,20 @@ def main():
         out["assets"].append({"sym": sym, "cc": cc, "name": NAMES.get(sym, sym), "series": rows, "funds": fl})
     if not out["assets"]:
         print("No data came back, keeping the previous file."); return 0
+    # compact daily totals for the Risk charts overlay: [date, all ETF tokens, BTC ETFs, ETH ETFs] net flow in USD millions
+    tot = {}
+    for a in out["assets"]:
+        for r in a["series"]:
+            if r.get("flow") is None:
+                continue
+            row = tot.setdefault(r["d"], [0.0, 0.0, 0.0])
+            row[0] += r["flow"]
+            if a["sym"] == "BTC":
+                row[1] += r["flow"]
+            elif a["sym"] == "ETH":
+                row[2] += r["flow"]
+    with open(os.path.join(ROOT, "etf_flows_total.json"), "w") as fh:
+        json.dump({"generated_at": out["generated_at"], "unit": "USD millions", "rows": [[d] + [round(x / 1e6, 2) for x in v] for d, v in sorted(tot.items())]}, fh, separators=(",", ":"))
     with open(OUT, "w") as fh:
         json.dump(out, fh, separators=(",", ":"))
     print("wrote", OUT, len(out["assets"]), "assets")
