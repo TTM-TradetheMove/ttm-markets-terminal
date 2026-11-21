@@ -1368,7 +1368,9 @@ function rmBuild(){
   const tabs = ROOMS.map(r => `<button class="filter-chip" data-rmtab="${r[0]}" ${rmCan(r[0]) ? '' : 'style="opacity:.45"'}>${r[1]}${rmCan(r[0]) ? '' : ' 🔒'}</button>`).join('');
   root.innerHTML = `<div class="filter-row" id="rmTabs" style="margin-bottom:8px">${tabs}</div>
     <p class="calendar-note" id="rmOnline" style="margin:0 0 8px"></p>
-    <div class="filter-row" id="rmFilt" style="margin:0 0 8px"><button class="filter-chip" data-rmf="all">Everyone</button><button class="filter-chip" data-rmf="follow">Only people I follow</button></div>
+    <div class="filter-row" id="rmFilt" style="margin:0 0 8px"><button class="filter-chip" data-rmf="all">Everyone</button><button class="filter-chip" data-rmf="follow">Only people I follow</button><button class="filter-chip" id="rmSrchBtn" type="button">🔍 Search</button></div>
+    <div id="rmSrch" style="display:none;margin:0 0 8px;padding:10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02)"><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="rmSq" type="search" placeholder="Search messages…" maxlength="80" autocomplete="off" style="flex:2 1 200px;min-width:0"><input id="rmSf" type="search" placeholder="From (name)" maxlength="40" autocomplete="off" list="rmSfl" style="flex:1 1 130px;min-width:0"><datalist id="rmSfl"></datalist><button class="rr-btn sm" id="rmSgo" type="button">Search</button></div><label style="display:flex;gap:6px;align-items:center;font-size:12.5px;margin-top:8px;color:var(--mute);cursor:pointer"><input type="checkbox" id="rmSall"> Search all my rooms, not just this one</label><div id="rmSres" style="margin-top:8px;max-height:280px;overflow:auto"></div></div>
+    <div id="rmOldBar" style="display:none;margin:0 0 8px;padding:8px 12px;border-radius:10px;background:rgba(219,161,24,.12);border:1px solid rgba(219,161,24,.45);font-size:13px;align-items:center;gap:10px;flex-wrap:wrap"><span>Viewing older messages</span><button class="rr-btn sm" id="rmOldBtn" type="button">Back to latest</button></div>
     <div class="rr-card" style="padding:0;overflow:hidden"><div id="rmList" style="height:min(60vh,520px);overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px"></div>
       <div id="rmPrev" style="display:none;padding:8px 12px;border-top:1px solid var(--line)"></div>
       <div id="rmGifBox" style="display:none;padding:8px 10px;border-top:1px solid var(--line)"></div>
@@ -1388,16 +1390,48 @@ function rmBuild(){
       if(f) rmPick1(f.type ? f : new File([f], f.name, {type: /gif$/i.test(f.name) ? 'image/gif' : /png$/i.test(f.name) ? 'image/png' : /webp$/i.test(f.name) ? 'image/webp' : 'image/jpeg'}));
       else if(n) n.textContent = fl.length ? 'Drop a PNG, JPG, GIF or WebP image from your computer.' : 'That drop was a link, not a file. Save the GIF to your computer first, or paste its link in the message box.'; }); }
   $('rmFile').addEventListener('change', ev => { const f = ev.target.files && ev.target.files[0]; ev.target.value = ''; if(f) rmPick1(f); });
+  rmSearchInit();
   RM.built = true; presBeat().then(presLoad); return true;
+}
+
+/* ---- Chat search: find messages by text and sender, click a result to jump to it ---- */
+function rmSearchInit(){
+  if(!document.getElementById('rmFlashCss')){ const st = document.createElement('style'); st.id = 'rmFlashCss'; st.textContent = '.rm-flash{outline:2px solid var(--gold2,#dba118);outline-offset:2px;animation:rmfl 1s ease-in-out 3}@keyframes rmfl{50%{background:rgba(219,161,24,.18)}}.rm-sr{display:block;width:100%;text-align:left;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:0 0 6px;color:inherit;font:inherit;cursor:pointer}.rm-sr:hover{border-color:var(--gold2,#dba118)}.rm-sr small{color:var(--mute);display:block;font-size:11.5px;margin-bottom:2px}.rm-sr mark{background:rgba(219,161,24,.35);color:inherit;border-radius:3px;padding:0 1px}'; document.head.appendChild(st); }
+  const btn = $('rmSrchBtn'), box = $('rmSrch'); if(!btn || !box) return;
+  btn.onclick = () => { const on = box.style.display === 'none'; box.style.display = on ? 'block' : 'none'; btn.classList.toggle('active', on); if(on){ const dl = $('rmSfl'); const names = [...new Set((RM.rows || []).map(x => x.name).filter(Boolean))].slice(0, 40); if(dl) dl.innerHTML = names.map(n => '<option value="' + e(n) + '">').join(''); $('rmSq').focus(); } };
+  const go = () => rmSearch(); $('rmSgo').onclick = go; ['rmSq', 'rmSf'].forEach(id => $(id).addEventListener('keydown', ev => { if(ev.key === 'Enter'){ ev.preventDefault(); go(); } }));
+  $('rmOldBtn').onclick = () => { RM.minId = null; RM.jumpTo = null; RM.sig = ''; rmLoad(true).then(() => { const l = $('rmList'); if(l) l.scrollTop = l.scrollHeight; }); };
+  $('rmSres').onclick = ev => { const b = ev.target.closest('[data-sid]'); if(!b) return; rmJump(b.dataset.sroom, +b.dataset.sid); };
+}
+const rmQ = v => '"' + String(v).replace(/[\\"]/g, ' ').replace(/[*%]/g, ' ') + '"';
+async function rmSearch(){
+  const q = ($('rmSq').value || '').trim(), f = ($('rmSf').value || '').trim(), out = $('rmSres'), all = $('rmSall').checked;
+  if(!q && !f){ out.innerHTML = '<p class="calendar-note" style="margin:0">Type a word or a name to search.</p>'; return; }
+  const rooms = all ? ROOMS.filter(r => rmCan(r[0])).map(r => r[0]) : [RM.room || 'free'];
+  let u = '/rest/v1/ttm_room_msgs?select=id,room,name,body,ts,img&room=in.(' + rooms.join(',') + ')&order=id.desc&limit=60';
+  if(q) u += '&body=ilike.' + encodeURIComponent('"*' + q.replace(/[\\"*%]/g, ' ') + '*"'); if(f) u += '&name=ilike.' + encodeURIComponent('"*' + f.replace(/[\\"*%]/g, ' ') + '*"');
+  out.innerHTML = '<p class="calendar-note" style="margin:0">Searching…</p>';
+  const r = await api(u); if(!r.ok || !Array.isArray(r.json)){ out.innerHTML = '<p class="calendar-note" style="margin:0;color:#e0554d">Search did not work. Try again in a moment.</p>'; return; }
+  if(!r.json.length){ out.innerHTML = '<p class="calendar-note" style="margin:0">No messages found' + (all ? '' : ' in this room. Tick “search all my rooms” to look wider') + '.</p>'; return; }
+  const re = q ? new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig') : null, rn = k => (ROOMS.find(x => x[0] === k) || [0, k])[1];
+  out.innerHTML = '<p class="calendar-note" style="margin:0 0 6px">' + r.json.length + (r.json.length === 60 ? '+' : '') + ' result' + (r.json.length === 1 ? '' : 's') + '. Tap one to jump to it.</p>' + r.json.map(m => { const body = String(m.body || (m.img ? '(image)' : '')), i = re ? body.search(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')) : 0, st = Math.max(0, i - 40), snip = (st ? '…' : '') + body.slice(st, st + 160) + (body.length > st + 160 ? '…' : ''), hs = e(snip).replace(re ? new RegExp('(' + e(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig') : /$^/, '<mark>$1</mark>');
+    return '<button class="rm-sr" type="button" data-sid="' + m.id + '" data-sroom="' + m.room + '"><small>' + e(m.name || 'Member') + (all ? ' · ' + e(rn(m.room)) : '') + ' · ' + new Date(m.ts).toLocaleString([], {day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'}) + '</small>' + hs + '</button>'; }).join('');
+}
+function rmJump(room, id){
+  if(!rmCan(room)) return;
+  RM.minId = Math.max(1, id - 25); RM.jumpTo = id; RM.sig = '';
+  if(room !== RM.room){ RM.room = room; document.querySelectorAll('.rmToBox').forEach(c => { c.checked = c.value === room; }); rmTabs(); const l = $('rmList'); if(l) l.innerHTML = ''; }
+  RM.busy = false; rmLoad(true); const l = $('rmList'); if(l) l.scrollIntoView({block: 'nearest', behavior: 'smooth'});
 }
 function rmFiltPaint(){ document.querySelectorAll('#rmFilt [data-rmf]').forEach(b => b.classList.toggle('active', b.dataset.rmf === (PREFS.rfilter === 'follow' ? 'follow' : 'all'))); }
 function rmTabs(){ rmFiltPaint(); document.querySelectorAll('#rmTabs [data-rmtab]').forEach(b => { const k = b.dataset.rmtab; b.classList.toggle('active', k === RM.room); const lab = (ROOMS.find(r => r[0] === k) || [0, k])[1] + (rmCan(k) ? '' : ' 🔒') + (RMU[k] && k !== RM.room ? ` (${RMU[k]})` : ''); if(b.textContent !== lab) b.textContent = lab; }); }
-function rmPick(r){ if(!rmCan(r)){ const n = $('rmNote'); if(n) n.textContent = 'The ' + (ROOMS.find(x => x[0] === r) || [0, r])[1] + ' room is for ' + needText('room:' + r) + ' members.'; return; } RM.room = r; RM.sig = ''; document.querySelectorAll('.rmToBox').forEach(c => { c.checked = c.value === r; }); rmTabs(); const l = $('rmList'); if(l) l.innerHTML = ''; rmLoad(true); }
+function rmPick(r){ if(!rmCan(r)){ const n = $('rmNote'); if(n) n.textContent = 'The ' + (ROOMS.find(x => x[0] === r) || [0, r])[1] + ' room is for ' + needText('room:' + r) + ' members.'; return; } RM.room = r; RM.minId = null; RM.jumpTo = null; RM.sig = ''; document.querySelectorAll('.rmToBox').forEach(c => { c.checked = c.value === r; }); rmTabs(); const l = $('rmList'); if(l) l.innerHTML = ''; rmLoad(true); }
 async function rmLoad(force){
   if(!rmBuild()) return; if(!RM.room){ RM.room = (ROOMS.slice().reverse().find(r => rmCan(r[0])) || ['free'])[0]; document.querySelectorAll('.rmToBox').forEach(c => { c.checked = c.value === RM.room; }); rmTabs(); }
   if(RM.busy || RM.editing) return; RM.busy = true;
   try{
-    const r = await api(`/rest/v1/ttm_room_msgs?select=*&room=eq.${RM.room}&order=id.desc&limit=80`);
+    const r = RM.minId ? await api(`/rest/v1/ttm_room_msgs?select=*&room=eq.${RM.room}&id=gte.${RM.minId}&order=id.asc&limit=200`) : await api(`/rest/v1/ttm_room_msgs?select=*&room=eq.${RM.room}&order=id.desc&limit=80`);
+    if(RM.minId && r.ok && Array.isArray(r.json)) r.json.reverse(); { const bk = $('rmOldBar'); if(bk) bk.style.display = RM.minId ? 'flex' : 'none'; }
     const l = $('rmList'); if(!l) return;
     { const ro = rmRO(); document.body.classList.toggle('rm-ro', ro); let nt = $('rmRoNote'); if(ro && !nt){ const row = $('rmInRow'); if(row){ nt = document.createElement('div'); nt.id = 'rmRoNote'; nt.style.cssText = 'padding:12px;border-top:1px solid var(--line);font-size:13px;color:var(--mute)'; nt.innerHTML = 'Free members can <b>react with emojis</b> but cannot post or reply. <a href="#account" style="color:var(--gold2)">See the plans</a> to join the conversation.'; row.insertAdjacentElement('beforebegin', nt); } } else if(!ro && nt) nt.remove(); }
     if(!r.ok || !Array.isArray(r.json)){ l.innerHTML = '<p style="color:var(--mute);font-size:13px;margin:4px 2px">Could not open this room. If you just upgraded, refresh. The chat database step may also be missing.</p>'; return; }
@@ -1406,12 +1440,12 @@ async function rmLoad(force){
     { RM.seen = {}; const mine = USER && PROF && PROF.is_admin ? r.json.filter(x => x.user_id === USER.id).map(x => x.id) : []; if(mine.length){ const q = await api('/rest/v1/rpc/ttm_seen_counts', {method: 'POST', body: JSON.stringify({rm: RM.room, ids: mine})}); if(q.ok && Array.isArray(q.json)) q.json.forEach(x => { RM.seen[x.id] = x.n; }); } }
     RM.rows = r.json;
     const fol = PREFS.rfilter === 'follow', fids = new Set((PREFS.follow || []).map(f => f.id));
-    const rows = r.json.slice().reverse().filter(x => !fol || fids.has(x.user_id) || (USER && x.user_id === USER.id)), sig = (fol ? 'f:' : '') + rows.map(x => x.id + (x.edited_at || '') + ':' + (RM.seen[x.id] != null ? 's' + RM.seen[x.id] : '') + (RM.rx[x.id] || []).map(y => y.emoji + y.user_id.slice(0, 4)).sort().join('')).join(',') + '|' + RM.rxpick + '|' + Object.keys(RM.votes || {}).map(k => k + ':' + RM.votes[k].length + RM.votes[k].filter(v => USER && v.user_id === USER.id).map(v => v.opt).join('')).join(','); if(rows.length && location.hash === '#community' && !document.hidden){ rmSeenSet(RM.room, rows[rows.length - 1].id); rmReadPing(RM.room, r.json.length ? r.json[0].id : 0); RMU[RM.room] = 0; commBtn(); rmTabs(); }
+    const rows = r.json.slice().reverse().filter(x => !fol || fids.has(x.user_id) || (USER && x.user_id === USER.id)), sig = (fol ? 'f:' : '') + rows.map(x => x.id + (x.edited_at || '') + ':' + (RM.seen[x.id] != null ? 's' + RM.seen[x.id] : '') + (RM.rx[x.id] || []).map(y => y.emoji + y.user_id.slice(0, 4)).sort().join('')).join(',') + '|' + RM.rxpick + '|' + (RM.minId || '') + '|' + Object.keys(RM.votes || {}).map(k => k + ':' + RM.votes[k].length + RM.votes[k].filter(v => USER && v.user_id === USER.id).map(v => v.opt).join('')).join(','); if(!RM.minId && rows.length && location.hash === '#community' && !document.hidden){ rmSeenSet(RM.room, rows[rows.length - 1].id); rmReadPing(RM.room, r.json.length ? r.json[0].id : 0); RMU[RM.room] = 0; commBtn(); rmTabs(); }
     if(sig === RM.sig && !force) return; RM.sig = sig;
     const near = l.scrollHeight - l.scrollTop - l.clientHeight < 80, first = !l.children.length, adm = !!(PROF && PROF.is_admin);
     l.innerHTML = rows.length ? rows.map(m => { const mine = USER && m.user_id === USER.id, tm = new Date(m.ts).toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'});
       return `<div class="rm-m ${mine ? 'me' : ''}" data-mid="${m.id}"><div class="rm-h"><b ${mine ? '' : `data-rmat="${e(m.name || '')}" title="Tap to tag"`}>${e(m.name || 'Member')}</b>${bdgHtml(m)}<span>${tm}${m.edited_at ? ' \u00b7 edited' : ''}</span>${mine && !m.poll ? `<u data-rmedit="${m.id}">edit</u>` : ''}${mine && RM.seen[m.id] != null ? `<u data-rmseen="${m.id}">seen by ${RM.seen[m.id]}</u>` : ''}${rmReplyLink(m)}${mine || adm ? `<u data-rmdel="${m.id}">delete</u>` : ''}${adm && !mine ? `<u data-rmmute="${m.user_id}">mute</u>` : ''}${!mine ? `<u data-rmfollow="${m.user_id}" data-n="${e(m.name || 'Member')}">${(PREFS.follow || []).some(x => x.id === m.user_id) ? 'following' : 'follow'}</u>` : ''}</div><div class="rm-bd">${rmFmt(m)}</div><div class="rm-sn" id="rmSn${m.id}"></div>${rxHtml(m)}</div>`; }).join('') : (fol ? '<p style="color:var(--mute);font-size:13px;margin:4px 2px">No messages from people you follow yet. Switch to Everyone to find people, then press <b>follow</b> on their messages.</p>' : '<p style="color:var(--mute);font-size:13px;margin:4px 2px">No messages yet. Say hello.</p>');
-    if(near || first) l.scrollTop = l.scrollHeight;
+    if(RM.minId){ if(RM.jumpTo){ const el = l.querySelector('.rm-m[data-mid="' + RM.jumpTo + '"]'); if(el){ l.scrollTop = Math.max(0, el.offsetTop - l.clientHeight / 3); el.classList.add('rm-flash'); setTimeout(() => el.classList.remove('rm-flash'), 3500); } RM.jumpTo = null; } } else if(near || first) l.scrollTop = l.scrollHeight;
     if(first){ const mu = await api('/rest/v1/ttm_room_mutes?select=room&user_id=eq.' + USER.id); RM.muted = !!(mu.ok && Array.isArray(mu.json) && mu.json.length); const i = $('rmIn'); if(i && RM.muted){ i.disabled = true; i.placeholder = 'You have been muted by TTM.'; } }
   } finally { RM.busy = false; }
 }
