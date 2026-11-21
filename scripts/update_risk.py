@@ -237,7 +237,7 @@ def chart_liquidity(spx):
         comp.append(sum(w) / len(w) if len(w) >= 3 else None)
     comp = smooth(comp, 3)
     return {"id": "liquidity", "title": "Liquidity Risk", "kind": "risk", "bands": MACRO_BANDS, "freq": "monthly",
-            "sub": "How tight US and global money conditions are, as a percentile of their own history (0 loose, 1 very tight)",
+            "sub": "How tight US money conditions are, as a percentile of their own history (0 loose, 1 very tight)",
             "series": trim(series_of(allm, comp), "2007-01-01"), "overlay": {"name": "S&P 500", "log": True, "series": [[a, round(b, 2)] for a, b in spx if a >= "2007-01-01"]},
             "desc": "Risk assets (stocks and crypto) tend to do best when money is loose and worst when it is tight. This score blends the 10-year real yield, the US dollar, credit spreads, money-supply (M2) growth and the Fed's net liquidity (balance sheet minus Treasury cash and reverse repos). High score = tight conditions, which are less supportive for risk assets.",
             "how": "Five inputs from FRED, each turned into its own percentile (past only), averaged, then smoothed over 3 months. Needs at least 3 inputs available. Net liquidity growth uses WALCL minus TGA minus reverse repo."}
