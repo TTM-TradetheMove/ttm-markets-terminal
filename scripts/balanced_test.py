@@ -9,18 +9,22 @@ GENESIS = date(2009, 1, 3)
 
 def cdd():
     last = None
-    for u in ("https://api.blockchain.info/charts/bitcoin-days-destroyed?timespan=20years&sampled=false&format=json&cors=true",
-              "https://api.blockchain.info/charts/bitcoin-days-destroyed?timespan=all&format=json&cors=true"):
-        try:
-            j = json.loads(ur.fetch(u))
-            v = j["values"]
-            out = {datetime.fromtimestamp(p["x"], timezone.utc).strftime("%Y-%m-%d"): float(p["y"]) for p in v}
-            print("cdd rows", len(out), "unit", j.get("unit"), "first", min(out), "last", max(out), "period", j.get("period"))
-            if len(out) > 3000:
-                return out
-        except Exception as e:
-            last = e
-            print("cdd fail", u, e)
+    names = ("bitcoin-days-destroyed", "bitcoin-days-destroyed-cumulative", "days-destroyed")
+    hosts = ("https://api.blockchain.info/charts/", "https://blockchain.info/charts/", "https://api.blockchain.com/charts/", "https://www.blockchain.com/charts/", "https://api.blockchain.info/charts/")
+    for n in names:
+        for h in hosts:
+            for q in ("?timespan=all&sampled=false&format=json", "?timespan=20years&format=json", "?format=json"):
+                u = h + n + q
+                try:
+                    j = json.loads(ur.fetch(u))
+                    v = j["values"]
+                    out = {datetime.fromtimestamp(p["x"], timezone.utc).strftime("%Y-%m-%d"): float(p["y"]) for p in v}
+                    print("OK", u, "rows", len(out), "first", min(out), "last", max(out), "unit", j.get("unit"), "period", j.get("period"))
+                    if n == "bitcoin-days-destroyed" and len(out) > 3000:
+                        return out
+                except Exception as e:
+                    last = e
+                    print("fail", u, str(e)[:60])
     raise last
 
 def main():
