@@ -1,0 +1,44 @@
+name: Update ETF flows
+
+on:
+  schedule:
+    - cron: "40 12 * * *"   # US market is open: shows the previous day's settled flows and early data
+    - cron: "40 22 * * 1-5" # just after the US close, today's flows
+    - cron: "40 1 * * 2-6"  # late filers for the day
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-etf-flows
+  cancel-in-progress: false
+
+jobs:
+  etf-flows:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch ETF flows (SoSoValue)
+        env:
+          SOSO_API_KEY: ${{ secrets.SOSO_API_KEY }}
+        run: timeout 25m python3 -u scripts/update_etf_flows.py
+      - name: Commit
+        run: |
+          git config user.name "ttm-calendar-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add etf_flows.json 2>/dev/null || echo "no etf_flows.json yet"
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Auto-update ETF flows"
+            for i in 1 2 3 4; do
+              git pull --rebase -X theirs origin main && git push && break
+              echo "Push attempt $i failed, retrying..."
+              sleep 5
+            done
+          fi
