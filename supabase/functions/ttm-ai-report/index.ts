@@ -3,6 +3,8 @@
 // Plan rule: admins, and whoever the Admin grid gives the "airep" feature to (default Premium and Pro). Daily limits below.
 const URL_ = Deno.env.get("SUPABASE_URL")!, KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, CGK = Deno.env.get("COINGECKO_KEY") || "";
 const H = {apikey: KEY, Authorization: "Bearer " + KEY, "Content-Type": "application/json"};
+// Admin-only for now. To open it to Premium/Pro later, set this to false (and give the "airep" feature to those plans in Admin).
+const ADMIN_ONLY = true;
 const LIM = {premium: 3, pro: 10, admin: 60}, MODEL = "claude-sonnet-5-5";
 const CORS = {"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, apikey, content-type", "Access-Control-Allow-Methods": "POST, OPTIONS"};
 const out = (o: unknown, s = 200) => new Response(JSON.stringify(o), {status: s, headers: {...CORS, "Content-Type": "application/json"}});
@@ -29,13 +31,13 @@ Deno.serve(async (req) => {
     const charging = await st("charging"), access = (await st("access")) || {};
     const rk = (p: string) => p === "pro" ? 2 : p === "premium" || p === "crypto" || p === "tradfi" ? 1 : 0;
     const live = !prof.plan_until || new Date(prof.plan_until) > new Date(), mine = live ? rk(prof.plan) : 0;
-    let ok = !!prof.is_admin || charging === false || charging === "false";
-    if (!ok) {
+    let ok = !!prof.is_admin || (!ADMIN_ONLY && (charging === false || charging === "false"));
+    if (!ok && !ADMIN_ONLY) {
       const a: string[] = access.airep || ["premium"];
       const need = Math.min(...a.filter((x) => ["free", "premium", "pro"].includes(x)).map((x) => rk(x)).concat([2]));
       ok = mine >= need || (!!prof.beta && a.includes("beta")) || (!!prof.team && a.includes("team"));
     }
-    if (!ok) return out({error: "TTM AI reports are for Premium and Pro members."}, 403);
+    if (!ok) return out({error: ADMIN_ONLY ? "TTM AI reports are admin-only for now." : "TTM AI reports are for Premium and Pro members."}, 403);
 
     const b = await req.json().catch(() => ({}));
     const kind = b.kind === "market" ? "market" : "token";

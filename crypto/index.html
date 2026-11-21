@@ -817,10 +817,11 @@ body.rm-full #rmIn{font-size:17px}
 </style>
 <script>
 (function(){
-  var box = document.getElementById('aiRep'); if(!box) return;
+  var box = document.getElementById('aiRep'); if(!box) return; box.style.display = 'none';
+  var AIADMIN = false; (function chk(n){ if(window.ttmIsAdmin && window.ttmWho && ttmWho().ready && (ttmWho().user || n > 40)){ AIADMIN = !!ttmIsAdmin(); box.style.display = AIADMIN ? '' : 'none'; return; } if(n < 80) setTimeout(function(){ chk(n + 1); }, 250); })(0);
   var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var w = document.getElementById('briefWrap'); if(w) w.style.display = '';
-  box.innerHTML = '<h3>🤖 Ask TTM AI <span style="font-size:11px;font-weight:700;color:#111;background:#dba118;border-radius:6px;padding:2px 7px;vertical-align:middle">Premium &amp; Pro</span></h3>' +
+  box.innerHTML = '<h3>🤖 Ask TTM AI <span style="font-size:11px;font-weight:700;color:#111;background:#dba118;border-radius:6px;padding:2px 7px;vertical-align:middle">Admin only</span></h3>' +
     '<div class="calendar-note" style="margin:0">Get a token review or a market assessment, written in the same format as the TTM Asset Reviews, from live market data.</div>' +
     '<div class="air-row"><input id="airTok" placeholder="Token name or ticker, e.g. SOL" maxlength="40" autocomplete="off"><button class="air-b go" id="airT">Token review</button><button class="air-b" id="airM">Market assessment</button></div><div class="air-out" id="airOut"></div>';
   var out = document.getElementById('airOut'), tokIn = document.getElementById('airTok'), busy = false;
@@ -835,7 +836,7 @@ body.rm-full #rmIn{font-size:17px}
   }
   function msg(t, bad){ out.innerHTML = '<p class="calendar-note" style="margin:0;' + (bad ? 'color:#e0554d' : '') + '">' + esc(t) + '</p>'; }
   async function ask(kind){
-    if(busy) return; if(window.ttmCan && !ttmCan('airep')){ if(window.ttmUpsell) ttmUpsell('airep'); return; }
+    if(busy) return; if(!AIADMIN) return;
     var tk = (tokIn.value || '').trim(); if(kind === 'token' && !tk){ msg('Type a token name or ticker first, for example SOL.', true); tokIn.focus(); return; }
     var who = window.ttmWho ? ttmWho() : null, cfg = window.ttmCfg ? ttmCfg() : null, token = who && who.token ? await who.token() : null;
     if(!token || !cfg){ msg('Sign in to use Ask TTM AI.', true); return; }
@@ -5606,7 +5607,7 @@ fill(); paint();
 <script src="../education.js?v=2"></script>
 <script src="../ttmind.js?v=14"></script>
 <script src="../ttmpaper.js?v=15"></script>
-<script src="../accounts.js?v=1795165300"></script>
+<script src="../accounts.js?v=1795165400"></script>
 <script>
 (function(){
   const secs = Array.from(document.querySelectorAll('body > section[id]'));
