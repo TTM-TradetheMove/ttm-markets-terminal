@@ -76,4 +76,4 @@ def main():
             print(d, f"p {p:,.0f} real {r:,.0f} bal_A {ba:,.0f} bal_B {bb:,.0f}")
     json.dump({d: [round(x, 2) for x in v] for d, v in res.items()}, open("/tmp/balanced_test.json", "w"))
 
-main()
+main()  # run
