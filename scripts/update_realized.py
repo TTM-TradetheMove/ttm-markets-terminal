@@ -80,6 +80,29 @@ def from_bitcoin_data():
     return [(d, px[d], rp[d]) for d in sorted(rp) if d in px and rp[d] > 0]
 
 
+def balanced_series(dates):
+    """Balanced Price from bitcoin-data.com (free, from Nov 2022). Its formula differs from Glassnode's, so the level is lower. Falls back to the old file's values."""
+    old = []
+    try:
+        old = json.load(open(os.path.join(ROOT, "btc_realized.json"))).get("balanced", [])
+    except Exception:  # noqa
+        pass
+    try:
+        raw = json.loads(fetch("https://bitcoin-data.com/v1/balanced-price"))
+        new = {str(d["d"])[:10]: float(d["balancedPrice"]) for d in raw if d.get("balancedPrice")}
+        if len(new) < 100:
+            raise ValueError("too few rows")
+        m = {d: v for d, v in old}
+        m.update(new)
+        STATUS["balanced"] = f"{len(new)} rows"
+        out = sorted(m.items())
+    except Exception as e:  # noqa
+        STATUS["balanced"] = "failed: " + str(e)[:120]
+        out = [(d, v) for d, v in old]
+    m = dict(out)
+    return [[d, round(m[d], 2)] for d in dates if d in m]
+
+
 def extend_to_today(rows):
     """The free sources lag by days. Fill the gap with Bitstamp daily closes (realized price carried forward, it moves ~0.1%/day), then today's live price."""
     try:
@@ -129,7 +152,6 @@ def main():
     rows = sorted((d, p, r) for d, (p, r) in m.items() if p > 0.05 and r > 0.05)
     status["when"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
     status["first_day"] = rows[0][0] if rows else None
-    json.dump(status, open(os.path.join(ROOT, "btc_realized_status.json"), "w"), indent=1)
     if len(rows) < 1000:
         print("No usable data, keeping the old file.")
         return
@@ -139,8 +161,9 @@ def main():
     series = [[d, round(p, 2), round(r, 2)] for i, (d, p, r) in enumerate(rows) if i >= cut or i % 7 == 0]
     price, real = rows[-1][1], rows[-1][2]
     out = {"updated": datetime.now(timezone.utc).isoformat(timespec="seconds"), "as_of": last_date, "price": round(price, 2),
-           "realized": round(real, 2), "realized_as_of": status.get("realized_as_of", last_date), "mvrv": round(price / real, 3), "series": series}
+           "realized": round(real, 2), "realized_as_of": status.get("realized_as_of", last_date), "mvrv": round(price / real, 3), "series": series, "balanced": balanced_series([x[0] for x in series])}
     json.dump(out, open(os.path.join(ROOT, "btc_realized.json"), "w"), separators=(",", ":"))
+    json.dump(status, open(os.path.join(ROOT, "btc_realized_status.json"), "w"), indent=1)
     print("saved", last_date, out["price"], out["realized"], len(series), "points")
 
 

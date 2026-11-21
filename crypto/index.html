@@ -1322,13 +1322,13 @@ body.rm-full #rmIn{font-size:17px}
       <p id="rpStatus" class="calendar-note" style="margin-top:8px">Loading…</p>
     </div>
     <div class="filter-row" id="rpRange" style="margin-bottom:10px">
-      <button class="filter-chip" data-y="2">2 years</button><button class="filter-chip active" data-y="4">4 years</button><button class="filter-chip" data-y="8">8 years</button><button class="filter-chip" data-y="0">All</button>
+      <button class="filter-chip" data-y="2">2 years</button><button class="filter-chip active" data-y="4">4 years</button><button class="filter-chip" data-y="8">8 years</button><button class="filter-chip" data-y="0">All</button><button class="filter-chip active" id="rpBal" title="Balanced Price = realized price minus transfer price. Free data from bitcoin-data.com, available from Nov 2022. It reads lower than Glassnode's version.">Balanced Price</button>
     </div>
     <div id="rpBox" style="position:relative;background:var(--card,#16161a);border:1px solid var(--line,#2a2a2f);border-radius:14px;padding:10px 6px 6px">
       <canvas id="rpCv" style="width:100%;height:380px;display:block;touch-action:pan-y"></canvas>
       <div id="rpTip" style="position:absolute;display:none;pointer-events:none;background:#0d0d10;border:1px solid rgba(219,161,24,.5);border-radius:8px;padding:6px 9px;font-size:12px;line-height:1.5;white-space:nowrap"></div>
     </div>
-    <p class="calendar-note" style="margin-top:8px"><span style="color:#dba118">&#9632;</span> BTC price &nbsp; <span style="color:#3fb97a">&#9632;</span> Realized price &nbsp; <span style="color:rgba(224,85,77,.6)">&#9632;</span> shaded red while price is below realized. Premium and Pro members get an alert when price crosses the realized price. Source: Coin Metrics community data. Not financial advice.</p>
+    <p class="calendar-note" style="margin-top:8px"><span style="color:#dba118">&#9632;</span> BTC price &nbsp; <span style="color:#3fb97a">&#9632;</span> Realized price &nbsp; <span style="color:#9b7bff">&#9632;</span> Balanced Price (free bitcoin-data.com series from Nov 2022; its formula differs from Glassnode's, so it reads lower) &nbsp; <span style="color:rgba(224,85,77,.6)">&#9632;</span> shaded red while price is below realized. Premium and Pro members get an alert when price crosses the realized price. Source: Coin Metrics community data. Not financial advice.</p>
   </div>
 </section>
 
@@ -6100,13 +6100,13 @@ window.ttmLuna = {cycles: CY, phaseNow};
 </script>
 <script>
 (function(){
-  var D = null, Y = 4, cv = document.getElementById('rpCv'); if(!cv) return;
+  var D = null, Y = 4, BAL = true, BM = {}, cv = document.getElementById('rpCv'); if(!cv) return;
   var fmt = function(n){ return n >= 1000 ? '$' + Math.round(n).toLocaleString('en-US') : '$' + n.toFixed(2); };
   function pts(){ if(!D) return []; var s = D.series, y = Y; if(!y) return s; var cut = Date.now() - y * 365.25 * 864e5; return s.filter(function(p){ return Date.parse(p[0]) >= cut; }); }
   function draw(hover){
     var P = pts(); if(P.length < 2) return; var dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight; cv.width = W * dpr; cv.height = H * dpr;
     var c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H);
-    var L = 56, R = 10, T = 10, B = 24, lo = Infinity, hi = 0; P.forEach(function(p){ lo = Math.min(lo, p[1], p[2]); hi = Math.max(hi, p[1], p[2]); });
+    var L = 56, R = 10, T = 10, B = 24, lo = Infinity, hi = 0; P.forEach(function(p){ lo = Math.min(lo, p[1], p[2]); hi = Math.max(hi, p[1], p[2]); if(BAL && BM[p[0]]) lo = Math.min(lo, BM[p[0]]); });
     lo = Math.max(1, lo * 0.8); hi *= 1.25; var ll = Math.log(lo), lh = Math.log(hi), t0 = Date.parse(P[0][0]), t1 = Date.parse(P[P.length - 1][0]);
     var X = function(t){ return L + (t - t0) / (t1 - t0) * (W - L - R); }, Yp = function(v){ return T + (1 - (Math.log(v) - ll) / (lh - ll)) * (H - T - B); };
     c.font = '11px system-ui,sans-serif'; c.fillStyle = '#8a8a90'; c.strokeStyle = 'rgba(255,255,255,.07)'; c.lineWidth = 1;
@@ -6115,9 +6115,10 @@ window.ttmLuna = {cycles: CY, phaseNow};
     // red where price < realized
     c.fillStyle = 'rgba(224,85,77,.28)'; for(var k = 1; k < P.length; k++){ if(P[k][1] < P[k][2] || P[k - 1][1] < P[k - 1][2]){ c.beginPath(); c.moveTo(X(Date.parse(P[k - 1][0])), Yp(P[k - 1][1])); c.lineTo(X(Date.parse(P[k][0])), Yp(P[k][1])); c.lineTo(X(Date.parse(P[k][0])), Yp(P[k][2])); c.lineTo(X(Date.parse(P[k - 1][0])), Yp(P[k - 1][2])); c.closePath(); if(P[k][1] < P[k][2]) c.fill(); } }
     function line(ix, col, w){ c.strokeStyle = col; c.lineWidth = w; c.beginPath(); P.forEach(function(p, j){ var x = X(Date.parse(p[0])), y = Yp(p[ix]); j ? c.lineTo(x, y) : c.moveTo(x, y); }); c.stroke(); }
+    if(BAL){ c.strokeStyle = '#9b7bff'; c.lineWidth = 1.8; c.beginPath(); var st0 = false; P.forEach(function(p){ var v = BM[p[0]]; if(!v) return; var x = X(Date.parse(p[0])), y = Yp(v); st0 ? c.lineTo(x, y) : c.moveTo(x, y); st0 = true; }); c.stroke(); }
     line(2, '#3fb97a', 1.8); line(1, '#dba118', 1.8);
     if(hover != null){ var q = P[hover], x = X(Date.parse(q[0])); c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 1; c.beginPath(); c.moveTo(x, T); c.lineTo(x, H - B); c.stroke();
-      var tip = document.getElementById('rpTip'), rel = (q[1] / q[2] - 1) * 100; tip.innerHTML = '<b>' + new Date(q[0]).toLocaleDateString(undefined, {day: 'numeric', month: 'short', year: 'numeric'}) + '</b><br><span style="color:#dba118">Price ' + fmt(q[1]) + '</span><br><span style="color:#3fb97a">Realized ' + fmt(q[2]) + '</span><br>' + (rel >= 0 ? '+' : '') + rel.toFixed(0) + '% vs realized'; tip.style.display = 'block'; tip.style.left = Math.min(Math.max(4, x - 60), W - 150) + 'px'; tip.style.top = '14px'; }
+      var tip = document.getElementById('rpTip'), rel = (q[1] / q[2] - 1) * 100; tip.innerHTML = '<b>' + new Date(q[0]).toLocaleDateString(undefined, {day: 'numeric', month: 'short', year: 'numeric'}) + '</b><br><span style="color:#dba118">Price ' + fmt(q[1]) + '</span><br><span style="color:#3fb97a">Realized ' + fmt(q[2]) + '</span><br>' + (BAL && BM[q[0]] ? '<span style="color:#9b7bff">Balanced ' + fmt(BM[q[0]]) + '</span><br>' : '') + (rel >= 0 ? '+' : '') + rel.toFixed(0) + '% vs realized'; tip.style.display = 'block'; tip.style.left = Math.min(Math.max(4, x - 60), W - 150) + 'px'; tip.style.top = '14px'; }
     else document.getElementById('rpTip').style.display = 'none';
     cv._m = {L: L, R: R, W: W, P: P, t0: t0, t1: t1};
   }
@@ -6125,9 +6126,10 @@ window.ttmLuna = {cycles: CY, phaseNow};
   cv.addEventListener('mousemove', function(e){ var i = at(e); if(i != null) draw(i); }); cv.addEventListener('mouseleave', function(){ draw(null); });
   cv.addEventListener('touchstart', function(e){ var i = at(e); if(i != null) draw(i); }, {passive: true}); cv.addEventListener('touchmove', function(e){ var i = at(e); if(i != null) draw(i); }, {passive: true});
   document.getElementById('rpRange').addEventListener('click', function(e){ var b = e.target.closest('[data-y]'); if(!b) return; Y = +b.dataset.y; this.querySelectorAll('.filter-chip').forEach(function(x){ x.classList.toggle('active', x === b); }); draw(null); });
+  document.getElementById('rpBal').addEventListener('click', function(){ BAL = !BAL; this.classList.toggle('active', BAL); draw(null); });
   window.addEventListener('resize', function(){ draw(null); });
   fetch('../btc_realized.json?t=' + Math.floor(Date.now() / 600000), {cache: 'no-store'}).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }).then(function(d){
-    var st = document.getElementById('rpStatus'); if(!d || !d.series){ st.textContent = 'Realized price data is not available yet. It is built automatically every few hours.'; return; } D = d;
+    var st = document.getElementById('rpStatus'); if(!d || !d.series){ st.textContent = 'Realized price data is not available yet. It is built automatically every few hours.'; return; } D = d; (d.balanced || []).forEach(function(b){ BM[b[0]] = b[1]; });
     function paintStatus(){ var rel = (d.price / d.realized - 1) * 100; st.innerHTML = 'BTC <b>' + fmt(d.price) + '</b> <span style="opacity:.7">(live)</span> &middot; realized price <b style="color:#3fb97a">' + fmt(d.realized) + '</b> &middot; <b style="color:' + (rel < 0 ? '#e0554d' : '#3fb97a') + '">' + (rel >= 0 ? '+' : '') + rel.toFixed(1) + '%</b> vs realized &middot; MVRV ' + (d.price / d.realized).toFixed(2) + ' &middot; realized price as of ' + (d.realized_as_of || d.as_of); }
     paintStatus(); draw(null); if(window.ResizeObserver) new ResizeObserver(function(){ draw(null); }).observe(cv);
     function live(){ fetch('https://api.exchange.coinbase.com/products/BTC-USD/ticker').then(function(r){ return r.json(); }).then(function(t){ var px = +t.price; if(!(px > 0)) return; d.price = px; var last = d.series[d.series.length - 1], today = new Date().toISOString().slice(0, 10); if(last[0] === today){ last[1] = px; } else { d.series.push([today, px, last[2]]); } paintStatus(); draw(null); }).catch(function(){}); }
