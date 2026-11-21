@@ -792,6 +792,7 @@ body.rm-full #rmIn{font-size:17px}
 </header>
 
 <div class="wrap" id="briefWrap" style="display:none;padding-top:14px;padding-bottom:6px"><div id="dailyBrief" class="rr-card" style="display:none;margin:0;border-color:rgba(212,175,55,.45)"></div>
+<div id="aiRep" class="rr-card" style="margin:12px 0 0;border-color:rgba(212,175,55,.45)"></div>
 </div>
 <script>
 (function(){
@@ -804,6 +805,51 @@ body.rm-full #rmIn{font-size:17px}
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">' + b.sections.map(function(s){ return '<div><b style="color:var(--gold2)">' + esc(s.h) + '</b><ul style="margin:4px 0 0;padding-left:18px;font-size:13px;line-height:1.55">' + s.lines.map(function(l){ return '<li>' + esc(l) + '</li>'; }).join('') + '</ul></div>'; }).join('') + '</div>';
     box.style.display = ''; var w = document.getElementById('briefWrap'); if(w) w.style.display = '';
   }).catch(function(){});
+})();
+</script>
+<style>
+#aiRep h3{margin:0 0 2px;font-size:15px}#aiRep .air-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}#aiRep input{flex:1 1 200px;min-width:0;background:#0f0f12;color:#e8e8ec;border:1px solid #3a3a42;border-radius:10px;padding:10px 12px;font:inherit;font-size:14px}
+#aiRep button.air-b{background:#1a1a1f;color:var(--gold2,#f1c75b);border:1px solid rgba(212,175,55,.5);border-radius:10px;padding:10px 14px;font:inherit;font-weight:700;cursor:pointer}#aiRep button.air-b.go{background:var(--gold2,#dba118);color:#111}#aiRep button:disabled{opacity:.5;cursor:wait}
+.air-out{margin-top:14px}.air-hd{border-left:3px solid #dba118;padding:2px 0 2px 12px}.air-hd h4{margin:0;font-size:17px}.air-v{margin:12px 0;padding:10px 12px;background:rgba(212,175,55,.09);border:1px solid rgba(212,175,55,.35);border-radius:10px;font-weight:600;font-size:14px;line-height:1.5}
+.air-st{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:10px 0}.air-st div{background:#111114;border:1px solid #26262c;border-radius:10px;padding:8px 10px}.air-st small{display:block;color:#8a8a92;font-size:11px}.air-st b{font-size:14px}
+.air-sec{background:#111114;border:1px solid #26262c;border-radius:12px;padding:12px 14px;margin:8px 0}.air-sec h5{margin:0 0 4px;color:var(--gold2,#f1c75b);font-size:14px}.air-sec p{margin:0;font-size:13.5px;line-height:1.6}.air-sec ul{margin:6px 0 0;padding-left:18px;font-size:13px;line-height:1.55}
+.air-dis{margin-top:10px;font-size:11.5px;color:#8a8a92;line-height:1.5}
+</style>
+<script>
+(function(){
+  var box = document.getElementById('aiRep'); if(!box) return;
+  var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+  var w = document.getElementById('briefWrap'); if(w) w.style.display = '';
+  box.innerHTML = '<h3>🤖 Ask TTM AI <span style="font-size:11px;font-weight:700;color:#111;background:#dba118;border-radius:6px;padding:2px 7px;vertical-align:middle">Premium &amp; Pro</span></h3>' +
+    '<div class="calendar-note" style="margin:0">Get a token review or a market assessment, written in the same format as the TTM Asset Reviews, from live market data.</div>' +
+    '<div class="air-row"><input id="airTok" placeholder="Token name or ticker, e.g. SOL" maxlength="40" autocomplete="off"><button class="air-b go" id="airT">Token review</button><button class="air-b" id="airM">Market assessment</button></div><div class="air-out" id="airOut"></div>';
+  var out = document.getElementById('airOut'), tokIn = document.getElementById('airTok'), busy = false;
+  function render(r, left){
+    var d = new Date(r.asof), when = d.toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'});
+    out.innerHTML = '<div class="air-hd"><h4>' + esc(r.title) + '</h4><div class="calendar-note" style="margin:2px 0 0">' + esc(r.subtitle) + ' · AI report, ' + esc(when) + '</div></div>' +
+      '<div class="air-v">' + esc(r.verdict) + '</div>' +
+      (r.stats.length ? '<div class="air-st">' + r.stats.map(function(x){ return '<div><small>' + esc(x.k) + '</small><b>' + esc(x.v) + '</b></div>'; }).join('') + '</div>' : '') +
+      r.sections.map(function(s){ return '<div class="air-sec"><h5>' + esc(s.h) + '</h5><p>' + esc(s.body) + '</p>' + (s.bullets.length ? '<ul>' + s.bullets.map(function(b){ return '<li>' + esc(b) + '</li>'; }).join('') + '</ul>' : '') + '</div>'; }).join('') +
+      (r.watch.length ? '<div class="air-sec"><h5>What to watch next</h5><ul>' + r.watch.map(function(b){ return '<li>' + esc(b) + '</li>'; }).join('') + '</ul></div>' : '') +
+      '<div class="air-dis">Written by AI from live market data and recent news. It can be wrong or out of date. Educational only, not financial advice. TTM does not tell you to buy or sell anything.' + (left != null ? ' · ' + left + ' report' + (left === 1 ? '' : 's') + ' left today' : '') + '</div>';
+  }
+  function msg(t, bad){ out.innerHTML = '<p class="calendar-note" style="margin:0;' + (bad ? 'color:#e0554d' : '') + '">' + esc(t) + '</p>'; }
+  async function ask(kind){
+    if(busy) return; if(window.ttmCan && !ttmCan('airep')){ if(window.ttmUpsell) ttmUpsell('airep'); return; }
+    var tk = (tokIn.value || '').trim(); if(kind === 'token' && !tk){ msg('Type a token name or ticker first, for example SOL.', true); tokIn.focus(); return; }
+    var who = window.ttmWho ? ttmWho() : null, cfg = window.ttmCfg ? ttmCfg() : null, token = who && who.token ? await who.token() : null;
+    if(!token || !cfg){ msg('Sign in to use Ask TTM AI.', true); return; }
+    busy = true; var b1 = document.getElementById('airT'), b2 = document.getElementById('airM'); b1.disabled = b2.disabled = true; var t0 = Date.now();
+    var tm = setInterval(function(){ msg((kind === 'token' ? 'Reading ' + tk.toUpperCase() + ' data and writing the review… ' : 'Reading the market and writing the assessment… ') + Math.floor((Date.now() - t0) / 1000) + 's (usually 20 to 40 seconds)'); }, 1000); msg('Starting…');
+    try{
+      var r = await fetch(cfg.url + '/functions/v1/ttm-ai-report', {method: 'POST', headers: {apikey: cfg.key, Authorization: 'Bearer ' + token, 'Content-Type': 'application/json'}, body: JSON.stringify({kind: kind, token: tk})});
+      var j = await r.json().catch(function(){ return {}; });
+      if(r.ok && j.report) render(j.report, j.left); else msg(j.error || (r.status === 404 ? 'TTM AI is not switched on yet (the function has not been deployed).' : 'TTM AI could not answer right now. Try again soon.'), true);
+    }catch(e){ msg('Could not reach TTM AI. Check your connection and try again.', true); }
+    clearInterval(tm); busy = false; b1.disabled = b2.disabled = false;
+  }
+  document.getElementById('airT').onclick = function(){ ask('token'); }; document.getElementById('airM').onclick = function(){ ask('market'); };
+  tokIn.addEventListener('keydown', function(e){ if(e.key === 'Enter') ask('token'); });
 })();
 </script>
 <div class="hero wrap">
@@ -5560,7 +5606,7 @@ fill(); paint();
 <script src="../education.js?v=2"></script>
 <script src="../ttmind.js?v=14"></script>
 <script src="../ttmpaper.js?v=15"></script>
-<script src="../accounts.js?v=1795165207"></script>
+<script src="../accounts.js?v=1795165300"></script>
 <script>
 (function(){
   const secs = Array.from(document.querySelectorAll('body > section[id]'));
