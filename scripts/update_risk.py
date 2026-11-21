@@ -325,6 +325,83 @@ def chart_btc(btc, spx_unused=None):
     return [risk, logreg, puell]
 
 
+def sig(x):
+    return 1 / (1 + math.exp(-max(-30, min(30, x))))
+
+
+def _spx_ov(spx, frm):
+    return {"name": "S&P 500", "log": True, "series": [[a, round(b, 2)] for a, b in spx if a >= frm]}
+
+
+def chart_employment(spx):
+    r = month_last(fred("SAHMREALTIME", "1959-01-01"))
+    p = [sig(6 * (v - 0.35)) for _, v in r]
+    d = [x[0] for x in r]
+    return {"id": "employment", "title": "Employment Recession Risk", "kind": "risk", "bands": ["Very low", "Low", "Medium", "High", "Very high"], "freq": "monthly",
+            "sub": "The Sahm rule gauge: how far US unemployment has risen above its recent low",
+            "series": trim(series_of(d, p), "1985-01-01"), "overlay": _spx_ov(spx, "1985-01-01"),
+            "extra": {"name": "Sahm indicator (pts)", "series": [[a, round(b, 2)] for a, b in r if a >= "1985-01-01"]},
+            "desc": "Rising unemployment is one of the most reliable signs that a recession has started. The Sahm rule fires when the 3-month average unemployment rate is 0.5 points above its lowest level of the past year; it has flagged every US recession since 1970. High score = unemployment is climbing fast.",
+            "how": "Source: FRED SAHMREALTIME (monthly). Score = 1 / (1 + e^(-6 × (indicator - 0.35))): about 0.1 at 0, 0.5 at 0.35, above 0.7 once the 0.5 rule fires. A confirming gauge: it usually lights up after a recession has begun."}
+
+
+def chart_production(spx):
+    r = month_last(fred("INDPRO", "1959-01-01"))
+    y = [(d, v) for d, v in yoy(r, 12) if v is not None]
+    p = [sig(-1.0 * (v + 1.0)) for _, v in y]
+    d = [x[0] for x in y]
+    return {"id": "production", "title": "Production & Business Recession Risk", "kind": "risk", "bands": ["Very low", "Low", "Medium", "High", "Very high"], "freq": "monthly",
+            "sub": "Year-on-year change in US industrial production; weak or falling output means higher risk",
+            "series": trim(series_of(d, p), "1985-01-01"), "overlay": _spx_ov(spx, "1985-01-01"),
+            "extra": {"name": "Output, year on year (%)", "series": [[a, round(b, 2)] for a, b in y if a >= "1985-01-01"]},
+            "desc": "Factories, mines and utilities react early when demand fades. Industrial production falling year on year has accompanied most US recessions. High score = output is shrinking or growing very slowly.",
+            "how": "Source: FRED INDPRO (monthly index), year-on-year change. Score = 1 / (1 + e^(1 × (growth + 1))): about 0.27 at 0% growth, 0.5 at -1%, above 0.85 when output is down 3% or more."}
+
+
+def chart_gdp(spx):
+    r = fred("A191RL1Q225SBEA", "1959-01-01")
+    d = [x[0][:7] + "-01" for x in r]
+    p = [sig(-1.2 * (v - 0.5)) for _, v in r]
+    return {"id": "gdp", "title": "National Income & Product Recession Risk", "kind": "risk", "bands": ["Very low", "Low", "Medium", "High", "Very high"], "freq": "monthly",
+            "sub": "US real GDP growth, quarterly (annualised); slow or negative growth means higher risk",
+            "series": trim(series_of(d, p), "1985-01-01"), "overlay": _spx_ov(spx, "1985-01-01"),
+            "extra": {"name": "Real GDP growth (%)", "series": [[a, round(b, 2)] for a, (_, b) in zip(d, r) if a >= "1985-01-01"]},
+            "desc": "GDP is the broadest measure of the economy. Two quarters in a row of falling GDP is the common rule of thumb for a recession. High score = growth is slow or negative. It is published late and revised, so it confirms rather than predicts.",
+            "how": "Source: FRED A191RL1Q225SBEA (real GDP, % change at annual rate, quarterly). Score = 1 / (1 + e^(1.2 × (growth - 0.5))): about 0.35 at 0%, 0.5 at +0.5%, above 0.9 at -2%."}
+
+
+def chart_total():
+    d0 = json.load(open(os.path.join(ROOT, "crypto_market_history.json")))
+    t0, step, tot = d0["t0"], d0["step"], d0["s"]["TOTAL"]
+    d = [datetime.fromtimestamp((t0 + i * step) / 1000, timezone.utc).strftime("%Y-%m-%d") for i in range(len(tot))]
+    start = next(i for i, v in enumerate(tot) if v and v >= 0.05)
+    d, v = d[start:], tot[start:]
+    if len(v) < 1500:
+        raise ValueError("TOTAL history too short")
+    ln = [math.log(max(x, 1e-6)) for x in v]
+    xs = [math.log(max(1, (date.fromisoformat(x) - GENESIS).days)) for x in d]
+    mx, my = sum(xs) / len(xs), sum(ln) / len(ln)
+    b = sum((a - mx) * (c - my) for a, c in zip(xs, ln)) / sum((a - mx) ** 2 for a in xs); a0 = my - b * mx
+    res = [c - (a0 + b * a) for a, c in zip(xs, ln)]
+    ma = [(sum(v[i - 1399:i + 1]) / 1400 if i >= 1399 else None) for i in range(len(v))]
+    dev = [(math.log(v[i] / ma[i]) if ma[i] else None) for i in range(len(v))]
+    P = {"ma200w": smooth(pct_expanding(dev, 365), 7), "logreg": smooth(pct_expanding(res, 365), 7)}
+    names = {"ma200w": "Total cap vs 200-week average", "logreg": "Total cap vs log-regression trend"}
+    comp = []
+    for i in range(len(v)):
+        w = [P[k][i] for k in P if P[k][i] is not None]
+        comp.append(sum(w) / len(w) if len(w) == 2 else None)
+    comp = smooth(comp, 7)
+    wk = weekly([(a, c) for a, c in zip(d, comp) if c is not None and a >= "2014-06-01"]); wset = {a for a, _ in wk}
+    parts = [{"k": k, "name": names[k], "series": [[a, round(x, 3)] for a, x in zip(d, P[k]) if x is not None and a in wset]} for k in names]
+    return {"id": "totalrisk", "title": "Total Market Cap Risk", "kind": "risk", "bands": RISK_BANDS, "freq": "daily",
+            "sub": "How stretched the whole crypto market is against its own long-term trend, as a percentile of its history",
+            "series": [[a, round(x, 3)] for a, x in wk], "parts": parts,
+            "overlay": {"name": "Total market cap ($B)", "log": True, "series": [[a, round(x, 2)] for a, x in weekly([(a, x) for a, x in zip(d, v) if a >= "2014-06-01"])]},
+            "desc": "The same idea as Bitcoin Risk, applied to the total value of all crypto. Low scores have been where the market was cheap against its own history; high scores where it was stretched. It says where we are in the cycle, not what happens next.",
+            "how": "Two measures, each a percentile of its own past (no look-ahead), smoothed over 7 days: total market cap against its 200-week average and against its log-regression trend. Source: TTM's market history (Coin Metrics and CoinGecko based). Starts mid 2014."}
+
+
 def main():
     out_path = os.path.join(ROOT, "risk_data.json")
     old = {}
@@ -334,14 +411,14 @@ def main():
         pass
     spx = sp500()
     new = {}
-    for name, fn in (("liquidity", lambda: [chart_liquidity(spx)]), ("credit", lambda: [chart_credit(spx)]), ("curve", lambda: [chart_curve(spx)]), ("btc", lambda: chart_btc(btc_daily()))):
+    for name, fn in (("liquidity", lambda: [chart_liquidity(spx)]), ("credit", lambda: [chart_credit(spx)]), ("curve", lambda: [chart_curve(spx)]), ("employment", lambda: [chart_employment(spx)]), ("production", lambda: [chart_production(spx)]), ("gdp", lambda: [chart_gdp(spx)]), ("total", lambda: [chart_total()]), ("btc", lambda: chart_btc(btc_daily()))):
         try:
             for c in fn():
                 new[c["id"]] = c
             STATUS[name] = "ok"
         except Exception as e:  # noqa
             STATUS[name] = "failed: " + str(e)[:150]
-    order = ["liquidity", "credit", "curve", "btcrisk", "logreg", "puell"]
+    order = ["liquidity", "credit", "curve", "employment", "production", "gdp", "btcrisk", "totalrisk", "logreg", "puell"]
     charts = []
     for k in order:
         c = new.get(k) or old.get(k)
