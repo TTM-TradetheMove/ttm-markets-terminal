@@ -1471,6 +1471,16 @@ async function rmSend(){
     i.value = ''; RM.reply = null; rmReplyBar(); RM.pend = null; RM.voice = null; rmPrev(); n.textContent = rooms.length > 1 ? 'Sent to ' + rooms.length + ' rooms.' : ''; await rmLoad(true); const l = $('rmList'); if(l) l.scrollTop = l.scrollHeight;
   } finally { RM.sending = false; }
 }
+window.ttmPostRoom = async function(room, blob, text){
+  if(!chatOK || !rmCan(room)) return {ok: false, error: 'You cannot post in the ' + room + ' room.'};
+  try{ const t = await token(), path = USER.id + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.jpg';
+    const up = await fetch(CFG.url + '/storage/v1/object/room-pending/' + path, {method: 'POST', headers: {apikey: CFG.key, Authorization: 'Bearer ' + t, 'Content-Type': 'image/jpeg'}, body: blob}); if(!up.ok) return {ok: false, error: 'Could not upload the image.'};
+    let sc = null; try{ const r = await fetch(CFG.url + '/functions/v1/scan-image', {method: 'POST', headers: {apikey: CFG.key, Authorization: 'Bearer ' + t, 'Content-Type': 'application/json'}, body: JSON.stringify({path, type: 'image/jpeg'})}); sc = await r.json(); }catch(e){}
+    if(!sc || !sc.ok) return {ok: false, error: sc && sc.reason ? 'Image blocked: ' + sc.reason : 'Could not scan the image, so it was not sent.'};
+    const r = await api('/rest/v1/ttm_room_msgs', {method: 'POST', headers: {Prefer: 'return=minimal'}, body: JSON.stringify([{room, body: String(text || '').slice(0, 1000) || 'TTM AI report', img: sc.url}])});
+    return r.ok ? {ok: true} : {ok: false, error: /Slow down/i.test(JSON.stringify(r.json || '')) ? 'Slow down a little, then try again.' : 'Could not post to the ' + room + ' room (muted, or not in your plan).'};
+  }catch(e){ return {ok: false, error: 'Something went wrong posting. Try again.'}; }
+};
 window.ttmPostImage = async function(blob, text){
   if(!chatOK || !rmCan('free') && !rmCan('premium') && !rmCan('pro')){ alert('Sign in to post in the chat rooms.'); return; }
   if(!document.getElementById('community')){ const fr = new FileReader(); fr.onload = () => { try{ sessionStorage.setItem('ttm_pend_chart', JSON.stringify({d: fr.result, t: text || ''})); }catch(x){ alert('That chart is too large to send from here. Use the Image button and add it in the chat by hand.'); return; } location.href = BASE + 'crypto/index.html#community'; }; fr.readAsDataURL(blob); return; }
