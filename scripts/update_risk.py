@@ -426,6 +426,11 @@ def main():
             if k not in new:
                 c["stale"] = True
             c["latest"] = (c.get("series") or [None])[-1] if c.get("series") else (c["lines"][0]["s"][-1] if c.get("lines") else None)
+            lt = c.get("latest")
+            if lt and c.get("freq") == "daily" and (date.today() - date.fromisoformat(lt[0])).days > 45:
+                c["lag"] = lt[0]
+            else:
+                c.pop("lag", None)
             charts.append(c)
     if not charts:
         print("nothing built, keeping the old file", STATUS)

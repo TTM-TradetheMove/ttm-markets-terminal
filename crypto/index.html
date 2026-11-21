@@ -1217,7 +1217,7 @@ body.rm-full #rmIn{font-size:17px}
   ['mouseleave', 'touchend'].forEach(function(n){ cv.addEventListener(n, function(){ $('rkTip').style.display = 'none'; draw(); }); });
   function ui(){
     var c = chart(); if(!c) return;
-    $('rkTitle').textContent = c.title; $('rkSub').textContent = c.sub || ''; $('rkDesc').textContent = c.desc || ''; $('rkHow').textContent = c.how || ''; $('rkStale').style.display = c.stale ? 'block' : 'none';
+    $('rkTitle').textContent = c.title; $('rkSub').textContent = c.sub || ''; $('rkDesc').textContent = c.desc || ''; $('rkHow').textContent = c.how || ''; var stl = $('rkStale'); stl.textContent = c.lag ? 'The data source for this chart is behind: it runs to ' + c.lag + ' and will catch up when the source does.' : 'This chart could not refresh on the last update, so it shows older data.'; stl.style.display = (c.stale || c.lag) ? 'block' : 'none';
     var l = c.latest; if(c.kind === 'risk' && l){ var bi = bandOf(l[1]); $('rkNow').innerHTML = '<b style="color:rgb(' + BC[bi] + ')">' + l[1].toFixed(2) + '</b><span style="color:rgb(' + BC[bi] + ');border-color:rgb(' + BC[bi] + ')">' + esc(c.bands[bi]) + '</span><div class="rk-sub" style="margin:3px 0 0">as of ' + esc(l[0]) + '</div>'; }
     else if(l){ $('rkNow').innerHTML = '<b>' + (c.kind === 'lines' ? '$' + fmtP(l[1]) : l[1].toFixed(2)) + '</b><div class="rk-sub" style="margin:3px 0 0">as of ' + esc(l[0]) + '</div>'; } else $('rkNow').innerHTML = '';
     $('rkColG').style.display = c.kind === 'risk' ? '' : 'none'; $('rkOvG').style.display = c.overlay ? '' : 'none'; $('rkOv').textContent = (c.overlay ? c.overlay.name : '') + (st.ov ? ' on' : ' off'); $('rkOv').classList.toggle('on', st.ov);
