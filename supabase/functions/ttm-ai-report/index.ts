@@ -31,20 +31,20 @@ Deno.serve(async (req) => {
     const charging = await st("charging"), access = (await st("access")) || {};
     const rk = (p: string) => p === "pro" ? 2 : p === "premium" || p === "crypto" || p === "tradfi" ? 1 : 0;
     const live = !prof.plan_until || new Date(prof.plan_until) > new Date(), mine = live ? rk(prof.plan) : 0;
-    let ok = !!prof.is_admin || (!ADMIN_ONLY && (charging === false || charging === "false"));
+    let ok = !!prof.is_admin || !!prof.team || (!ADMIN_ONLY && (charging === false || charging === "false"));
     if (!ok && !ADMIN_ONLY) {
       const a: string[] = access.airep || ["premium"];
       const need = Math.min(...a.filter((x) => ["free", "premium", "pro"].includes(x)).map((x) => rk(x)).concat([2]));
       ok = mine >= need || (!!prof.beta && a.includes("beta")) || (!!prof.team && a.includes("team"));
     }
-    if (!ok) return out({error: ADMIN_ONLY ? "TTM AI reports are admin-only for now." : "TTM AI reports are for Premium and Pro members."}, 403);
+    if (!ok) return out({error: ADMIN_ONLY ? "TTM AI reports are for the TTM team for now." : "TTM AI reports are for Premium and Pro members."}, 403);
 
     const b = await req.json().catch(() => ({}));
     const kind = b.kind === "market" ? "market" : "token";
     const q = String(b.token ?? "").replace(/[^A-Za-z0-9 .\-]/g, "").trim().slice(0, 40);
     if (kind === "token" && !q) return out({error: "Type a token name or ticker first."}, 400);
 
-    const day = new Date().toISOString().slice(0, 10), lim = prof.is_admin ? LIM.admin : mine >= 2 ? LIM.pro : LIM.premium;
+    const day = new Date().toISOString().slice(0, 10), lim = prof.is_admin ? LIM.admin : prof.team ? LIM.pro : mine >= 2 ? LIM.pro : LIM.premium;
     const used = (await get(`ttm_ai_usage?select=n&user_id=eq.${uid}&day=eq.${day}`))[0]?.n || 0;
     if (used >= lim) return out({error: `You have used today's ${lim} AI reports. Try again tomorrow.`}, 429);
 
