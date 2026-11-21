@@ -1,18 +1,18 @@
 {
- "generated_at": "2026-11-21T14:51:05+00:00",
+ "generated_at": "2026-11-21T23:31:51+00:00",
  "bytes": 38216,
  "log_tail": [
   "nyfed SOMA: 390 rows",
   "nyfed RRP: 1866 rows via =2019-06-01&endDate=2026-11-21&operationTypes=Reverse%20Repo",
-  "fiscaldata TGA: 1739 rows",
   "  fetch failed https://data-api.ecb.europa.eu/service/data/ILM/W.U2.C.T000000.Z5.Z01.E?startPeriod=2019-0 (HTTPError 400) try 1",
+  "fiscaldata TGA: 1739 rows",
   "  fetch failed https://data-api.ecb.europa.eu/service/data/ILM/W.U2.C.T000000.Z5.Z01.E?startPeriod=2019-0 (HTTPError 400) try 2",
   "ecb assets W.U2.C.T000000.Z5.Z01.E: 0 rows (reply starts: '')",
   "ecb assets W.U2.C.T000000.Z5.Z01: 389 rows",
-  "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=JPNASSETS&cosd=2019-06-01 (TimeoutError ) try 1",
   "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=M2SL&cosd=2018-01-01 (TimeoutError ) try 1",
-  "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=JPNASSETS&cosd=2019-06-01 (TimeoutError ) try 2",
+  "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=JPNASSETS&cosd=2019-06-01 (TimeoutError ) try 1",
   "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=M2SL&cosd=2018-01-01 (TimeoutError ) try 2",
+  "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=JPNASSETS&cosd=2019-06-01 (TimeoutError ) try 2",
   "rows: WALCL=390, WTREGEN=1739, RRPONTSYD=1866, ECB=389, BOJ=0, M2=0, EUR=1300, JPY=1300, BTC=3653, SPX=2514"
  ],
  "weeks": 359,
