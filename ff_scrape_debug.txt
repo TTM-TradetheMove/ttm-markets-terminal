@@ -1,26 +1,26 @@
-Run at 2026-11-22T17:55:18.572929+00:00
+Run at 2026-11-22T23:22:48.396416+00:00
 
 page title: 'Calendar | Forex Factory'
 page url after load: 'https://www.forexfactory.com/calendar'
 row selector used: 'tr.calendar__row', rows found: 83
 sample row: date_el=False currency_el=False event_el=False actual_el=False raw_text='Sun Nov 22'
-sample row: date_el=True currency_el=True event_el=True actual_el=True raw_text='Sun\nNov 22\n\t\n9:45pm\n\tNZD\t\t\nCore Retail Sales q/q\n\t\n\t\n\t\t0.8%\t0.7%\t'
-sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='\tNZD\t\t\nRetail Sales q/q\n\t\n\t\n\t\t0.5%\t-0.5%\t'
-sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='10:00pm\n\tAUD\t\t\nFlash Manufacturing PMI\n\t\n\t\n\t\t\t\n49.6\n\t'
-sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='\tAUD\t\t\nFlash Services PMI\n\t\n\t\n\t\t\t\n48.5\n\t'
+sample row: date_el=True currency_el=True event_el=True actual_el=True raw_text='Sun\nNov 22\n\t\n3:45pm\n\tNZD\t\t\nCore Retail Sales q/q\n\t\n\t\n\t1.4%\t0.8%\t\n0.8%\n\t'
+sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='\tNZD\t\t\nRetail Sales q/q\n\t\n\t\n\t2.2%\t0.5%\t\n-0.4%\n\t'
+sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='4:00pm\n\tAUD\t\t\nFlash Manufacturing PMI\n\t\n\t\n\t48.7\t\t\n49.6\n\t'
+sample row: date_el=False currency_el=True event_el=True actual_el=True raw_text='\tAUD\t\t\nFlash Services PMI\n\t\n\t\n\t46.2\t\t\n48.5\n\t'
 TARGET ROW: date='Wed Nov 25' currency='USD' title='Unemployment Claims' actual=''
 TARGET ROW: date='Fri Nov 27' currency='EUR' title='German Unemployment Change' actual=''
-matched-actuals by date: {}
-Scraped 0 live actual values from forexfactory.com
-Past events without actual (17): 2026-11-02 USD Loan Officer Survey; 2026-11-02 USD Congressional Elections; 2026-11-03 USD API Weekly Statistical Bulletin; 2026-11-04 JPY Monetary Policy Meeting Minutes; 2026-11-05 GBP BOE Monetary Policy Report; 2026-11-05 GBP Monetary Policy Summary; 2026-11-08 EUR ECOFIN Meetings; 2026-11-08 EUR Eurogroup Meetings; 2026-11-09 JPY BOJ Summary of Opinions; 2026-11-10 USD API Weekly Statistical Bulletin; 2026-11-12 EUR ECB Economic Bulletin; 2026-11-13 USD FOMC Financial Stability Report; 2026-11-17 EUR EU Economic Forecasts; 2026-11-17 USD API Weekly Statistical Bulletin; 2026-11-18 EUR ECB Financial Stability Review; 2026-11-18 USD FOMC Meeting Minutes; 2026-11-19 EUR German Buba Monthly Report
-Scraped GBP keys: [('2026-11-02', 'GBP', 'finalmanufacturingpmi'), ('2026-11-03', 'GBP', '10ybondauction'), ('2026-11-04', 'GBP', 'finalservicespmi'), ('2026-11-05', 'GBP', 'constructionpmi'), ('2026-11-05', 'GBP', 'mpcofficialbankratevotes'), ('2026-11-05', 'GBP', 'officialbankrate'), ('2026-11-06', 'GBP', 'lloydshpimm'), ('2026-11-09', 'GBP', 'brcretailsalesmonitoryy'), ('2026-11-10', 'GBP', '30ybondauction'), ('2026-11-11', 'GBP', 'ricshousepricebalance'), ('2026-11-12', 'GBP', 'gdpmm'), ('2026-11-12', 'GBP', 'prelimgdpqq'), ('2026-11-12', 'GBP', 'constructionoutputmm'), ('2026-11-12', 'GBP', 'goodstradebalance'), ('2026-11-12', 'GBP', 'indexofservices3m3m'), ('2026-11-12', 'GBP', 'industrialproductionmm'), ('2026-11-12', 'GBP', 'manufacturingproductionmm'), ('2026-11-12', 'GBP', 'prelimbusinessinvestmentqq'), ('2026-11-13', 'GBP', 'cbleadingindexmm'), ('2026-11-15', 'GBP', 'rightmovehpimm'), ('2026-11-17', 'GBP', 'averageearningsindex3my'), ('2026-11-17', 'GBP', 'claimantcountchange'), ('2026-11-17', 'GBP', 'hmrcpayrollschange'), ('2026-11-17', 'GBP', 'unemploymentrate'), ('2026-11-18', 'GBP', 'cpiyy'), ('2026-11-18', 'GBP', 'corecpiyy'), ('2026-11-18', 'GBP', 'ppiinputmm'), ('2026-11-18', 'GBP', 'ppioutputmm'), ('2026-11-18', 'GBP', 'rpiyy'), ('2026-11-18', 'GBP', 'hpiyy')]
+matched-actuals by date: {'2026-11-22': 4}
+Scraped 4 live actual values from forexfactory.com
+Past events without actual (15): 2026-11-02 USD Loan Officer Survey; 2026-11-04 JPY Monetary Policy Meeting Minutes; 2026-11-05 GBP BOE Monetary Policy Report; 2026-11-05 GBP Monetary Policy Summary; 2026-11-09 EUR ECOFIN Meetings; 2026-11-09 EUR Eurogroup Meetings; 2026-11-09 JPY BOJ Summary of Opinions; 2026-11-10 USD API Weekly Statistical Bulletin; 2026-11-12 EUR ECB Economic Bulletin; 2026-11-13 USD FOMC Financial Stability Report; 2026-11-17 EUR EU Economic Forecasts; 2026-11-17 USD API Weekly Statistical Bulletin; 2026-11-18 EUR ECB Financial Stability Review; 2026-11-18 USD FOMC Meeting Minutes; 2026-11-19 EUR German Buba Monthly Report
+Scraped GBP keys: [('2026-11-02', 'GBP', 'finalmanufacturingpmi'), ('2026-11-04', 'GBP', 'finalservicespmi'), ('2026-11-05', 'GBP', 'constructionpmi'), ('2026-11-05', 'GBP', 'mpcofficialbankratevotes'), ('2026-11-05', 'GBP', 'officialbankrate'), ('2026-11-06', 'GBP', 'lloydshpimm'), ('2026-11-09', 'GBP', 'brcretailsalesmonitoryy'), ('2026-11-10', 'GBP', '30ybondauction'), ('2026-11-11', 'GBP', 'ricshousepricebalance'), ('2026-11-12', 'GBP', 'gdpmm'), ('2026-11-12', 'GBP', 'prelimgdpqq'), ('2026-11-12', 'GBP', 'constructionoutputmm'), ('2026-11-12', 'GBP', 'goodstradebalance'), ('2026-11-12', 'GBP', 'indexofservices3m3m'), ('2026-11-12', 'GBP', 'industrialproductionmm'), ('2026-11-12', 'GBP', 'manufacturingproductionmm'), ('2026-11-12', 'GBP', 'prelimbusinessinvestmentqq'), ('2026-11-13', 'GBP', 'cbleadingindexmm'), ('2026-11-15', 'GBP', 'rightmovehpimm'), ('2026-11-17', 'GBP', 'averageearningsindex3my'), ('2026-11-17', 'GBP', 'claimantcountchange'), ('2026-11-17', 'GBP', 'hmrcpayrollschange'), ('2026-11-17', 'GBP', 'unemploymentrate'), ('2026-11-18', 'GBP', 'cpiyy'), ('2026-11-18', 'GBP', 'corecpiyy'), ('2026-11-18', 'GBP', 'ppiinputmm'), ('2026-11-18', 'GBP', 'ppioutputmm'), ('2026-11-18', 'GBP', 'rpiyy'), ('2026-11-18', 'GBP', 'hpiyy'), ('2026-11-19', 'GBP', 'cbiindustrialorderexpectations')]
 
 -- month scrape --
-month nov.2026: title='Calendar | Forex Factory' url='https://www.forexfactory.com/calendar?month=nov.2026' rows=483 tracked=326
-month nov.2026: 326 rows for tracked currencies; sample: [{'date': 'Sun Nov 1', 'time': '7:00am', 'cur': 'USD', 'impact': 'icon icon--ff-impact-gra', 'title': 'Daylight Saving Time Shift', 'actual': '', 'forecast': '', 'previous': ''}, {'date': 'Mon Nov 2', 'time': '12:30am', 'cur': 'JPY', 'impact': 'icon icon--ff-impact-yel', 'title': 'Final Manufacturing PMI', 'actual': '53.3', 'forecast': '53.3', 'previous': '53.3'}]
-month nov.2026: page timezone calibrated to UTC (55 matching rows)
-month nov.2026: added 265 events not already in the weekly feeds
+month nov.2026: title='Calendar | Forex Factory' url='https://www.forexfactory.com/calendar?month=nov.2026' rows=490 tracked=318
+month nov.2026: 318 rows for tracked currencies; sample: [{'date': 'Sun Nov 1', 'time': '1:00am', 'cur': 'USD', 'impact': 'icon icon--ff-impact-gra', 'title': 'Daylight Saving Time Shift', 'actual': '', 'forecast': '', 'previous': ''}, {'date': 'Sun Nov 1', 'time': '6:30pm', 'cur': 'JPY', 'impact': 'icon icon--ff-impact-yel', 'title': 'Final Manufacturing PMI', 'actual': '53.3', 'forecast': '53.3', 'previous': '53.3'}]
+month nov.2026: page timezone calibrated to America/Chicago (55 matching rows)
+month nov.2026: added 258 events not already in the weekly feeds
 month dec.2026: title='Just a moment...' url='https://www.forexfactory.com/calendar?month=dec.2026' rows=0 tracked=0
 month dec.2026: first rows: []
 month dec.2026: 0 rows for tracked currencies; sample: []
-month-ahead fallback (financecalendar.com): 1 rows read, 0 events after 2026-11-30 added
+month-ahead fallback (financecalendar.com): 1 rows read, 0 events after 2026-12-01 added
