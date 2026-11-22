@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
     let r = await call(true); if (!r.ok) r = await call(false);
     const j = await r.json(); if (!r.ok) return out({error: "TTM AI could not write the report right now. Try again soon."}, 502);
     const text = (j.content || []).filter((x: any) => x.type === "text").map((x: any) => x.text).join("").trim();
-    const a = text.indexOf("{"), z = text.lastIndexOf("}"); let rep: any = null; try { rep = JSON.parse(text.slice(a, z + 1)); } catch (_e) { /* fall through */ }
+    const i0 = text.indexOf("{"), z = text.lastIndexOf("}"); let rep: any = null; try { rep = JSON.parse(text.slice(i0, z + 1)); } catch (_e) { /* fall through */ }
     if (!rep || !Array.isArray(rep.sections) || !rep.sections.length) return out({error: "TTM AI returned an unreadable report. Try again."}, 502);
     await rest("ttm_ai_usage?on_conflict=user_id,day", {method: "POST", headers: {Prefer: "resolution=merge-duplicates,return=minimal"}, body: JSON.stringify({user_id: uid, day, n: used + 1})});
     const cl = (v: unknown, n: number) => String(v ?? "").replace(/<\/?cite[^>]*>/g, "").replace(/\s{2,}/g, " ").trim().slice(0, n), tn = (v: unknown) => v === "bull" || v === "bear" ? v : "neutral";
