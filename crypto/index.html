@@ -1565,19 +1565,16 @@ body.rm-full #rmIn{font-size:17px}
             <div class="rr-f"><label for="rrPStop">Part stop loss (USD), optional</label><input id="rrPStop" type="number" inputmode="decimal" step="any" placeholder="Closes only part of the trade"></div>
             <div class="rr-f"><label for="rrPSh">% of position closed at the part stop</label><input id="rrPSh" type="number" inputmode="decimal" step="any"></div>
           </div>
-          <p class="calendar-note" style="margin:-4px 0 10px">A part stop closes only that share of the trade. The rest stays on the main stop above, and your risk is worked out from both.</p>
-          <div class="rr-f" style="margin:2px 0 10px"><label style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="rrSplit" style="width:auto"> Split the entry into up to 5 limit orders</label>
+          <div class="rr-row">
+            <div class="rr-f"><label for="rrPStop2">Part stop loss 2 (USD), optional</label><input id="rrPStop2" type="number" inputmode="decimal" step="any" placeholder="A second part stop"></div>
+            <div class="rr-f"><label for="rrPSh2">% of position closed at part stop 2</label><input id="rrPSh2" type="number" inputmode="decimal" step="any"></div>
+          </div>
+          <p class="calendar-note" style="margin:-4px 0 10px">Up to 3 stop losses: the main stop plus two part stops. Each part stop closes only its share of the trade, the rest stays on the main stop above, and your risk is worked out from all of them.</p>
+          <div class="rr-f" style="margin:2px 0 10px"><label style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="rrSplit" style="width:auto"> Split the entry into up to 12 limit orders</label>
             <div id="rrSplitBox" style="display:none;margin-top:8px"><div class="calendar-note" style="margin:0 0 8px">Price and share of the position for each order. The average entry is worked out for you and used for the risk, stop and targets. When an order fills, your tracker updates the average entry and draws it on the trade chart.</div>
-              <div class="rr-tp" style="margin-bottom:6px"><input id="rrLo1p" type="number" inputmode="decimal" step="any" placeholder="Order 1 price"><input id="rrLo1w" type="number" inputmode="decimal" step="any" placeholder="% of position"></div><div class="rr-tp" style="margin-bottom:6px"><input id="rrLo2p" type="number" inputmode="decimal" step="any" placeholder="Order 2 price"><input id="rrLo2w" type="number" inputmode="decimal" step="any" placeholder="% of position"></div><div class="rr-tp" style="margin-bottom:6px"><input id="rrLo3p" type="number" inputmode="decimal" step="any" placeholder="Order 3 price"><input id="rrLo3w" type="number" inputmode="decimal" step="any" placeholder="% of position"></div><div class="rr-tp" style="margin-bottom:6px"><input id="rrLo4p" type="number" inputmode="decimal" step="any" placeholder="Order 4 price"><input id="rrLo4w" type="number" inputmode="decimal" step="any" placeholder="% of position"></div><div class="rr-tp" style="margin-bottom:6px"><input id="rrLo5p" type="number" inputmode="decimal" step="any" placeholder="Order 5 price"><input id="rrLo5w" type="number" inputmode="decimal" step="any" placeholder="% of position"></div>
-              <div id="rrSplitInfo" class="calendar-note" style="margin:6px 0 0"></div></div></div>
-          <div class="rr-row">
-            <div class="rr-f"><label for="rrTp1">Take profit 1 (USD)</label><div class="rr-tp"><input id="rrTp1" type="number" inputmode="decimal" step="any"><input id="rrS1" type="number" inputmode="decimal" step="any" placeholder="% of position"></div></div>
-            <div class="rr-f"><label for="rrTp2">Take profit 2 (USD)</label><div class="rr-tp"><input id="rrTp2" type="number" inputmode="decimal" step="any"><input id="rrS2" type="number" inputmode="decimal" step="any" placeholder="% of position"></div></div>
-          </div>
-          <div class="rr-row">
-            <div class="rr-f"><label for="rrTp3">Take profit 3 (USD)</label><div class="rr-tp"><input id="rrTp3" type="number" inputmode="decimal" step="any"><input id="rrS3" type="number" inputmode="decimal" step="any" placeholder="% of position"></div></div>
-            <div class="rr-f"><label>&nbsp;</label><button type="button" class="rr-btn ghost" id="rrLive">Use live price as entry</button></div>
-          </div>
+              <div id="rrLoBox"></div><button type="button" class="rr-btn ghost sm" id="rrLoAdd" style="margin:2px 0 6px">+ Add order</button><div id="rrSplitInfo" class="calendar-note" style="margin:6px 0 0"></div></div></div>
+          <div class="rr-row" id="rrTpBox"></div>
+          <div class="rr-row"><div class="rr-f"><button type="button" class="rr-btn ghost" id="rrTpAdd">+ Add take profit</button></div><div class="rr-f"><button type="button" class="rr-btn ghost" id="rrLive">Use live price as entry</button></div></div>
           <p class="calendar-note" id="rrAlloc" style="margin:0 0 10px"></p>
           <div class="rr-row3">
             <div class="rr-f"><label for="rrBal" id="rrBalL">Starting balance (USD)</label><input id="rrBal" type="number" inputmode="decimal" step="any"></div>
@@ -4218,7 +4215,8 @@ let COINS = ['BTC','ETH','SOL','XRP','BNB','DOGE','ADA','AVAX','LINK','SUI','TON
 addExtra();
 const LEVS = [1,2,3,5,10,15,20,25,50,75,100];
 const KEY = 'ttm_rr_state_v1', SKEY = 'ttm_rr_saved_v1';
-const DEF = {asset:'BTC', dir:'long', mkt:'fut', lev:10, entry:'', stop:'', tp1:'', s1:50, tp2:'', s2:50, tp3:'', s3:0, pstop:'', psh:50, mm:'iso', bal:5000, risk:1, fee:0.06, daily:250, min:2, mmr:0.5, acc:'lev', tf:'h1', mode:'pct', rusd:50, inv:1000, split:false, lo1p:'', lo1w:'', lo2p:'', lo2w:'', lo3p:'', lo3w:'', lo4p:'', lo4w:'', lo5p:'', lo5w:''};
+const DEF = {asset:'BTC', dir:'long', mkt:'fut', lev:10, entry:'', stop:'', tp1:'', s1:50, tp2:'', s2:50, tp3:'', s3:0, pstop:'', psh:50, mm:'iso', bal:5000, risk:1, fee:0.06, daily:250, min:2, mmr:0.5, acc:'lev', tf:'h1', mode:'pct', rusd:50, inv:1000, split:false, lo1p:'', lo1w:'', lo2p:'', lo2w:'', lo3p:'', lo3w:'', lo4p:'', lo4w:'', lo5p:'', lo5w:'', pstop2:'', psh2:25};
+const NTP = 12, NLO = 12; for(let k = 4; k <= NTP; k++){ DEF['tp' + k] = ''; DEF['s' + k] = 0; } for(let k = 6; k <= NLO; k++){ DEF['lo' + k + 'p'] = ''; DEF['lo' + k + 'w'] = ''; }
 let S = Object.assign({}, DEF);
 function lsGet(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); if(window.ttmSync && (k === 'ttm_rr_saved_v1' || k === 'ttm_rr_bals_v1')) window.ttmSync.dirty(); return true; }catch(e){ return false; } }
@@ -4234,10 +4232,21 @@ $('rrSrc').innerHTML = [['okx', 'OKX'], ['binance', 'Binance'], ['bybit', 'Bybit
 $('rrAcc').innerHTML = [['spot', 'Spot portfolio'], ['lev', 'Leverage / futures'], ['coinm', 'Coin-M futures (coin-margined)'], ['super', 'Super / retirement'], ['tokenised', 'Tokenised stocks']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
 if(!['spot', 'lev', 'coinm', 'super', 'tokenised'].includes(S.acc)){ S.acc = 'spot'; S.mkt = 'spot'; S.dir = 'long'; try{ persist(); }catch(e){} }
 $('rrTf').innerHTML = [['m5', '5 min'], ['m15', '15 min'], ['h1', '1 hour'], ['h2', '2 hour'], ['h4', '4 hour'], ['h8', '8 hour'], ['h12', '12 hour'], ['d1', 'Daily'], ['w1', 'Weekly'], ['mo1', 'Monthly']].map(a => `<option value="${a[0]}">${a[1]}</option>`).join('');
-const IDS = {entry:'rrEntry', stop:'rrStop', pstop:'rrPStop', psh:'rrPSh', tp1:'rrTp1', s1:'rrS1', tp2:'rrTp2', s2:'rrS2', tp3:'rrTp3', s3:'rrS3', risk:'rrRisk', rusd:'rrRusd', inv:'rrInv', fee:'rrFee', daily:'rrDaily', min:'rrMin', mmr:'rrMmr', lo1p:'rrLo1p', lo1w:'rrLo1w', lo2p:'rrLo2p', lo2w:'rrLo2w', lo3p:'rrLo3p', lo3w:'rrLo3w', lo4p:'rrLo4p', lo4w:'rrLo4w', lo5p:'rrLo5p', lo5w:'rrLo5w'};
+const IDS = {entry:'rrEntry', stop:'rrStop', pstop:'rrPStop', psh:'rrPSh', tp1:'rrTp1', s1:'rrS1', tp2:'rrTp2', s2:'rrS2', tp3:'rrTp3', s3:'rrS3', risk:'rrRisk', rusd:'rrRusd', inv:'rrInv', fee:'rrFee', daily:'rrDaily', min:'rrMin', mmr:'rrMmr', lo1p:'rrLo1p', lo1w:'rrLo1w', lo2p:'rrLo2p', lo2w:'rrLo2w', lo3p:'rrLo3p', lo3w:'rrLo3w', lo4p:'rrLo4p', lo4w:'rrLo4w', lo5p:'rrLo5p', lo5w:'rrLo5w', pstop2:'rrPStop2', psh2:'rrPSh2'};
+(function(){ const ip = (id, ph) => `<input id="${id}" type="number" inputmode="decimal" step="any" placeholder="${ph}">`;
+  let h = ''; for(let k = 1; k <= NTP; k++){ if(k > 3) { IDS['tp' + k] = 'rrTp' + k; IDS['s' + k] = 'rrS' + k; } h += `<div class="rr-f" data-tpk="${k}"${k > 3 ? ' style="display:none"' : ''}><label for="rrTp${k}">Take profit ${k} (USD)</label><div class="rr-tp">${ip('rrTp' + k, '')}${ip('rrS' + k, '% of position')}</div></div>`; }
+  $('rrTpBox').innerHTML = h; h = '';
+  for(let k = 1; k <= NLO; k++){ if(k > 5){ IDS['lo' + k + 'p'] = 'rrLo' + k + 'p'; IDS['lo' + k + 'w'] = 'rrLo' + k + 'w'; } h += `<div class="rr-tp" data-lok="${k}" style="margin-bottom:6px${k > 5 ? ';display:none' : ''}">${ip('rrLo' + k + 'p', 'Order ' + k + ' price')}${ip('rrLo' + k + 'w', '% of position')}</div>`; }
+  $('rrLoBox').innerHTML = h; })();
+let TPSHOW = 3, LOSHOW = 5;
+function showRows(){ let lt = 0, ll = 0; for(let k = 1; k <= NTP; k++) if(S['tp' + k] !== '' && S['tp' + k] != null) lt = k; for(let k = 1; k <= NLO; k++) if(S['lo' + k + 'p'] !== '' && S['lo' + k + 'p'] != null) ll = k;
+  TPSHOW = Math.min(NTP, Math.max(3, lt, TPSHOW)); LOSHOW = Math.min(NLO, Math.max(5, ll, LOSHOW));
+  document.querySelectorAll('[data-tpk]').forEach(el => { el.style.display = +el.dataset.tpk <= TPSHOW ? '' : 'none'; }); document.querySelectorAll('[data-lok]').forEach(el => { el.style.display = +el.dataset.lok <= LOSHOW ? '' : 'none'; });
+  $('rrTpAdd').style.display = TPSHOW >= NTP ? 'none' : ''; $('rrLoAdd').style.display = LOSHOW >= NLO ? 'none' : ''; }
+$('rrTpAdd').addEventListener('click', () => { TPSHOW++; showRows(); }); $('rrLoAdd').addEventListener('click', () => { LOSHOW++; showRows(); });
 function pushInputs(){
   if($('rrSplit')){ $('rrSplit').checked = !!S.split; $('rrSplitBox').style.display = S.split ? 'block' : 'none'; }
-  Object.keys(IDS).forEach(k => { $(IDS[k]).value = S[k] === '' || S[k] == null ? '' : S[k]; });
+  Object.keys(IDS).forEach(k => { $(IDS[k]).value = S[k] === '' || S[k] == null ? '' : S[k]; }); showRows();
   $('rrBal').value = BALS[S.acc] == null ? '' : BALS[S.acc]; $('rrAccHint').textContent = S.acc === 'lev' ? 'Futures / perps, starting at 3x. Change the leverage below if you need to.' : S.acc === 'coinm' ? 'Coin-M: contracts margined and settled in the coin itself, starting at 3x. Results here are shown in USD at the exit price; liquidation uses the inverse-contract formula.' : (S.acc === 'tokenised' ? 'Tokenised stocks are leverage plays: futures / perps on stocks (Hyperliquid, BTCC and others), starting at 3x, long or short. Use leverage 1 for a plain spot xStock. Shown on the TradFi TTM Holdings page under Tokenised stocks.' : S.acc === 'tradfi' ? 'TradFi investments (shares, ETFs): spot only, no leverage, long only. Shown on the TradFi TTM Holdings page.' : S.acc === 'super' ? 'Retirement: spot only, no leverage, long only.' : 'Spot: no leverage, long only.');
   $('rrBalL').textContent = 'Starting balance — ' + (accName(S.acc) || '') + ' (USD)';
   $('rrAsset').value = S.asset; $('rrAcc').value = S.acc; $('rrTf').value = S.tf; $('rrSrc').value = SRC;
@@ -4261,10 +4270,10 @@ const ax = (v, base) => window.ttmHid && window.ttmHid() ? (base > 0 ? ((v / bas
 window.addEventListener('ttm-hide', () => { [render, renderAcct, renderSaved, renderJournal, renderPortfolio].forEach(f => { try{ f(); }catch(e){} }); });
 const pr = v => v == null || !isFinite(v) ? '—' : v >= 1000 ? v.toLocaleString(undefined, {maximumFractionDigits: 2}) : v >= 1 ? v.toFixed(3) : v >= 0.01 ? v.toFixed(5) : v.toPrecision(4);
 const qty = v => v == null || !isFinite(v) ? '—' : v >= 100 ? v.toFixed(2) : v >= 1 ? v.toFixed(4) : v.toPrecision(4);
-// split entry: up to 5 limit orders; returns the valid rows with their share of the position (scaled to 100%)
+// split entry: up to 12 limit orders; returns the valid rows with their share of the position (scaled to 100%)
 function splitRows(){
   if(!S.split) return null; const r = [];
-  for(let k = 1; k <= 5; k++){ const p = num(S['lo' + k + 'p']), w = num(S['lo' + k + 'w']); if(p > 0 && w > 0) r.push({p, w, k}); }
+  for(let k = 1; k <= NLO; k++){ const p = num(S['lo' + k + 'p']), w = num(S['lo' + k + 'w']); if(p > 0 && w > 0) r.push({p, w, k}); }
   if(r.length < 2) return null; const t = r.reduce((a, x) => a + x.w, 0); r.forEach(x => { x.share = x.w / t * 100; }); return r;
 }
 // unrealised profit on this account's open, filled trades (cross margin can use it as margin on exchanges)
@@ -4282,11 +4291,13 @@ function calc(){
   if(E == null || SL == null || bal == null || sizeIn == null || E <= 0 || (!noSL && SL <= 0) || bal <= 0 || sizeIn <= 0) return out;
   if(long ? SL >= E : SL <= E){ out.warns.push(['bad', long ? 'For a long trade the stop-loss must be below the entry.' : 'For a short trade the stop-loss must be above the entry.']); return out; }
   if(S.mkt === 'spot' && !long) out.warns.push(['y', 'Shorting is not possible on spot; switch to Futures / Perp to model a short.']);
-  let dist = Math.abs(E - SL), SLe = SL; const PS = num(S.pstop), PSH = Math.min(100, Math.max(0, num(S.psh) || 0));
-  if(PS != null && PS > 0 && PSH > 0 && !noSL){
-    if(long ? (PS >= E || PS <= SL) : (PS <= E || PS >= SL)) out.warns.push(['bad', long ? 'For a long trade the part stop must sit between the main stop and the entry.' : 'For a short trade the part stop must sit between the entry and the main stop.']);
-    else { out.psl = {P: PS, share: PSH}; dist = PSH / 100 * Math.abs(E - PS) + (1 - PSH / 100) * Math.abs(E - SL); SLe = long ? E - dist : E + dist; }
-  }
+  let dist = Math.abs(E - SL), SLe = SL;
+  if(!noSL){ const pls = []; let shT = 0;
+    [[S.pstop, S.psh, 1], [S.pstop2, S.psh2, 2]].forEach(([pp, ps, n]) => { const PS = num(pp), PSH = Math.min(100, Math.max(0, num(ps) || 0)); if(!(PS != null && PS > 0 && PSH > 0)) return;
+      if(long ? (PS >= E || PS <= SL) : (PS <= E || PS >= SL)){ out.warns.push(['bad', long ? 'For a long trade part stop ' + n + ' must sit between the main stop and the entry.' : 'For a short trade part stop ' + n + ' must sit between the entry and the main stop.']); return; }
+      if(shT + PSH > 100.0001){ out.warns.push(['bad', 'The part stops add up to more than 100% of the position.']); return; }
+      shT += PSH; pls.push({P: PS, share: PSH}); });
+    if(pls.length){ out.psl = pls[0]; if(pls[1]) out.psl2 = pls[1]; dist = pls.reduce((t, q) => t + q.share / 100 * Math.abs(E - q.P), 0) + (1 - shT / 100) * Math.abs(E - SL); SLe = long ? E - dist : E + dist; } }
   out.dist = dist; out.distPct = dist / E * 100;
   const perUnitLoss = dist + fee * (E + SLe);            // loss per unit at the stop including fees on both sides
   if(mode === 'inv'){ out.margin = inv; out.notional = inv * lev; out.units = out.notional / E; out.riskUsd = out.units * perUnitLoss; }
@@ -4294,7 +4305,7 @@ function calc(){
   out.riskPctAcct = out.riskUsd / bal * 100; out.riskPctInv = out.riskUsd / out.margin * 100;
   out.tps = [];
   let used = 0, profit = 0;
-  [[S.tp1, S.s1], [S.tp2, S.s2], [S.tp3, S.s3]].forEach(([p, sh], i) => {
+  Array.from({length: NTP}, (_, i) => [S['tp' + (i + 1)], S['s' + (i + 1)]]).forEach(([p, sh], i) => {
     const P = num(p), share = Math.max(0, num(sh) || 0);
     if(P == null || P <= 0 || share <= 0) return;
     if(long ? P <= E : P >= E){ out.warns.push(['bad', `Take profit ${i + 1} is on the wrong side of the entry for a ${long ? 'long' : 'short'}.`]); return; }
@@ -4336,8 +4347,9 @@ function row(k, v, cls){ return `<div><small>${k}</small><strong class="${cls ||
 function render(){
   const c = calc();
   if($('rrSplitInfo')){ $('rrSplitBox').style.display = S.split ? 'block' : 'none'; const sp = c.splits; $('rrSplitInfo').innerHTML = sp ? `Average entry <b style="color:var(--gold2)">${pr(c.E)}</b> across ${sp.length} orders` + (Math.abs(sp.reduce((a, x) => a + x.w, 0) - 100) > .01 ? ` (your shares add to ${Math.round(sp.reduce((a, x) => a + x.w, 0) * 100) / 100}%, scaled to 100%)` : '') + '.' : ''; $('rrEntry').disabled = !!sp; $('rrEntry').style.opacity = sp ? .45 : 1; if(sp) $('rrEntry').value = +c.E.toPrecision(8); }
-  { const t = (num(S.s1) || 0) + (num(S.s2) || 0) + (num(S.s3) || 0), r = Math.round((100 - t) * 100) / 100;
-    $('rrAlloc').innerHTML = `Position split across targets: <b style="color:${t > 100.0001 ? '#e0554d' : 'var(--gold2)'}">${Math.round(t * 100) / 100}%</b> allocated` + (r > 0.0001 ? `, ${r}% left with no target` : r < -0.0001 ? ` — over by ${-r}%` : ' — fully allocated') + '. Change TP1 and TP2 gets the rest; change TP2 and TP3 gets the rest.'; }
+  { let t = 0, moreTp = false; for(let k = 1; k <= NTP; k++){ if(k > 3 && S['tp' + k] !== '' && S['tp' + k] != null) moreTp = true; if(S['tp' + k] !== '' && S['tp' + k] != null || k <= 3) t += num(S['s' + k]) || 0; } const r = Math.round((100 - t) * 100) / 100;
+    $('rrAlloc').innerHTML = `Position split across targets: <b style="color:${t > 100.0001 ? '#e0554d' : 'var(--gold2)'}">${Math.round(t * 100) / 100}%</b> allocated` + (r > 0.0001 ? `, ${r}% left with no target` : r < -0.0001 ? ` — over by ${-r}%` : ' — fully allocated') + (moreTp ? '. Shares for TP4 and beyond are set by you.' : '. Change TP1 and TP2 gets the rest; change TP2 and TP3 gets the rest.'); }
+  try{ showRows(); }catch(e){}
   $('rrWarns').innerHTML = c.warns.map(w => { const fv = w[2] ? (Math.floor(w[2] * 100) / 100).toFixed(2) : null, lab = w[3] === 'risk' ? `Set risk to ${fv}%` : w[3] === 'rusd' ? `Set risk to ${window.ttmHid && window.ttmHid() ? '\u2022\u2022\u2022' : '$' + fv}` : `Invest $${fv}`;
     return `<div class="rr-warn ${w[0] === 'y' ? 'y' : ''}">${w[1]}${fv && +fv > 0 ? ` <button type="button" class="rr-btn sm" data-key="${w[3]}" data-fit="${fv}" style="margin-left:6px">${lab}</button>` : ''}</div>`; }).join('');
   renderAcct();
@@ -4355,7 +4367,7 @@ function render(){
   $('rrVerdict').innerHTML = c.rr == null ? '' : `<span class="rr-badge ${meets ? 'ok' : 'bad'}">R:R 1:${c.rr.toFixed(2)} ${meets ? '✓ meets target' : '✕ below target'}</span>`;
   const sym = S.asset || 'units';
   $('rrOut').innerHTML = row('Risk at stop', usd(-c.riskUsd).replace('-', ''), 'r') + row('Potential profit', c.tps.length ? usd(c.profit) : '—', 'g') + row('Position size', qty(c.units) + ' ' + sym) +
-    row('Position notional', usd(c.notional)) + row('Risk : reward', c.rr == null ? '—' : '1 : ' + c.rr.toFixed(2), 'y') + row('Stop distance' + (c.psl ? ' (weighted)' : ''), c.distPct.toFixed(2) + '%') + (c.psl ? row('Part stop', pr(c.psl.P) + ' · ' + c.psl.share + '%', 'r') : '') +
+    row('Position notional', usd(c.notional)) + row('Risk : reward', c.rr == null ? '—' : '1 : ' + c.rr.toFixed(2), 'y') + row('Stop distance' + (c.psl ? ' (weighted)' : ''), c.distPct.toFixed(2) + '%') + (c.psl ? row('Part stop', pr(c.psl.P) + ' · ' + c.psl.share + '%', 'r') : '') + (c.psl2 ? row('Part stop 2', pr(c.psl2.P) + ' · ' + c.psl2.share + '%', 'r') : '') +
     row('Break-even win rate', c.be == null ? '—' : c.be.toFixed(1) + '%') + row('Est. fees (round trip at stop)', usd(c.units * c.fee * (c.E + c.SL))) + row('Investment (margin)', usd(c.margin)) + row('Risk as % of investment', c.riskPctInv.toFixed(2) + '%', 'r') + row('Risk as % of account', c.riskPctAcct.toFixed(2) + '%', 'r');
   $('rrLevOut').innerHTML = row('Leverage', c.lev + '×') + row('Margin required', usd(c.margin) + `<br><span style="font-size:11px;color:var(--mute);font-weight:400">${(c.margin / c.notional * 100).toFixed(1)}% of notional</span>`) +
     row('Liquidation (est.)' + (c.cross ? ' · cross' : S.mkt === 'fut' && c.lev > 1 ? ' · isolated' : ''), c.liq == null ? (S.mkt === 'spot' ? 'n/a (spot)' : c.liqNone ? 'None (your balance covers a move to zero)' : 'n/a at 1×') : pr(c.liq) + `<br><span style="font-size:11px;color:var(--mute);font-weight:400">${c.liqDist.toFixed(1)}% from entry</span>`, c.liq != null ? 'r' : '');
@@ -4375,7 +4387,7 @@ function render(){
 function drawChart(c){
   const svg = $('rrChart'); if(!svg) return; if(!c.ok){ svg.innerHTML = '<text x="260" y="150" fill="#8b8f9a" font-size="13" text-anchor="middle">Enter your levels to see the trade map</text>'; return; }
   const lv = [{k:'Entry', p:c.E, col:'#dba118'}, {k:'Stop', p:c.SL, col:'#e0554d'}];
-  if(c.psl) lv.push({k:'Part stop', p:c.psl.P, col:'#e0884d'});
+  if(c.psl) lv.push({k:'Part stop', p:c.psl.P, col:'#e0884d'}); if(c.psl2) lv.push({k:'Part stop 2', p:c.psl2.P, col:'#e0884d'});
   c.tps.forEach(x => lv.push({k:'TP' + x.i, p:x.P, col:'#3fb47a'}));
   if(c.liq != null) lv.push({k:'Liq (est.)', p:c.liq, col:'#b04bd6'});
   const ps = lv.map(l => l.p), mn = Math.min(...ps), mx = Math.max(...ps), pad = (mx - mn) * .12 || mx * .02, lo = mn - pad, hi = mx + pad, H = 300, T = 14, B = 14;
@@ -4430,9 +4442,9 @@ function renderAcct(){
   if($('jAcct')) $('jAcct').innerHTML = tiles(jA());
   [$('rrPort'), $('jPort')].forEach(el => { if(el) el.innerHTML = portHtml(); });
 }
-function snapOf(c, st){ st = st || S; return {asset: st.asset, acc: st.acc || 'lev', tf: st.tf || 'h1', long: c.long, mkt: st.mkt, lev: c.lev, E: c.E, SL: c.SL, units: c.units, notional: c.notional, margin: c.margin, riskUsd: c.riskUsd, fee: c.fee, tps: c.tps.map(t => ({P: t.P, share: t.share})), mm: c.cross ? 'cross' : 'iso', usedUnreal: c.usesUnreal || 0, noSL: !!c.noSL, psl: c.psl ? {P: c.psl.P, share: c.psl.share} : null}; }
-// ---- limit orders: a trade can be built from up to 5 orders (x.orders). The position shown everywhere (snap) is always worked out from the orders that have filled.
-const MAXLO = 5;
+function snapOf(c, st){ st = st || S; return {asset: st.asset, acc: st.acc || 'lev', tf: st.tf || 'h1', long: c.long, mkt: st.mkt, lev: c.lev, E: c.E, SL: c.SL, units: c.units, notional: c.notional, margin: c.margin, riskUsd: c.riskUsd, fee: c.fee, tps: c.tps.map(t => ({P: t.P, share: t.share})), mm: c.cross ? 'cross' : 'iso', usedUnreal: c.usesUnreal || 0, noSL: !!c.noSL, psl: c.psl ? {P: c.psl.P, share: c.psl.share} : null, psl2: c.psl2 ? {P: c.psl2.P, share: c.psl2.share} : null}; }
+// ---- limit orders: a trade can be built from up to 12 orders (x.orders). The position shown everywhere (snap) is always worked out from the orders that have filled.
+const MAXLO = 12;
 function syncOrders(x){
   if(!x.orders || !x.orders.length || !x.snap) return; const sn = x.snap, lev = sn.mkt === 'spot' ? 1 : sn.lev, f = x.orders.filter(o => o.filled), base = f.length ? f : x.orders;
   let m = 0, u = 0, pu = 0; base.forEach(o => { const uo = o.m * lev / o.p; m += o.m; u += uo; pu += uo * o.p; });
@@ -4447,8 +4459,8 @@ function settle(sn, hits, rest){
   let pnl = 0, usedU = 0;
   sn.tps.forEach((t, i) => { if(hits[i]){ const u = sn.units * t.share / 100; pnl += u * Math.abs(t.P - sn.E) - u * sn.fee * (sn.E + t.P); usedU += u; } });
   const ru = Math.max(0, sn.units - usedU), mv = sn.long ? rest - sn.E : sn.E - rest;
-  if(sn.psl && rest === sn.SL){ const pu = Math.min(ru, sn.units * sn.psl.share / 100), pm = sn.long ? sn.psl.P - sn.E : sn.E - sn.psl.P;
-    return pnl + pu * pm - pu * sn.fee * (sn.E + sn.psl.P) + (ru - pu) * mv - (ru - pu) * sn.fee * (sn.E + rest); }
+  if((sn.psl || sn.psl2) && rest === sn.SL){ let rp = ru, add = 0; [sn.psl, sn.psl2].filter(Boolean).forEach(ps => { const pu = Math.min(rp, sn.units * ps.share / 100), pm = sn.long ? ps.P - sn.E : sn.E - ps.P; add += pu * pm - pu * sn.fee * (sn.E + ps.P); rp -= pu; });
+    return pnl + add + rp * mv - rp * sn.fee * (sn.E + rest); }
   return pnl + ru * mv - ru * sn.fee * (sn.E + rest);
 }
 function pill(x){ if(x.status === 'open') return '<span class="rr-pill open">Open</span>'; if(!x.res) return ''; const k = kind(x.res.pnl, x.snap.riskUsd); return `<span class="rr-pill ${k}">${k === 'win' ? 'Win' : k === 'loss' ? 'Loss' : 'Break-even'}</span>`; }
@@ -4748,7 +4760,7 @@ function drawModal(){
 let ed = null;
 function openEdit(i){
   const x = loadSaved()[i]; if(!x || !x.snap) return; const sn = x.snap;
-  ed = {i, sl: sn.SL, tp: [0, 1, 2].map(k => sn.tps[k] ? sn.tps[k].P : ''), sh: [0, 1, 2].map(k => sn.tps[k] ? sn.tps[k].share : ''), addm: '', addp: '', ps: sn.psl ? sn.psl.P : '', psh: sn.psl ? sn.psl.share : ''};
+  ed = {i, sl: sn.SL, tp: Array.from({length: NTP}, (_, k) => sn.tps[k] ? sn.tps[k].P : ''), sh: Array.from({length: NTP}, (_, k) => sn.tps[k] ? sn.tps[k].share : ''), ntp: Math.min(NTP, Math.max(3, sn.tps.length)), addm: '', addp: '', ps: sn.psl ? sn.psl.P : '', psh: sn.psl ? sn.psl.share : '', ps2: sn.psl2 ? sn.psl2.P : '', psh2: sn.psl2 ? sn.psl2.share : ''};
   drawEdit(); $('rrModal').classList.add('open');
 }
 function editCalc(){
@@ -4757,7 +4769,7 @@ function editCalc(){
   let units = sn.units, E = sn.E, margin = sn.margin, notional = sn.notional;
   if(addM > 0){
     if(hitAny) errs.push('You can only add to a trade before a target is hit. After that, close this trade and open a new one.');
-    else if((x.orders || []).length >= MAXLO) errs.push('A trade can have at most 5 orders.');
+    else if((x.orders || []).length >= MAXLO) errs.push('A trade can have at most 12 orders.');
     else if(!(addP > 0)) errs.push('Enter the price you are adding at.');
     else { const addN = addM * lev, addU = addN / addP; units = sn.units + addU; E = (sn.units * sn.E + addU * addP) / units; margin += addM; notional += addN;
       if(addM > A.avail + 0.005) errs.push(`Adding ${usd(addM)} is more than the ${usd(A.avail)} available in this account.`); }
@@ -4765,20 +4777,25 @@ function editCalc(){
   if(!(SL > 0)) errs.push('Enter a stop-loss price.');
   else if(long ? SL >= E : SL <= E){ if(!hitAny) errs.push(`For a ${long ? 'long' : 'short'} the stop must be ${long ? 'below' : 'above'} the entry until a target has been hit.`); }
   const tps = []; let used = 0;
-  [0, 1, 2].forEach(k => { const P = num(ed.tp[k]), sh = num(ed.sh[k]);
+  for(let k = 0; k < NTP; k++){ const P = num(ed.tp[k]), sh = num(ed.sh[k]);
     if(P > 0 && sh > 0){ if(long ? P <= E : P >= E) errs.push(`TP${k + 1} is on the wrong side of the entry.`); tps.push({P, share: sh, k}); used += sh; }
-    else if(hit[k]) errs.push(`TP${k + 1} has already been hit and can't be removed.`); });
+    else if(hit[k]) errs.push(`TP${k + 1} has already been hit and can't be removed.`); }
   if(used > 100.0001) errs.push(`Target shares add up to ${used.toFixed(0)}%, more than 100%.`);
   if(!tps.length) errs.push('Keep at least one take-profit.');
   hit.forEach((h, k) => { if(h && sn.tps[k] && (num(ed.tp[k]) !== sn.tps[k].P || num(ed.sh[k]) !== sn.tps[k].share)) errs.push(`TP${k + 1} has already been hit, so its price and share are locked.`); });
   let risk = sn.riskUsd; const lossSide = SL > 0 && (long ? SL < E : SL > E);
-  const PS = num(ed.ps), PSH = Math.min(100, Math.max(0, num(ed.psh) || 0)); let psl = null; const pslHit = !!(x.sent && x.sent.psl);
-  if(PS > 0 && PSH > 0){ if(!(SL > 0)) errs.push('Enter the main stop-loss before a part stop.'); else if(long ? (PS >= E || PS <= SL) : (PS <= E || PS >= SL)){ if(!hitAny || !(sn.psl && sn.psl.P === PS)) errs.push(`The part stop must sit between the main stop and the entry (${long ? 'above the stop, below the entry' : 'below the stop, above the entry'}).`); else psl = {P: PS, share: PSH}; } else psl = {P: PS, share: PSH}; }
-  else if(PS > 0) errs.push('Enter the % of the position that closes at the part stop.');
-  if(pslHit && (!psl || !sn.psl || psl.P !== sn.psl.P || psl.share !== sn.psl.share)) errs.push('The part stop has already been hit, so it is locked.');
-  if(lossSide){ const dist = psl ? psl.share / 100 * Math.abs(E - psl.P) + (1 - psl.share / 100) * Math.abs(E - SL) : Math.abs(E - SL), SLe = long ? E - dist : E + dist; risk = units * (dist + fee * (E + SLe)); }
+  let psl = null, psl2 = null; const pslHit = !!(x.sent && x.sent.psl), psl2Hit = !!(x.sent && x.sent.psl2);
+  const chkPs = (pv, shv, old, n) => { const PS = num(pv), PSH = Math.min(100, Math.max(0, num(shv) || 0)); if(!(PS > 0 && PSH > 0)){ if(PS > 0) errs.push('Enter the % of the position that closes at part stop ' + n + '.'); return null; }
+    if(!(SL > 0)){ errs.push('Enter the main stop-loss before a part stop.'); return null; }
+    if(long ? (PS >= E || PS <= SL) : (PS <= E || PS >= SL)){ if(!hitAny || !(old && old.P === PS)) errs.push(`Part stop ${n} must sit between the main stop and the entry (${long ? 'above the stop, below the entry' : 'below the stop, above the entry'}).`); }
+    return {P: PS, share: PSH}; };
+  psl = chkPs(ed.ps, ed.psh, sn.psl, 1); psl2 = chkPs(ed.ps2, ed.psh2, sn.psl2, 2);
+  if(psl && psl2 && psl.share + psl2.share > 100.0001) errs.push('The part stops add up to more than 100% of the position.');
+  if(pslHit && (!psl || !sn.psl || psl.P !== sn.psl.P || psl.share !== sn.psl.share)) errs.push('Part stop 1 has already been hit, so it is locked.');
+  if(psl2Hit && (!psl2 || !sn.psl2 || psl2.P !== sn.psl2.P || psl2.share !== sn.psl2.share)) errs.push('Part stop 2 has already been hit, so it is locked.');
+  if(lossSide){ const pa = [psl, psl2].filter(Boolean), shT = pa.reduce((t, q) => t + q.share, 0), dist = pa.reduce((t, q) => t + q.share / 100 * Math.abs(E - q.P), 0) + (1 - Math.min(shT, 100) / 100) * Math.abs(E - SL), SLe = long ? E - dist : E + dist; risk = units * (dist + fee * (E + SLe)); }
   const out = {errs: errs.filter((v, i, a) => a.indexOf(v) === i), units, E, margin, notional, risk, tps, SL, used, addM, hitAny};
-  const snap = Object.assign({}, sn, {E, SL: SL || sn.SL, units, notional, margin, riskUsd: risk, tps: tps.map(t => ({P: t.P, share: t.share})), psl});
+  const snap = Object.assign({}, sn, {E, SL: SL || sn.SL, units, notional, margin, riskUsd: risk, tps: tps.map(t => ({P: t.P, share: t.share})), psl, psl2});
   let profit = 0; snap.tps.forEach(t => { const u = units * t.share / 100; profit += u * Math.abs(t.P - E) - u * fee * (E + t.P); });
   out.snap = snap; out.profit = profit; out.rr = lossSide && used > 0 ? profit / (risk * Math.min(used, 100) / 100) : null; return out;
 }
@@ -4795,9 +4812,11 @@ function drawEdit(){
   $('rrModalBody').innerHTML = `<h3>Edit open trade</h3><p style="margin:0 0 12px;font-size:13.5px"><b>${esc(x.name)}</b> · ${esc(sn.asset)} ${sn.long ? 'long' : 'short'} · ${sn.mkt === 'spot' ? 'spot' : sn.lev + '×'} · entry ${pr(sn.E)}${pp ? ' · live ' + pr(pp.p) : ''}</p>
     <div class="rr-f" style="margin-bottom:10px"><label>Stop loss</label>${inp('edSl', ed.sl)}</div>
     <div style="font-size:12px;color:var(--mute);margin-bottom:6px">Part stop loss (optional): price and % of position closed there${x.sent && x.sent.psl ? ' · already hit, locked' : ''}</div>
-    <div class="rr-tp" style="margin-bottom:10px">${inp('edPs', ed.ps, 'Part stop price', x.sent && x.sent.psl)}${inp('edPsh', ed.psh, '% of position', x.sent && x.sent.psl)}</div>
+    <div class="rr-tp" style="margin-bottom:8px">${inp('edPs', ed.ps, 'Part stop price', x.sent && x.sent.psl)}${inp('edPsh', ed.psh, '% of position', x.sent && x.sent.psl)}</div>
+    <div style="font-size:12px;color:var(--mute);margin-bottom:6px">Part stop loss 2 (optional)${x.sent && x.sent.psl2 ? ' · already hit, locked' : ''}</div>
+    <div class="rr-tp" style="margin-bottom:10px">${inp('edPs2', ed.ps2, 'Part stop 2 price', x.sent && x.sent.psl2)}${inp('edPsh2', ed.psh2, '% of position', x.sent && x.sent.psl2)}</div>
     <div style="font-size:12px;color:var(--mute);margin-bottom:6px">Targets (price and % of position)${hit.some(Boolean) ? ' · hit targets are locked' : ''}</div>
-    ${[0, 1, 2].map(k => `<div class="rr-tp" style="margin-bottom:8px">${inp('edTp' + k, ed.tp[k], 'TP' + (k + 1) + ' price', hit[k])}${inp('edSh' + k, ed.sh[k], '% of position', hit[k])}</div>`).join('')}
+    ${Array.from({length: ed.ntp || 3}, (_, k) => k).map(k => `<div class="rr-tp" style="margin-bottom:8px">${inp('edTp' + k, ed.tp[k], 'TP' + (k + 1) + ' price', hit[k])}${inp('edSh' + k, ed.sh[k], '% of position', hit[k])}</div>`).join('')}${(ed.ntp || 3) < NTP ? '<button type="button" class="rr-btn ghost sm" id="edTpMore" style="margin:0 0 6px">+ Add target</button>' : ''}
     <div style="font-size:12px;color:var(--mute);margin:12px 0 6px">Add to the position${hitAny ? ' (not available once a target has hit)' : ''}</div>
     <div class="rr-tp" style="margin-bottom:6px">${inp('edAddM', ed.addm, 'Margin to add ($)', hitAny)}${inp('edAddP', ed.addp, 'Add at price', hitAny)}</div>
     <div class="rr-acts" style="margin:0 0 12px"><button type="button" class="rr-btn ghost sm" id="edLive" ${hitAny ? 'disabled' : ''}>Use live price${pp ? ' (' + pr(pp.p) + ')' : ''}</button></div>
@@ -4809,17 +4828,18 @@ function drawEdit(){
 function wireEdit(){
   const B = $('rrModalBody');
   B.addEventListener('input', e => { if(!ed || !e.target.id || e.target.id.slice(0, 2) !== 'ed') return; const id = e.target.id, v = e.target.value;
-    if(id === 'edSl') ed.sl = v; else if(id === 'edPs') ed.ps = v; else if(id === 'edPsh') ed.psh = v; else if(id === 'edAddM') ed.addm = v; else if(id === 'edAddP') ed.addp = v; else if(/^edTp\d$/.test(id)) ed.tp[+id.slice(4)] = v; else if(/^edSh\d$/.test(id)) ed.sh[+id.slice(4)] = v; edPrev(); });
+    if(id === 'edSl') ed.sl = v; else if(id === 'edPs') ed.ps = v; else if(id === 'edPsh') ed.psh = v; else if(id === 'edPs2') ed.ps2 = v; else if(id === 'edPsh2') ed.psh2 = v; else if(id === 'edAddM') ed.addm = v; else if(id === 'edAddP') ed.addp = v; else if(/^edTp\d+$/.test(id)) ed.tp[+id.slice(4)] = v; else if(/^edSh\d+$/.test(id)) ed.sh[+id.slice(4)] = v; edPrev(); });
   B.addEventListener('click', async e => {
     if(!ed) return;
     if(e.target.id === 'edCancel'){ $('rrModal').classList.remove('open'); ed = null; }
+    else if(e.target.id === 'edTpMore'){ ed.ntp = Math.min(NTP, (ed.ntp || 3) + 1); drawEdit(); }
     else if(e.target.id === 'edLive'){ const x = loadSaved()[ed.i]; let pp = priceOf(x.snap.asset); if(!pp || !pp.live){ const t = await getTickers(); if(t){ PRICES = t.map; PSTAMP = t.t; PUSED = t.used; pp = priceOf(x.snap.asset); } } if(pp){ ed.addp = pp.p >= 1 ? +pp.p.toFixed(4) : +pp.p.toPrecision(5); $('edAddP').value = ed.addp; edPrev(); } else e.target.textContent = 'No live price for ' + x.snap.asset; }
     else if(e.target.id === 'edSave'){ const c = editCalc(); if(c.errs.length) return; window.ttmTrack && ttmTrack('feat', 'edit_trade'); const list = loadSaved(), x = list[ed.i], old = x.snap;
       if(c.addM > 0){ ensureOrders(x); x.orders.push({id: uid() + 'a', p: num(ed.addp), m: c.addM, side: 1, filled: true, ft: Date.now()}); }
       x.snap = c.snap; x.snap.slMoved = c.SL === c.E; if(x.orders) syncOrders(x);
       const hit = x.hit || [], sent = x.sent || {tp: [], sl: false};
-      x.hit = c.tps.map((t, k) => !!hit[k]); x.sent = {tp: c.tps.map((t, k) => !!(sent.tp && sent.tp[k]) && old.tps[k] && old.tps[k].P === t.P), sl: false, psl: !!sent.psl && !!c.snap.psl && !!old.psl && old.psl.P === c.snap.psl.P};
-      x.s = Object.assign({}, x.s, {stop: String(c.SL), entry: String(+c.E.toPrecision(8)), pstop: c.snap.psl ? String(c.snap.psl.P) : '', psh: c.snap.psl ? c.snap.psl.share : 50}); if(JSON.stringify(old.psl || null) !== JSON.stringify(c.snap.psl || null)) myPush(x, 'pslmv:' + x.id + ':' + (c.snap.psl ? c.snap.psl.P : 'off'), c.snap.psl ? 'Part SL moved' : 'Part SL removed', c.snap.psl ? 'Part stop is now at ' + pr(c.snap.psl.P) + ' (' + c.snap.psl.share + '% of the trade)' : ''); c.tps.forEach((t, k) => { x.s['tp' + (k + 1)] = String(t.P); x.s['s' + (k + 1)] = t.share; }); for(let k = c.tps.length; k < 3; k++){ x.s['tp' + (k + 1)] = ''; x.s['s' + (k + 1)] = 0; }
+      x.hit = c.tps.map((t, k) => !!hit[k]); x.sent = {tp: c.tps.map((t, k) => !!(sent.tp && sent.tp[k]) && old.tps[k] && old.tps[k].P === t.P), sl: false, psl: !!sent.psl && !!c.snap.psl && !!old.psl && old.psl.P === c.snap.psl.P, psl2: !!sent.psl2 && !!c.snap.psl2 && !!old.psl2 && old.psl2.P === c.snap.psl2.P};
+      x.s = Object.assign({}, x.s, {stop: String(c.SL), entry: String(+c.E.toPrecision(8)), pstop: c.snap.psl ? String(c.snap.psl.P) : '', psh: c.snap.psl ? c.snap.psl.share : 50, pstop2: c.snap.psl2 ? String(c.snap.psl2.P) : '', psh2: c.snap.psl2 ? c.snap.psl2.share : 25}); if(JSON.stringify(old.psl || null) !== JSON.stringify(c.snap.psl || null)) myPush(x, 'pslmv:' + x.id + ':' + (c.snap.psl ? c.snap.psl.P : 'off'), c.snap.psl ? 'Part SL moved' : 'Part SL removed', c.snap.psl ? 'Part stop is now at ' + pr(c.snap.psl.P) + ' (' + c.snap.psl.share + '% of the trade)' : ''); c.tps.forEach((t, k) => { x.s['tp' + (k + 1)] = String(t.P); x.s['s' + (k + 1)] = t.share; }); for(let k = c.tps.length; k < NTP; k++){ x.s['tp' + (k + 1)] = ''; x.s['s' + (k + 1)] = 0; }
       (x.edits = x.edits || []).push({t: Date.now(), sl: [old.SL, c.SL], tps: old.tps.map(t => t.P).join('/') + ' → ' + c.tps.map(t => t.P).join('/'), added: c.addM || 0});
       saveAll(list); $('rrModal').classList.remove('open'); ed = null; render(); renderSaved(); }
   });
@@ -5194,7 +5214,7 @@ function paintTC(){
   if(!tc || !$('tcChart')) return; const x = loadSaved()[tc.i]; if(!x || !x.snap) return;
   $('tcChart').innerHTML = tc.busy ? '<p class="calendar-note">Loading candles…</p>' : tc.rows ? tcSvg(x, tc.rows.slice(-90)) + `<p class="calendar-note" style="margin:6px 0 0">${esc(x.snap.asset)}/USDT · ${esc(tfName(tc.tf))} · ${esc(SRCS[tc.src] || tc.src)}. Gold = limit orders (dashed while waiting, triangle where one filled), white = average entry, red = stop, green = targets, blue = live price.</p>` : `<div class="rr-warn y">${esc(tc.err || 'No candles.')}</div>`;
   $('tcOrders').innerHTML = tcOrdersHtml(x);
-  const full = (x.orders || []).length >= MAXLO; $('tcAdd').disabled = full; $('tcAddNote').textContent = full ? 'This trade already has the maximum of 5 orders.' : '';
+  const full = (x.orders || []).length >= MAXLO; $('tcAdd').disabled = full; $('tcAddNote').textContent = full ? 'This trade already has the maximum of 12 orders.' : '';
 }
 function drawTC(){
   const x = loadSaved()[tc.i], sn = x.snap, pp = priceOf(sn.asset);
@@ -5215,7 +5235,7 @@ function tcAddOrder(){
   const p = num($('tcAddP').value), m = num($('tcAddM').value), sn = x0.snap;
   if(!(p > 0)) return note('Enter the order price.'); if(!(m > 0)) return note('Enter how much margin to put in this order.');
   if(sn.long ? p <= sn.SL : p >= sn.SL) return note('That price is on the wrong side of your stop-loss.');
-  if((x0.orders || []).length >= MAXLO) return note('This trade already has 5 orders.');
+  if((x0.orders || []).length >= MAXLO) return note('This trade already has 12 orders.');
   const list = loadSaved(), x = list[tc.i], lv0 = priceOf(sn.asset), lv = lv0 && lv0.live ? lv0 : null, near = lv && Math.abs(lv.p / p - 1) <= 0.001, A = acct(accOf(x));
   if(near && m > A.avail + 0.005) return note(`That is more than the ${usd(A.avail)} available in this account.`);
   ensureOrders(x); x.orders.push({id: uid() + 'l', p, m, side: lv ? (lv.p > p ? 1 : -1) : null, filled: !!near, ft: near ? Date.now() : null}); syncOrders(x);
@@ -5288,6 +5308,7 @@ function trackHits(){
       if(x.hit[i] && !x.sent.tp[i]){ x.sent.tp[i] = true; changed = true; spotEv(x, 'tp', 'tp:' + x.id + ':' + i, Math.round(sn.tps.reduce((a, q, k) => a + (x.hit[k] ? q.share : 0), 0) * 10) / 10);
         myPush(x, 'tp:' + x.id + ':' + i, i === sn.tps.length - 1 ? 'Full TP hit' : 'Part TP hit', i === sn.tps.length - 1 ? 'All targets are in at ' + pr(t.P) : 'TP' + (i + 1) + ' at ' + pr(t.P) + (i === 0 && sn.SL !== sn.E ? ' · move SL to entry' : ' · trail your stop'));
          } });
+    if(sn.psl2 && !x.sent.psl2 && (sn.long ? p <= sn.psl2.P : p >= sn.psl2.P)){ x.sent.psl2 = true; changed = true; myPush(x, 'psl2:' + x.id, 'Part SL 2 hit', sn.psl2.share + '% of the trade stopped at ' + pr(sn.psl2.P) + ' · rest stays on the main stop'); }
     if(sn.psl && !x.sent.psl && (sn.long ? p <= sn.psl.P : p >= sn.psl.P)){ x.sent.psl = true; changed = true; myPush(x, 'psl:' + x.id, 'Part SL hit', sn.psl.share + '% of the trade stopped at ' + pr(sn.psl.P) + ' · rest stays on the main stop');
        }
     const stopped = (sn.long ? p <= sn.SL : p >= sn.SL) || !!x.wkStop;
@@ -5508,7 +5529,9 @@ function wire(){
   Object.keys(IDS).forEach(k => $(IDS[k]).addEventListener('input', e => {
     S[k] = e.target.value;
     // take-profit shares balance themselves: TP1 -> TP2 gets the rest, TP3 0; TP2 -> TP3 gets the rest
-    if(k === 's1'){ const a = clampPct(S.s1); S.s2 = 100 - a; S.s3 = 0; $('rrS2').value = S.s2; $('rrS3').value = S.s3; }
+    const moreTp = Array.from({length: NTP - 3}, (_, j) => S['tp' + (j + 4)]).some(v => v !== '' && v != null);
+    if(moreTp){}
+    else if(k === 's1'){ const a = clampPct(S.s1); S.s2 = 100 - a; S.s3 = 0; $('rrS2').value = S.s2; $('rrS3').value = S.s3; }
     else if(k === 's2'){ const a = clampPct(S.s1), b = Math.min(clampPct(S.s2), 100 - a); if(b !== clampPct(S.s2)){ S.s2 = b; $('rrS2').value = b; } S.s3 = Math.round((100 - a - b) * 100) / 100; $('rrS3').value = S.s3; }
     persist(); render(); }));
   // searchable asset picker: top 250 from top_coins.json, or any ticker typed in
