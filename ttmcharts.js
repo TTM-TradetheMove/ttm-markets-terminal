@@ -696,8 +696,8 @@ const SZK = {em: [36, 14, 160, 8], pl: [11, 8, 60, 2], tx: [13, 8, 60, 2]};
 function szStep(dir){ const s = S.sel, z = s && SZK[s.k]; if(!z) return; const v = s.sz || z[0]; s.sz = Math.max(z[1], Math.min(z[2], v + dir * z[3])); saveDraw(); paint(); }
 let TPL = ls('tpls', []) || [], TDEF = ls('tpldef', {}) || {};
 const tplSave = () => { lsSet('tpls', TPL); lsSet('tpldef', TDEF); };
-const tplOf = s => { const o = {}; ['col', 'cu', 'cd', 'sz'].forEach(k => { if(s[k] != null) o[k] = s[k]; }); if(!o.col) o.col = S.col || '#4fd1c5'; if(s.lbl) o.lbl = Object.assign({}, s.lbl, {t: ''}); return o; };
-function applyStyle(t, st){ if(!t || !st) return; if(st.col) t.col = st.col; if(t.k === 'bp'){ if(st.cu) t.cu = st.cu; if(st.cd) t.cd = st.cd; } if(st.sz && SZK[t.k]) t.sz = st.sz; if(st.lbl && LB_NO.indexOf(t.k) < 0){ t.lbl = Object.assign({}, st.lbl, {t: (t.lbl && t.lbl.t) || ''}); } }
+const tplOf = s => { const o = {}; ['col', 'cu', 'cd', 'sz'].forEach(k => { if(s[k] != null) o[k] = s[k]; }); if(!o.col) o.col = S.col || '#4fd1c5'; if(s.lbl) o.lbl = Object.assign({}, s.lbl); return o; };
+function applyStyle(t, st, force){ if(!t || !st) return; if(st.col) t.col = st.col; if(t.k === 'bp'){ if(st.cu) t.cu = st.cu; if(st.cd) t.cd = st.cd; } if(st.sz && SZK[t.k]) t.sz = st.sz; if(st.lbl && LB_NO.indexOf(t.k) < 0){ t.lbl = Object.assign({}, st.lbl, {t: force && st.lbl.t ? st.lbl.t : ((t.lbl && t.lbl.t) || st.lbl.t || '')}); } }
 function applyDef(o){ const id = TDEF[o.k], t = id && TPL.find(x => x.id === id); if(t) applyStyle(o, t.st); }
 const toolName = k => { const t = TOOLS.find(x => x[0] === k); return t ? t[2].split(' — ')[0] : k; };
 function tplPop(){ const s = S.sel; if(!s) return; popClose(); const p = document.createElement('div'); p.className = 'pop al'; p.style.cssText = 'width:min(380px,92%);max-height:70%;overflow:auto;right:8px;top:48px';
@@ -706,7 +706,7 @@ function tplPop(){ const s = S.sel; if(!s) return; popClose(); const p = documen
   draw(); $('ttc').appendChild(p); p.onkeydown = e => e.stopPropagation();
   p.onclick = e => { const b = e.target.closest('button'); if(!b) return; if(b.id === 'tpX'){ popClose(); return; } if(b.id === 'tpS'){ const n = ($('tpN').value || '').trim() || (toolName(s.k) + ' ' + (TPL.length + 1)); TPL.push({id: 't' + Date.now().toString(36), n, k: s.k, st: tplOf(s)}); tplSave(); draw(); return; }
     const t = TPL.find(x => x.id === b.dataset.id); if(!t) return; const a = b.dataset.a;
-    if(a === 'ap'){ applyStyle(s, t.st); saveDraw(); paint(); } else if(a === 'all'){ S.draw.filter(d => d.k === s.k).forEach(d => applyStyle(d, t.st)); saveDraw(); paint(); } else if(a === 'df'){ if(TDEF[t.k] === t.id) delete TDEF[t.k]; else TDEF[t.k] = t.id; tplSave(); draw(); } else if(a === 'rm'){ TPL = TPL.filter(x => x.id !== t.id); if(TDEF[t.k] === t.id) delete TDEF[t.k]; tplSave(); draw(); } }; }
+    if(a === 'ap'){ applyStyle(s, t.st, true); saveDraw(); paint(); } else if(a === 'all'){ S.draw.filter(d => d.k === s.k).forEach(d => applyStyle(d, t.st)); saveDraw(); paint(); } else if(a === 'df'){ if(TDEF[t.k] === t.id) delete TDEF[t.k]; else TDEF[t.k] = t.id; tplSave(); draw(); } else if(a === 'rm'){ TPL = TPL.filter(x => x.id !== t.id); if(TDEF[t.k] === t.id) delete TDEF[t.k]; tplSave(); draw(); } }; }
 function popClose(){ document.querySelectorAll('#ttc .pop').forEach(p => p.remove()); }
 async function fixSymForEx(){ const ex = S.ex, X = EX[ex]; let ok = true, def = null; const flip = S.exFlip; S.exFlip = false; try{ if(X && X.stk){ def = X.def || (ex === 'stocks_au' ? 'BHP' : 'AAPL'); const l = await X.list(); ok = !flip && (l || []).some(r => r.s === S.sym); } else if(X && !VX(ex) && X.list){ def = 'BTC'; const l = await X.list(); ok = !flip && (l || []).some(r => r.s === S.sym); } }catch(e){ ok = true; } if(S.ex !== ex) return; if(!ok && def){ setSym(def); } else { syncSym(); loadAll(); } }
 async function symPop(){
