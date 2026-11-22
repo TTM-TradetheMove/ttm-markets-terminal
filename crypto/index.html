@@ -5057,7 +5057,7 @@ function drawCandles(c){
   svg.innerHTML = g;
 }
 
-// ---- live prices, open-trade tracking, optional Telegram alerts
+// ---- live prices, open-trade tracking, optional phone alerts
 let PRICES = {}, PSTAMP = 0, pfScope = 'all', PUSED = '';
 const hasOpenTrades = () => { try{ return loadSaved().some(x => x && x.status === 'open' && x.snap); }catch(e){ return false; } };
 const needLive = () => pfActive() || tjActive() || hasOpenTrades();
@@ -5250,7 +5250,7 @@ $('rrModalBody').addEventListener('click', e => {
     syncOrders(x); saveAll(list); render(); renderSaved(); paintTC(); }
 });
 // ---- TTM holdings: share the portfolio as percentages only (no dollar values, no units) with Pro members. Published while you (admin) have the terminal open.
-// ---- spot moves feed: Pro members get a live pop-up, everyone else sees it 14 days later (and Telegram posts it then)
+// ---- spot moves feed: Pro members get a live pop-up, everyone else sees it 14 days later
 function feedEv(ukey, kind, asset, title, body, pct){ if(!(window.ttmIsAdmin && ttmIsAdmin() && window.ttmFeedPost)) return; ttmFeedPost({ukey, kind, asset, title, body, pct: pct == null ? null : pct}); }
 // Spot portfolio moves only, in plain words: no stop, no targets, no size.
 function myPush(x, key, head, body){ try{ if(!window.ttmMyPush || !x || !x.snap) return; if(window.ttmIsAdmin && ttmIsAdmin() && x.snap.mkt === 'spot' && accOf(x) === 'spot') return; ttmMyPush(key, x.snap.asset + ' · ' + head, body || ''); }catch(e){} }
@@ -5911,7 +5911,7 @@ fill(); paint();
 <script src="../education.js?v=2"></script>
 <script src="../ttmind.js?v=14"></script>
 <script src="../ttmpaper.js?v=15"></script>
-<script src="../accounts.js?v=1795380000"></script>
+<script src="../accounts.js?v=1795440000"></script>
 <script>
 (function(){
   const secs = Array.from(document.querySelectorAll('body > section[id]'));
