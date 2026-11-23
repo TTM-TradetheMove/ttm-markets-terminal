@@ -402,6 +402,55 @@ def chart_total():
             "how": "Two measures, each a percentile of its own past (no look-ahead), smoothed over 7 days: total market cap against its 200-week average and against its log-regression trend. Source: TTM's market history (Coin Metrics and CoinGecko based). Starts mid 2014."}
 
 
+VOL_BANDS = ["Very calm", "Calm", "Neutral", "Fearful", "Panic"]
+
+
+def chart_vix(spx):
+    r = month_avg(fred("VIXCLS", "1990-01-01"))
+    p = pct_expanding([v for _, v in r], 60)
+    d = [x[0] for x in r]
+    return {"id": "vix", "title": "VIX Fear (Stocks)", "kind": "risk", "bands": VOL_BANDS, "freq": "monthly",
+            "sub": "The VIX (expected 30-day S&P 500 volatility), as a percentile of its own history",
+            "series": trim(series_of(d, p), "1991-01-01"), "overlay": _spx_ov(spx, "1991-01-01"),
+            "extra": {"name": "VIX (monthly average)", "series": [[a, round(b, 2)] for a, b in r if a >= "1991-01-01"]},
+            "desc": "The VIX shows how much movement options traders expect in the S&P 500 over the next month. It usually moves the opposite way to stocks: it jumps when prices fall fast and sinks when markets drift up calmly. Very high readings (panic) have often sat close to market lows, and very low readings (complacency) often come before sudden shocks. High score = more fear than usual.",
+            "how": "Source: FRED VIXCLS (daily close, monthly average). Score = where the latest reading sits among every reading seen up to that month (0 = calmest ever, 1 = most fearful ever). No look-ahead."}
+
+
+def deribit_dvol(cur="BTC"):
+    import calendar
+    end = int(time.time() * 1000)
+    start = int(datetime(2021, 3, 1, tzinfo=timezone.utc).timestamp() * 1000)
+    rows = {}
+    for _ in range(12):
+        j = json.loads(fetch(f"https://www.deribit.com/api/v2/public/get_volatility_index_data?currency={cur}&start_timestamp={start}&end_timestamp={end}&resolution=1D", tries=3, timeout=60))
+        res = j.get("result") or {}
+        for t, o, h, l, c in res.get("data", []):
+            rows[datetime.fromtimestamp(t / 1000, timezone.utc).strftime("%Y-%m-%d")] = c
+        cont = res.get("continuation")
+        if not cont or cont >= end:
+            break
+        end = cont
+    out = sorted(rows.items())
+    if len(out) < 200:
+        raise ValueError("DVOL: too few rows " + str(len(out)))
+    return out
+
+
+def chart_dvol():
+    rows = deribit_dvol("BTC")
+    p = pct_expanding([v for _, v in rows], 100)
+    d = [x[0] for x in rows]
+    btc = {a: b for a, b, *_ in btc_daily()}
+    ov = weekly([(a, btc[a]) for a in d if a in btc])
+    return {"id": "dvol", "title": "DVOL Fear (Bitcoin)", "kind": "risk", "bands": VOL_BANDS, "freq": "daily",
+            "sub": "Deribit's Bitcoin volatility index (crypto's VIX), as a percentile of its own history",
+            "series": series_of(d, p), "overlay": {"name": "BTC price", "log": True, "series": [[a, round(v, 2)] for a, v in ov]},
+            "extra": {"name": "DVOL (annualised %)", "series": [[a, round(b, 1)] for a, b in rows]},
+            "desc": "DVOL is the Bitcoin version of the VIX. It shows how much price movement Bitcoin options traders expect over the next 30 days. It tends to jump in sell-offs and shrink in quiet, steady trends. Extreme highs have often marked capitulation, while long stretches of very low readings have often come before big moves in either direction. High score = more fear than usual.",
+            "how": "Source: Deribit public volatility index (daily close, since March 2021). Score = where the latest reading sits among every reading seen up to that day (0 = calmest, 1 = most fearful). It only has about five years of history, so extremes are judged against that window. No look-ahead."}
+
+
 def main():
     out_path = os.path.join(ROOT, "risk_data.json")
     old = {}
@@ -411,14 +460,14 @@ def main():
         pass
     spx = sp500()
     new = {}
-    for name, fn in (("liquidity", lambda: [chart_liquidity(spx)]), ("credit", lambda: [chart_credit(spx)]), ("curve", lambda: [chart_curve(spx)]), ("employment", lambda: [chart_employment(spx)]), ("production", lambda: [chart_production(spx)]), ("gdp", lambda: [chart_gdp(spx)]), ("total", lambda: [chart_total()]), ("btc", lambda: chart_btc(btc_daily()))):
+    for name, fn in (("liquidity", lambda: [chart_liquidity(spx)]), ("credit", lambda: [chart_credit(spx)]), ("curve", lambda: [chart_curve(spx)]), ("employment", lambda: [chart_employment(spx)]), ("production", lambda: [chart_production(spx)]), ("gdp", lambda: [chart_gdp(spx)]), ("total", lambda: [chart_total()]), ("vix", lambda: [chart_vix(spx)]), ("dvol", lambda: [chart_dvol()]), ("btc", lambda: chart_btc(btc_daily()))):
         try:
             for c in fn():
                 new[c["id"]] = c
             STATUS[name] = "ok"
         except Exception as e:  # noqa
             STATUS[name] = "failed: " + str(e)[:150]
-    order = ["liquidity", "credit", "curve", "employment", "production", "gdp", "btcrisk", "totalrisk", "logreg", "puell"]
+    order = ["liquidity", "credit", "curve", "employment", "production", "gdp", "btcrisk", "totalrisk", "logreg", "puell", "vix", "dvol"]
     charts = []
     for k in order:
         c = new.get(k) or old.get(k)
