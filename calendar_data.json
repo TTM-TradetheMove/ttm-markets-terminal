@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-11-23T03:52:31.963846+00:00",
+  "generated_at": "2026-11-23T13:59:07.164327+00:00",
   "source": "https://nfs.faireconomy.media/ff_calendar_thisweek.json",
   "live_actuals_source": "https://www.forexfactory.com/calendar",
-  "months_scraped_at": "2026-11-23T03:52:31.963846+00:00",
+  "months_scraped_at": "2026-11-23T13:59:07.164327+00:00",
   "month_ahead_source": "https://www.financecalendar.com",
   "events": [
     {
@@ -6323,7 +6323,7 @@
     {
       "date": "09 Nov 2026",
       "dt": "2026-11-09",
-      "time": "MEL 5:00pm AEDT \u00b7 NY 1:00am EST \u00b7 LDN 6:00am GMT \u00b7 EU 7:00am CET",
+      "time": "MEL 4:00pm AEDT \u00b7 NY 12:00am EST \u00b7 LDN 5:00am GMT \u00b7 EU 6:00am CET",
       "country": "EU",
       "event": "ECOFIN Meetings",
       "impact": "low",
@@ -6333,12 +6333,12 @@
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
-      "ts": 1794204000
+      "ts": 1794200400
     },
     {
       "date": "09 Nov 2026",
       "dt": "2026-11-09",
-      "time": "MEL 5:00pm AEDT \u00b7 NY 1:00am EST \u00b7 LDN 6:00am GMT \u00b7 EU 7:00am CET",
+      "time": "MEL 4:00pm AEDT \u00b7 NY 12:00am EST \u00b7 LDN 5:00am GMT \u00b7 EU 6:00am CET",
       "country": "EU",
       "event": "Eurogroup Meetings",
       "impact": "low",
@@ -6348,7 +6348,7 @@
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
-      "ts": 1794204000
+      "ts": 1794200400
     },
     {
       "date": "09 Nov 2026",
@@ -6563,7 +6563,7 @@
     {
       "date": "10 Nov 2026",
       "dt": "2026-11-10",
-      "time": "MEL 5:00pm AEDT \u00b7 NY 1:00am EST \u00b7 LDN 6:00am GMT \u00b7 EU 7:00am CET",
+      "time": "MEL 4:00pm AEDT \u00b7 NY 12:00am EST \u00b7 LDN 5:00am GMT \u00b7 EU 6:00am CET",
       "country": "US",
       "event": "ADP Weekly Employment Change",
       "impact": "low",
@@ -6573,7 +6573,7 @@
       "miss": false,
       "bias": "neutral",
       "upcoming": false,
-      "ts": 1794290400
+      "ts": 1794286800
     },
     {
       "date": "10 Nov 2026",
@@ -8937,12 +8937,12 @@
       "country": "EU",
       "event": "French Flash Manufacturing PMI",
       "impact": "medium",
-      "actual": "\u2014",
+      "actual": "47.9",
       "forecast": "49.8",
       "previous": "49.3",
-      "miss": false,
+      "miss": true,
       "bias": "neutral",
-      "upcoming": true,
+      "upcoming": false,
       "ts": 1795421700
     },
     {
@@ -8952,12 +8952,12 @@
       "country": "EU",
       "event": "French Flash Services PMI",
       "impact": "medium",
-      "actual": "\u2014",
+      "actual": "46.6",
       "forecast": "47.4",
       "previous": "48.4",
-      "miss": false,
+      "miss": true,
       "bias": "neutral",
-      "upcoming": true,
+      "upcoming": false,
       "ts": 1795421700
     },
     {
@@ -8967,12 +8967,12 @@
       "country": "EU",
       "event": "German Flash Manufacturing PMI",
       "impact": "medium",
-      "actual": "\u2014",
+      "actual": "55.0",
       "forecast": "54.1",
       "previous": "54.2",
       "miss": false,
       "bias": "neutral",
-      "upcoming": true,
+      "upcoming": false,
       "ts": 1795422600
     },
     {
@@ -8982,12 +8982,12 @@
       "country": "EU",
       "event": "German Flash Services PMI",
       "impact": "medium",
-      "actual": "\u2014",
+      "actual": "54.0",
       "forecast": "52.4",
       "previous": "51.7",
       "miss": false,
       "bias": "neutral",
-      "upcoming": true,
+      "upcoming": false,
       "ts": 1795422600
     },
     {
@@ -8997,12 +8997,12 @@
       "country": "EU",
       "event": "Flash Manufacturing PMI",
       "impact": "low",
-      "actual": "\u2014",
+      "actual": "52.9",
       "forecast": "52.7",
       "previous": "52.4",
       "miss": false,
       "bias": "neutral",
-      "upcoming": true,
+      "upcoming": false,
       "ts": 1795424400
     },
     {
@@ -9012,12 +9012,12 @@
       "country": "EU",
       "event": "Flash Services PMI",
       "impact": "low",
-      "actual": "\u2014",
+      "actual": "51.2",
       "forecast": "51.8",
       "previous": "51.7",
-      "miss": false,
+      "miss": true,
       "bias": "neutral",
-      "upcoming": true,
+      "upcoming": false,
       "ts": 1795424400
     },
     {
@@ -9027,12 +9027,12 @@
       "country": "UK",
       "event": "Flash Manufacturing PMI",
       "impact": "medium",
-      "actual": "\u2014",
+      "actual": "52.7",
       "forecast": "53.0",
       "previous": "52.8",
-      "miss": false,
+      "miss": true,
       "bias": "neutral",
-      "upcoming": true,
+      "upcoming": false,
       "ts": 1795426200
     },
     {
@@ -9042,12 +9042,12 @@
       "country": "UK",
       "event": "Flash Services PMI",
       "impact": "medium",
-      "actual": "\u2014",
+      "actual": "52.0",
       "forecast": "53.0",
       "previous": "53.1",
-      "miss": false,
+      "miss": true,
       "bias": "neutral",
-      "upcoming": true,
+      "upcoming": false,
       "ts": 1795426200
     },
     {
@@ -9308,7 +9308,7 @@
     {
       "date": "25 Nov 2026",
       "dt": "2026-11-25",
-      "time": "MEL 5:00pm AEDT \u00b7 NY 1:00am EST \u00b7 LDN 6:00am GMT \u00b7 EU 7:00am CET",
+      "time": "MEL 4:00pm AEDT \u00b7 NY 12:00am EST \u00b7 LDN 5:00am GMT \u00b7 EU 6:00am CET",
       "country": "EU",
       "event": "German 10-y Bond Auction",
       "impact": "low",
@@ -9318,7 +9318,7 @@
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
-      "ts": 1795586400
+      "ts": 1795582800
     },
     {
       "date": "25 Nov 2026",
@@ -9653,7 +9653,7 @@
     {
       "date": "27 Nov 2026",
       "dt": "2026-11-27",
-      "time": "MEL 5:00pm AEDT \u00b7 NY 1:00am EST \u00b7 LDN 6:00am GMT \u00b7 EU 7:00am CET",
+      "time": "MEL 4:00pm AEDT \u00b7 NY 12:00am EST \u00b7 LDN 5:00am GMT \u00b7 EU 6:00am CET",
       "country": "EU",
       "event": "Italian 10-y Bond Auction",
       "impact": "low",
@@ -9663,7 +9663,7 @@
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
-      "ts": 1795759200
+      "ts": 1795755600
     },
     {
       "date": "27 Nov 2026",
@@ -9824,7 +9824,7 @@
       "impact": "low",
       "actual": "\u2014",
       "forecast": "\u2014",
-      "previous": "\u2014",
+      "previous": "2.0%",
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
@@ -9839,7 +9839,7 @@
       "impact": "low",
       "actual": "\u2014",
       "forecast": "\u2014",
-      "previous": "\u2014",
+      "previous": "2.4%",
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
@@ -9854,7 +9854,7 @@
       "impact": "low",
       "actual": "\u2014",
       "forecast": "\u2014",
-      "previous": "\u2014",
+      "previous": "-2.7%",
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
@@ -9863,7 +9863,7 @@
     {
       "date": "30 Nov 2026",
       "dt": "2026-11-30",
-      "time": "MEL 5:00pm AEDT \u00b7 NY 1:00am EST \u00b7 LDN 6:00am GMT \u00b7 EU 7:00am CET",
+      "time": "MEL 4:00pm AEDT \u00b7 NY 12:00am EST \u00b7 LDN 5:00am GMT \u00b7 EU 6:00am CET",
       "country": "EU",
       "event": "German Import Prices m/m",
       "impact": "low",
@@ -9873,12 +9873,12 @@
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
-      "ts": 1796018400
+      "ts": 1796014800
     },
     {
       "date": "30 Nov 2026",
       "dt": "2026-11-30",
-      "time": "MEL 5:00pm AEDT \u00b7 NY 1:00am EST \u00b7 LDN 6:00am GMT \u00b7 EU 7:00am CET",
+      "time": "MEL 4:00pm AEDT \u00b7 NY 12:00am EST \u00b7 LDN 5:00am GMT \u00b7 EU 6:00am CET",
       "country": "EU",
       "event": "German Retail Sales m/m",
       "impact": "low",
@@ -9888,12 +9888,12 @@
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
-      "ts": 1796018400
+      "ts": 1796014800
     },
     {
       "date": "30 Nov 2026",
       "dt": "2026-11-30",
-      "time": "MEL 5:00pm AEDT \u00b7 NY 1:00am EST \u00b7 LDN 6:00am GMT \u00b7 EU 7:00am CET",
+      "time": "MEL 4:00pm AEDT \u00b7 NY 12:00am EST \u00b7 LDN 5:00am GMT \u00b7 EU 6:00am CET",
       "country": "UK",
       "event": "Nationwide HPI m/m",
       "impact": "low",
@@ -9903,12 +9903,12 @@
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
-      "ts": 1796018400
+      "ts": 1796014800
     },
     {
       "date": "30 Nov 2026",
       "dt": "2026-11-30",
-      "time": "MEL 5:00pm AEDT \u00b7 NY 1:00am EST \u00b7 LDN 6:00am GMT \u00b7 EU 7:00am CET",
+      "time": "MEL 4:00pm AEDT \u00b7 NY 12:00am EST \u00b7 LDN 5:00am GMT \u00b7 EU 6:00am CET",
       "country": "EU",
       "event": "German Prelim CPI m/m",
       "impact": "medium",
@@ -9918,7 +9918,7 @@
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
-      "ts": 1796018400
+      "ts": 1796014800
     },
     {
       "date": "30 Nov 2026",
@@ -9929,7 +9929,7 @@
       "impact": "low",
       "actual": "\u2014",
       "forecast": "\u2014",
-      "previous": "\u2014",
+      "previous": "0.1%",
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
@@ -9944,7 +9944,7 @@
       "impact": "low",
       "actual": "\u2014",
       "forecast": "\u2014",
-      "previous": "\u2014",
+      "previous": "53K",
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
@@ -9959,7 +9959,7 @@
       "impact": "low",
       "actual": "\u2014",
       "forecast": "\u2014",
-      "previous": "\u2014",
+      "previous": "5.8B",
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
@@ -9974,7 +9974,7 @@
       "impact": "low",
       "actual": "\u2014",
       "forecast": "\u2014",
-      "previous": "\u2014",
+      "previous": "1.0%",
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
@@ -9989,7 +9989,7 @@
       "impact": "low",
       "actual": "\u2014",
       "forecast": "\u2014",
-      "previous": "\u2014",
+      "previous": "55.3",
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
@@ -10004,7 +10004,7 @@
       "impact": "low",
       "actual": "\u2014",
       "forecast": "\u2014",
-      "previous": "\u2014",
+      "previous": "2.4%",
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
@@ -10019,7 +10019,7 @@
       "impact": "low",
       "actual": "\u2014",
       "forecast": "\u2014",
-      "previous": "\u2014",
+      "previous": "1.6%",
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
@@ -10034,7 +10034,7 @@
       "impact": "low",
       "actual": "\u2014",
       "forecast": "\u2014",
-      "previous": "\u2014",
+      "previous": "2.1%",
       "miss": false,
       "bias": "neutral",
       "upcoming": true,
@@ -10054,21 +10054,6 @@
       "bias": "neutral",
       "upcoming": true,
       "ts": 1796085000
-    },
-    {
-      "date": "01 Dec 2026",
-      "dt": "2026-12-01",
-      "time": "MEL 2:35pm AEDT \u00b7 NY 10:35pm EST \u00b7 LDN 3:35am GMT \u00b7 EU 4:35am CET",
-      "country": "JP",
-      "event": "10-y Bond Auction",
-      "impact": "low",
-      "actual": "\u2014",
-      "forecast": "\u2014",
-      "previous": "\u2014",
-      "miss": false,
-      "bias": "neutral",
-      "upcoming": true,
-      "ts": 1796096100
     }
   ]
 }
