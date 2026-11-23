@@ -126,7 +126,7 @@ async function cycleAlert(now: number) {
     const c = await rest("ttm_session_fired?on_conflict=ukey", {method: "POST", headers: {Prefer: "resolution=ignore-duplicates,return=representation"}, body: JSON.stringify({ukey: "cyc-" + ev.id})});
     const j = await c.json(); if (!Array.isArray(j) || !j.length) continue;   // already sent
     const people = await get("ttm_profiles?select=id&or=(is_admin.eq.true,team.eq.true)");
-    await send(await subsFor(idsOf(people)), {title: ev.title, body: ev.body, tag: "cycle-" + ev.id, url: "./crypto/index.html#riskcharts"}, "cycle");
+    await send(await subsFor(idsOf(people)), {title: ev.title, body: ev.body, tag: "cycle-" + ev.id, url: "./crypto/index.html#cyclesignals"}, "cycle");
   }
 }
 
@@ -317,6 +317,10 @@ const handler = async (req: Request): Promise<Response> => {
   const liveAud = async (s: any) => {
     const t = String(s.min_tier || "free");
     if (t === "free") return await subsFor(null);
+    if (t === "team" || t === "beta") {   // Team-only or Beta-testers-only session (Beta also includes Team)
+      const grp = await get(`ttm_profiles?select=id&or=(is_admin.eq.true,team.eq.true${t === "beta" ? ",beta.eq.true" : ""})`);
+      return await subsFor(idsOf(grp));
+    }
     const plans = t === "pro" ? "pro" : "premium,pro", iso = new Date().toISOString();
     const people = await get(`ttm_profiles?select=id&or=(is_admin.eq.true,and(plan.in.(${plans}),plan_until.is.null),and(plan.in.(${plans}),plan_until.gt.${iso}))`);
     return await subsFor(idsOf(people));
@@ -346,7 +350,7 @@ const handler = async (req: Request): Promise<Response> => {
   const fresh = await get(`ttm_live?select=*&announced=eq.false&starts_at=gt.${new Date(now).toISOString()}`);
   for (const s of fresh) {
     const c = await claim("ttm_live", s.id, "announced"); if (!c) continue;
-    await send(await subsFor(null), {title: "New live session", body: s.title + " · " + when(s.starts_at), tag: "live-new-" + s.id, url: "./crypto/index.html"}, "live");
+    await send(s.min_tier === "team" || s.min_tier === "beta" ? await liveAud(s) : await subsFor(null), {title: "New live session", body: s.title + " · " + when(s.starts_at), tag: "live-new-" + s.id, url: "./crypto/index.html"}, "live");
   }
   // Eclipse alerts: a push 7 days before and another on the day, to admin, Team, beta testers and Pro members
   const ecAudience = async () => { let people; try { people = await get("ttm_profiles?select=id&or=(is_admin.eq.true,beta.eq.true,team.eq.true,plan.eq.pro)"); } catch (_) { people = await get("ttm_profiles?select=id&or=(is_admin.eq.true,beta.eq.true)"); } return await subsFor(idsOf(people)); };
