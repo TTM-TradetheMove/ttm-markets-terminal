@@ -1117,6 +1117,7 @@ body.rm-full #rmIn{font-size:17px}
       <div id="rkParts" class="rk-parts"></div>
       <div class="rk-cvw"><canvas id="rkCv"></canvas><div id="rkTip" class="rk-tip"></div></div>
       <div id="rkLeg" class="rk-leg"></div>
+      <div id="rkCyc" style="display:none"></div>
       <div id="rkStale" class="calendar-note" style="display:none;margin:6px 0 0;color:#e0a14d">This chart could not refresh on the last update, so it shows older data.</div>
       <h4 class="rk-h">What it shows</h4><p id="rkDesc" class="rk-p"></p>
       <h4 class="rk-h">How it is built</h4><p id="rkHow" class="rk-p"></p>
@@ -1132,12 +1133,13 @@ body.rm-full #rmIn{font-size:17px}
 .rk-cvw{position:relative}#rkCv{width:100%;height:380px;display:block;touch-action:pan-y}.rk-tip{position:absolute;pointer-events:none;display:none;background:#0b0b0d;border:1px solid #3a3a42;border-radius:8px;padding:6px 9px;font-size:12px;line-height:1.5;z-index:3;white-space:nowrap}
 .rk-leg{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:#c9c9d0;margin:8px 0 2px}.rk-leg i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
 .rk-h{margin:14px 0 4px;font-size:13px;color:#f1c75b}.rk-p{margin:0;font-size:13.5px;line-height:1.6;color:#d6d6dc}
+.rk-cyg{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}.rk-cy{background:#0d0d10;border:1px solid #26262c;border-radius:10px;padding:10px 12px}.rk-cyh{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px}.rk-cyh span{font-size:11px;border:1px solid;border-radius:10px;padding:2px 8px}.rk-cyv{display:grid;grid-template-columns:16px 1fr;gap:0 6px;font-size:12.5px;color:#8a8a92;margin:4px 0}.rk-cyv.on{color:#e8e8ec}.rk-cyv i{font-style:normal;color:#5a5a62}.rk-cyv.on i{color:#dba118}.rk-cyv em{grid-column:2;font-style:normal;font-size:11.5px;color:#6f6f78}
 @media(max-width:600px){#rkCv{height:320px}.rk-now b{font-size:20px}.rk-chip{min-width:calc(50% - 4px);flex:1 1 calc(50% - 4px)}.rk-g button{padding:6px 8px}}
 </style>
 <script>
 (function(){
   var sec = document.getElementById('riskcharts'); if(!sec) return;
-  var D = null, ETF = null, cur = 'liquidity', st = {rng: 0, ma: 0, col: 0, ov: true, etf: 0, w: {}}, cv = document.getElementById('rkCv'), geo = null, loaded = false;
+  var D = null, ETF = null, CYC = null, cur = 'liquidity', st = {rng: 0, ma: 0, col: 0, ov: true, etf: 0, w: {}}, cv = document.getElementById('rkCv'), geo = null, loaded = false;
   var $ = function(i){ return document.getElementById(i); };
   var etfBars = null;
   var BC = ['63,180,122', '140,190,80', '219,161,24', '224,125,60', '224,85,77'];
@@ -1236,6 +1238,9 @@ body.rm-full #rmIn{font-size:17px}
     var pr = $('rkParts'); if(c.parts){ pr.className = 'rk-parts show'; pr.innerHTML = c.parts.map(function(p){ var v = st.w[p.k] == null ? 1 : st.w[p.k]; return '<div class="rk-pt"><label><span>' + esc(p.name) + '</span><b>' + (+v).toFixed(1) + '</b></label><input type="range" min="0" max="1" step="0.1" value="' + v + '" data-k="' + p.k + '"></div>'; }).join(''); } else { pr.className = 'rk-parts'; pr.innerHTML = ''; }
     var leg = []; if(c.kind === 'lines') c.lines.forEach(function(o){ leg.push('<span><i style="background:' + o.c + '"></i>' + esc(o.n) + '</span>'); }); else { leg.push('<span><i style="background:#dba118"></i>' + esc(c.title) + '</span>'); if(st.etf && ETF) leg.push('<span><i style="background:#3fb97a"></i>ETF inflows / <i style="background:#e0554d;margin-left:6px"></i>outflows (bottom bars)</span>'); if(st.ov && c.overlay) leg.push('<span><i style="background:#4da3ff"></i>' + esc(c.overlay.name) + ' (left, log scale)</span>'); }
     $('rkLeg').innerHTML = leg.join('');
+    (function(){ var bx = $('rkCyc'); if(!CYC || ['logreg', 'btcrisk', 'puell'].indexOf(c.id) < 0){ bx.style.display = 'none'; return; }
+      function side(t, o, col){ return '<div class="rk-cy"><div class="rk-cyh"><b style="color:' + col + '">' + t + '</b><span style="color:' + col + ';border-color:' + col + '">' + o.n + ' of ' + o.of + ' active' + (o.level !== 'None' ? ' · ' + o.level : '') + '</span></div>' + o.votes.map(function(v){ return '<div class="rk-cyv' + (v.on ? ' on' : '') + '"><i>' + (v.on ? '●' : '○') + '</i><span>' + esc(v.name) + '</span><em>' + esc(v.detail) + '</em></div>'; }).join('') + '</div>'; }
+      bx.innerHTML = '<h4 class="rk-h">Bitcoin cycle signals today <span style="font-weight:400;color:#8a8a92">as of ' + esc(CYC.as_of) + '</span></h4><div class="rk-cyg">' + side('Bear-market low zone', CYC.low, '#3fb47a') + side('Cycle-top risk', CYC.top, '#e0554d') + '</div><p class="rk-p" style="color:#8a8a92;font-size:11.5px">Each signal is a simple yes or no. The more that agree, the stronger the signal. The TTM Team gets a phone alert when a new level is reached. Educational only, not financial advice.</p>'; bx.style.display = ''; })();
     sec.querySelectorAll('[data-e]').forEach(function(x){ x.classList.toggle('on', +x.dataset.e === st.etf); });
     document.querySelectorAll('#rkChips .rk-chip').forEach(function(b){ b.classList.toggle('on', b.dataset.id === cur); });
     draw();
@@ -1252,6 +1257,7 @@ body.rm-full #rmIn{font-size:17px}
     fetch('../risk_data.json?' + Date.now().toString(36).slice(0, 6)).then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(d){ D = d; if(!d.charts || !d.charts.length) throw 0;
       $('rkChips').innerHTML = d.charts.map(function(c){ var l = c.latest, v = '', col = '#c9c9d0'; if(c.kind === 'risk' && l){ var bi = bandOf(l[1]); v = l[1].toFixed(2) + ' · ' + c.bands[bi]; col = 'rgb(' + BC[bi] + ')'; } return '<button class="rk-chip" data-id="' + c.id + '"><b>' + esc(c.title) + '</b><span style="color:' + col + '">' + esc(v || ' ') + '</span></button>'; }).join('');
       $('rkUpdated').textContent = 'Updated ' + new Date(d.generated_at).toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}) + '. Free data from FRED, Coin Metrics and Yahoo Finance.'; if(!chart()) cur = d.charts[0].id; ui();
+      fetch('../cycle_signals.json?' + Date.now().toString(36).slice(0, 6)).then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(e){ if(e && e.low && e.top){ CYC = e; ui(); } }).catch(function(){});
       fetch('../etf_flows_total.json').then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(e){ if(e && e.rows && e.rows.length){ ETF = e.rows; ui(); } }).catch(function(){});
     }).catch(function(){ loaded = false; $('rkUpdated').textContent = 'Risk charts are not available yet. They appear after the first data update.'; }); }
   var obs = new IntersectionObserver(function(es){ if(es.some(function(e){ return e.isIntersecting; })) load(); }, {rootMargin: '300px'}); obs.observe(sec); if(location.hash === '#riskcharts') load();

@@ -453,6 +453,86 @@ def chart_dvol():
             "how": "Source: Deribit public volatility index (daily close, since March 2021). Score = where the latest reading sits among every reading seen up to that day (0 = calmest, 1 = most fearful). It only has about five years of history, so extremes are judged against that window. No look-ahead."}
 
 
+HALVING = date(2024, 4, 20)
+
+
+def compute_cycle(by_id, out_dir):
+    """Combine the long-term cycle indicators into 'low zone' and 'top risk' votes and decide when a TTM-wide push is due."""
+    def last(cid):
+        c = by_id.get(cid) or {}
+        if c.get("series"):
+            return c["series"][-1]
+        return None
+    lr = by_id.get("logreg") or {}
+    lines = {l["n"]: l["s"] for l in lr.get("lines", [])}
+    px_rows = lines.get("BTC price") or []
+    if not px_rows:
+        raise ValueError("no BTC price in logreg")
+    today, px = px_rows[-1]
+    def band(n):
+        for d, v in lines.get(n, []):
+            if d == today:
+                return v
+        return None
+    p1, m1, tr = band("+1σ"), band("-1σ"), band("Trend")
+    try:
+        rz = json.load(open(os.path.join(out_dir, "btc_realized.json")))
+        realized = float(rz["realized"])
+    except Exception:  # noqa
+        realized = None
+    mvrv = px / realized if realized else None
+    risk, puell, dvol, tot = last("btcrisk"), last("puell"), last("dvol"), last("totalrisk")
+    since_halv = (date.fromisoformat(today) - HALVING).days / 30.44
+    post = [(v, d) for d, v in px_rows if d >= HALVING.isoformat()]
+    top_v, top_d = max(post) if post else (None, None)
+    since_top = (date.fromisoformat(today) - date.fromisoformat(top_d)).days / 30.44 if top_d else None
+    def vote(k, name, on, detail):
+        return {"k": k, "name": name, "on": bool(on), "detail": detail}
+    low = [
+        vote("lr", "Below the −1σ regression band", m1 is not None and px < m1, f"price ${px:,.0f} vs band ${m1:,.0f}" if m1 else "no data"),
+        vote("rp", "Below realised price", realized is not None and px < realized, f"price ${px:,.0f} vs realised ${realized:,.0f}" if realized else "no data"),
+        vote("pu", "Puell multiple below 0.5 (miner stress)", puell is not None and puell[1] < 0.5, f"Puell {puell[1]:.2f}" if puell else "no data"),
+        vote("rk", "TTM Bitcoin Risk below 0.20", risk is not None and risk[1] < 0.20, f"score {risk[1]:.2f}" if risk else "no data"),
+        vote("tm", "11 to 15 months after the cycle high", since_top is not None and 11 <= since_top <= 15, f"{since_top:.1f} months since the high" if since_top is not None else "no data"),
+        vote("fr", "DVOL fear in the top 10% of its history", dvol is not None and dvol[1] >= 0.9, f"DVOL score {dvol[1]:.2f}" if dvol else "no data"),
+    ]
+    top = [
+        vote("lr", "Above the +1σ regression band", p1 is not None and px > p1, f"price ${px:,.0f} vs band ${p1:,.0f}" if p1 else "no data"),
+        vote("mv", "MVRV above 3.5 (price vs realised price)", mvrv is not None and mvrv > 3.5, f"MVRV {mvrv:.2f}" if mvrv else "no data"),
+        vote("pu", "Puell multiple above 4 (miner euphoria)", puell is not None and puell[1] > 4, f"Puell {puell[1]:.2f}" if puell else "no data"),
+        vote("rk", "TTM Bitcoin Risk above 0.80", risk is not None and risk[1] > 0.80, f"score {risk[1]:.2f}" if risk else "no data"),
+        vote("tm", "12 to 18 months after a halving", 12 <= since_halv <= 18, f"{since_halv:.1f} months since the halving"),
+        vote("tt", "TTM Total Market Risk above 0.80", tot is not None and tot[1] > 0.80, f"score {tot[1]:.2f}" if tot else "no data"),
+    ]
+    path = os.path.join(out_dir, "cycle_signals.json")
+    try:
+        old = json.load(open(path))
+    except Exception:  # noqa
+        old = {}
+    def lvl(n):
+        return 3 if n >= 4 else 2 if n == 3 else 1 if n == 2 else 0
+    NAMES = {0: "None", 1: "Watch", 2: "Alert", 3: "Strong"}
+    res, events = {}, list(old.get("events", []))
+    for side, votes, icon, head in (("low", low, "🟢", "Bitcoin low-zone signals"), ("top", top, "🔴", "Bitcoin cycle-top risk signals")):
+        n = sum(1 for v in votes if v["on"]); lv = lvl(n)
+        st = (old.get("state") or {}).get(side) or {}
+        prev, last_ev, last_lv = int(st.get("level", 0)), st.get("last_event"), int(st.get("last_level", 0))
+        days = (date.fromisoformat(today) - date.fromisoformat(last_ev)).days if last_ev else 9999
+        fire = lv >= 1 and lv > prev and (days >= 30 or lv > last_lv)
+        ns = {"level": lv, "last_event": last_ev, "last_level": last_lv}
+        if fire:
+            ids = f"{side}-{lv}-{today}"
+            on = "; ".join(v["name"].lower() if i else v["name"] for i, v in enumerate([x for x in votes if x["on"]]))
+            events.append({"id": ids, "side": side, "level": NAMES[lv], "at": today, "title": f"{icon} {head}: {n} of {len(votes)} active ({NAMES[lv]})", "body": f"{on}. Educational, not financial advice."})
+            ns.update({"last_event": today, "last_level": lv})
+        res[side] = {"n": n, "of": len(votes), "level": NAMES[lv], "votes": votes, "state": ns}
+    out = {"generated_at": datetime.now(timezone.utc).isoformat(), "as_of": today, "price": round(px, 2), "realized": realized, "cycle_high": {"price": top_v, "date": top_d}, "months_since_halving": round(since_halv, 1),
+           "low": {k: v for k, v in res["low"].items() if k != "state"}, "top": {k: v for k, v in res["top"].items() if k != "state"},
+           "state": {"low": res["low"]["state"], "top": res["top"]["state"]}, "events": events[-12:]}
+    json.dump(out, open(path, "w"), indent=1, ensure_ascii=False)
+    return out
+
+
 def main():
     out_path = os.path.join(ROOT, "risk_data.json")
     old = {}
@@ -487,6 +567,11 @@ def main():
         print("nothing built, keeping the old file", STATUS)
         raise SystemExit(0)
     json.dump({"generated_at": datetime.now(timezone.utc).isoformat(), "charts": charts}, open(out_path, "w"), separators=(",", ":"))
+    try:
+        cyc = compute_cycle({c["id"]: c for c in charts}, ROOT)
+        STATUS["cycle"] = f"ok low {cyc['low']['n']}/{cyc['low']['of']} top {cyc['top']['n']}/{cyc['top']['of']}"
+    except Exception as e:  # noqa
+        STATUS["cycle"] = "failed: " + str(e)[:150]
     json.dump({"generated_at": datetime.now(timezone.utc).isoformat(), "status": STATUS}, open(os.path.join(ROOT, "risk_data_status.json"), "w"), indent=1)
     print(json.dumps(STATUS, indent=1), "size", os.path.getsize(out_path))
 

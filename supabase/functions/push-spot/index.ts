@@ -115,6 +115,21 @@ async function realizedAlert(now: number) {
   await send(subs, payload, "realized");
 }
 
+// Bitcoin cycle signals: the daily GitHub Action writes cycle_signals.json (low-zone and cycle-top votes). When it records a new event,
+// the TTM Team (and admin) get one push. Each event id is claimed once, so nothing is sent twice. Members can switch it off ("cycle").
+async function cycleAlert(now: number) {
+  const site = Deno.env.get("SITE_URL") || "https://ttm-tradethemove.github.io/ttm-markets-terminal/";
+  const r = await fetch(site + "cycle_signals.json?t=" + Math.floor(now / 600000)); if (!r.ok) return;
+  const d = await r.json(); const evs: any[] = Array.isArray(d.events) ? d.events : [];
+  for (const ev of evs) {
+    if (!ev.id || !ev.at || now - Date.parse(ev.at) > 4 * 864e5) continue;
+    const c = await rest("ttm_session_fired?on_conflict=ukey", {method: "POST", headers: {Prefer: "resolution=ignore-duplicates,return=representation"}, body: JSON.stringify({ukey: "cyc-" + ev.id})});
+    const j = await c.json(); if (!Array.isArray(j) || !j.length) continue;   // already sent
+    const people = await get("ttm_profiles?select=id&or=(is_admin.eq.true,team.eq.true)");
+    await send(await subsFor(idsOf(people)), {title: ev.title, body: ev.body, tag: "cycle-" + ev.id, url: "./crypto/index.html#riskcharts"}, "cycle");
+  }
+}
+
 // token unlocks (beta): a heads-up 7 days and 24 hours before
 async function unlockAlerts(now: number) {
   for (const [col, ms, label] of [["alerted7", 7 * 864e5, "7 days"], ["alerted1", 864e5, "24 hours"]] as [string, number, string][]) {
@@ -278,6 +293,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try { await realizedAlert(now); } catch (e) { console.log("realized alert failed:", String(e)); }
+  try { await cycleAlert(now); } catch (e) { console.log("cycle alert failed:", String(e)); }
   try { await briefAlert(now); } catch (e) { console.log("brief alert failed:", String(e)); }
   try { await unlockAlerts(now); } catch (e) { console.log("unlock alerts failed:", String(e)); }
   // cron tick: market session alerts, new community room messages, then live sessions
