@@ -291,6 +291,7 @@ document.addEventListener('click', async ev => {
   else if(t.dataset && t.dataset.rmf){ PREFS.rfilter = t.dataset.rmf === 'follow' ? 'follow' : 'all'; RM.sig = ''; rmFiltPaint(); prefSave(); rmLoad(true); }
   else if(t.dataset && t.dataset.rmat){ const i = $('rmIn'); if(i && !i.disabled){ i.value = (i.value + (i.value && !/\s$/.test(i.value) ? ' ' : '') + '@' + t.dataset.rmat.replace(/^@/, '') + ' '); i.focus(); } }
   else if(t.dataset && t.dataset.rmfollow){ const id = t.dataset.rmfollow, f = PREFS.follow || [], i = f.findIndex(x => x.id === id); if(i >= 0) f.splice(i, 1); else f.push({id, n: t.dataset.n || 'Member'}); PREFS.follow = f.slice(0, 50); await prefSave(); RM.sig = ''; rmLoad(true); }
+  else if(t.id === 'prefTestPush'){ const nt = $('prefNote'); if(nt) nt.textContent = 'Sending…'; const ok = await window.ttmMyPush('test:' + Date.now(), '🔔 TTM test alert', 'If you can see this, phone alerts are working on this device.'); if(nt) nt.textContent = ok ? 'Sent. It should arrive within a minute on every phone or browser with alerts on. If nothing arrives, check your phone Settings > Notifications > TTM.' : 'Could not send. Check you are signed in and try again.'; }
   else if(t.dataset && t.dataset.unfollow){ PREFS.follow = (PREFS.follow || []).filter(x => x.id !== t.dataset.unfollow); await prefSave(); ui(); }
   else if(t.id === 'authPwIn' || t.id === 'authPwUp'){ const em = ($('authEmail').value || '').trim(), pw = ($('authPw').value || ''), up = t.id === 'authPwUp';
     if(!/^\S+@\S+\.\S+$/.test(em)){ $('authNote').textContent = 'Enter a valid email address.'; return; }
@@ -1666,7 +1667,7 @@ function prefsHtml(){
     + grp('Trades and TTM', pick(['cycle', 'realized', 'brief', 'live', 'mytrade', 'spot', 'chat', 'inbox', 'luna', 'vest']))
     + grp('Market sessions', sess)
     + (rooms.length ? grp('Community chat', rmHtml + cb('online', 'Show me as online in the community chat')) : grp('Community chat', cb('online', 'Show me as online in the community chat')))
-    + `<span id="prefNote" class="calendar-note"></span></div>`;
+    + `<div style="margin:10px 0 4px"><button type="button" class="rr-btn ghost sm" id="prefTestPush">Send me a test alert</button></div><span id="prefNote" class="calendar-note"></span></div>`;
 }
 async function prefSave(){ const n = $('prefNote'); if(n) n.textContent = 'Saving…';
   const r = await api('/rest/v1/ttm_prefs?on_conflict=user_id', {method: 'POST', headers: {Prefer: 'resolution=merge-duplicates,return=minimal'}, body: JSON.stringify({user_id: USER.id, prefs: PREFS, updated: new Date().toISOString()})}); const n2 = $('prefNote'); if(n2) n2.textContent = r.ok ? ' Saved.' : ' Could not save. Ask TTM to run the settings step.'; return r.ok; }
