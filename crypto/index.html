@@ -1266,31 +1266,78 @@ body.rm-full #rmIn{font-size:17px}
 })();
 </script>
 <section id="cyclesignals">
+  <style>
+  #cyclesignals .cs-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:0 0 16px}
+  #cyclesignals .cs-st{background:linear-gradient(180deg,#14141a,#0d0d10);border:1px solid #26262c;border-radius:12px;padding:12px 14px}
+  #cyclesignals .cs-st small{display:block;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:#8a8a92;margin-bottom:4px}
+  #cyclesignals .cs-st b{font-size:20px;color:#f2f0ea;font-weight:700}#cyclesignals .cs-st em{display:block;font-style:normal;font-size:11.5px;color:#8a8a92;margin-top:2px}
+  #cyclesignals .cs-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px}
+  #cyclesignals .cs-c{background:linear-gradient(180deg,#14141a,#0b0b0e);border:1px solid #26262c;border-top:3px solid var(--c);border-radius:14px;padding:18px 18px 14px;box-shadow:0 6px 24px rgba(0,0,0,.35)}
+  #cyclesignals .cs-t{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  #cyclesignals .cs-t h3{margin:0;font-size:15px;color:#f2f0ea;letter-spacing:.01em}#cyclesignals .cs-t p{margin:2px 0 0;font-size:12px;color:#8a8a92}
+  #cyclesignals .cs-big{text-align:right;line-height:1}#cyclesignals .cs-big b{font-size:42px;font-weight:800;color:var(--c)}#cyclesignals .cs-big b i{font-size:20px;font-style:normal;opacity:.8}
+  #cyclesignals .cs-lv{display:inline-block;margin:10px 0 12px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--c);color:var(--c);border-radius:999px;padding:3px 12px}
+  #cyclesignals .cs-lv.none{border-color:#3a3a42;color:#8a8a92}
+  #cyclesignals .cs-bar{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+  #cyclesignals .cs-bar span{height:10px;border-radius:5px;background:#1d1d23}#cyclesignals .cs-bar span.on{background:var(--c);box-shadow:0 0 10px var(--c)}
+  #cyclesignals .cs-lab{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin:5px 0 14px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#6c6c75}
+  #cyclesignals .cs-lab span{text-align:center}#cyclesignals .cs-lab span.cur{color:var(--c);font-weight:800}
+  #cyclesignals .cs-sg{display:grid;gap:7px}
+  #cyclesignals .cs-s{display:grid;grid-template-columns:26px 1fr auto;gap:10px;align-items:center;background:#0f0f13;border:1px solid #202026;border-radius:10px;padding:9px 11px}
+  #cyclesignals .cs-s.on{border-color:var(--c);background:linear-gradient(90deg,rgba(255,255,255,.04),#0f0f13)}
+  #cyclesignals .cs-k{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;border:1.5px solid #3a3a42;color:#55555e}
+  #cyclesignals .cs-s.on .cs-k{background:var(--c);border-color:var(--c);color:#06100b}
+  #cyclesignals .cs-s b{display:block;font-size:13px;font-weight:600;color:#a8a8b0}#cyclesignals .cs-s.on b{color:#f2f0ea}
+  #cyclesignals .cs-s em{display:block;font-style:normal;font-size:11.5px;color:#7a7a84;margin-top:1px}
+  #cyclesignals .cs-p{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#55555e}#cyclesignals .cs-s.on .cs-p{color:var(--c)}
+  #cyclesignals .cs-h{margin:26px 0 10px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold2,#f2c14e)}
+  #cyclesignals .cs-ev{display:grid;grid-template-columns:auto 1fr;gap:12px;background:#0f0f13;border:1px solid #202026;border-left:3px solid var(--c);border-radius:10px;padding:11px 14px;margin-bottom:8px}
+  #cyclesignals .cs-ev time{font-size:12px;color:#8a8a92;white-space:nowrap;padding-top:2px}#cyclesignals .cs-ev b{display:block;font-size:14px;color:#f2f0ea}#cyclesignals .cs-ev span{display:block;font-size:12.5px;color:#a8a8b0;margin-top:3px;line-height:1.45}
+  #cyclesignals .cs-how{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+  #cyclesignals .cs-how div{background:#0f0f13;border:1px solid #202026;border-radius:10px;padding:10px 12px;font-size:12px;color:#a8a8b0}#cyclesignals .cs-how b{display:block;color:#f2f0ea;font-size:13px;margin-bottom:2px}
+  @media(max-width:520px){#cyclesignals .cs-g{grid-template-columns:1fr}#cyclesignals .cs-big b{font-size:34px}}
+  </style>
   <div class="wrap">
     <div class="section-head">
       <span class="tag">Team</span>
-      <h2>Bitcoin cycle signals: low zone and cycle-top risk</h2>
-      <p>Six simple yes or no signals for each side of the cycle. The more that agree, the higher the level: Watch, Building, Strong, Extreme. Team members get a phone alert when a new level is reached. Educational only, not financial advice.</p>
+      <h2>Bitcoin cycle signals</h2>
+      <p>Six yes or no checks for each side of the cycle. The more that agree, the higher the level. The Team gets a phone alert each time a new level is reached. Educational only, not financial advice.</p>
       <p id="csUpdated" class="calendar-note" style="margin-top:8px">Loading cycle signals…</p>
     </div>
-    <div id="csNow"></div>
-    <h4 class="rk-h" style="margin-top:18px">Alerts sent to the Team</h4>
-    <div id="csHist" class="rk-p"></div>
-    <h4 class="rk-h" style="margin-top:18px">How the levels work</h4>
-    <p class="rk-p">2 of 6 signals = <b>Watch</b>, 3 = <b>Building</b>, 4 = <b>Strong</b>, 5 or 6 = <b>Extreme</b>. An alert goes out when the level rises, and the same level is not repeated for 30 days. The data refreshes twice a day.</p>
+    <div id="csStats" class="cs-stats"></div>
+    <div id="csNow" class="cs-g"></div>
+    <h4 class="cs-h">Alerts sent to the Team</h4>
+    <div id="csHist"></div>
+    <h4 class="cs-h">How the levels work</h4>
+    <div class="cs-how"><div><b>2 of 6 · Watch</b>Early sign, worth watching</div><div><b>3 of 6 · Building</b>Signals are lining up</div><div><b>4 of 6 · Strong</b>Most signals agree</div><div><b>5-6 of 6 · Extreme</b>Nearly all agree</div></div>
+    <p class="calendar-note" style="margin-top:10px">An alert goes out when the level rises. The same level is not repeated for 30 days. Data refreshes twice a day.</p>
   </div>
 </section>
 <script>
 (function(){
   var sec = document.getElementById('cyclesignals'); if(!sec) return; var loaded = false;
   function esc(t){ return String(t == null ? '' : t).replace(/[&<>"]/g, function(c){ return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]; }); }
-  function side(t, o, col){ return '<div class="rk-cy"><div class="rk-cyh"><b style="color:' + col + '">' + t + '</b><span style="color:' + col + ';border-color:' + col + '">' + o.n + ' of ' + o.of + ' · ' + (o.pct || 0) + '%' + (o.level !== 'None' ? ' · ' + o.level : '') + '</span></div>' + o.votes.map(function(v){ return '<div class="rk-cyv' + (v.on ? ' on' : '') + '"><i>' + (v.on ? '●' : '○') + '</i><span>' + esc(v.name) + '</span><em>' + esc(v.detail) + '</em></div>'; }).join('') + '</div>'; }
+  function usd(n){ return '$' + Math.round(n).toLocaleString('en-US'); }
+  var LV = ['Watch', 'Building', 'Strong', 'Extreme'];
+  function card(title, sub, o, col){
+    var lvIdx = o.n >= 5 ? 3 : o.n >= 2 ? o.n - 2 : -1, bar = '', lab = '';
+    for(var i = 1; i <= 6; i++){ bar += '<span class="' + (i <= o.n ? 'on' : '') + '"></span>'; lab += '<span class="' + ((i === 2 && lvIdx === 0) || (i === 3 && lvIdx === 1) || (i === 4 && lvIdx === 2) || (i === 5 && lvIdx === 3) ? 'cur' : '') + '">' + (i === 2 ? 'Watch' : i === 3 ? 'Build' : i === 4 ? 'Strong' : i === 5 ? 'Extreme' : '') + '</span>'; }
+    var rows = o.votes.map(function(v){ return '<div class="cs-s' + (v.on ? ' on' : '') + '"><div class="cs-k">' + (v.on ? '✓' : '') + '</div><div><b>' + esc(v.name) + '</b><em>' + esc(v.detail) + '</em></div><div class="cs-p">' + (v.on ? 'Active' : 'Not yet') + '</div></div>'; }).join('');
+    return '<div class="cs-c" style="--c:' + col + '"><div class="cs-t"><div><h3>' + title + '</h3><p>' + sub + '</p></div><div class="cs-big"><b>' + (o.pct || 0) + '<i>%</i></b></div></div>'
+      + '<span class="cs-lv' + (lvIdx < 0 ? ' none' : '') + '">' + (lvIdx < 0 ? 'No signal' : LV[lvIdx]) + ' · ' + o.n + ' of ' + o.of + '</span><div class="cs-bar">' + bar + '</div><div class="cs-lab">' + lab + '</div><div class="cs-sg">' + rows + '</div></div>';
+  }
   function load(){ if(loaded) return; loaded = true;
     fetch('../cycle_signals.json?' + Date.now().toString(36).slice(0, 6)).then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(d){ if(!d || !d.low || !d.top) throw 0;
-      document.getElementById('csUpdated').textContent = 'As of ' + d.as_of + ' · BTC $' + Math.round(d.price).toLocaleString() + (d.realized ? ' · realised price $' + Math.round(d.realized).toLocaleString() : '') + (d.cycle_high && d.cycle_high.date ? ' · cycle high $' + Math.round(d.cycle_high.price).toLocaleString() + ' on ' + d.cycle_high.date : '') + '.';
-      document.getElementById('csNow').innerHTML = '<div class="rk-cyg">' + side('Bear-market low zone', d.low, '#3fb47a') + side('Cycle-top risk', d.top, '#e0554d') + '</div>';
+      document.getElementById('csUpdated').textContent = 'Updated ' + d.as_of + '. Refreshes twice a day.';
+      var hi = d.cycle_high && d.cycle_high.price, dd = hi ? Math.round((d.price / hi - 1) * 100) : null, mv = d.realized ? (d.price / d.realized) : null, st = [];
+      st.push('<div class="cs-st"><small>Bitcoin</small><b>' + usd(d.price) + '</b>' + (dd != null ? '<em>' + dd + '% from the cycle high</em>' : '') + '</div>');
+      if(hi) st.push('<div class="cs-st"><small>Cycle high</small><b>' + usd(hi) + '</b><em>' + esc(d.cycle_high.date) + '</em></div>');
+      if(d.realized) st.push('<div class="cs-st"><small>Realised price</small><b>' + usd(d.realized) + '</b><em>MVRV ' + mv.toFixed(2) + '</em></div>');
+      if(d.months_since_halving != null) st.push('<div class="cs-st"><small>Since the halving</small><b>' + d.months_since_halving + '</b><em>months</em></div>');
+      document.getElementById('csStats').innerHTML = st.join('');
+      document.getElementById('csNow').innerHTML = card('Bear-market low zone', 'Signs a cycle low is forming', d.low, '#3fb47a') + card('Cycle-top risk', 'Signs a cycle top is near', d.top, '#e0554d');
       var ev = (d.events || []).slice().reverse();
-      document.getElementById('csHist').innerHTML = ev.length ? ev.map(function(e){ return '<div style="border-left:3px solid ' + (e.side === 'low' ? '#3fb47a' : '#e0554d') + ';padding:4px 10px;margin:0 0 8px"><b>' + esc(e.title) + '</b> <span style="color:#8a8a92;font-size:12px">' + esc(e.at) + '</span><br><span style="font-size:13px">' + esc(e.body) + '</span></div>'; }).join('') : 'No alerts sent yet.';
+      document.getElementById('csHist').innerHTML = ev.length ? ev.map(function(e){ return '<div class="cs-ev" style="--c:' + (e.side === 'low' ? '#3fb47a' : '#e0554d') + '"><time>' + esc(e.at) + '</time><div><b>' + esc(e.title) + '</b><span>' + esc(e.body) + '</span></div></div>'; }).join('') : '<p class="calendar-note">No alerts sent yet.</p>';
     }).catch(function(){ loaded = false; document.getElementById('csUpdated').textContent = 'Cycle signals are not available yet. They appear after the next data update.'; }); }
   var obs = new IntersectionObserver(function(es){ if(es.some(function(x){ return x.isIntersecting; })) load(); }, {rootMargin: '300px'}); obs.observe(sec); if(location.hash === '#cyclesignals') load();
   window.addEventListener('hashchange', function(){ if(location.hash === '#cyclesignals') load(); });
