@@ -95,9 +95,9 @@ def trim(series, from_date):
     return [p for p in series if p[0] >= from_date]
 
 
-def weekly(rows):
-    """Keep one point per ISO week (the last) but every day of the last 400 days."""
-    cut = (date.today() - timedelta(days=400)).isoformat()
+def weekly(rows, days=400):
+    """Keep one point per ISO week (the last) but every day of the last `days` days."""
+    cut = (date.today() - timedelta(days=days)).isoformat()
     last = {}
     for d, v in rows:
         if d >= cut:
@@ -302,15 +302,17 @@ def chart_btc(btc, spx_unused=None):
             "how": "Five measures, each turned into a percentile of its own past (no look-ahead) and smoothed over 7 days: price vs the 200-week average, price vs the log-regression trend, MVRV, MVRV Z-Score and the Puell Multiple. The score is their weighted average. Starts mid 2014 so there is enough history to rank."}
     # --- log regression chart
     end_day = (date.today() - GENESIS).days + 365
-    lines = [{"n": "BTC price", "c": "#dba118", "w": 1.8, "s": [[a, round(v, 2)] for a, v in weekly(list(zip(d, p))) if a >= "2011-01-01"]}]
+    lines = [{"n": "BTC price", "c": "#dba118", "w": 1.8, "s": [[a, round(v, 2)] for a, v in weekly(list(zip(d, p)), 1100) if a >= "2011-01-01"]}]
     for k, lab, col in [(2, "+2σ", "#e0554d"), (1, "+1σ", "#e08a4d"), (0, "Trend", "#9aa0aa"), (-1, "-1σ", "#4da3ff"), (-2, "-2σ", "#3fb47a")]:
         s = []
-        for day in range((date(2011, 1, 1) - GENESIS).days, end_day, 14):
+        day, dcut = (date(2011, 1, 1) - GENESIS).days, (date.today() - timedelta(days=1100) - GENESIS).days
+        while day < end_day:
             dd = (GENESIS + timedelta(days=day)).isoformat()
             s.append([dd, round(math.exp(fitv(day) + k * sd), 4)])
+            day += 14 if day < dcut else 1
         lines.append({"n": lab, "c": col, "w": 1.1 if k else 1.6, "dash": bool(k), "s": s})
     logreg = {"id": "logreg", "title": "Logarithmic Regression", "kind": "lines", "freq": "daily", "logY": True,
-              "sub": f"Bitcoin price with a long-term trend line and bands at ±1 and ±2 standard deviations (fitted on all data since 2011; slope {b:.2f})",
+              "sub": f"Bitcoin price (weekly, daily for the last 3 years; use the 1y and 2y range buttons to zoom in) with a long-term trend line and bands at ±1 and ±2 standard deviations (fitted on all data since 2011; slope {b:.2f})",
               "lines": lines,
               "desc": "A straight line fitted through Bitcoin's price on log scales shows its long-term growth path. The bands show how far price has historically swung from that path. Price near the bottom band has been cheap and near the top band stretched. Growth has been slowing over time, so older fits overstate the future.",
               "how": "Least squares fit of ln(price) against ln(days since the genesis block, 3 Jan 2009), using daily prices from 2011. Bands are the standard deviation of the fit errors. This is fitted with hindsight on purpose: it is a map of the past, not a forecast."}
