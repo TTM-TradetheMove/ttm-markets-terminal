@@ -486,23 +486,23 @@ def compute_cycle(by_id, out_dir):
     post = [(v, d) for d, v in px_rows if d >= HALVING.isoformat()]
     top_v, top_d = max(post) if post else (None, None)
     since_top = (date.fromisoformat(today) - date.fromisoformat(top_d)).days / 30.44 if top_d else None
-    def vote(k, name, on, detail):
-        return {"k": k, "name": name, "on": bool(on), "detail": detail}
+    def vote(k, name, on, detail, short=None):
+        return {"k": k, "name": name, "on": bool(on), "detail": detail, "short": short or name}
     low = [
-        vote("lr", "Below the −1σ regression band", m1 is not None and px < m1, f"price ${px:,.0f} vs band ${m1:,.0f}" if m1 else "no data"),
-        vote("rp", "Below realised price", realized is not None and px < realized, f"price ${px:,.0f} vs realised ${realized:,.0f}" if realized else "no data"),
-        vote("pu", "Puell multiple below 0.5 (miner stress)", puell is not None and puell[1] < 0.5, f"Puell {puell[1]:.2f}" if puell else "no data"),
-        vote("rk", "TTM Bitcoin Risk below 0.20", risk is not None and risk[1] < 0.20, f"score {risk[1]:.2f}" if risk else "no data"),
-        vote("tm", "11 to 15 months after the cycle high", since_top is not None and 11 <= since_top <= 15, f"{since_top:.1f} months since the high" if since_top is not None else "no data"),
-        vote("fr", "DVOL fear in the top 10% of its history", dvol is not None and dvol[1] >= 0.9, f"DVOL score {dvol[1]:.2f}" if dvol else "no data"),
+        vote("lr", "Below the −1σ regression band", m1 is not None and px < m1, f"price ${px:,.0f} vs band ${m1:,.0f}" if m1 else "no data", "Regression Band"),
+        vote("rp", "Below realised price", realized is not None and px < realized, f"price ${px:,.0f} vs realised ${realized:,.0f}" if realized else "no data", "Realised Price"),
+        vote("pu", "Puell multiple below 0.5 (miner stress)", puell is not None and puell[1] < 0.5, f"Puell {puell[1]:.2f}" if puell else "no data", "Puell Multiple"),
+        vote("rk", "TTM Bitcoin Risk below 0.20", risk is not None and risk[1] < 0.20, f"score {risk[1]:.2f}" if risk else "no data", "TTM Bitcoin Risk"),
+        vote("tm", "11 to 15 months after the cycle high", since_top is not None and 11 <= since_top <= 15, f"{since_top:.1f} months since the high" if since_top is not None else "no data", f"{since_top:.0f} months after ATH" if since_top is not None else None),
+        vote("fr", "DVOL fear in the top 10% of its history", dvol is not None and dvol[1] >= 0.9, f"DVOL score {dvol[1]:.2f}" if dvol else "no data", "DVOL Fear"),
     ]
     top = [
-        vote("lr", "Above the +1σ regression band", p1 is not None and px > p1, f"price ${px:,.0f} vs band ${p1:,.0f}" if p1 else "no data"),
-        vote("mv", "MVRV above 3.5 (price vs realised price)", mvrv is not None and mvrv > 3.5, f"MVRV {mvrv:.2f}" if mvrv else "no data"),
-        vote("pu", "Puell multiple above 4 (miner euphoria)", puell is not None and puell[1] > 4, f"Puell {puell[1]:.2f}" if puell else "no data"),
-        vote("rk", "TTM Bitcoin Risk above 0.80", risk is not None and risk[1] > 0.80, f"score {risk[1]:.2f}" if risk else "no data"),
-        vote("tm", "12 to 18 months after a halving", 12 <= since_halv <= 18, f"{since_halv:.1f} months since the halving"),
-        vote("tt", "TTM Total Market Risk above 0.80", tot is not None and tot[1] > 0.80, f"score {tot[1]:.2f}" if tot else "no data"),
+        vote("lr", "Above the +1σ regression band", p1 is not None and px > p1, f"price ${px:,.0f} vs band ${p1:,.0f}" if p1 else "no data", "Regression Band"),
+        vote("mv", "MVRV above 3.5 (price vs realised price)", mvrv is not None and mvrv > 3.5, f"MVRV {mvrv:.2f}" if mvrv else "no data", "MVRV"),
+        vote("pu", "Puell multiple above 4 (miner euphoria)", puell is not None and puell[1] > 4, f"Puell {puell[1]:.2f}" if puell else "no data", "Puell Multiple"),
+        vote("rk", "TTM Bitcoin Risk above 0.80", risk is not None and risk[1] > 0.80, f"score {risk[1]:.2f}" if risk else "no data", "TTM Bitcoin Risk"),
+        vote("tm", "12 to 18 months after a halving", 12 <= since_halv <= 18, f"{since_halv:.1f} months since the halving", f"{since_halv:.0f} months after halving"),
+        vote("tt", "TTM Total Market Risk above 0.80", tot is not None and tot[1] > 0.80, f"score {tot[1]:.2f}" if tot else "no data", "TTM Total Market Risk"),
     ]
     path = os.path.join(out_dir, "cycle_signals.json")
     try:
@@ -522,8 +522,8 @@ def compute_cycle(by_id, out_dir):
         ns = {"level": lv, "last_event": last_ev, "last_level": last_lv}
         if fire:
             ids = f"{side}-{lv}-{today}"
-            on = " · ".join(v["name"] for v in votes if v["on"])
-            events.append({"id": ids, "side": side, "level": NAMES[lv], "at": today, "title": f"{icon} BTC cycle {head}: {NAMES[lv]} · {round(n / len(votes) * 100)}%", "body": f"{n} of {len(votes)} signals active: {on} · Educational, not financial advice"})
+            on = ", ".join(v["short"] for v in votes if v["on"])
+            events.append({"id": ids, "side": side, "level": NAMES[lv], "at": today, "title": f"{icon} BTC cycle {head}: {NAMES[lv]} · {round(n / len(votes) * 100)}%", "body": f"{n} of {len(votes)} signals active: {on}"})
             ns.update({"last_event": today, "last_level": lv})
         res[side] = {"n": n, "of": len(votes), "pct": round(n / len(votes) * 100), "level": NAMES[lv], "votes": votes, "state": ns}
     out = {"generated_at": datetime.now(timezone.utc).isoformat(), "as_of": today, "price": round(px, 2), "realized": realized, "cycle_high": {"price": top_v, "date": top_d}, "months_since_halving": round(since_halv, 1),
