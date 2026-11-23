@@ -1,0 +1,119 @@
+{
+ "generated_at": "2026-11-23T08:52:48.985206+00:00",
+ "as_of": "2026-11-23",
+ "price": 61406.3,
+ "realized": 53569.75,
+ "cycle_high": {
+  "price": 124824.45,
+  "date": "2025-10-06"
+ },
+ "months_since_halving": 31.1,
+ "low": {
+  "n": 3,
+  "of": 6,
+  "level": "Alert",
+  "votes": [
+   {
+    "k": "lr",
+    "name": "Below the −1σ regression band",
+    "on": true,
+    "detail": "price $61,406 vs band $69,217"
+   },
+   {
+    "k": "rp",
+    "name": "Below realised price",
+    "on": false,
+    "detail": "price $61,406 vs realised $53,570"
+   },
+   {
+    "k": "pu",
+    "name": "Puell multiple below 0.5 (miner stress)",
+    "on": false,
+    "detail": "Puell 0.81"
+   },
+   {
+    "k": "rk",
+    "name": "TTM Bitcoin Risk below 0.20",
+    "on": true,
+    "detail": "score 0.16"
+   },
+   {
+    "k": "tm",
+    "name": "11 to 15 months after the cycle high",
+    "on": true,
+    "detail": "13.6 months since the high"
+   },
+   {
+    "k": "fr",
+    "name": "DVOL fear in the top 10% of its history",
+    "on": false,
+    "detail": "DVOL score 0.40"
+   }
+  ]
+ },
+ "top": {
+  "n": 0,
+  "of": 6,
+  "level": "None",
+  "votes": [
+   {
+    "k": "lr",
+    "name": "Above the +1σ regression band",
+    "on": false,
+    "detail": "price $61,406 vs band $266,698"
+   },
+   {
+    "k": "mv",
+    "name": "MVRV above 3.5 (price vs realised price)",
+    "on": false,
+    "detail": "MVRV 1.15"
+   },
+   {
+    "k": "pu",
+    "name": "Puell multiple above 4 (miner euphoria)",
+    "on": false,
+    "detail": "Puell 0.81"
+   },
+   {
+    "k": "rk",
+    "name": "TTM Bitcoin Risk above 0.80",
+    "on": false,
+    "detail": "score 0.16"
+   },
+   {
+    "k": "tm",
+    "name": "12 to 18 months after a halving",
+    "on": false,
+    "detail": "31.1 months since the halving"
+   },
+   {
+    "k": "tt",
+    "name": "TTM Total Market Risk above 0.80",
+    "on": false,
+    "detail": "score 0.05"
+   }
+  ]
+ },
+ "state": {
+  "low": {
+   "level": 2,
+   "last_event": "2026-11-23",
+   "last_level": 2
+  },
+  "top": {
+   "level": 0,
+   "last_event": null,
+   "last_level": 0
+  }
+ },
+ "events": [
+  {
+   "id": "low-2-2026-11-23",
+   "side": "low",
+   "level": "Alert",
+   "at": "2026-11-23",
+   "title": "🟢 Bitcoin low-zone signals: 3 of 6 active (Alert)",
+   "body": "Below the −1σ regression band; ttm bitcoin risk below 0.20; 11 to 15 months after the cycle high. Educational, not financial advice."
+  }
+ ]
+}
