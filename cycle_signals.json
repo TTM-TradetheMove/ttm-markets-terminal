@@ -11,7 +11,7 @@
  "low": {
   "n": 3,
   "of": 6,
-  "level": "Alert",
+  "level": "Building",
   "votes": [
    {
     "k": "lr",
@@ -49,7 +49,8 @@
     "on": false,
     "detail": "DVOL score 0.40"
    }
-  ]
+  ],
+  "pct": 50
  },
  "top": {
   "n": 0,
@@ -92,7 +93,8 @@
     "on": false,
     "detail": "score 0.05"
    }
-  ]
+  ],
+  "pct": 0
  },
  "state": {
   "low": {
@@ -110,10 +112,10 @@
   {
    "id": "low-2-2026-11-23",
    "side": "low",
-   "level": "Alert",
+   "level": "Building",
    "at": "2026-11-23",
-   "title": "🟢 Bitcoin low-zone signals: 3 of 6 active (Alert)",
-   "body": "Below the −1σ regression band · TTM Bitcoin Risk below 0.20 · 11 to 15 months after the cycle high · Educational, not financial advice"
+   "title": "🟢 BTC cycle low zone: Building · 50%",
+   "body": "3 of 6 signals active: Below the −1σ regression band · TTM Bitcoin Risk below 0.20 · 11 to 15 months after the cycle high · Educational, not financial advice"
   }
  ]
 }

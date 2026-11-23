@@ -510,10 +510,10 @@ def compute_cycle(by_id, out_dir):
     except Exception:  # noqa
         old = {}
     def lvl(n):
-        return 3 if n >= 4 else 2 if n == 3 else 1 if n == 2 else 0
-    NAMES = {0: "None", 1: "Watch", 2: "Alert", 3: "Strong"}
+        return 4 if n >= 5 else 3 if n == 4 else 2 if n == 3 else 1 if n == 2 else 0
+    NAMES = {0: "None", 1: "Watch", 2: "Building", 3: "Strong", 4: "Extreme"}
     res, events = {}, list(old.get("events", []))
-    for side, votes, icon, head in (("low", low, "🟢", "Bitcoin low-zone signals"), ("top", top, "🔴", "Bitcoin cycle-top risk signals")):
+    for side, votes, icon, head in (("low", low, "🟢", "low zone"), ("top", top, "🔴", "top risk")):
         n = sum(1 for v in votes if v["on"]); lv = lvl(n)
         st = (old.get("state") or {}).get(side) or {}
         prev, last_ev, last_lv = int(st.get("level", 0)), st.get("last_event"), int(st.get("last_level", 0))
@@ -523,9 +523,9 @@ def compute_cycle(by_id, out_dir):
         if fire:
             ids = f"{side}-{lv}-{today}"
             on = " · ".join(v["name"] for v in votes if v["on"])
-            events.append({"id": ids, "side": side, "level": NAMES[lv], "at": today, "title": f"{icon} {head}: {n} of {len(votes)} active ({NAMES[lv]})", "body": f"{on} · Educational, not financial advice"})
+            events.append({"id": ids, "side": side, "level": NAMES[lv], "at": today, "title": f"{icon} BTC cycle {head}: {NAMES[lv]} · {round(n / len(votes) * 100)}%", "body": f"{n} of {len(votes)} signals active: {on} · Educational, not financial advice"})
             ns.update({"last_event": today, "last_level": lv})
-        res[side] = {"n": n, "of": len(votes), "level": NAMES[lv], "votes": votes, "state": ns}
+        res[side] = {"n": n, "of": len(votes), "pct": round(n / len(votes) * 100), "level": NAMES[lv], "votes": votes, "state": ns}
     out = {"generated_at": datetime.now(timezone.utc).isoformat(), "as_of": today, "price": round(px, 2), "realized": realized, "cycle_high": {"price": top_v, "date": top_d}, "months_since_halving": round(since_halv, 1),
            "low": {k: v for k, v in res["low"].items() if k != "state"}, "top": {k: v for k, v in res["top"].items() if k != "state"},
            "state": {"low": res["low"]["state"], "top": res["top"]["state"]}, "events": events[-12:]}
