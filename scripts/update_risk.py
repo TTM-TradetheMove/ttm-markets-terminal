@@ -523,7 +523,8 @@ def compute_cycle(by_id, out_dir):
         if fire:
             ids = f"{side}-{lv}-{today}"
             on = ", ".join(v["short"] for v in votes if v["on"])
-            events.append({"id": ids, "side": side, "level": NAMES[lv], "at": today, "title": f"{icon} BTC cycle {head}: {NAMES[lv]} · {round(n / len(votes) * 100)}%", "body": f"{n} of {len(votes)} signals active: {on}"})
+            off = ", ".join(("Cycle timing" if v["k"] == "tm" else v["short"]) for v in votes if not v["on"])
+            events.append({"id": ids, "side": side, "level": NAMES[lv], "at": today, "title": f"{icon} BTC cycle {head}: {NAMES[lv]} · {round(n / len(votes) * 100)}%", "body": f"{n} of {len(votes)} signals active: {on}" + (f" · Not yet: {off}" if off else "")})
             ns.update({"last_event": today, "last_level": lv})
         res[side] = {"n": n, "of": len(votes), "pct": round(n / len(votes) * 100), "level": NAMES[lv], "votes": votes, "state": ns}
     out = {"generated_at": datetime.now(timezone.utc).isoformat(), "as_of": today, "price": round(px, 2), "realized": realized, "cycle_high": {"price": top_v, "date": top_d}, "months_since_halving": round(since_halv, 1),
