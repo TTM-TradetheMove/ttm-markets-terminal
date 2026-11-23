@@ -522,8 +522,8 @@ def compute_cycle(by_id, out_dir):
         ns = {"level": lv, "last_event": last_ev, "last_level": last_lv}
         if fire:
             ids = f"{side}-{lv}-{today}"
-            on = "; ".join(v["name"].lower() if i else v["name"] for i, v in enumerate([x for x in votes if x["on"]]))
-            events.append({"id": ids, "side": side, "level": NAMES[lv], "at": today, "title": f"{icon} {head}: {n} of {len(votes)} active ({NAMES[lv]})", "body": f"{on}. Educational, not financial advice."})
+            on = " · ".join(v["name"] for v in votes if v["on"])
+            events.append({"id": ids, "side": side, "level": NAMES[lv], "at": today, "title": f"{icon} {head}: {n} of {len(votes)} active ({NAMES[lv]})", "body": f"{on} · Educational, not financial advice"})
             ns.update({"last_event": today, "last_level": lv})
         res[side] = {"n": n, "of": len(votes), "level": NAMES[lv], "votes": votes, "state": ns}
     out = {"generated_at": datetime.now(timezone.utc).isoformat(), "as_of": today, "price": round(px, 2), "realized": realized, "cycle_high": {"price": top_v, "date": top_d}, "months_since_halving": round(since_halv, 1),
