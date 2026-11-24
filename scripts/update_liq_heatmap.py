@@ -29,6 +29,7 @@ TIER_W = [0.35, 0.30, 0.20, 0.15]
 MM = 0.005
 RANGE = 0.08          # grid covers +/-8% around the current price
 NB = 160              # -> 0.1% bins
+SYMS = {"BTCUSDT": "BTC", "ETHUSDT": "ETH", "SOLUSDT": "SOL", "XRPUSDT": "XRP", "DOGEUSDT": "DOGE"}
 LOG = []
 
 
@@ -114,7 +115,7 @@ def bybit(sym, start_ms, end_ms):
 def coinbase_candles(sym, start_ms, end_ms):
     """5-minute spot candles from Coinbase Exchange (reachable from GitHub runners,
     unlike Binance/Bybit REST which are geo-blocked there)."""
-    prod = {"BTCUSDT": "BTC-USD", "ETHUSDT": "ETH-USD"}.get(sym)
+    prod = f"{sym[:-4]}-USD" if sym in SYMS else None
     if not prod:
         return None
     out, t = {}, start_ms
@@ -133,7 +134,7 @@ def coinbase_candles(sym, start_ms, end_ms):
 
 
 def okx_oi(sym, start_ms, end_ms):
-    inst = {"BTCUSDT": "BTC-USDT-SWAP", "ETHUSDT": "ETH-USDT-SWAP"}.get(sym)
+    inst = f"{sym[:-4]}-USDT-SWAP" if sym in SYMS else None
     if not inst:
         return None
     for host in ("www.okx.com", "aws.okx.com"):
@@ -162,7 +163,7 @@ def okx_oi(sym, start_ms, end_ms):
 
 
 def gate_oi(sym, start_ms, end_ms):
-    contract = {"BTCUSDT": "BTC_USDT", "ETHUSDT": "ETH_USDT"}.get(sym)
+    contract = f"{sym[:-4]}_USDT" if sym in SYMS else None
     if not contract:
         return None
     oi, frm, pages = {}, start_ms // 1000, 0
@@ -313,7 +314,7 @@ def build(sym, source, candles, oi):
                       "short": [[round(v / 1e6, 2) for v in a] for a in ws]}
     return {
         "w": wins, "maps": maps,
-        "symbol": sym, "price": last, "lo": round(lo, 4), "step": round(step, 4), "nb": NB,
+        "symbol": sym, "price": last, "lo": round(lo, 8), "step": round(step, 8), "nb": NB,
         "max_usd": round(mx), "times": times, "cols": enc, "candles": c15,
         "map": {"tiers": TIERS, "long": [[round(v / 1e6, 3) for v in a] for a in longs],
                 "short": [[round(v / 1e6, 3) for v in a] for a in shorts]},
@@ -335,7 +336,7 @@ DAY = 86400_000
 
 
 def coinbase_daily(sym, start_ms, end_ms):
-    prod = {"BTCUSDT": "BTC-USD", "ETHUSDT": "ETH-USD"}.get(sym)
+    prod = f"{sym[:-4]}-USD" if sym in SYMS else None
     if not prod:
         return None
     out, t = {}, start_ms
@@ -354,7 +355,7 @@ def coinbase_daily(sym, start_ms, end_ms):
 
 
 def okx_oi_daily(sym, start_ms, end_ms):
-    inst = {"BTCUSDT": "BTC-USDT-SWAP", "ETHUSDT": "ETH-USDT-SWAP"}.get(sym)
+    inst = f"{sym[:-4]}-USDT-SWAP" if sym in SYMS else None
     if not inst:
         return None
     for host in ("www.okx.com", "aws.okx.com"):
@@ -452,7 +453,7 @@ def build_htf(sym, oi5=None):
                 for a in longs + shorts:
                     for i in range(nb):
                         a[i] *= f
-    return {"lo": round(lo, 4), "step": round(step, 4), "nb": nb, "price": last, "days": HTF_DAYS, "older_than_days": LOOKBACK_DAYS, "scale": round(ratio, 2),
+    return {"lo": round(lo, 8), "step": round(step, 8), "nb": nb, "price": last, "days": HTF_DAYS, "older_than_days": LOOKBACK_DAYS, "scale": round(ratio, 2),
             "tiers": HTF_TIERS, "source": "OKX daily open interest" if oi else "Coinbase daily volume (no open interest history)",
             "long": [[round(v / 1e6, 2) for v in a] for a in longs],
             "short": [[round(v / 1e6, 2) for v in a] for a in shorts]}
@@ -464,7 +465,7 @@ def main():
     end = now // STEP5 * STEP5
     start = end - LOOKBACK_DAYS * 86400_000
     out = {}
-    for key, sym in (("BTC", "BTCUSDT"), ("ETH", "ETHUSDT")):
+    for sym, key in SYMS.items():
         try:
             source, candles, oi = fetch(sym, start, end)
             if candles:
@@ -487,7 +488,7 @@ def main():
         # keep a missing symbol from the previous file rather than dropping it
         try:
             old = json.load(open(OUT))
-            for k in ("BTC", "ETH"):
+            for k in SYMS.values():
                 if k not in payload and k in old:
                     payload[k] = old[k]
                 elif k in payload and "htf" not in payload[k] and "htf" in old.get(k, {}):
