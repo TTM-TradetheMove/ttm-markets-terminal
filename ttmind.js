@@ -263,7 +263,7 @@ push({id: 'rsic', name: 'Trade with Confluence (TTM)', pane: 'sub', range: [0, 1
 /* 17. Order flow bubbles (TTM): live big-trade bubbles from the exchange's public trade stream.
    Green = aggressive buyers, red = aggressive sellers, bigger = bigger. Bubbles build while the chart is open (plus the last ~1000 trades on load). */
 const OF = {};
-const ofCfg = () => Object.assign({min: 100000, scale: 1, lab: true, buy: '#2ebd85', sell: '#f6465d', op: 0.55}, (LSX().ls('ofcfg', {}) || {}));
+const ofCfg = () => Object.assign({min: 50000, scale: 1, lab: true, buy: '#2ebd85', sell: '#f6465d', op: 0.55}, (LSX().ls('ofcfg', {}) || {}));
 const ofSrc = S => { const ex = String(S.ex || ''), perp = /perp/.test(ex), bn = /binance/.test(ex), ok = /^(bybit|binance)_/.test(ex); return {ok, bn, perp, fam: bn ? 'Binance' : 'Bybit', pair: String(S.sym).toUpperCase() + 'USDT', key: (bn ? 'bn' : 'by') + (perp ? 'p' : 's') + ':' + S.sym}; };
 function ofAdd(e, t, p, q, side){ const n = p * q; if(!(n >= 5000)) return; e.tr.push({t, p, q, n, s: side}); if(e.tr.length > 40000) e.tr.splice(0, 5000); }
 function ofConnect(e, src){
@@ -292,7 +292,7 @@ push({id: 'oflow', name: 'Order flow bubbles (TTM)', pane: 'overlay', calc: () =
   over: a => { const {c, g, X, Y, d, i0, i1, S} = a; if(!d.length || d.length < 2) return; const src = ofSrc(S), cf = ofCfg();
     c.save(); c.beginPath(); c.rect(0, g.mT, g.pw, g.mB - g.mT); c.clip();
     c.font = '600 10px system-ui,sans-serif'; c.textAlign = 'left'; c.textBaseline = 'bottom';
-    if(!src.ok){ c.fillStyle = 'rgba(200,200,210,.7)'; c.fillText('Order flow bubbles need a Bybit or Binance source for this chart', 8, g.mB - 8); c.restore(); return; }
+    if(!src.ok){ c.fillStyle = 'rgba(200,200,210,.7)'; c.textAlign = 'right'; c.textBaseline = 'top'; c.fillText('Order flow bubbles need a Bybit or Binance source', g.pw - 8, g.mT + 8); c.restore(); return; }
     let e = OF[src.key]; if(!e){ e = OF[src.key] = {tr: [], st: 'connecting', ws: null, seen: 0, rp: null, q: 0}; ofBackfill(e, src); }
     e.seen = Date.now(); e.rp = a.repaint; if(!e.ws && (!e.started || e.st === 'closed') && Date.now() - (e.tried || 0) > 5000){ e.started = true; e.tried = Date.now(); ofConnect(e, src); }
     if(!OF._gc) OF._gc = setInterval(() => { Object.keys(OF).forEach(k => { const z = OF[k]; if(k !== '_gc' && z && z.ws && Date.now() - z.seen > 30000){ try{ z.ws.close(); }catch(x){} } }); }, 15000);
@@ -303,8 +303,8 @@ push({id: 'oflow', name: 'Order flow bubbles (TTM)', pane: 'overlay', calc: () =
     L.forEach(b => { const x = X(b.i), y = Y(b.p); if(x < -30 || x > g.pw + 30 || y < g.mT - 30 || y > g.mB + 30) return; const cap = Math.max(10, Math.min(34, g.w * 1.9)) * cf.scale, r = Math.max(4, Math.min(cap, (4 + cap * Math.sqrt(b.n / mx)) * .9)), col = b.s > 0 ? cf.buy : cf.sell;
       c.globalAlpha = cf.op; c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, 6.3); c.fill(); c.globalAlpha = Math.min(1, cf.op + .3); c.strokeStyle = col; c.lineWidth = 1; c.stroke(); c.globalAlpha = 1;
       if(cf.lab && r >= 11){ c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = '700 ' + Math.max(8, Math.min(12, r * .6)) + 'px system-ui,sans-serif'; c.fillText((b.s > 0 ? '+' : '-') + ofFmt(b.q), x, y + .5); } });
-    c.textAlign = 'left'; c.textBaseline = 'bottom'; c.font = '600 10px system-ui,sans-serif'; c.fillStyle = e.st === 'live' ? 'rgba(46,189,133,.95)' : 'rgba(200,200,210,.7)';
-    c.fillText('● Order flow ' + (e.st === 'live' ? 'live' : e.st) + ' · ' + src.fam + (src.perp ? ' perp' : ' spot') + ' · trades over $' + (cf.min >= 1e6 ? cf.min / 1e6 + 'M' : cf.min / 1e3 + 'K') + ' · builds while this chart is open', 8, g.mB - 8);
+    c.textAlign = 'right'; c.textBaseline = 'top'; c.font = '600 10px system-ui,sans-serif'; c.fillStyle = e.st === 'live' ? 'rgba(46,189,133,.95)' : 'rgba(200,200,210,.7)';
+    c.fillText('● Order flow ' + (e.st === 'live' ? 'live' : e.st) + ' · ' + src.fam + ' · $' + (cf.min >= 1e6 ? cf.min / 1e6 + 'M' : cf.min / 1e3 + 'K') + '+ trades', g.pw - 8, g.mT + 8);
     c.restore(); },
   settings: p => { const cf = ofCfg(), rp = () => { try{ window.TTM_REPAINT(); }catch(x){} }, set = (k, v) => { const u = LSX().ls('ofcfg', {}) || {}; u[k] = v; LSX().lsSet('ofcfg', u); rp(); };
     const draw = () => { const c2 = ofCfg(), mins = [[25000, '$25K'], [50000, '$50K'], [100000, '$100K'], [250000, '$250K'], [500000, '$500K'], [1000000, '$1M']], sc = [[0.7, 'Small'], [1, 'Medium'], [1.4, 'Large']], btn = (on, a, t) => '<button type="button" ' + a + ' style="margin:2px 4px 2px 0;padding:5px 10px;border-radius:8px;border:1px solid ' + (on ? '#dba118' : '#3a3a42') + ';background:' + (on ? '#dba118' : '#1c1c21') + ';color:' + (on ? '#111' : '#d6d6dc') + ';font-weight:' + (on ? 800 : 500) + ';cursor:pointer">' + t + '</button>';
