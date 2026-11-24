@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-11-23T13:38:57.540541+00:00",
- "as_of": "2026-11-23",
- "price": 61406.3,
- "realized": 53569.75,
+ "generated_at": "2026-11-24T02:34:52.673383+00:00",
+ "as_of": "2026-11-24",
+ "price": 61180.69,
+ "realized": 53524.18,
  "cycle_high": {
   "price": 124824.45,
   "date": "2025-10-06"
@@ -18,14 +18,14 @@
     "k": "lr",
     "name": "Below the −1σ regression band",
     "on": true,
-    "detail": "price $61,406 vs band $69,217",
+    "detail": "price $61,181 vs band $69,248",
     "short": "Regression Band"
    },
    {
     "k": "rp",
     "name": "Below realised price",
     "on": false,
-    "detail": "price $61,406 vs realised $53,570",
+    "detail": "price $61,181 vs realised $53,524",
     "short": "Realised Price"
    },
    {
@@ -39,7 +39,7 @@
     "k": "rk",
     "name": "TTM Bitcoin Risk below 0.20",
     "on": true,
-    "detail": "score 0.16",
+    "detail": "score 0.15",
     "short": "TTM Bitcoin Risk"
    },
    {
@@ -53,7 +53,7 @@
     "k": "fr",
     "name": "DVOL fear in the top 10% of its history",
     "on": false,
-    "detail": "DVOL score 0.41",
+    "detail": "DVOL score 0.43",
     "short": "DVOL Fear"
    }
   ]
@@ -68,14 +68,14 @@
     "k": "lr",
     "name": "Above the +1σ regression band",
     "on": false,
-    "detail": "price $61,406 vs band $266,698",
+    "detail": "price $61,181 vs band $266,831",
     "short": "Regression Band"
    },
    {
     "k": "mv",
     "name": "MVRV above 3.5 (price vs realised price)",
     "on": false,
-    "detail": "MVRV 1.15",
+    "detail": "MVRV 1.14",
     "short": "MVRV"
    },
    {
@@ -89,7 +89,7 @@
     "k": "rk",
     "name": "TTM Bitcoin Risk above 0.80",
     "on": false,
-    "detail": "score 0.16",
+    "detail": "score 0.15",
     "short": "TTM Bitcoin Risk"
    },
    {
@@ -103,7 +103,7 @@
     "k": "tt",
     "name": "TTM Total Market Risk above 0.80",
     "on": false,
-    "detail": "score 0.05",
+    "detail": "score 0.04",
     "short": "TTM Total Market Risk"
    }
   ]
