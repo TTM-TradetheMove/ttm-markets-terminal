@@ -113,7 +113,7 @@ const IND = [
   {id: 'vol', name: 'Volume', pane: 'volume'}, {id: 'rsi', name: 'RSI 14', pane: 'sub', color: '#b18cff', range: [0, 100], lines: [30, 70], calc: r => rsi(r, 14)}
 ];
 window.TTM_INDICATORS = window.TTM_INDICATORS || [];   // push {id, name, pane: 'price'|'sub', color, calc(rows) -> array, range?: [lo, hi], lines?: [..]} here for TTM's own indicators
-const allInd = () => IND.concat(window.TTM_INDICATORS);
+const allInd = () => IND.concat(window.TTM_INDICATORS).filter(i => !i.gate || i.gate());
 // coin categories for the symbol search (Layer 1, DeFi, Gaming ...). Simple lists kept by TTM; coins not listed just have no category.
 const TAGS = {
   'Layer 1': 'BTC ETH BNB SOL ADA AVAX DOT TRX NEAR ATOM APT SUI SEI TON ICP ALGO XLM XRP HBAR KAS FTM S EGLD FLOW MINA KAVA ONE CELO ZIL IOTA XTZ EOS NEO KDA ROSE INJ TIA CFX BERA LTC BCH DOGE XMR ZEC DASH ETC XDC VET THETA QTUM ICX ONT WAVES MONAD HYPE XNO CKB FIL AR TAO',

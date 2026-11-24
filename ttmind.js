@@ -259,4 +259,60 @@ push({id: 'rsic', name: 'Trade with Confluence (TTM)', pane: 'sub', range: [0, 1
       else if(e.k === 'wS' || e.k === 'wB'){ c.fillStyle = e.k === 'wS' ? '#9023f5' : '#f9c431'; c.beginPath(); c.moveTo(x, yy(o) - 4); c.lineTo(x + 4, yy(o)); c.lineTo(x, yy(o) + 4); c.lineTo(x - 4, yy(o)); c.fill(); }
       else if(e.k === 'rB' || e.k === 'rS'){ c.fillStyle = e.k === 'rB' ? '#45b02d' : '#d60f0f'; c.beginPath(); c.arc(x, yy(o), 3.5, 0, 6.3); c.fill(); } });
     c.font = '10px system-ui'; c.fillStyle = 'rgba(212,175,55,.8)'; c.textAlign = 'right'; c.fillText('Indicators by TTM', g.pw - 6, bot - 8); c.textAlign = 'left'; }});
+
+/* 17. Order flow bubbles (TTM): live big-trade bubbles from the exchange's public trade stream.
+   Green = aggressive buyers, red = aggressive sellers, bigger = bigger. Bubbles build while the chart is open (plus the last ~1000 trades on load). */
+const OF = {};
+const ofCfg = () => Object.assign({min: 100000, scale: 1, lab: true, buy: '#2ebd85', sell: '#f6465d', op: 0.55}, (LSX().ls('ofcfg', {}) || {}));
+const ofSrc = S => { const ex = String(S.ex || ''), perp = /perp/.test(ex), bn = /binance/.test(ex), ok = /^(bybit|binance)_/.test(ex); return {ok, bn, perp, fam: bn ? 'Binance' : 'Bybit', pair: String(S.sym).toUpperCase() + 'USDT', key: (bn ? 'bn' : 'by') + (perp ? 'p' : 's') + ':' + S.sym}; };
+function ofAdd(e, t, p, q, side){ const n = p * q; if(!(n >= 5000)) return; e.tr.push({t, p, q, n, s: side}); if(e.tr.length > 40000) e.tr.splice(0, 5000); }
+function ofConnect(e, src){
+  e.st = 'connecting'; let ws; try{
+    ws = new WebSocket(src.bn ? (src.perp ? 'wss://fstream.binance.com/ws/' : 'wss://stream.binance.com:9443/ws/') + src.pair.toLowerCase() + '@aggTrade' : 'wss://stream.bybit.com/v5/public/' + (src.perp ? 'linear' : 'spot'));
+  }catch(x){ e.st = 'closed'; return; }
+  e.ws = ws;
+  ws.onopen = () => { e.st = 'live'; if(!src.bn){ ws.send(JSON.stringify({op: 'subscribe', args: ['publicTrade.' + src.pair]})); e.ping = setInterval(() => { try{ ws.send(JSON.stringify({op: 'ping'})); }catch(x){} }, 20000); } };
+  ws.onmessage = m => { let j; try{ j = JSON.parse(m.data); }catch(x){ return; }
+    if(src.bn){ if(j && j.p) ofAdd(e, +j.T, +j.p, +j.q, j.m ? -1 : 1); }
+    else if(j && j.data && Array.isArray(j.data) && /^publicTrade/.test(j.topic || '')){ j.data.forEach(z => ofAdd(e, +z.T, +z.p, +z.v, z.S === 'Buy' ? 1 : -1)); }
+    if(e.rp && !e.q){ e.q = setTimeout(() => { e.q = 0; try{ e.rp(); }catch(x){} }, 350); } };
+  ws.onclose = () => { clearInterval(e.ping); e.st = 'closed'; if(e.ws === ws) e.ws = null; if(Date.now() - e.seen < 30000) setTimeout(() => { if(!e.ws && Date.now() - e.seen < 30000) ofConnect(e, src); }, 3000); };
+  ws.onerror = () => { try{ ws.close(); }catch(x){} };
+}
+async function ofBackfill(e, src){
+  try{ const u = src.bn ? (src.perp ? 'https://fapi.binance.com/fapi/v1/aggTrades?symbol=' : 'https://api.binance.com/api/v3/aggTrades?symbol=') + src.pair + '&limit=1000' : 'https://api.bybit.com/v5/market/recent-trade?category=' + (src.perp ? 'linear' : 'spot') + '&symbol=' + src.pair + '&limit=1000';
+    const j = await (await fetch(u)).json(), old = [];
+    if(src.bn) (j || []).forEach(z => old.push({t: +z.T, p: +z.p, q: +z.q, s: z.m ? -1 : 1}));
+    else ((j.result && j.result.list) || []).forEach(z => old.push({t: +z.time, p: +z.price, q: +z.size, s: z.side === 'Buy' ? 1 : -1}));
+    const keep = e.tr.slice(); e.tr = []; old.sort((a, b) => a.t - b.t).forEach(z => ofAdd(e, z.t, z.p, z.q, z.s)); const first = e.tr.length ? e.tr[e.tr.length - 1].t : 0; keep.forEach(z => { if(z.t > first) e.tr.push(z); }); if(e.rp) e.rp();
+  }catch(x){}
+}
+const ofFmt = q => q >= 100 ? String(Math.round(q)) : q >= 10 ? q.toFixed(1) : q >= 1 ? q.toFixed(2) : q.toFixed(3);
+push({id: 'oflow', name: 'Order flow bubbles (TTM)', pane: 'overlay', calc: () => null, gate: () => !!(window.ttmCan && window.ttmCan('c:lensflow')),
+  over: a => { const {c, g, X, Y, d, i0, i1, S} = a; if(!d.length || d.length < 2) return; const src = ofSrc(S), cf = ofCfg();
+    c.save(); c.beginPath(); c.rect(0, g.mT, g.pw, g.mB - g.mT); c.clip();
+    c.font = '600 10px system-ui,sans-serif'; c.textAlign = 'left'; c.textBaseline = 'bottom';
+    if(!src.ok){ c.fillStyle = 'rgba(200,200,210,.7)'; c.fillText('Order flow bubbles need a Bybit or Binance source for this chart', 8, g.mB - 8); c.restore(); return; }
+    let e = OF[src.key]; if(!e){ e = OF[src.key] = {tr: [], st: 'connecting', ws: null, seen: 0, rp: null, q: 0}; ofBackfill(e, src); }
+    e.seen = Date.now(); e.rp = a.repaint; if(!e.ws && (!e.started || e.st === 'closed') && Date.now() - (e.tried || 0) > 5000){ e.started = true; e.tried = Date.now(); ofConnect(e, src); }
+    if(!OF._gc) OF._gc = setInterval(() => { Object.keys(OF).forEach(k => { const z = OF[k]; if(k !== '_gc' && z && z.ws && Date.now() - z.seen > 30000){ try{ z.ws.close(); }catch(x){} } }); }, 15000);
+    const step = d[1].t - d[0].t, t0 = d[0].t + Math.max(0, i0) * step, tEnd = d[d.length - 1].t + step; let lo = Infinity, hi = -Infinity; for(let i = Math.max(0, i0); i <= Math.min(i1, d.length - 1); i++){ lo = Math.min(lo, d[i].l); hi = Math.max(hi, d[i].h); }
+    const pb = Math.max((hi - lo) / 55, d[d.length - 1].c * 0.00015), B = new Map();
+    for(let k = e.tr.length - 1; k >= 0; k--){ const z = e.tr[k]; if(z.t < t0) { if(z.t < t0 - step) break; continue; } if(z.t >= tEnd) continue; const idx = Math.floor((z.t - d[0].t) / step), key = idx + '|' + Math.round(z.p / pb) + '|' + z.s; let b = B.get(key); if(!b){ b = {i: idx, s: z.s, n: 0, q: 0, pn: 0}; B.set(key, b); } b.n += z.n; b.q += z.q; b.pn += z.p * z.n; }
+    const L = []; let mx = 0; B.forEach(b => { if(b.n >= cf.min){ b.p = b.pn / b.n; L.push(b); if(b.n > mx) mx = b.n; } }); L.sort((u, v) => v.n - u.n);
+    L.forEach(b => { const x = X(b.i), y = Y(b.p); if(x < -30 || x > g.pw + 30 || y < g.mT - 30 || y > g.mB + 30) return; const cap = Math.max(10, Math.min(34, g.w * 1.9)) * cf.scale, r = Math.max(4, Math.min(cap, (4 + cap * Math.sqrt(b.n / mx)) * .9)), col = b.s > 0 ? cf.buy : cf.sell;
+      c.globalAlpha = cf.op; c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, 6.3); c.fill(); c.globalAlpha = Math.min(1, cf.op + .3); c.strokeStyle = col; c.lineWidth = 1; c.stroke(); c.globalAlpha = 1;
+      if(cf.lab && r >= 11){ c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = '700 ' + Math.max(8, Math.min(12, r * .6)) + 'px system-ui,sans-serif'; c.fillText((b.s > 0 ? '+' : '-') + ofFmt(b.q), x, y + .5); } });
+    c.textAlign = 'left'; c.textBaseline = 'bottom'; c.font = '600 10px system-ui,sans-serif'; c.fillStyle = e.st === 'live' ? 'rgba(46,189,133,.95)' : 'rgba(200,200,210,.7)';
+    c.fillText('● Order flow ' + (e.st === 'live' ? 'live' : e.st) + ' · ' + src.fam + (src.perp ? ' perp' : ' spot') + ' · trades over $' + (cf.min >= 1e6 ? cf.min / 1e6 + 'M' : cf.min / 1e3 + 'K') + ' · builds while this chart is open', 8, g.mB - 8);
+    c.restore(); },
+  settings: p => { const cf = ofCfg(), rp = () => { try{ window.TTM_REPAINT(); }catch(x){} }, set = (k, v) => { const u = LSX().ls('ofcfg', {}) || {}; u[k] = v; LSX().lsSet('ofcfg', u); rp(); };
+    const draw = () => { const c2 = ofCfg(), mins = [[25000, '$25K'], [50000, '$50K'], [100000, '$100K'], [250000, '$250K'], [500000, '$500K'], [1000000, '$1M']], sc = [[0.7, 'Small'], [1, 'Medium'], [1.4, 'Large']], btn = (on, a, t) => '<button type="button" ' + a + ' style="margin:2px 4px 2px 0;padding:5px 10px;border-radius:8px;border:1px solid ' + (on ? '#dba118' : '#3a3a42') + ';background:' + (on ? '#dba118' : '#1c1c21') + ';color:' + (on ? '#111' : '#d6d6dc') + ';font-weight:' + (on ? 800 : 500) + ';cursor:pointer">' + t + '</button>';
+      p.innerHTML = '<b style="color:#dba118;font-size:13px">Order flow bubbles</b><div style="font-size:11px;color:#8b8f9a;margin:4px 0 8px">Live big trades from Bybit or Binance, matched to the chart source. Green = buyers hit the ask, red = sellers hit the bid. Bubbles build while this chart is open, plus the latest trades when it loads.</div>'
+        + '<div style="font-size:12px;margin:6px 0 2px"><b>Show trades over</b></div>' + mins.map(m => btn(c2.min === m[0], 'data-min="' + m[0] + '"', m[1])).join('')
+        + '<div style="font-size:12px;margin:8px 0 2px"><b>Bubble size</b></div>' + sc.map(m => btn(c2.scale === m[0], 'data-sc="' + m[0] + '"', m[1])).join('')
+        + '<div style="display:flex;gap:12px;align-items:center;margin:10px 0"><label style="font-size:12px"><input type="checkbox" data-lab="1"' + (c2.lab ? ' checked' : '') + '> Show sizes</label><label style="font-size:12px">Buy <input type="color" data-col="buy" value="' + c2.buy + '" style="width:34px;height:24px;padding:0;border:0;background:none;vertical-align:middle"></label><label style="font-size:12px">Sell <input type="color" data-col="sell" value="' + c2.sell + '" style="width:34px;height:24px;padding:0;border:0;background:none;vertical-align:middle"></label></div>'
+        + '<div style="font-size:11px;color:#8b8f9a;margin-bottom:8px">Educational context only. Big prints show activity, not what price will do next.</div><button type="button" data-done="1" style="padding:6px 14px;border-radius:8px;border:1px solid #dba118;background:#dba118;color:#111;font-weight:800;cursor:pointer">Done</button>'; };
+    draw(); p.onclick = e => { const b = e.target.closest('button'); if(!b) return; if(b.dataset.done){ p.remove(); return; } if(b.dataset.min){ set('min', +b.dataset.min); draw(); } else if(b.dataset.sc){ set('scale', +b.dataset.sc); draw(); } };
+    p.onchange = p.oninput = e => { const t = e.target; if(t.dataset.lab) set('lab', t.checked); else if(t.dataset.col) set(t.dataset.col, t.value); }; }});
 })();
