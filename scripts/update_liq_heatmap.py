@@ -321,6 +321,126 @@ def build(sym, source, candles, oi):
     }
 
 
+# ----------------------------------------------------------------------------
+# Higher-timeframe levels: a wide grid (+/-60% around price) built from daily candles over
+# two years, so leverage that was opened far from today's price (and never traded through)
+# still shows as a level way above or below the market. Low leverage tiers (2x/3x/5x) are
+# included because only they can sit that far away. Same model as above, just coarser.
+HTF_DAYS = 730
+HTF_RANGE = 0.60
+HTF_NB = 240           # -> 0.5% bins
+HTF_TIERS = [2, 3, 5, 10, 25, 50, 100]
+HTF_W = [0.04, 0.07, 0.12, 0.25, 0.25, 0.17, 0.10]
+DAY = 86400_000
+
+
+def coinbase_daily(sym, start_ms, end_ms):
+    prod = {"BTCUSDT": "BTC-USD", "ETHUSDT": "ETH-USD"}.get(sym)
+    if not prod:
+        return None
+    out, t = {}, start_ms
+    iso = lambda ms: datetime.fromtimestamp(ms / 1000, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    while t < end_ms:
+        e = min(t + 299 * DAY, end_ms)
+        d = get(f"https://api.exchange.coinbase.com/products/{prod}/candles?granularity=86400&start={iso(t)}&end={iso(e)}")
+        if d is None:
+            return None
+        for ts, lo, hi, op, cl, vol in d:
+            out[int(ts) * 1000] = (int(ts) * 1000, float(op), float(hi), float(lo), float(cl), float(vol))
+        t = e
+        time.sleep(0.15)
+    cl = sorted(out.values())
+    return cl if len(cl) > 100 else None
+
+
+def okx_oi_daily(sym, start_ms, end_ms):
+    inst = {"BTCUSDT": "BTC-USDT-SWAP", "ETHUSDT": "ETH-USDT-SWAP"}.get(sym)
+    if not inst:
+        return None
+    for host in ("www.okx.com", "aws.okx.com"):
+        oi, end, pages = {}, end_ms, 0
+        while end > start_ms and pages < 40:
+            d = get(f"https://{host}/api/v5/rubik/stat/contracts/open-interest-history?instId={inst}&period=1D&limit=100&end={end}", tries=2)
+            rows = (d or {}).get("data") or []
+            if not rows:
+                break
+            for r in rows:
+                try:
+                    oi[int(r[0]) // DAY * DAY] = float(r[3])
+                except (ValueError, IndexError):
+                    pass
+            oldest = min(int(r[0]) for r in rows)
+            if oldest >= end:
+                break
+            end = oldest - 1
+            pages += 1
+            time.sleep(0.1)
+        if len(oi) >= 30:
+            log(f"{sym}: OKX daily open interest - {len(oi)} days from {host}")
+            return oi
+    return None
+
+
+def build_htf(sym):
+    end = int(time.time() * 1000) // DAY * DAY
+    start = end - HTF_DAYS * DAY
+    cd = coinbase_daily(sym, start, end + DAY)
+    if not cd:
+        log(f"{sym}: HTF daily candles failed")
+        return None
+    oi = okx_oi_daily(sym, start, end + DAY) or {}
+    last = cd[-1][4]
+    lo = last * (1 - HTF_RANGE)
+    step = last * 2 * HTF_RANGE / HTF_NB
+    nb, nt = HTF_NB, len(HTF_TIERS)
+
+    def idx(p):
+        return max(-1, min(nb, int((p - lo) // step)))
+
+    longs = [[0.0] * nb for _ in HTF_TIERS]
+    shorts = [[0.0] * nb for _ in HTF_TIERS]
+    prev = None
+    avg_vol = sum(c[5] * c[4] for c in cd[:30]) / 30 if len(cd) >= 30 else 0
+    for t, o, h, l, c, v in cd:
+        il, ih = idx(l), idx(h)
+        if il < nb:
+            for a in longs:
+                for i in range(max(il, 0), nb):
+                    a[i] = 0.0
+        if ih >= 0:
+            for a in shorts:
+                for i in range(0, min(ih, nb - 1) + 1):
+                    a[i] = 0.0
+        cur = oi.get(t)
+        if oi:
+            d = (cur - prev) if (cur is not None and prev is not None) else 0
+            if cur is not None:
+                prev = cur
+        else:
+            d = v * c * 0.04  # no open interest history: assume a slice of the day's volume opened new positions
+        if d > 0:
+            entry = (h + l + c) / 3
+            chg = (c - o) / o if o else 0
+            lshare = 0.5 + max(-1.0, min(1.0, chg / 0.02)) * 0.15
+            for k, (lev, w) in enumerate(zip(HTF_TIERS, HTF_W)):
+                i, j = idx(entry * (1 - 1 / lev + MM)), idx(entry * (1 + 1 / lev - MM))
+                if 0 <= i < nb:
+                    longs[k][i] += d * lshare * w
+                if 0 <= j < nb:
+                    shorts[k][j] += d * (1 - lshare) * w
+        elif d < 0:
+            total = sum(map(sum, longs)) + sum(map(sum, shorts))
+            if total > 0:
+                f = max(0.0, 1 + d / total * 0.35)
+                for a in longs + shorts:
+                    for i in range(nb):
+                        a[i] *= f
+    return {"lo": round(lo, 4), "step": round(step, 4), "nb": nb, "price": last, "days": HTF_DAYS,
+            "tiers": HTF_TIERS, "source": "OKX daily open interest" if oi else "Coinbase daily volume (no open interest history)",
+            "long": [[round(v / 1e6, 2) for v in a] for a in longs],
+            "short": [[round(v / 1e6, 2) for v in a] for a in shorts]}
+
+
 def main():
     log(f"liq heatmap run {datetime.now(timezone.utc).isoformat()}")
     now = int(time.time() * 1000)
@@ -332,6 +452,12 @@ def main():
             source, candles, oi = fetch(sym, start, end)
             if candles:
                 out[key] = build(sym, source, candles, oi)
+                try:
+                    h = build_htf(sym)
+                    if h:
+                        out[key]["htf"] = h
+                except Exception as e:  # noqa
+                    log(f"{sym} HTF FAILED: {type(e).__name__}: {e}")
         except Exception as e:  # noqa
             log(f"{sym} FAILED: {type(e).__name__}: {e}")
     if out:
@@ -347,6 +473,8 @@ def main():
             for k in ("BTC", "ETH"):
                 if k not in payload and k in old:
                     payload[k] = old[k]
+                elif k in payload and "htf" not in payload[k] and "htf" in old.get(k, {}):
+                    payload[k]["htf"] = old[k]["htf"]
         except Exception:
             pass
         with open(OUT, "w") as f:
