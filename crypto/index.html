@@ -1143,6 +1143,25 @@ body.rm-full #rmIn{font-size:17px}
   .cs-cw{position:relative;height:320px}.cs-cw canvas{width:100%;height:100%;display:block}
   .cs-tp{position:absolute;pointer-events:none;background:rgba(10,10,13,.95);border:1px solid #33333a;border-radius:8px;padding:6px 9px;font-size:12px;line-height:1.45;display:none;white-space:nowrap}
   .cs-lg{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:#a8a8b0;margin-top:8px}.cs-lg i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+  #cyclesignals .bt-intro{font-size:13px;color:#a8a8b0;line-height:1.55;margin:0 0 12px;max-width:820px}
+  #cyclesignals .bt-card{background:linear-gradient(180deg,#14141a,#0b0b0e);border:1px solid #26262c;border-radius:14px;padding:14px 14px 10px;margin:0 0 14px}
+  #cyclesignals .bt-cw{position:relative;height:430px}#cyclesignals .bt-cw canvas{width:100%;height:100%;display:block;cursor:crosshair}
+  #cyclesignals .bt-lg{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:#a8a8b0;margin:8px 2px 2px}#cyclesignals .bt-lg i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+  #cyclesignals .bt-mx{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:14px;margin:0 0 14px}
+  #cyclesignals .bt-mc{background:linear-gradient(180deg,#14141a,#0b0b0e);border:1px solid #26262c;border-top:3px solid var(--c);border-radius:14px;padding:14px 14px 10px}
+  #cyclesignals .bt-mc h3{margin:0 0 2px;font-size:15px;color:#f2f0ea}#cyclesignals .bt-mc p{margin:0 0 10px;font-size:12px;color:#8a8a92}
+  #cyclesignals .bt-row{display:grid;grid-template-columns:118px repeat(5,1fr) 52px;gap:6px;align-items:center;padding:7px 8px;border-radius:10px;border:1px solid transparent;cursor:pointer}
+  #cyclesignals .bt-row:not(.bt-hd):hover{background:#101015;border-color:var(--c)}
+  #cyclesignals .bt-hd{cursor:default;padding-bottom:4px}#cyclesignals .bt-hd span{font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:#6c6c76;text-align:center;line-height:1.2}
+  #cyclesignals .bt-ev b{display:block;font-size:12.5px;color:#f2f0ea}#cyclesignals .bt-ev em{display:block;font-style:normal;font-size:11px;color:#8a8a92}
+  #cyclesignals .bt-d{justify-self:center;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;border:1.5px solid #34343b;color:#55555e}
+  #cyclesignals .bt-d.on{background:var(--c);border-color:var(--c);color:#06100b;box-shadow:0 0 12px var(--c)}#cyclesignals .bt-d.na{border-style:dashed;color:#44444c}
+  #cyclesignals .bt-sc{justify-self:end;font-size:12px;font-weight:800;padding:3px 8px;border-radius:999px;border:1px solid var(--c);color:var(--c);white-space:nowrap}
+  #cyclesignals .bt-tk{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:0 0 10px}
+  #cyclesignals .bt-tk div{background:#0f0f13;border:1px solid #202026;border-radius:12px;padding:12px 14px;font-size:12.5px;line-height:1.5;color:#a8a8b0}#cyclesignals .bt-tk b{display:block;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--gold2,#f2c14e);margin-bottom:4px}
+  .cs-mb table.bt-t{width:100%;border-collapse:collapse;margin:10px 0}.cs-mb .bt-t td{padding:9px 6px;border-top:1px solid #202026;font-size:13px;color:#b4b4bc;vertical-align:top}.cs-mb .bt-t td:first-child{width:34px}.cs-mb .bt-t b{display:block;color:#f2f0ea;font-weight:600}.cs-mb .bt-t em{font-style:normal;font-size:12px;color:#7a7a84}
+  .cs-mb .bt-d{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;border:1.5px solid #34343b;color:#55555e}.cs-mb .bt-d.on{background:var(--c);border-color:var(--c);color:#06100b}.cs-mb .bt-d.na{border-style:dashed}
+  @media(max-width:520px){#cyclesignals .bt-mx{grid-template-columns:1fr}#cyclesignals .bt-row{grid-template-columns:96px repeat(5,1fr) 44px;gap:3px}#cyclesignals .bt-cw{height:340px}}
   @media(max-width:520px){#cyclesignals .cs-g{grid-template-columns:1fr}#cyclesignals .cs-big b{font-size:34px}}
   </style>
   <div class="wrap">
@@ -1154,6 +1173,7 @@ body.rm-full #rmIn{font-size:17px}
     </div>
     <div id="csStats" class="cs-stats"></div>
     <div id="csNow" class="cs-g"></div>
+    <div id="csBtWrap" style="display:none"><h4 class="cs-h">Backtest: how the signals did at past cycle lows and highs</h4><div id="csBt"></div></div>
     <h4 class="cs-h">Alerts sent to the Team</h4>
     <div id="csHist"></div>
     <h4 class="cs-h">How the levels work</h4>
@@ -1247,6 +1267,62 @@ body.rm-full #rmIn{font-size:17px}
       m.querySelector('.cs-lg').innerHTML = cfg.s.map(function(q){ return '<span><i style="background:' + q.c + '"></i>' + q.n + '</span>'; }).join(''); paint(null);
     }).catch(function(){ m.querySelector('.cs-lg').textContent = 'Chart not available yet.'; });
   }
+  /* ---------- Backtest ---------- */
+  var BT = null, BTM = null, btHit = [], BTC = '#3fb47a', BTH = '#e0554d';
+  var SHORTN = {'Regression Band': 'Regression', 'Puell Multiple': 'Puell', 'TTM Bitcoin Risk': 'BTC risk', 'Cycle timing': 'Timing', 'DVOL Fear': 'DVOL fear', 'TTM Total Market Risk': 'Total risk'};
+  var DEFN = {low: {'Regression Band': 'Price below the −1σ regression band', 'Puell Multiple': 'Puell Multiple below 0.5 (miner stress)', 'TTM Bitcoin Risk': 'TTM Bitcoin Risk below 0.20', 'Cycle timing': '11 to 15 months after the cycle high', 'DVOL Fear': 'DVOL fear in the top 10% of its history'},
+    high: {'Regression Band': 'Price above the +1σ regression band', 'Puell Multiple': 'Puell Multiple above 4 (miner euphoria)', 'TTM Bitcoin Risk': 'TTM Bitcoin Risk above 0.80', 'Cycle timing': '12 to 18 months after a halving', 'TTM Total Market Risk': 'TTM Total Market Risk above 0.80'}};
+  function fmtD(s){ return new Date(s + 'T00:00:00Z').toLocaleDateString(undefined, {day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC'}); }
+  function monY(s){ return new Date(s + 'T00:00:00Z').toLocaleDateString(undefined, {month: 'short', year: 'numeric', timeZone: 'UTC'}); }
+  function dot(v){ return '<span class="bt-d ' + (v === true ? 'on' : v === false ? 'off' : 'na') + '" title="' + (v === true ? 'On' : v === false ? 'Not on' : 'No data that far back') + '">' + (v === true ? '✓' : v === false ? '' : '–') + '</span>'; }
+  function matrix(bt, side){ var col = side === 'low' ? BTC : BTH, evs = bt.events.map(function(e, i){ e._i = i; return e; }).filter(function(e){ return e.side === side; }); if(!evs.length) return '';
+    var head = '<div class="bt-row bt-hd"><span></span>' + evs[0].signals.map(function(x){ return '<span>' + esc(SHORTN[x.s] || x.s) + '</span>'; }).join('') + '<span></span></div>';
+    var rows = evs.map(function(e){ return '<div class="bt-row" data-i="' + e._i + '"><span class="bt-ev"><b>' + monY(e.date) + '</b><em>' + usd(e.price) + '</em></span>' + e.signals.map(function(x){ return dot(x.on); }).join('') + '<span class="bt-sc">' + e.n + ' of ' + e.of + '</span></div>'; }).join('');
+    return '<div class="bt-mc" style="--c:' + col + '"><h3>' + (side === 'low' ? 'Bear-market lows' : 'Cycle highs') + '</h3><p>Which signals were on in the week of each ' + (side === 'low' ? 'low' : 'high') + '. Tap a row for the detail.</p>' + head + rows + '</div>'; }
+  function renderBt(bt){ BT = bt; var wrap = document.getElementById('csBtWrap'); if(!bt || !bt.events || !bt.events.length){ wrap.style.display = 'none'; return; } wrap.style.display = '';
+    var lows = bt.events.filter(function(e){ return e.side === 'low'; }), highs = bt.events.filter(function(e){ return e.side === 'high'; });
+    var minLow = Math.min.apply(null, lows.map(function(e){ return e.n; })), mo = bt.max_outside || {}, hiBest = highs.slice().sort(function(a, b){ return b.n - a.n || (a.date < b.date ? 1 : -1); })[0], hiLast = highs[highs.length - 1];
+    var tk = '<div><b>At past lows</b>' + minLow + ' or more of the testable signals were on at every bear-market low' + (lows.length ? ' (' + lows.map(function(e){ return e.n + ' of ' + e.of; }).join(', ') + ').' : '.') + '</div>'
+      + '<div><b>False alarms</b>' + (mo.low && mo.low.n ? 'Up to ' + mo.low.n + ' low signals were on as early as ' + monY(mo.low.date) + ', months before the real low. ' : '') + (mo.high && mo.high.n ? 'Up to ' + mo.high.n + ' top signals were on in ' + monY(mo.high.date) + ', well before that top.' : '') + '</div>'
+      + '<div><b>At past highs</b>' + (hiBest ? hiBest.n + ' of ' + hiBest.of + ' at the ' + monY(hiBest.date) + ' high' : '') + (hiLast && hiLast !== hiBest ? ', but only ' + hiLast.n + ' of ' + hiLast.of + ' at the ' + monY(hiLast.date) + ' high. Tops have been harder to catch each cycle.' : '.') + '</div>'
+      + '<div><b>Not tested yet</b>' + (bt.untested || []).join(' and ') + ' need a price history we do not hold yet, so they are not in this backtest.</div>';
+    document.getElementById('csBt').innerHTML = '<p class="bt-intro">We replayed the same yes or no signals on Bitcoin history and looked at which ones were on at each past cycle low and cycle high. Each marker below is a past turning point. Tap a marker or a row to see what fired and how early. This is a look back, not a forecast. Cycles can behave differently. Educational only, not financial advice.</p>'
+      + '<div class="bt-card"><div class="bt-cw"><canvas id="csBtC"></canvas><div class="cs-tp" id="csBtTp"></div></div><div class="bt-lg"><span><i style="background:#dba118"></i>Bitcoin price (log scale)</span><span><i style="background:' + BTC + '"></i>Low signals on (bars)</span><span><i style="background:' + BTH + '"></i>Top signals on (bars)</span><span style="color:#8a8a92">▲ past low · ▼ past high · shaded: 4 months either side</span></div></div>'
+      + '<div class="bt-mx">' + matrix(bt, 'low') + matrix(bt, 'high') + '</div><div class="bt-tk">' + tk + '</div>';
+    paintBt(null); }
+  function paintBt(hov){ var cv = document.getElementById('csBtC'); if(!cv || !BT) return; var tp = document.getElementById('csBtTp'), dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight; if(!W) return; cv.width = W * dpr; cv.height = H * dpr; var c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H);
+    var S = BT.series.map(function(r){ return {t: Date.parse(r[0] + 'T00:00:00Z'), d: r[0], p: r[1], ln: r[2], lof: r[3], hn: r[4], hof: r[5]}; }), t0 = S[0].t, t1 = S[S.length - 1].t, L = 50, R = 12, T = 12, PH = Math.round(H * 0.6), SH = Math.round(H * 0.115), G = 12, y1 = T + PH + G, y2 = y1 + SH + 8;
+    var X = function(t){ return L + (t - t0) / (t1 - t0) * (W - L - R); }, mn = Infinity, mx = 0; S.forEach(function(r){ mn = Math.min(mn, r.p); mx = Math.max(mx, r.p); }); var lmn = Math.log10(mn * 0.8), lmx = Math.log10(mx * 3.2), Y = function(p){ return T + PH - (Math.log10(p) - lmn) / (lmx - lmn) * PH; };
+    c.font = '11px system-ui,sans-serif'; c.textBaseline = 'middle';
+    /* shaded windows around each event */
+    var wd = (BT.window_days || 120) * 864e5; BT.events.forEach(function(e){ var t = Date.parse(e.date + 'T00:00:00Z'), a = Math.max(L, X(t - wd)), b = Math.min(W - R, X(t + wd)); c.fillStyle = e.side === 'low' ? 'rgba(63,180,122,.10)' : 'rgba(224,85,77,.10)'; c.fillRect(a, T, b - a, y2 + SH - T); });
+    /* grid */
+    c.strokeStyle = 'rgba(255,255,255,.06)'; c.fillStyle = '#6c6c76'; c.textAlign = 'right'; for(var g = 0; g < 8; g++){ var pv = Math.pow(10, g); if(pv < mn * 0.8 || pv > mx * 1.25) continue; var yy = Y(pv); c.beginPath(); c.moveTo(L, yy); c.lineTo(W - R, yy); c.stroke(); c.fillText(pv >= 1000 ? '$' + pv / 1000 + 'K' : '$' + pv, L - 6, yy); }
+    c.textAlign = 'center'; var y0 = new Date(t0).getUTCFullYear() + 1; for(var yr = y0; yr <= new Date(t1).getUTCFullYear(); yr++){ var tx = X(Date.UTC(yr, 0, 1)); c.fillStyle = '#6c6c76'; c.fillText(yr, tx, y2 + SH + 12); c.strokeStyle = 'rgba(255,255,255,.04)'; c.beginPath(); c.moveTo(tx, T); c.lineTo(tx, y2 + SH); c.stroke(); }
+    /* strips */
+    var strip = function(yTop, key, ofk, col, label){ c.fillStyle = 'rgba(255,255,255,.04)'; c.fillRect(L, yTop, W - L - R, SH); S.forEach(function(r, i){ var n = r[key], of = r[ofk] || 5; if(!n) return; var x = X(r.t), nx = i < S.length - 1 ? X(S[i + 1].t) : x + 3, w = Math.max(1.4, nx - x), h = Math.min(1, n / 5) * SH; c.fillStyle = col; c.globalAlpha = n >= 3 ? 0.95 : 0.35; c.fillRect(x, yTop + SH - h, w, h); }); c.globalAlpha = 1; c.fillStyle = '#8a8a92'; c.textAlign = 'left'; c.fillText(label, L + 6, yTop + 9); }; strip(y1, 'ln', 'lof', BTC, 'Low signals on'); strip(y2, 'hn', 'hof', BTH, 'Top signals on');
+    /* price line */
+    c.strokeStyle = '#dba118'; c.lineWidth = 1.7; c.beginPath(); S.forEach(function(r, i){ var x = X(r.t), y = Y(r.p); if(i) c.lineTo(x, y); else c.moveTo(x, y); }); c.stroke(); c.lineWidth = 1;
+    /* event markers */
+    btHit = []; var placed = []; BT.events.forEach(function(e, i){ var t = Date.parse(e.date + 'T00:00:00Z'), x = X(t), y = Y(e.price), col = e.side === 'low' ? BTC : BTH, up = e.side === 'low', ty = up ? y + 14 : y - 14; c.fillStyle = col; c.strokeStyle = '#0b0b0e'; c.lineWidth = 2; c.beginPath(); if(up){ c.moveTo(x, y + 4); c.lineTo(x - 7, y + 17); c.lineTo(x + 7, y + 17); } else { c.moveTo(x, y - 4); c.lineTo(x - 7, y - 17); c.lineTo(x + 7, y - 17); } c.closePath(); c.stroke(); c.fill(); c.lineWidth = 1;
+      c.font = '700 11px system-ui,sans-serif'; c.textAlign = 'center'; var lab = monY(e.date) + ' · ' + e.n + '/' + e.of, tw = c.measureText(lab).width + 10, lx = Math.max(L + tw / 2, Math.min(W - R - tw / 2, x)), ly = up ? y + 31 : y - 31; var bump = 0; placed.forEach(function(q){ if(Math.abs(q.x - lx) < (q.w + tw) / 2 + 4 && Math.abs(q.y - (ly + bump * (up ? 1 : -1))) < 20) bump++; }); ly += bump * (up ? 21 : -21); if(ly < T + 10){ ly = T + 10; lx = Math.min(W - R - tw / 2, lx + tw / 2 + 14); } placed.push({x: lx, y: ly, w: tw}); c.fillStyle = 'rgba(10,10,13,.88)'; c.fillRect(lx - tw / 2, ly - 9, tw, 18); c.strokeStyle = col; c.strokeRect(lx - tw / 2 + .5, ly - 8.5, tw - 1, 17); c.fillStyle = '#f2f0ea'; c.fillText(lab, lx, ly + .5); c.font = '11px system-ui,sans-serif'; btHit.push({x: x, y: y, i: i}); });
+    /* today */
+    var xl = X(t1); c.strokeStyle = 'rgba(255,255,255,.3)'; c.setLineDash([3, 4]); c.beginPath(); c.moveTo(xl, T); c.lineTo(xl, y2 + SH); c.stroke(); c.setLineDash([]);
+    cv._m = {L: L, R: R, W: W, t0: t0, t1: t1, S: S};
+    if(hov != null){ var bi = 0, bd = Infinity; S.forEach(function(r, i){ var d = Math.abs(r.t - hov); if(d < bd){ bd = d; bi = i; } }); var r = S[bi], x = X(r.t); c.strokeStyle = 'rgba(255,255,255,.4)'; c.beginPath(); c.moveTo(x, T); c.lineTo(x, y2 + SH); c.stroke(); c.fillStyle = '#dba118'; c.beginPath(); c.arc(x, Y(r.p), 4, 0, 6.3); c.fill();
+      tp.innerHTML = '<b>' + fmtD(r.d) + '</b><br>Bitcoin ' + usd(r.p) + '<br><span style="color:' + BTC + '">Low signals ' + r.ln + ' of ' + r.lof + '</span><br><span style="color:' + BTH + '">Top signals ' + r.hn + ' of ' + r.hof + '</span>'; tp.style.display = 'block'; tp.style.left = (x > W / 2 ? x - tp.offsetWidth - 12 : x + 12) + 'px'; tp.style.top = '20px'; } else tp.style.display = 'none'; }
+  function btMdEl(){ if(BTM) return BTM; BTM = document.createElement('div'); BTM.className = 'cs-md'; BTM.innerHTML = '<div class="cs-mb"><button class="cs-x" type="button">✕</button><h3></h3><div class="cs-hd"></div><div class="bt-body"></div></div>'; document.body.appendChild(BTM);
+    BTM.addEventListener('click', function(e){ if(e.target === BTM || e.target.closest('.cs-x')) BTM.classList.remove('on'); }); document.addEventListener('keydown', function(e){ if(e.key === 'Escape') BTM.classList.remove('on'); }); return BTM; }
+  function rel(d){ return d === 0 ? 'on the day' : Math.abs(d) + ' days ' + (d < 0 ? 'before' : 'after'); }
+  function openBt(i){ var e = BT && BT.events[i]; if(!e) return; var col = e.side === 'low' ? BTC : BTH, m = btMdEl(), lbl = e.side === 'low' ? 'low' : 'high', defs = DEFN[e.side];
+    m.querySelector('.cs-mb').style.setProperty('--c', col); m.querySelector('h3').textContent = 'Cycle ' + lbl + ' · ' + fmtD(e.date) + ' · ' + usd(e.price);
+    m.querySelector('.cs-hd').innerHTML = '<span class="cs-chip">' + e.n + ' of ' + e.of + ' signals on</span><span style="font-size:13px;color:#a8a8b0"> in the week of the ' + lbl + '</span>';
+    m.querySelector('.bt-body').innerHTML = '<table class="bt-t">' + e.signals.map(function(x){ var when = x.first == null ? (x.on === null ? 'No history that far back.' : 'Never on within ' + (BT.window_days || 120) + ' days either side.') : (x.first === x.last ? 'On ' + rel(x.first) : 'On from ' + rel(x.first) + ' to ' + rel(x.last)) + ' the ' + lbl + '.'; return '<tr><td>' + dot(x.on) + '</td><td><b>' + esc(defs[x.s] || x.s) + '</b><em>' + (x.on === true ? 'On at the ' + lbl + '. ' : x.on === false ? 'Not on at the ' + lbl + '. ' : '') + when + '</em></td></tr>'; }).join('') + '</table><p style="font-size:12px;color:#7a7a84;margin:6px 0 0">Prices are weekly closes, so the date can be a few days from the exact ' + lbl + '. ' + (BT.untested || []).join(' and ') + ' are not tested. Educational only, not financial advice.</p>';
+    m.classList.add('on'); }
+  document.addEventListener('mousemove', function(ev){ var cv = document.getElementById('csBtC'); if(!cv || !cv._m || ev.target !== cv) return; var m = cv._m, r = cv.getBoundingClientRect(), x = ev.clientX - r.left; paintBt(m.t0 + (x - m.L) / (m.W - m.L - m.R) * (m.t1 - m.t0)); });
+  document.addEventListener('mouseleave', function(){}, true);
+  document.addEventListener('click', function(ev){ var cv = document.getElementById('csBtC'); if(cv && ev.target === cv){ var r = cv.getBoundingClientRect(), x = ev.clientX - r.left, y = ev.clientY - r.top, best = null, bd = 28; btHit.forEach(function(h){ var d = Math.hypot(h.x - x, h.y - y); if(d < bd){ bd = d; best = h; } }); if(best) openBt(best.i); return; } var row = ev.target.closest && ev.target.closest('#csBt .bt-row'); if(row && row.dataset.i != null) openBt(+row.dataset.i); });
+  window.addEventListener('resize', function(){ if(BT) paintBt(null); });
   document.getElementById('csNow').addEventListener('click', function(e){ var r = e.target.closest('.cs-s'); if(r) openChart(r.dataset.side, +r.dataset.i); });
   function load(){ if(loaded) return; loaded = true;
     fetch('../cycle_signals.json?' + Date.now().toString(36).slice(0, 6)).then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(d){ if(!d || !d.low || !d.top) throw 0;
@@ -1257,7 +1333,7 @@ body.rm-full #rmIn{font-size:17px}
       if(d.realized) st.push('<div class="cs-st"><small>Realised price</small><b>' + usd(d.realized) + '</b><em>MVRV ' + mv.toFixed(2) + '</em></div>');
       if(d.months_since_halving != null) st.push('<div class="cs-st"><small>Since the halving</small><b>' + d.months_since_halving + '</b><em>months</em></div>');
       document.getElementById('csStats').innerHTML = st.join('');
-      document.getElementById('csNow').innerHTML = card('Bear-market low zone', 'Signs a cycle low is forming', d.low, '#3fb47a', 'low') + card('Cycle-top risk', 'Signs a cycle top is near', d.top, '#e0554d', 'top'); CS = d;
+      document.getElementById('csNow').innerHTML = card('Bear-market low zone', 'Signs a cycle low is forming', d.low, '#3fb47a', 'low') + card('Cycle-top risk', 'Signs a cycle top is near', d.top, '#e0554d', 'top'); CS = d; renderBt(d.backtest);
       var ev = (d.events || []).slice().reverse();
       document.getElementById('csHist').innerHTML = ev.length ? ev.map(function(e){ return '<div class="cs-ev" style="--c:' + (e.side === 'low' ? '#3fb47a' : '#e0554d') + '"><time>' + esc(e.at) + '</time><div><b>' + esc(e.title) + '</b><span>' + esc(e.body) + '</span></div></div>'; }).join('') : '<p class="calendar-note">No alerts sent yet.</p>';
     }).catch(function(){ loaded = false; document.getElementById('csUpdated').textContent = 'Cycle signals are not available yet. They appear after the next data update.'; }); }

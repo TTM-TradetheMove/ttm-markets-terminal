@@ -529,9 +529,128 @@ def compute_cycle(by_id, out_dir):
         res[side] = {"n": n, "of": len(votes), "pct": round(n / len(votes) * 100), "level": NAMES[lv], "votes": votes, "state": ns}
     out = {"generated_at": datetime.now(timezone.utc).isoformat(), "as_of": today, "price": round(px, 2), "realized": realized, "cycle_high": {"price": top_v, "date": top_d}, "months_since_halving": round(since_halv, 1),
            "low": {k: v for k, v in res["low"].items() if k != "state"}, "top": {k: v for k, v in res["top"].items() if k != "state"},
-           "state": {"low": res["low"]["state"], "top": res["top"]["state"]}, "events": events[-12:]}
+           "state": {"low": res["low"]["state"], "top": res["top"]["state"]}, "events": events[-12:], "backtest": _safe_bt(by_id)}
     json.dump(out, open(path, "w"), indent=1, ensure_ascii=False)
     return out
+
+
+BT_EVENTS = [  # side, search window start, end, extreme
+    ("low", "2014-12-01", "2015-03-01", "min"), ("low", "2018-11-01", "2019-02-01", "min"), ("low", "2022-10-15", "2023-01-15", "min"),
+    ("high", "2013-11-15", "2014-01-15", "max"), ("high", "2017-11-20", "2018-01-10", "max"), ("high", "2021-03-20", "2021-05-10", "max"),
+    ("high", "2021-10-20", "2021-12-10", "max"), ("high", "2025-09-15", "2025-11-15", "max"),
+]
+BT_HALVINGS = [date(2012, 11, 28), date(2016, 7, 9), date(2020, 5, 11), date(2024, 4, 20)]
+BT_WINDOW = 120  # days either side of a cycle low or high in which a signal counts as "around" it
+
+
+def compute_backtest(by_id):
+    """Replays the same yes/no signals on past history to show which ones were on at each cycle low and high.
+    Realised price / MVRV have no history in this data, so they are listed as untested."""
+    import bisect
+    lr = by_id.get("logreg") or {}
+    lines = {l["n"]: l["s"] for l in lr.get("lines", [])}
+    px = lines.get("BTC price") or []
+    if len(px) < 200:
+        return None
+    def mk(rows):
+        rows = [(a, v) for a, v in (rows or [])]
+        return [a for a, _ in rows], [v for _, v in rows]
+    S = {"p1": mk(lines.get("+1σ")), "m1": mk(lines.get("-1σ")), "rk": mk((by_id.get("btcrisk") or {}).get("series")),
+         "tt": mk((by_id.get("totalrisk") or {}).get("series")), "pu": mk((by_id.get("puell") or {}).get("series")),
+         "fr": mk((by_id.get("dvol") or {}).get("series"))}
+    def asof(k, dt):
+        ks, vs = S[k]
+        i = bisect.bisect_right(ks, dt) - 1
+        if i < 0 or (date.fromisoformat(dt) - date.fromisoformat(ks[i])).days > 10:
+            return None
+        return vs[i]
+    dates = [a for a, _ in px]
+    pxd = dict(px)
+    # running high since the latest halving
+    runmax = {}
+    for hv in BT_HALVINGS:
+        best = None
+        for a, v in px:
+            if a < hv.isoformat():
+                continue
+            if best is None or v > best[0]:
+                best = (v, a)
+            runmax[(hv, a)] = best[1]
+    def lasthalv(D):
+        h = [x for x in BT_HALVINGS if x <= D]
+        return h[-1] if h else None
+    LOWN = ["Regression Band", "Puell Multiple", "TTM Bitcoin Risk", "Cycle timing", "DVOL Fear"]
+    HIGHN = ["Regression Band", "Puell Multiple", "TTM Bitcoin Risk", "Cycle timing", "TTM Total Market Risk"]
+    cache = {}
+    def sig(dt):
+        if dt in cache:
+            return cache[dt]
+        D, p = date.fromisoformat(dt), pxd[dt]
+        hv = lasthalv(D)
+        m1, p1, rk, tt, pu, fr = asof("m1", dt), asof("p1", dt), asof("rk", dt), asof("tt", dt), asof("pu", dt), asof("fr", dt)
+        topd = runmax.get((hv, dt)) if hv else None
+        since_top = (D - date.fromisoformat(topd)).days / 30.44 if topd else None
+        sh = (D - hv).days / 30.44 if hv else None
+        n = lambda c, v: None if v is None else bool(c(v))
+        low = [n(lambda v: p < v, m1), n(lambda v: v < 0.5, pu), n(lambda v: v < 0.20, rk), n(lambda v: 11 <= v <= 15, since_top), n(lambda v: v >= 0.9, fr)]
+        high = [n(lambda v: p > v, p1), n(lambda v: v > 4, pu), n(lambda v: v > 0.80, rk), n(lambda v: 12 <= v <= 18, sh), n(lambda v: v > 0.80, tt)]
+        cache[dt] = (low, high)
+        return cache[dt]
+    cnt = lambda arr: (sum(1 for x in arr if x), sum(1 for x in arr if x is not None))
+    events, xs = [], {"low": [], "high": []}
+    for side, a0, a1, fn in BT_EVENTS:
+        w = [(v, a) for a, v in px if a0 <= a <= a1]
+        if not w:
+            continue
+        v, dt = (min(w) if fn == "min" else max(w))
+        names, k = (LOWN, 0) if side == "low" else (HIGHN, 1)
+        cur = sig(dt)[k]
+        D = date.fromisoformat(dt)
+        win = [x for x in dates if abs((date.fromisoformat(x) - D).days) <= BT_WINDOW]
+        sg = []
+        for i, nm in enumerate(names):
+            hits = [x for x in win if sig(x)[k][i]]
+            sg.append({"s": nm, "on": cur[i], "first": (date.fromisoformat(hits[0]) - D).days if hits else None, "last": (date.fromisoformat(hits[-1]) - D).days if hits else None})
+        n_on, n_of = cnt(cur)
+        events.append({"side": side, "date": dt, "price": round(v, 2), "n": n_on, "of": n_of, "signals": sg})
+        xs[side].append(D)
+    rates, mxo = {}, {}
+    for side, k, names in (("low", 0, LOWN), ("high", 1, HIGHN)):
+        tot, bad, mx = [0] * 5, [0] * 5, (0, None)
+        for x in dates:
+            near = any(abs((date.fromisoformat(x) - e).days) <= BT_WINDOW for e in xs[side])
+            arr = sig(x)[k]
+            for i, v in enumerate(arr):
+                if v is None:
+                    continue
+                tot[i] += 1
+                if v and not near:
+                    bad[i] += 1
+            if not near and cnt(arr)[0] > mx[0]:
+                mx = (cnt(arr)[0], x)
+        rates[side] = {nm: [bad[i], tot[i]] for i, nm in enumerate(names)}
+        mxo[side] = {"n": mx[0], "date": mx[1]}
+    series, last = [], None
+    for a, v in px:
+        if a < "2012-01-01":
+            continue
+        if last and (date.fromisoformat(a) - last).days < 7:
+            continue
+        last = date.fromisoformat(a)
+        lo, hi = sig(a)
+        ln, lof = cnt(lo)
+        hn, hof = cnt(hi)
+        series.append([a, round(v, 2), ln, lof, hn, hof])
+    return {"events": events, "series": series, "rates": rates, "max_outside": mxo, "window_days": BT_WINDOW,
+            "untested": ["Realised Price", "MVRV"], "from": series[0][0] if series else None}
+
+
+def _safe_bt(by_id):
+    try:
+        return compute_backtest(by_id)
+    except Exception as e:  # noqa
+        STATUS["backtest"] = "failed: " + str(e)[:150]
+        return None
 
 
 def main():
