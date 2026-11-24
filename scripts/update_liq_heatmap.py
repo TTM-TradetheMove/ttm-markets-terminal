@@ -381,7 +381,12 @@ def okx_oi_daily(sym, start_ms, end_ms):
     return None
 
 
-def build_htf(sym):
+def gross_up(series, since):
+    ks = sorted(k for k in series if k >= since)
+    return sum(max(0.0, series[b] - series[a]) for a, b in zip(ks, ks[1:]))
+
+
+def build_htf(sym, oi5=None):
     end = int(time.time() * 1000) // DAY * DAY
     start = end - HTF_DAYS * DAY
     cd = coinbase_daily(sym, start, end + DAY)
@@ -389,6 +394,16 @@ def build_htf(sym):
         log(f"{sym}: HTF daily candles failed")
         return None
     oi = okx_oi_daily(sym, start, end + DAY) or {}
+    # The near-term map adds every 5-minute rise in open interest; daily data nets those rises out. Scale the
+    # older (daily) additions by how much more the 5-minute series adds over the same last 30 days, so the two
+    # halves of 'all levels' are on the same footing.
+    ratio = 1.0
+    if oi and oi5:
+        since = end - LOOKBACK_DAYS * DAY
+        g5, gd = gross_up(oi5, since), gross_up(oi, since)
+        if gd > 0 and g5 > 0:
+            ratio = max(1.0, min(30.0, g5 / gd))
+    log(f"{sym}: HTF scale factor {ratio:.2f}")
     last = cd[-1][4]
     lo = last * (1 - HTF_RANGE)
     step = last * 2 * HTF_RANGE / HTF_NB
@@ -414,7 +429,8 @@ def build_htf(sym):
                     a[i] = 0.0
         cur = oi.get(t)
         if oi:
-            d = (cur - prev) if (cur is not None and prev is not None) else 0
+            d = ((cur - prev) if (cur is not None and prev is not None) else 0)
+            d = d * ratio if d > 0 else d
             if cur is not None:
                 prev = cur
         else:
@@ -436,7 +452,7 @@ def build_htf(sym):
                 for a in longs + shorts:
                     for i in range(nb):
                         a[i] *= f
-    return {"lo": round(lo, 4), "step": round(step, 4), "nb": nb, "price": last, "days": HTF_DAYS, "older_than_days": LOOKBACK_DAYS,
+    return {"lo": round(lo, 4), "step": round(step, 4), "nb": nb, "price": last, "days": HTF_DAYS, "older_than_days": LOOKBACK_DAYS, "scale": round(ratio, 2),
             "tiers": HTF_TIERS, "source": "OKX daily open interest" if oi else "Coinbase daily volume (no open interest history)",
             "long": [[round(v / 1e6, 2) for v in a] for a in longs],
             "short": [[round(v / 1e6, 2) for v in a] for a in shorts]}
@@ -454,7 +470,7 @@ def main():
             if candles:
                 out[key] = build(sym, source, candles, oi)
                 try:
-                    h = build_htf(sym)
+                    h = build_htf(sym, oi)
                     if h:
                         out[key]["htf"] = h
                 except Exception as e:  # noqa
