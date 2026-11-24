@@ -262,9 +262,15 @@ push({id: 'rsic', name: 'Trade with Confluence (TTM)', pane: 'sub', range: [0, 1
 
 /* 17. Order flow bubbles (TTM): live big-trade bubbles from the exchange's public trade stream.
    Green = aggressive buyers, red = aggressive sellers, bigger = bigger. Bubbles build while the chart is open (plus the last ~1000 trades on load). */
+/* TTM flow recorder (optional): a Cloudflare worker that records order book heat and big trades 24/7 so charts open with history.
+   Its address is recorder_url in ttm_config.json. If it is empty, everything still works live, it just starts empty. */
+let RECU, RECP = null;
+const recBase = () => RECU !== undefined ? Promise.resolve(RECU) : (RECP || (RECP = fetch('../ttm_config.json?t=' + Math.floor(Date.now() / 600000)).then(r => r.json()).then(c => (RECU = String(c.recorder_url || '').replace(/\/$/, ''))).catch(() => (RECU = ''))));
+async function recGet(S, hours, since){ try{ const b = await recBase(); if(!b) return null; const ex = String(S.ex || ''), r = await fetch(b + '/hist?ex=' + (/binance/.test(ex) ? 'binance' : 'bybit') + '&mkt=' + (/perp/.test(ex) ? 'perp' : 'spot') + '&sym=' + encodeURIComponent(String(S.sym).toUpperCase()) + '&hours=' + hours + (since ? '&since=' + since : '')); return r.ok ? await r.json() : null; }catch(x){ return null; } }
 const OF = {};
 const ofCfg = () => Object.assign({min: 50000, scale: 1, lab: true, buy: '#2ebd85', sell: '#f6465d', op: 0.55}, (LSX().ls('ofcfg', {}) || {}));
 const ofSrc = S => { const ex = String(S.ex || ''), perp = /perp/.test(ex), bn = /binance/.test(ex), ok = /^(bybit|binance)_/.test(ex); return {ok, bn, perp, fam: bn ? 'Binance' : 'Bybit', pair: String(S.sym).toUpperCase() + 'USDT', key: (bn ? 'bn' : 'by') + (perp ? 'p' : 's') + ':' + S.sym}; };
+function ofMerge(e, arr){ e.tr = e.tr.concat(arr).sort((u, w) => u.t - w.t); const o = []; e.tr.forEach(z => { const l = o[o.length - 1]; if(l && l.t === z.t && l.p === z.p && l.q === z.q) return; o.push(z); }); e.tr = o.length > 40000 ? o.slice(o.length - 40000) : o; }
 function ofAdd(e, t, p, q, side){ const n = p * q; if(!(n >= 5000)) return; e.tr.push({t, p, q, n, s: side}); if(e.tr.length > 40000) e.tr.splice(0, 5000); }
 function ofConnect(e, src){
   e.st = 'connecting'; let ws; try{
@@ -284,7 +290,7 @@ async function ofBackfill(e, src){
     const j = await (await fetch(u)).json(), old = [];
     if(src.bn) (j || []).forEach(z => old.push({t: +z.T, p: +z.p, q: +z.q, s: z.m ? -1 : 1}));
     else ((j.result && j.result.list) || []).forEach(z => old.push({t: +z.time, p: +z.price, q: +z.size, s: z.side === 'Buy' ? 1 : -1}));
-    const keep = e.tr.slice(); e.tr = []; old.sort((a, b) => a.t - b.t).forEach(z => ofAdd(e, z.t, z.p, z.q, z.s)); const first = e.tr.length ? e.tr[e.tr.length - 1].t : 0; keep.forEach(z => { if(z.t > first) e.tr.push(z); }); if(e.rp) e.rp();
+    ofMerge(e, old.filter(z => z.p * z.q >= 5000).map(z => ({t: z.t, p: z.p, q: z.q, n: z.p * z.q, s: z.s}))); if(e.rp) e.rp();
   }catch(x){}
 }
 const ofFmt = q => q >= 100 ? String(Math.round(q)) : q >= 10 ? q.toFixed(1) : q >= 1 ? q.toFixed(2) : q.toFixed(3);
@@ -293,7 +299,7 @@ push({id: 'oflow', name: 'Order flow bubbles (TTM)', pane: 'overlay', calc: () =
     c.save(); c.beginPath(); c.rect(0, g.mT, g.pw, g.mB - g.mT); c.clip();
     c.font = '600 10px system-ui,sans-serif'; c.textAlign = 'left'; c.textBaseline = 'bottom';
     if(!src.ok){ c.fillStyle = 'rgba(200,200,210,.7)'; c.textAlign = 'right'; c.textBaseline = 'top'; c.fillText('Order flow bubbles need a Bybit or Binance source', g.pw - 8, g.mT + 8); c.restore(); return; }
-    let e = OF[src.key]; if(!e){ e = OF[src.key] = {tr: [], st: 'connecting', ws: null, seen: 0, rp: null, q: 0}; ofBackfill(e, src); }
+    let e = OF[src.key]; if(!e){ e = OF[src.key] = {tr: [], st: 'connecting', ws: null, seen: 0, rp: null, q: 0}; ofBackfill(e, src); recGet(S, 24).then(j => { if(j && j.trades && j.trades.length){ e.rec = true; ofMerge(e, j.trades.map(z => ({t: z[0], p: z[1], q: z[2], n: z[1] * z[2], s: z[3]}))); if(e.rp) e.rp(); } }); }
     e.seen = Date.now(); e.rp = a.repaint; if(!e.ws && (!e.started || e.st === 'closed') && Date.now() - (e.tried || 0) > 5000){ e.started = true; e.tried = Date.now(); ofConnect(e, src); }
     if(!OF._gc) OF._gc = setInterval(() => { Object.keys(OF).forEach(k => { const z = OF[k]; if(k !== '_gc' && z && z.ws && Date.now() - z.seen > 30000){ try{ z.ws.close(); }catch(x){} } }); }, 15000);
     const step = d[1].t - d[0].t, t0 = d[0].t + Math.max(0, i0) * step, tEnd = d[d.length - 1].t + step; let lo = Infinity, hi = -Infinity; for(let i = Math.max(0, i0); i <= Math.min(i1, d.length - 1); i++){ lo = Math.min(lo, d[i].l); hi = Math.max(hi, d[i].h); }
@@ -304,7 +310,7 @@ push({id: 'oflow', name: 'Order flow bubbles (TTM)', pane: 'overlay', calc: () =
       c.globalAlpha = cf.op; c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, 6.3); c.fill(); c.globalAlpha = Math.min(1, cf.op + .3); c.strokeStyle = col; c.lineWidth = 1; c.stroke(); c.globalAlpha = 1;
       if(cf.lab && r >= 11){ c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = '700 ' + Math.max(8, Math.min(12, r * .6)) + 'px system-ui,sans-serif'; c.fillText((b.s > 0 ? '+' : '-') + ofFmt(b.q), x, y + .5); } });
     c.textAlign = 'right'; c.textBaseline = 'top'; c.font = '600 10px system-ui,sans-serif'; c.fillStyle = e.st === 'live' ? 'rgba(46,189,133,.95)' : 'rgba(200,200,210,.7)';
-    c.fillText('● Order flow ' + (e.st === 'live' ? 'live' : e.st) + ' · ' + src.fam + ' · $' + (cf.min >= 1e6 ? cf.min / 1e6 + 'M' : cf.min / 1e3 + 'K') + '+ trades', g.pw - 8, g.mT + 8);
+    c.fillText('● Order flow ' + (e.st === 'live' ? 'live' : e.st) + ' · ' + src.fam + ' · $' + (cf.min >= 1e6 ? cf.min / 1e6 + 'M' : cf.min / 1e3 + 'K') + '+ trades' + (e.rec ? ' · history on' : ''), g.pw - 8, g.mT + 8);
     c.restore(); },
   settings: p => { const cf = ofCfg(), rp = () => { try{ window.TTM_REPAINT(); }catch(x){} }, set = (k, v) => { const u = LSX().ls('ofcfg', {}) || {}; u[k] = v; LSX().lsSet('ofcfg', u); rp(); };
     const draw = () => { const c2 = ofCfg(), mins = [[25000, '$25K'], [50000, '$50K'], [100000, '$100K'], [250000, '$250K'], [500000, '$500K'], [1000000, '$1M']], sc = [[0.7, 'Small'], [1, 'Medium'], [1.4, 'Large']], btn = (on, a, t) => '<button type="button" ' + a + ' style="margin:2px 4px 2px 0;padding:5px 10px;border-radius:8px;border:1px solid ' + (on ? '#dba118' : '#3a3a42') + ';background:' + (on ? '#dba118' : '#1c1c21') + ';color:' + (on ? '#111' : '#d6d6dc') + ';font-weight:' + (on ? 800 : 500) + ';cursor:pointer">' + t + '</button>';
@@ -320,7 +326,7 @@ push({id: 'oflow', name: 'Order flow bubbles (TTM)', pane: 'overlay', calc: () =
    Brighter = more size waiting at that price. Builds while the chart is open. Optional wall lines and a small bid / ask ladder. */
 const OB = {};
 const obCfg = () => Object.assign({mode: 'both', gain: 1, ladder: false, wall: 500000}, (LSX().ls('obcfg', {}) || {}));
-const obSrc = S => { const ex = String(S.ex || ''), perp = /perp/.test(ex), ok = /^bybit_/.test(ex); return {ok, perp, pair: String(S.sym).toUpperCase() + 'USDT', key: 'ob' + (perp ? 'p' : 's') + ':' + S.sym}; };
+const obSrc = S => { const ex = String(S.ex || ''), perp = /perp/.test(ex), bn = /^binance_/.test(ex), ok = /^(bybit|binance)_/.test(ex); return {ok, bn, perp, pair: String(S.sym).toUpperCase() + 'USDT', key: 'ob' + (bn ? 'b' : 'y') + (perp ? 'p' : 's') + ':' + S.sym}; };
 const obNice = x => { const e = Math.pow(10, Math.floor(Math.log10(x))), m = x / e; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * e; };
 function obConnect(e, src){
   e.st = 'connecting'; let ws; try{ ws = new WebSocket('wss://stream.bybit.com/v5/public/' + (src.perp ? 'linear' : 'spot')); }catch(x){ e.st = 'closed'; return; }
@@ -335,13 +341,19 @@ function obConnect(e, src){
 }
 function obBest(e){ let bb = 0, ba = Infinity; if(e.b) e.b.forEach((q, p) => { if(p > bb) bb = p; }); if(e.a) e.a.forEach((q, p) => { if(p < ba) ba = p; }); return {bb, ba}; }
 function obSample(e){
+  if(!e.histDone) return;
   if(!e.b || !e.a || !e.b.size || !e.a.size) return; const {bb, ba} = obBest(e); if(!bb || !isFinite(ba)) return; const mid = (bb + ba) / 2; if(!e.step) e.step = obNice(mid * 0.00003);
   const M = new Map(), add = (q, p) => { const n = p * q; if(n < 1500) return; const k = Math.round(p / e.step); M.set(k, (M.get(k) || 0) + n); }; e.b.forEach(add); e.a.forEach(add);
-  const ids = new Int32Array(M.size), v = new Float32Array(M.size); let i = 0; M.forEach((n, k) => { ids[i] = k; v[i] = n; i++; }); e.sl.push({t: Date.now(), ids, v}); if(e.sl.length > 5000) e.sl.splice(0, 500);
+  const ids = new Int32Array(M.size), v = new Float32Array(M.size); let i = 0; M.forEach((n, k) => { ids[i] = k; v[i] = n; i++; }); e.sl.push({t: Date.now(), ids, v}); if(e.sl.length > 14000) e.sl.splice(0, 1000);
+}
+function obHist(e, S, since){
+  return recGet(S, since ? 1 : 24, since).then(j => { if(j && j.slices && j.slices.length){ if(j.step){ if(e.step && e.step !== j.step) e.sl = []; e.step = j.step; } const first = e.sl.length ? e.sl[0].t : Infinity, last = e.sl.length ? e.sl[e.sl.length - 1].t : 0, H = j.slices.map(z => ({t: z[0], ids: Int32Array.from(z[1]), v: Float32Array.from(z[2], x => x * 100)}));
+      if(since) e.sl = e.sl.concat(H.filter(z => z.t > last)); else { e.sl = H.filter(z => z.t < first).concat(e.sl); e.rec = true; } e.recAt = Date.now(); if(e.rp) try{ e.rp(); }catch(x){} } e.histDone = true; });
 }
 function obStart(a, src){
-  let e = OB[src.key]; if(!e){ e = OB[src.key] = {sl: [], st: 'connecting', ws: null, seen: 0, step: 0, b: null, a: null}; }
+  let e = OB[src.key]; if(!e){ e = OB[src.key] = {sl: [], st: 'connecting', ws: null, seen: 0, step: 0, b: null, a: null}; obHist(e, a.S).then(() => { if(src.bn && !e.rec){ e.st = 'needs recorder'; } }); setTimeout(() => { e.histDone = true; }, 6000); }
   e.seen = Date.now(); e.rp = a.repaint;
+  if(src.bn){ if(e.rec){ e.st = 'recorded'; if(!e.iv) e.iv = setInterval(() => { if(Date.now() - e.seen > 30000) return; const last = e.sl.length ? e.sl[e.sl.length - 1].t : 0; obHist(e, a.S, last); }, 10000); } return e; }
   if(!e.ws && (!e.started || e.st === 'closed') && Date.now() - (e.tried || 0) > 5000){ e.started = true; e.tried = Date.now(); obConnect(e, src); }
   if(!e.iv) e.iv = setInterval(() => { if(Date.now() - e.seen > 30000){ if(e.ws){ try{ e.ws.close(); }catch(x){} } return; } obSample(e); if(e.rp) try{ e.rp(); }catch(x){} }, 3000);
   return e;
@@ -357,7 +369,9 @@ push({id: 'obheat', name: 'Order book heatmap (TTM)', pane: 'overlay', calc: () 
   over: a => { const {c, g, X, Y, d, S} = a; if(!d || d.length < 2) return; const src = obSrc(S); c.save(); c.beginPath(); c.rect(0, g.mT, g.pw, g.mB - g.mT); c.clip();
     if(!src.ok){ c.font = '600 10px system-ui,sans-serif'; c.fillStyle = 'rgba(200,200,210,.7)'; c.textAlign = 'right'; c.textBaseline = 'top'; c.fillText('Order book heatmap needs a Bybit source', g.pw - 8, g.mT + 22); c.restore(); return; }
     const e = obStart(a, src), cf = obCfg(); c.font = '600 10px system-ui,sans-serif'; c.textAlign = 'right'; c.textBaseline = 'top'; c.fillStyle = e.st === 'live' ? 'rgba(90,170,255,.95)' : 'rgba(200,200,210,.7)';
-    c.fillText('● Order book ' + (e.st === 'live' ? 'live' : e.st) + ' · Bybit ' + (src.perp ? 'perp' : 'spot') + (e.sl.length ? ' · ' + Math.round(e.sl.length * 3 / 60) + ' min built' : ''), g.pw - 8, g.mT + 22);
+    const hrs = e.sl.length > 1 ? (e.sl[e.sl.length - 1].t - e.sl[0].t) / 36e5 : 0; c.fillText('● Order book ' + (e.st === 'live' ? 'live' : e.st) + ' · ' + (src.bn ? 'Binance ' : 'Bybit ') + (src.perp ? 'perp' : 'spot') + (hrs >= 0.05 ? ' · ' + (hrs >= 1 ? hrs.toFixed(1) + ' h' : Math.round(hrs * 60) + ' min') + ' of history' : '') + (e.rec ? ' (recorder)' : ''), g.pw - 8, g.mT + 22);
+    if(src.bn && !e.rec){ c.fillStyle = 'rgba(200,200,210,.75)'; c.fillText('Binance order book needs the TTM recorder (not connected yet). Use a Bybit source for live.', g.pw - 8, g.mT + 36); }
+    else if(e.sl.length && e.step){ const L = e.sl[e.sl.length - 1]; let mn = Infinity, mxp = 0; for(let i = 0; i < L.ids.length; i++){ mn = Math.min(mn, L.ids[i]); mxp = Math.max(mxp, L.ids[i]); } const cov = (mxp - mn) * e.step, sc = S.sc, vis = sc && sc.hi > sc.lo && sc.lo > 0 ? sc.hi - sc.lo : 0; if(vis && cov / vis < 0.12){ c.fillStyle = 'rgba(200,200,210,.75)'; c.fillText('Exchanges only share orders near the price (about ' + '$' + obK(cov) + ' wide). Zoom in or use 1m to 1h to see them.', g.pw - 8, g.mT + 36); } }
     if(e.b && e.a && e.b.size && e.a.size){ const mid = obBest(e); const mk = (M, side) => { const G = new Map(); M.forEach((q, p) => { const k = Math.round(p / (e.step || 1)); const o = G.get(k) || {n: 0, q: 0, pn: 0}; o.n += p * q; o.q += q; o.pn += p * q * p; G.set(k, o); }); return Array.from(G.values()).filter(o => o.n >= cf.wall).sort((u, w) => w.n - u.n).slice(0, 3).map(o => ({n: o.n, q: o.q, side})); };
       if(cf.mode !== 'heat'){ const lby = []; [].concat(mk(e.b, 1), mk(e.a, -1)).forEach(w => { const pr = w.n / w.q, y = Y(pr); if(y < g.mT || y > g.mB) return; const col = w.side > 0 ? '46,189,133' : '246,70,93'; c.strokeStyle = 'rgba(' + col + ',.85)'; c.lineWidth = 1.4; c.setLineDash([8, 4]); c.beginPath(); c.moveTo(0, y); c.lineTo(g.pw, y); c.stroke(); c.setLineDash([]); if(lby.some(v => Math.abs(v - y) < 17)) return; lby.push(y); const t = (w.side > 0 ? 'BID ' : 'ASK ') + '$' + obK(w.n); c.font = '700 10px system-ui,sans-serif'; const tw = c.measureText(t).width + 10; c.fillStyle = 'rgba(' + col + ',.95)'; c.fillRect(g.pw - 150 - tw, y - 8, tw, 16); c.fillStyle = '#0b0b0d'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(t, g.pw - 150 - tw / 2, y + .5); }); }
       if(cf.ladder){ const bids = Array.from(e.b.entries()).sort((u, w) => w[0] - u[0]).slice(0, 7), asks = Array.from(e.a.entries()).sort((u, w) => u[0] - w[0]).slice(0, 7), mx = Math.max.apply(null, bids.concat(asks).map(z => z[1])) || 1, x0 = 10, y0 = g.mT + 120, rh = 15, W = 150;
@@ -373,4 +387,28 @@ push({id: 'obheat', name: 'Order book heatmap (TTM)', pane: 'overlay', calc: () 
         + '<div style="margin:10px 0"><label style="font-size:12px"><input type="checkbox" data-lad="1"' + (c2.ladder ? ' checked' : '') + '> Show bid / ask ladder</label></div><button type="button" data-done="1" style="padding:6px 14px;border-radius:8px;border:1px solid #dba118;background:#dba118;color:#111;font-weight:800;cursor:pointer">Done</button>'; };
     draw(); p.onclick = e => { const b = e.target.closest('button'); if(!b) return; if(b.dataset.done){ p.remove(); return; } if(b.dataset.mode){ set('mode', b.dataset.mode); draw(); } else if(b.dataset.gain){ set('gain', +b.dataset.gain); draw(); } else if(b.dataset.wall){ set('wall', +b.dataset.wall); draw(); } };
     p.onchange = e => { const t = e.target; if(t.dataset.lad) set('ladder', t.checked); }; }});
+
+/* 19. Liquidation levels (TTM, modelled): where leveraged longs (below price) and shorts (above price) are estimated to be liquidated.
+   Uses TTM's own liquidation map (BTC and ETH, about 8% either side of price). Modelled from open interest and candles, not real position data. */
+const LQ = {t: 0, d: null, busy: false, err: ''};
+function lqLoad(a){ if(LQ.busy || (LQ.t && Date.now() - LQ.t < 300000)) return; LQ.busy = true; fetch('../liq_heatmap_data.json?t=' + Math.floor(Date.now() / 300000)).then(r => { if(!r.ok) throw r.status; return r.json(); }).then(j => { LQ.d = j; LQ.err = ''; LQ.t = Date.now(); LQ.busy = false; try{ a.repaint(); }catch(x){} }).catch(x => { LQ.err = String(x); LQ.t = Date.now(); LQ.busy = false; try{ a.repaint(); }catch(y){} }); }
+const lqCfg = () => Object.assign({win: 'map', lines: true}, (LSX().ls('lqcfg', {}) || {}));
+push({id: 'liqlv', name: 'Liquidation levels (TTM, modelled)', pane: 'overlay', calc: () => null, gate: () => !!(window.ttmCan && window.ttmCan('c:lensflow')),
+  over: a => { const {c, g, Y, S} = a; lqLoad(a); const sym = String(S.sym || '').toUpperCase(), cf = lqCfg(), b = LQ.d && LQ.d[sym];
+    c.save(); c.beginPath(); c.rect(0, g.mT, g.pw, g.mB - g.mT); c.clip(); c.font = '600 10px system-ui,sans-serif'; c.textAlign = 'right'; c.textBaseline = 'bottom';
+    const note = (t, col) => { const w = c.measureText(t).width + 10; c.fillStyle = 'rgba(10,10,13,.75)'; c.fillRect(g.pw - 8 - w, g.mB - 24, w, 16); c.fillStyle = col || 'rgba(200,200,210,.85)'; c.textBaseline = 'middle'; c.fillText(t, g.pw - 13, g.mB - 16); };
+    if(!b){ note(LQ.err ? (LQ.err === '403' || LQ.err === '401' ? 'Liquidation levels need Market Pulse access' : 'Liquidation levels are not available right now') : (LQ.d ? 'Liquidation levels cover BTC and ETH only' : 'Loading liquidation levels…')); c.restore(); return; }
+    const M = (b.maps && b.maps[cf.win]) || b.map, nb = b.nb, lo = b.lo, st = b.step, L = new Array(nb).fill(0), Sh = new Array(nb).fill(0); let mx = 0;
+    for(let i = 0; i < nb; i++){ let l = 0, sh = 0; for(let t = 0; t < M.long.length; t++){ l += M.long[t][i] || 0; sh += M.short[t][i] || 0; } L[i] = l; Sh[i] = sh; mx = Math.max(mx, l, sh); }
+    if(!mx){ c.restore(); return; } const W = Math.min(g.pw * 0.3, 280);
+    for(let i = 0; i < nb; i++){ const y1 = Y(lo + (i + 1) * st), y2 = Y(lo + i * st), h = Math.max(1.6, y2 - y1); if(y2 < g.mT || y1 > g.mB) continue; if(L[i] > 0){ c.fillStyle = 'rgba(255,150,60,' + (0.25 + 0.5 * L[i] / mx).toFixed(2) + ')'; c.fillRect(g.pw - W * L[i] / mx, y1, W * L[i] / mx, h); } if(Sh[i] > 0){ c.fillStyle = 'rgba(80,200,255,' + (0.25 + 0.5 * Sh[i] / mx).toFixed(2) + ')'; c.fillRect(g.pw - W * Sh[i] / mx, y1, W * Sh[i] / mx, h); } }
+    if(cf.lines){ const top = (A2, side) => { const o = []; for(let i = 1; i < nb - 1; i++){ if(A2[i] > 0.3 * mx && A2[i] >= A2[i - 1] && A2[i] >= A2[i + 1]) o.push({i, v: A2[i], side}); } return o.sort((u, w) => w.v - u.v).slice(0, 2); }; const lby = [];
+      [].concat(top(L, 1), top(Sh, -1)).forEach(z => { const y = Y(lo + (z.i + 0.5) * st); if(y < g.mT || y > g.mB) return; const col = z.side > 0 ? '255,150,60' : '80,200,255'; c.strokeStyle = 'rgba(' + col + ',.8)'; c.lineWidth = 1.2; c.setLineDash([3, 4]); c.beginPath(); c.moveTo(0, y); c.lineTo(g.pw, y); c.stroke(); c.setLineDash([]); if(lby.some(v => Math.abs(v - y) < 17)) return; lby.push(y); const t = (z.side > 0 ? 'LONG LIQ ' : 'SHORT LIQ ') + '~$' + (z.v >= 1e6 ? (z.v / 1e6).toFixed(1) + 'M' : Math.round(z.v / 1e3) + 'K'), w = c.measureText(t).width + 10; c.fillStyle = 'rgba(' + col + ',.95)'; c.fillRect(g.pw - W - 12 - w, y - 8, w, 16); c.fillStyle = '#0b0b0d'; c.textBaseline = 'middle'; c.textAlign = 'center'; c.fillText(t, g.pw - W - 12 - w / 2, y + .5); c.textAlign = 'right'; }); }
+    const gen = b.generated_at || (LQ.d && LQ.d.generated_at) || ''; note('Liquidation levels · modelled, not real positions' + (gen ? ' · ' + new Date(gen).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : '')); c.restore(); },
+  settings: p => { const rp = () => { try{ window.TTM_REPAINT(); }catch(x){} }, set = (k, v) => { const u = LSX().ls('lqcfg', {}) || {}; u[k] = v; LSX().lsSet('lqcfg', u); rp(); };
+    const draw = () => { const c2 = lqCfg(), btn = (on, a2, t) => '<button type="button" ' + a2 + ' style="margin:2px 4px 2px 0;padding:5px 10px;border-radius:8px;border:1px solid ' + (on ? '#dba118' : '#3a3a42') + ';background:' + (on ? '#dba118' : '#1c1c21') + ';color:' + (on ? '#111' : '#d6d6dc') + ';font-weight:' + (on ? 800 : 500) + ';cursor:pointer">' + t + '</button>';
+      p.innerHTML = '<b style="color:#dba118;font-size:13px">Liquidation levels</b><div style="font-size:11px;color:#8b8f9a;margin:4px 0 8px">Where leveraged traders are estimated to be liquidated: <span style="color:#ff963c">orange = longs (below price)</span>, <span style="color:#50c8ff">blue = shorts (above price)</span>. Longer bar = more money. TTM\'s own model from open interest and candles, for BTC and ETH, about 8% either side of price. It is an estimate, not real position data.</div>'
+        + '<div style="font-size:12px;margin:6px 0 2px"><b>Look-back</b></div>' + [['map', 'Default'], ['1d', '1 day'], ['1w', '1 week'], ['1m', '1 month']].map(m => btn(c2.win === m[0], 'data-win="' + m[0] + '"', m[1])).join('')
+        + '<div style="margin:10px 0"><label style="font-size:12px"><input type="checkbox" data-lines="1"' + (c2.lines ? ' checked' : '') + '> Draw lines at the biggest clusters</label></div><button type="button" data-done="1" style="padding:6px 14px;border-radius:8px;border:1px solid #dba118;background:#dba118;color:#111;font-weight:800;cursor:pointer">Done</button>'; };
+    draw(); p.onclick = e => { const b = e.target.closest('button'); if(!b) return; if(b.dataset.done){ p.remove(); return; } if(b.dataset.win){ set('win', b.dataset.win); draw(); } }; p.onchange = e => { const t = e.target; if(t.dataset.lines) set('lines', t.checked); }; }});
 })();

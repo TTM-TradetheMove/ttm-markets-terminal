@@ -1,0 +1,14 @@
+{
+  // TTM order flow recorder: keeps 48 hours of order book heat and big trades so TTM LENS charts open with history.
+  "name": "ttm-flow-recorder",
+  "main": "src/index.js",
+  "compatibility_date": "2025-11-01",
+  "durable_objects": { "bindings": [{ "name": "REC", "class_name": "Rec" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Rec"] }],
+  // every minute: make sure the recorder is awake and connected
+  "triggers": { "crons": ["* * * * *"] },
+  "vars": {
+    "SYMS": "BTC,ETH,SOL",
+    "ORIGINS": "https://ttm.markets,http://localhost:8765"
+  }
+}
