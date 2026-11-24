@@ -400,6 +400,7 @@ def build_htf(sym):
     longs = [[0.0] * nb for _ in HTF_TIERS]
     shorts = [[0.0] * nb for _ in HTF_TIERS]
     prev = None
+    cutoff = end - LOOKBACK_DAYS * DAY
     avg_vol = sum(c[5] * c[4] for c in cd[:30]) / 30 if len(cd) >= 30 else 0
     for t, o, h, l, c, v in cd:
         il, ih = idx(l), idx(h)
@@ -418,7 +419,7 @@ def build_htf(sym):
                 prev = cur
         else:
             d = v * c * 0.04  # no open interest history: assume a slice of the day's volume opened new positions
-        if d > 0:
+        if d > 0 and t < cutoff:  # the last 30 days come from the finer near-term map, so they are not counted twice
             entry = (h + l + c) / 3
             chg = (c - o) / o if o else 0
             lshare = 0.5 + max(-1.0, min(1.0, chg / 0.02)) * 0.15
@@ -435,7 +436,7 @@ def build_htf(sym):
                 for a in longs + shorts:
                     for i in range(nb):
                         a[i] *= f
-    return {"lo": round(lo, 4), "step": round(step, 4), "nb": nb, "price": last, "days": HTF_DAYS,
+    return {"lo": round(lo, 4), "step": round(step, 4), "nb": nb, "price": last, "days": HTF_DAYS, "older_than_days": LOOKBACK_DAYS,
             "tiers": HTF_TIERS, "source": "OKX daily open interest" if oi else "Coinbase daily volume (no open interest history)",
             "long": [[round(v / 1e6, 2) for v in a] for a in longs],
             "short": [[round(v / 1e6, 2) for v in a] for a in shorts]}
