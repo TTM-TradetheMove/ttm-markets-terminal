@@ -315,4 +315,62 @@ push({id: 'oflow', name: 'Order flow bubbles (TTM)', pane: 'overlay', calc: () =
         + '<div style="font-size:11px;color:#8b8f9a;margin-bottom:8px">Educational context only. Big prints show activity, not what price will do next.</div><button type="button" data-done="1" style="padding:6px 14px;border-radius:8px;border:1px solid #dba118;background:#dba118;color:#111;font-weight:800;cursor:pointer">Done</button>'; };
     draw(); p.onclick = e => { const b = e.target.closest('button'); if(!b) return; if(b.dataset.done){ p.remove(); return; } if(b.dataset.min){ set('min', +b.dataset.min); draw(); } else if(b.dataset.sc){ set('scale', +b.dataset.sc); draw(); } };
     p.onchange = p.oninput = e => { const t = e.target; if(t.dataset.lab) set('lab', t.checked); else if(t.dataset.col) set(t.dataset.col, t.value); }; }});
+
+/* 18. Order book heatmap (TTM): live resting orders from Bybit's public order book (1000 levels), drawn as horizontal lines behind the candles.
+   Brighter = more size waiting at that price. Builds while the chart is open. Optional wall lines and a small bid / ask ladder. */
+const OB = {};
+const obCfg = () => Object.assign({mode: 'both', gain: 1, ladder: false, wall: 500000}, (LSX().ls('obcfg', {}) || {}));
+const obSrc = S => { const ex = String(S.ex || ''), perp = /perp/.test(ex), ok = /^bybit_/.test(ex); return {ok, perp, pair: String(S.sym).toUpperCase() + 'USDT', key: 'ob' + (perp ? 'p' : 's') + ':' + S.sym}; };
+const obNice = x => { const e = Math.pow(10, Math.floor(Math.log10(x))), m = x / e; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * e; };
+function obConnect(e, src){
+  e.st = 'connecting'; let ws; try{ ws = new WebSocket('wss://stream.bybit.com/v5/public/' + (src.perp ? 'linear' : 'spot')); }catch(x){ e.st = 'closed'; return; }
+  e.ws = ws;
+  ws.onopen = () => { e.st = 'live'; ws.send(JSON.stringify({op: 'subscribe', args: ['orderbook.1000.' + src.pair]})); e.ping = setInterval(() => { try{ ws.send(JSON.stringify({op: 'ping'})); }catch(x){} }, 20000); };
+  ws.onmessage = m => { let j; try{ j = JSON.parse(m.data); }catch(x){ return; } if(!j || !j.data || !/^orderbook/.test(j.topic || '')) return; const dd = j.data;
+    if(j.type === 'snapshot'){ e.b = new Map(); e.a = new Map(); }
+    if(!e.b) return; (dd.b || []).forEach(z => { const p = +z[0], q = +z[1]; if(q > 0) e.b.set(p, q); else e.b.delete(p); }); (dd.a || []).forEach(z => { const p = +z[0], q = +z[1]; if(q > 0) e.a.set(p, q); else e.a.delete(p); });
+    e.upd = Date.now(); };
+  ws.onclose = () => { clearInterval(e.ping); e.st = 'closed'; if(e.ws === ws) e.ws = null; if(Date.now() - e.seen < 30000) setTimeout(() => { if(!e.ws && Date.now() - e.seen < 30000) obConnect(e, src); }, 3000); };
+  ws.onerror = () => { try{ ws.close(); }catch(x){} };
+}
+function obBest(e){ let bb = 0, ba = Infinity; if(e.b) e.b.forEach((q, p) => { if(p > bb) bb = p; }); if(e.a) e.a.forEach((q, p) => { if(p < ba) ba = p; }); return {bb, ba}; }
+function obSample(e){
+  if(!e.b || !e.a || !e.b.size || !e.a.size) return; const {bb, ba} = obBest(e); if(!bb || !isFinite(ba)) return; const mid = (bb + ba) / 2; if(!e.step) e.step = obNice(mid * 0.00003);
+  const M = new Map(), add = (q, p) => { const n = p * q; if(n < 1500) return; const k = Math.round(p / e.step); M.set(k, (M.get(k) || 0) + n); }; e.b.forEach(add); e.a.forEach(add);
+  const ids = new Int32Array(M.size), v = new Float32Array(M.size); let i = 0; M.forEach((n, k) => { ids[i] = k; v[i] = n; i++; }); e.sl.push({t: Date.now(), ids, v}); if(e.sl.length > 5000) e.sl.splice(0, 500);
+}
+function obStart(a, src){
+  let e = OB[src.key]; if(!e){ e = OB[src.key] = {sl: [], st: 'connecting', ws: null, seen: 0, step: 0, b: null, a: null}; }
+  e.seen = Date.now(); e.rp = a.repaint;
+  if(!e.ws && (!e.started || e.st === 'closed') && Date.now() - (e.tried || 0) > 5000){ e.started = true; e.tried = Date.now(); obConnect(e, src); }
+  if(!e.iv) e.iv = setInterval(() => { if(Date.now() - e.seen > 30000){ if(e.ws){ try{ e.ws.close(); }catch(x){} } return; } obSample(e); if(e.rp) try{ e.rp(); }catch(x){} }, 3000);
+  return e;
+}
+const obCol = v => { const t = Math.max(0, Math.min(1, v)), r = Math.round(20 + 235 * t * t), g2 = Math.round(70 + 185 * Math.pow(t, 1.4)), b = Math.round(170 + 85 * t); return 'rgba(' + r + ',' + g2 + ',' + b + ',' + (0.18 + 0.72 * t).toFixed(2) + ')'; };
+const obK = n => n >= 1e6 ? (n / 1e6).toFixed(n >= 1e7 ? 0 : 1) + 'M' : Math.round(n / 1e3) + 'K';
+push({id: 'obheat', name: 'Order book heatmap (TTM)', pane: 'overlay', calc: () => null, gate: () => !!(window.ttmCan && window.ttmCan('c:lensflow')),
+  under: a => { const {c, g, X, Y, d, i0, i1, S} = a; if(!d || d.length < 2) return; const src = obSrc(S); if(!src.ok) return; const e = obStart(a, src), cf = obCfg(); if(cf.mode === 'walls' || !e.step || !e.sl.length) return;
+    const step = d[1].t - d[0].t, tA = d[0].t + Math.max(0, i0 - 1) * step, tB = d[d.length - 1].t + step, cols = new Map(), all = [];
+    for(let k = e.sl.length - 1; k >= 0; k--){ const z = e.sl[k]; if(z.t < tA) break; if(z.t > tB) continue; const px = Math.floor(X((z.t - d[0].t) / step) / 2); let m = cols.get(px); if(!m){ m = new Map(); cols.set(px, m); } for(let i = 0; i < z.ids.length; i++){ const id = z.ids[i], v = z.v[i], o = m.get(id); if(o == null || v > o) m.set(id, v); } }
+    cols.forEach(m => m.forEach(v => { if(all.length < 20000) all.push(v); })); if(!all.length) return; all.sort((u, w) => u - w); const ref = Math.max(all[Math.floor(all.length * 0.96)] || 1, 5000) / cf.gain;
+    c.save(); cols.forEach((m, px) => { const x = px * 2; m.forEach((v, id) => { const y1 = Y((id + 0.5) * e.step), y2 = Y((id - 0.5) * e.step); if(y2 < g.mT || y1 > g.mB) return; c.fillStyle = obCol(Math.pow(Math.min(1, v / ref), 0.7)); c.fillRect(x, y1, 2.5, Math.max(1.4, y2 - y1)); }); }); c.restore(); },
+  over: a => { const {c, g, X, Y, d, S} = a; if(!d || d.length < 2) return; const src = obSrc(S); c.save(); c.beginPath(); c.rect(0, g.mT, g.pw, g.mB - g.mT); c.clip();
+    if(!src.ok){ c.font = '600 10px system-ui,sans-serif'; c.fillStyle = 'rgba(200,200,210,.7)'; c.textAlign = 'right'; c.textBaseline = 'top'; c.fillText('Order book heatmap needs a Bybit source', g.pw - 8, g.mT + 22); c.restore(); return; }
+    const e = obStart(a, src), cf = obCfg(); c.font = '600 10px system-ui,sans-serif'; c.textAlign = 'right'; c.textBaseline = 'top'; c.fillStyle = e.st === 'live' ? 'rgba(90,170,255,.95)' : 'rgba(200,200,210,.7)';
+    c.fillText('● Order book ' + (e.st === 'live' ? 'live' : e.st) + ' · Bybit ' + (src.perp ? 'perp' : 'spot') + (e.sl.length ? ' · ' + Math.round(e.sl.length * 3 / 60) + ' min built' : ''), g.pw - 8, g.mT + 22);
+    if(e.b && e.a && e.b.size && e.a.size){ const mid = obBest(e); const mk = (M, side) => { const G = new Map(); M.forEach((q, p) => { const k = Math.round(p / (e.step || 1)); const o = G.get(k) || {n: 0, q: 0, pn: 0}; o.n += p * q; o.q += q; o.pn += p * q * p; G.set(k, o); }); return Array.from(G.values()).filter(o => o.n >= cf.wall).sort((u, w) => w.n - u.n).slice(0, 3).map(o => ({n: o.n, q: o.q, side})); };
+      if(cf.mode !== 'heat'){ const lby = []; [].concat(mk(e.b, 1), mk(e.a, -1)).forEach(w => { const pr = w.n / w.q, y = Y(pr); if(y < g.mT || y > g.mB) return; const col = w.side > 0 ? '46,189,133' : '246,70,93'; c.strokeStyle = 'rgba(' + col + ',.85)'; c.lineWidth = 1.4; c.setLineDash([8, 4]); c.beginPath(); c.moveTo(0, y); c.lineTo(g.pw, y); c.stroke(); c.setLineDash([]); if(lby.some(v => Math.abs(v - y) < 17)) return; lby.push(y); const t = (w.side > 0 ? 'BID ' : 'ASK ') + '$' + obK(w.n); c.font = '700 10px system-ui,sans-serif'; const tw = c.measureText(t).width + 10; c.fillStyle = 'rgba(' + col + ',.95)'; c.fillRect(g.pw - 150 - tw, y - 8, tw, 16); c.fillStyle = '#0b0b0d'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(t, g.pw - 150 - tw / 2, y + .5); }); }
+      if(cf.ladder){ const bids = Array.from(e.b.entries()).sort((u, w) => w[0] - u[0]).slice(0, 7), asks = Array.from(e.a.entries()).sort((u, w) => u[0] - w[0]).slice(0, 7), mx = Math.max.apply(null, bids.concat(asks).map(z => z[1])) || 1, x0 = 10, y0 = g.mT + 120, rh = 15, W = 150;
+        c.fillStyle = 'rgba(10,10,13,.78)'; c.fillRect(x0 - 4, y0 - 4, W + 8, rh * 15 + 8); c.font = '600 10px system-ui,sans-serif'; c.textBaseline = 'middle';
+        asks.slice().reverse().concat([null], bids).forEach((z, i) => { const y = y0 + i * rh; if(!z){ c.fillStyle = '#8b8f9a'; c.textAlign = 'center'; c.fillText('spread ' + (mid.ba - mid.bb).toFixed(mid.ba < 10 ? 4 : 1), x0 + W / 2, y + rh / 2); return; } const isA = i < asks.length, col = isA ? '246,70,93' : '46,189,133'; c.fillStyle = 'rgba(' + col + ',.28)'; c.fillRect(x0 + W - W * z[1] / mx, y + 1, W * z[1] / mx, rh - 2); c.fillStyle = '#e8e8ec'; c.textAlign = 'left'; c.fillText(z[0] < 10 ? z[0].toFixed(4) : z[0].toFixed(1), x0 + 3, y + rh / 2); c.textAlign = 'right'; c.fillText(z[1] >= 100 ? Math.round(z[1]) : z[1].toFixed(2), x0 + W - 3, y + rh / 2); }); } }
+    c.restore(); },
+  settings: p => { const rp = () => { try{ window.TTM_REPAINT(); }catch(x){} }, set = (k, v) => { const u = LSX().ls('obcfg', {}) || {}; u[k] = v; LSX().lsSet('obcfg', u); rp(); };
+    const draw = () => { const c2 = obCfg(), btn = (on, a2, t) => '<button type="button" ' + a2 + ' style="margin:2px 4px 2px 0;padding:5px 10px;border-radius:8px;border:1px solid ' + (on ? '#dba118' : '#3a3a42') + ';background:' + (on ? '#dba118' : '#1c1c21') + ';color:' + (on ? '#111' : '#d6d6dc') + ';font-weight:' + (on ? 800 : 500) + ';cursor:pointer">' + t + '</button>';
+      p.innerHTML = '<b style="color:#dba118;font-size:13px">Order book heatmap</b><div style="font-size:11px;color:#8b8f9a;margin:4px 0 8px">Live resting orders from Bybit (1000 levels each side). Brighter lines = more size waiting at that price. Needs a Bybit source. It builds while this chart is open, so it starts empty. Orders can be pulled at any moment, so walls are context, not a promise.</div>'
+        + '<div style="font-size:12px;margin:6px 0 2px"><b>Show</b></div>' + [['both', 'Heatmap + walls'], ['heat', 'Heatmap only'], ['walls', 'Walls only']].map(m => btn(c2.mode === m[0], 'data-mode="' + m[0] + '"', m[1])).join('')
+        + '<div style="font-size:12px;margin:8px 0 2px"><b>Brightness</b></div>' + [[0.6, 'Low'], [1, 'Medium'], [1.8, 'High'], [3, 'Max']].map(m => btn(c2.gain === m[0], 'data-gain="' + m[0] + '"', m[1])).join('')
+        + '<div style="font-size:12px;margin:8px 0 2px"><b>Wall lines for orders over</b></div>' + [[250000, '$250K'], [500000, '$500K'], [1000000, '$1M'], [2500000, '$2.5M']].map(m => btn(c2.wall === m[0], 'data-wall="' + m[0] + '"', m[1])).join('')
+        + '<div style="margin:10px 0"><label style="font-size:12px"><input type="checkbox" data-lad="1"' + (c2.ladder ? ' checked' : '') + '> Show bid / ask ladder</label></div><button type="button" data-done="1" style="padding:6px 14px;border-radius:8px;border:1px solid #dba118;background:#dba118;color:#111;font-weight:800;cursor:pointer">Done</button>'; };
+    draw(); p.onclick = e => { const b = e.target.closest('button'); if(!b) return; if(b.dataset.done){ p.remove(); return; } if(b.dataset.mode){ set('mode', b.dataset.mode); draw(); } else if(b.dataset.gain){ set('gain', +b.dataset.gain); draw(); } else if(b.dataset.wall){ set('wall', +b.dataset.wall); draw(); } };
+    p.onchange = e => { const t = e.target; if(t.dataset.lad) set('ladder', t.checked); }; }});
 })();
