@@ -326,7 +326,7 @@ function paint0(){
   S.orders.concat(papLines().map(l => l.px), trkLines().map(l => l.px)).forEach(o => { if(o >= lo - rg && o <= hi + rg){ lo = Math.min(lo, o); hi = Math.max(hi, o); } });
   if(S.pv){ lo = S.pv.lo; hi = S.pv.hi; } else { const pd = (hi - lo) * .08; lo -= pd; hi += pd; if(S.inds.vol) lo -= (hi - lo) * .12; }
   S.sc = {lo, hi}; const Y = p => g.mT + (g.mB - g.mT) * (1 - (p - lo) / (hi - lo)); S.Y = Y;
-  const act = allInd().filter(i => S.inds[i.id] || i.always), A = ind => ({c, g, X, Y, d, i0, i1, S, res: R(ind, d), fx, i0w: i0, daily: (sy, n) => cand(sy, '1d', n || 95), repaint: paint}), cc = act.find(i => i.candleColor), cols = cc ? R(cc, d) : null;
+  const act = allInd().filter(i => S.inds[i.id] || i.always), A = ind => ({c, g, X, Y, d, i0, i1, S, res: R(ind, d), fx, i0w: i0, daily: (sy, n) => cand(sy, '1d', n || 95), hourly: (sy, n) => cand(sy, '1h', n || 1000), repaint: paint}), cc = act.find(i => i.candleColor), cols = cc ? R(cc, d) : null;
   c.font = '11px system-ui,sans-serif'; c.textBaseline = 'middle';
   { const want = Math.max(4, Math.floor((g.mB - g.mT) / 38)), raw = (hi - lo) / want, mag = Math.pow(10, Math.floor(Math.log10(raw))), nm = raw / mag, stp = (nm <= 1 ? 1 : nm <= 2 ? 2 : nm <= 2.5 ? 2.5 : nm <= 5 ? 5 : 10) * mag; for(let p = Math.ceil(lo / stp) * stp, n = 0; p <= hi && n < 60; p += stp, n++){ const y = Y(p); if(y < g.mT - 2 || y > g.mB + 2) continue; c.strokeStyle = '#1b1b21'; c.beginPath(); c.moveTo(0, y); c.lineTo(g.pw, y); c.stroke(); c.fillStyle = '#8b8f9a'; c.textAlign = 'left'; c.fillText(fx(p), g.pw + 6, y); } }
   const ab = document.getElementById('tcAuto'); if(ab) ab.classList.toggle('on', !S.pv);

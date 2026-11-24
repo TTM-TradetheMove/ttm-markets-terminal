@@ -52,28 +52,38 @@ push({id: 'ttmema', name: 'TTM EMA cloud + signals', pane: 'overlay', calc: r =>
     R.sig.forEach(s => { if(s.i < a.i0 || s.i > a.i1) return; const x = X(s.i), r = d[s.i], low = s.k === 'EL' || s.k === 'CB'; tagL(c, x, low ? Y(r.l) : Y(r.h), s.k, s.k === 'EL' ? '#2e9e4f' : s.k === 'ES' ? '#d93a35' : s.k === 'CB' ? '#00c853' : '#8b1a1a', '#fff', !low); }); }});
 
 /* 5. CME gap (Friday 21:00 UTC close to Monday open), BTC / ETH / XRP / SOL only. Hidden once filled. */
-push({id: 'cme', name: 'Old Style CME (TTM)', pane: 'overlay', calc: (r, S) => {
+const cmeCalc = r => {
   const out = {}; if(!r.length) return out; let fri = null;
   for(let i = 0; i < r.length; i++){ const u = utc(r[i].t); if(u.dow === 5 && u.min <= 21 * 60) fri = {i, c: r[i].c}; else if(u.dow === 1 && fri && i > fri.i && (i === 0 || utc(r[i - 1].t).dow !== 1)){ out.g = {a: fri.i, m: i, close: fri.c, top: Math.max(fri.c, r[i].o), bot: Math.min(fri.c, r[i].o)}; fri = null; } }
   if(fri && !out.g) out.fri = fri; else if(fri && out.g && fri.i > out.g.m) { out.fri = fri; out.g = null; }
   if(out.g){ let h = r[out.g.m].h, l = r[out.g.m].l; out.g.fill = null; for(let i = out.g.m; i < r.length; i++){ h = Math.max(h, r[i].h); l = Math.min(l, r[i].l); if(Math.min(out.g.top, h) - Math.max(out.g.bot, l) >= (out.g.top - out.g.bot) * .9999 && out.g.fill == null) out.g.fill = i; } out.g.pct = Math.min(1, (Math.min(out.g.top, h) - Math.max(out.g.bot, l)) / ((out.g.top - out.g.bot) || 1)); }
-  return out; },
+  return out; };
+/* On charts coarser than 1h the gap is worked out from hourly candles, so the Friday close and Monday open are right on every timeframe. */
+const CMEH = {};
+function cmeRes(a){ const d = a.d; if(d.length < 2 || d[1].t - d[0].t <= 36e5 * 1.01) return a.res; const S = a.S, key = S.ex + '|' + S.sym; let e = CMEH[key]; if(!e || (Date.now() - e.t > 6e5 && !e.busy)){ e = CMEH[key] = e || {t: 0, D: null, busy: false}; e.busy = true; try{ a.hourly(S.sym, 1000).then(D => { e.D = D; e.t = Date.now(); e.busy = false; a.repaint(); }).catch(() => { e.busy = false; e.t = Date.now(); }); }catch(x){ e.busy = false; e.t = Date.now(); } } if(!e.D || e.D.length < 30) return a.res; const H = e.D, o = cmeCalc(H), ix = t => { let k = 0; for(let i = d.length - 1; i >= 0; i--) if(d[i].t <= t){ k = i; break; } return k; }, out = {}; if(o.fri) out.fri = {i: ix(H[o.fri.i].t), c: o.fri.c}; if(o.g) out.g = {a: ix(H[o.g.a].t), m: ix(H[o.g.m].t), close: o.g.close, top: o.g.top, bot: o.g.bot, fill: o.g.fill == null ? null : ix(H[o.g.fill].t), pct: o.g.pct}; return out; }
+push({id: 'cme', name: 'Old Style CME (TTM)', pane: 'overlay', calc: (r, S) => cmeCalc(r),
   alerts: [{k: 'fill', name: 'Old Style CME filled'}], alertHits: (r, R) => R && R.g && R.g.fill != null ? [{i: R.g.fill, k: 'fill'}] : [],
-  over: a => { const R = a.res, {c, g, X, Y, S} = a; if(!R || !/^(BTC|ETH|XRP|SOL)$/.test(S.sym)) return; const w = g.w;
+  over: a => { const R = cmeRes(a), {c, g, X, Y, S} = a; if(!R || !/^(BTC|ETH|XRP|SOL)$/.test(S.sym)) return; const w = g.w;
     if(R.fri){ const y = Y(R.fri.c); c.strokeStyle = '#ffd600'; c.beginPath(); c.moveTo(X(R.fri.i), y); c.lineTo(g.pw, y); c.stroke(); tagL(c, X(R.fri.i), y, 'CME Friday close', '#ffd600', '#000', true); }
     if(R.g && R.g.fill == null){ const gp = R.g, col = gp.pct >= .5 ? '#ff9800' : '#ff3b30', yT = Y(gp.top), yB = Y(gp.bot); box(a, X(gp.a), g.pw, yT, Math.max(yB, yT + 2), col + '30', col); tagL(c, Math.min(g.pw - 40, (X(gp.a) + g.pw) / 2), yT, 'OLD STYLE CME ' + Math.round(gp.pct * 100) + '% filled', col, '#fff', true); } }});
 
+/* Monday and weekend levels come from daily candles (UTC days), so they are exact on every chart timeframe. */
+const DLV = {};
+function dayLv(a){ const S = a.S, key = S.ex + '|' + S.sym; let e = DLV[key]; if(!e || (Date.now() - e.t > 6e5 && !e.busy)){ e = DLV[key] = e || {t: 0, D: null, busy: false}; e.busy = true; try{ a.daily(S.sym, 40).then(D => { e.D = D; e.t = Date.now(); e.busy = false; a.repaint(); }).catch(() => { e.busy = false; e.t = Date.now(); }); }catch(x){ e.busy = false; e.t = Date.now(); } } return e.D; }
+function dayMon(D){ if(!D || !D.length) return null; for(let i = D.length - 1; i >= 0; i--) if(utc(D[i].t).dow === 1) return {hi: D[i].h, lo: D[i].l, t0: D[i].t}; return null; }
+function dayWke(D){ if(!D || !D.length) return null; let e = -1; for(let i = D.length - 1; i >= 0; i--){ const w = utc(D[i].t).dow; if(w === 6 || w === 0){ e = i; break; } } if(e < 0) return null; let st = e; while(st > 0 && [6, 0].includes(utc(D[st - 1].t).dow)) st--; let hi = -1, lo = 1e18; for(let i = st; i <= e; i++){ hi = Math.max(hi, D[i].h); lo = Math.min(lo, D[i].l); } return {hi, lo, t0: D[st].t}; }
+const dayX = (a, R, fb) => { if(R.t0 == null) return a.X(fb); const d = a.d; let k = -1; for(let i = d.length - 1; i >= 0; i--) if(d[i].t <= R.t0){ k = i; break; } return a.X(Math.max(0, k)); };
 /* 6. Monday high / low (current week) */
 push({id: 'mon', name: 'Monday high / low (TTM)', pane: 'overlay', calc: r => {
   let st = -1; for(let i = r.length - 1; i >= 0; i--){ if(utc(r[i].t).dow === 1){ st = i; if(i === 0 || utc(r[i - 1].t).dow !== 1){ break; } } else if(st >= 0) break; }
   if(st < 0) return null; let hi = -1, lo = 1e18, hb = st, lb = st; for(let i = st; i < r.length && utc(r[i].t).dow === 1; i++){ if(r[i].h > hi){ hi = r[i].h; hb = i; } if(r[i].l < lo){ lo = r[i].l; lb = i; } } return {hi, lo, hb, lb}; },
-  over: a => { const R = a.res, {c, g, X, Y} = a; if(!R) return; c.strokeStyle = '#d4af37'; c.lineWidth = 2; [[R.hi, R.hb, 'MON HIGH', true], [R.lo, R.lb, 'MON LOW', false]].forEach(z => { const y = Y(z[0]); c.beginPath(); c.moveTo(X(z[1]), y); c.lineTo(g.pw, y); c.stroke(); tagL(c, g.pw - 34, y, z[2], '#d4af37', '#000', z[3]); }); c.lineWidth = 1; }});
+  over: a => { const R = dayMon(dayLv(a)) || a.res, {c, g, X, Y} = a; if(!R) return; c.strokeStyle = '#d4af37'; c.lineWidth = 2; [[R.hi, R.hb, 'MON HIGH', true], [R.lo, R.lb, 'MON LOW', false]].forEach(z => { const y = Y(z[0]); c.beginPath(); c.moveTo(dayX(a, R, z[1]), y); c.lineTo(g.pw, y); c.stroke(); tagL(c, g.pw - 34, y, z[2], '#d4af37', '#000', z[3]); }); c.lineWidth = 1; }});
 
 /* 6b. Weekend high / low (latest Saturday + Sunday, UTC) */
 push({id: 'wkh', name: 'Weekend high / low (TTM)', pane: 'overlay', calc: r => {
   let e = -1; for(let i = r.length - 1; i >= 0; i--){ const d = utc(r[i].t).dow; if(d === 6 || d === 0){ e = i; break; } } if(e < 0) return null;
   let st = e; while(st > 0 && [6, 0].includes(utc(r[st - 1].t).dow)) st--; let hi = -1, lo = 1e18, hb = st, lb = st; for(let i = st; i <= e; i++){ if(r[i].h > hi){ hi = r[i].h; hb = i; } if(r[i].l < lo){ lo = r[i].l; lb = i; } } return {hi, lo, hb, lb}; },
-  over: a => { const R = a.res, {c, g, X, Y} = a; if(!R) return; c.strokeStyle = '#f5f5f5'; c.lineWidth = 2; [[R.hi, R.hb, 'WEEKEND HIGH', true], [R.lo, R.lb, 'WEEKEND LOW', false]].forEach(z => { const y = Y(z[0]); c.beginPath(); c.moveTo(X(z[1]), y); c.lineTo(g.pw, y); c.stroke(); tagL(c, g.pw - 50, y, z[2], '#f5f5f5', '#000', z[3]); }); c.lineWidth = 1; }});
+  over: a => { const R = dayWke(dayLv(a)) || a.res, {c, g, X, Y} = a; if(!R) return; c.strokeStyle = '#f5f5f5'; c.lineWidth = 2; [[R.hi, R.hb, 'WEEKEND HIGH', true], [R.lo, R.lb, 'WEEKEND LOW', false]].forEach(z => { const y = Y(z[0]); c.beginPath(); c.moveTo(dayX(a, R, z[1]), y); c.lineTo(g.pw, y); c.stroke(); tagL(c, g.pw - 50, y, z[2], '#f5f5f5', '#000', z[3]); }); c.lineWidth = 1; }});
 
 /* 6c. Anchored VWAP + 1/2/3 standard deviation bands. Anchor per coin; every line has its own colour, thickness and pattern. */
 const AVK = ['m3', 'm2', 'm1', 'v', 'p1', 'p2', 'p3'], AVN = {v: 'AVWAP', p1: '+1', p2: '+2', p3: '+3', m1: '-1', m2: '-2', m3: '-3'}, AVD = {v: ['#dba118', 2, 's', 1], p1: ['#3fb47a', 1.2, 's', 1], p2: ['#4fd1c5', 1.2, 'd', 1], p3: ['#5aa9ff', 1.2, 't', 1], m1: ['#e0554d', 1.2, 's', 1], m2: ['#ff8a5b', 1.2, 'd', 1], m3: ['#d36bff', 1.2, 't', 1]};
