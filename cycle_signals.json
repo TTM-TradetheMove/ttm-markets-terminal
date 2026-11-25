@@ -1,7 +1,7 @@
 {
- "generated_at": "2026-11-25T13:29:33.181748+00:00",
+ "generated_at": "2026-11-25T23:47:01.586310+00:00",
  "as_of": "2026-11-25",
- "price": 59212.62,
+ "price": 60232.55,
  "realized": 53447.67,
  "cycle_high": {
   "price": 124824.45,
@@ -18,21 +18,21 @@
     "k": "lr",
     "name": "Below the −1σ regression band",
     "on": true,
-    "detail": "price $59,213 vs band $69,277",
+    "detail": "price $60,233 vs band $69,277",
     "short": "Regression Band"
    },
    {
     "k": "rp",
     "name": "Below realised price",
     "on": false,
-    "detail": "price $59,213 vs realised $53,448",
+    "detail": "price $60,233 vs realised $53,448",
     "short": "Realised Price"
    },
    {
     "k": "pu",
     "name": "Puell multiple below 0.5 (miner stress)",
     "on": false,
-    "detail": "Puell 0.79",
+    "detail": "Puell 0.80",
     "short": "Puell Multiple"
    },
    {
@@ -53,7 +53,7 @@
     "k": "fr",
     "name": "DVOL fear in the top 10% of its history",
     "on": false,
-    "detail": "DVOL score 0.52",
+    "detail": "DVOL score 0.42",
     "short": "DVOL Fear"
    }
   ]
@@ -68,21 +68,21 @@
     "k": "lr",
     "name": "Above the +1σ regression band",
     "on": false,
-    "detail": "price $59,213 vs band $266,961",
+    "detail": "price $60,233 vs band $266,962",
     "short": "Regression Band"
    },
    {
     "k": "mv",
     "name": "MVRV above 3.5 (price vs realised price)",
     "on": false,
-    "detail": "MVRV 1.11",
+    "detail": "MVRV 1.13",
     "short": "MVRV"
    },
    {
     "k": "pu",
     "name": "Puell multiple above 4 (miner euphoria)",
     "on": false,
-    "detail": "Puell 0.79",
+    "detail": "Puell 0.80",
     "short": "Puell Multiple"
    },
    {
@@ -103,7 +103,7 @@
     "k": "tt",
     "name": "TTM Total Market Risk above 0.80",
     "on": false,
-    "detail": "score 0.04",
+    "detail": "score 0.03",
     "short": "TTM Total Market Risk"
    }
   ]
