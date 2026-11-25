@@ -42,7 +42,7 @@ export class Rec {
     return new Response('TTM flow recorder', {status: 200});
   }
   async start(){
-    if(!this.started){ this.started = true; this.syms.forEach(s => ['bybit', 'binance'].forEach(ex => ['spot', 'perp'].forEach(m => this.open(ex, m, s)))); }
+    if(!this.started){ this.started = true; this.syms.forEach(s => ['bybit'].forEach(ex => ['spot', 'perp'].forEach(m => this.open(ex, m, s)))); }
     const a = await this.st.storage.getAlarm(); if(a == null) await this.st.storage.setAlarm(Date.now() + 15000);
   }
   async alarm(){
