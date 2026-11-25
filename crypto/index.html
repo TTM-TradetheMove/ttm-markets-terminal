@@ -1485,6 +1485,9 @@ body.rm-full #rmIn{font-size:17px}
         <div class="filter-row" id="liqSymbolRow">
           <button class="filter-chip active" data-liqsym="BTCUSDT">BTC</button>
           <button class="filter-chip" data-liqsym="ETHUSDT">ETH</button>
+          <button class="filter-chip" data-liqsym="SOLUSDT">SOL</button>
+          <button class="filter-chip" data-liqsym="XRPUSDT">XRP</button>
+          <button class="filter-chip" data-liqsym="DOGEUSDT">DOGE</button>
         </div>
       </div>
 
@@ -3091,7 +3094,7 @@ Promise.all([
 // ---- Liquidation map (real Binance + Bybit liquidation orders, last 24h) ----
 let LIQ_DATA = null;
 let LIQ_SYMBOL = 'BTCUSDT';
-const liqSymLabel = {BTCUSDT:'BTC', ETHUSDT:'ETH'};
+const liqSymLabel = {BTCUSDT:'BTC', ETHUSDT:'ETH', SOLUSDT:'SOL', XRPUSDT:'XRP', DOGEUSDT:'DOGE'};
 
 function fmtUsd(n){
   if(n >= 1e6) return '$' + (n/1e6).toFixed(2) + 'm';
@@ -3901,9 +3904,9 @@ fetch('../crypto_bias_history.json?t=' + Date.now()).then(r => r.ok ? r.json() :
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const usd = n => n >= 1e9 ? '$' + (n/1e9).toFixed(2) + 'B' : n >= 1e6 ? '$' + (n/1e6).toFixed(2) + 'M' : n >= 1e3 ? '$' + (n/1e3).toFixed(1) + 'K' : '$' + Math.round(n);
-const symKey = () => (typeof LIQ_SYMBOL !== 'undefined' && LIQ_SYMBOL === 'ETHUSDT') ? 'ETH' : 'BTC';
+const symKey = () => (typeof LIQ_SYMBOL !== 'undefined' && LIQ_SYMBOL) ? String(LIQ_SYMBOL).replace(/USDT$/, '') : 'BTC';
 let TOT = null, HM = null, scope = 0, tab = 'heat';
-const fmtP = p => p >= 1000 ? p.toLocaleString('en-US', {maximumFractionDigits:0}) : p.toFixed(2);
+const fmtP = p => p >= 1000 ? p.toLocaleString('en-US', {maximumFractionDigits:0}) : p >= 10 ? p.toFixed(2) : p >= 1 ? p.toFixed(3) : p.toFixed(4);
 
 /* ---------- Total liquidations ---------- */
 function windowSum(w, sc){
