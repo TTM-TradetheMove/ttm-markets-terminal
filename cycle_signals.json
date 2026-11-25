@@ -1,13 +1,13 @@
 {
- "generated_at": "2026-11-25T00:06:51.176523+00:00",
- "as_of": "2026-11-24",
- "price": 59967.6,
- "realized": 53524.18,
+ "generated_at": "2026-11-25T13:29:33.181748+00:00",
+ "as_of": "2026-11-25",
+ "price": 59212.62,
+ "realized": 53447.67,
  "cycle_high": {
   "price": 124824.45,
   "date": "2025-10-06"
  },
- "months_since_halving": 31.1,
+ "months_since_halving": 31.2,
  "low": {
   "n": 3,
   "of": 6,
@@ -18,28 +18,28 @@
     "k": "lr",
     "name": "Below the −1σ regression band",
     "on": true,
-    "detail": "price $59,968 vs band $69,247",
+    "detail": "price $59,213 vs band $69,277",
     "short": "Regression Band"
    },
    {
     "k": "rp",
     "name": "Below realised price",
     "on": false,
-    "detail": "price $59,968 vs realised $53,524",
+    "detail": "price $59,213 vs realised $53,448",
     "short": "Realised Price"
    },
    {
     "k": "pu",
     "name": "Puell multiple below 0.5 (miner stress)",
     "on": false,
-    "detail": "Puell 0.80",
+    "detail": "Puell 0.79",
     "short": "Puell Multiple"
    },
    {
     "k": "rk",
     "name": "TTM Bitcoin Risk below 0.20",
     "on": true,
-    "detail": "score 0.15",
+    "detail": "score 0.14",
     "short": "TTM Bitcoin Risk"
    },
    {
@@ -53,7 +53,7 @@
     "k": "fr",
     "name": "DVOL fear in the top 10% of its history",
     "on": false,
-    "detail": "DVOL score 0.44",
+    "detail": "DVOL score 0.52",
     "short": "DVOL Fear"
    }
   ]
@@ -68,35 +68,35 @@
     "k": "lr",
     "name": "Above the +1σ regression band",
     "on": false,
-    "detail": "price $59,968 vs band $266,830",
+    "detail": "price $59,213 vs band $266,961",
     "short": "Regression Band"
    },
    {
     "k": "mv",
     "name": "MVRV above 3.5 (price vs realised price)",
     "on": false,
-    "detail": "MVRV 1.12",
+    "detail": "MVRV 1.11",
     "short": "MVRV"
    },
    {
     "k": "pu",
     "name": "Puell multiple above 4 (miner euphoria)",
     "on": false,
-    "detail": "Puell 0.80",
+    "detail": "Puell 0.79",
     "short": "Puell Multiple"
    },
    {
     "k": "rk",
     "name": "TTM Bitcoin Risk above 0.80",
     "on": false,
-    "detail": "score 0.15",
+    "detail": "score 0.14",
     "short": "TTM Bitcoin Risk"
    },
    {
     "k": "tm",
     "name": "12 to 18 months after a halving",
     "on": false,
-    "detail": "31.1 months since the halving",
+    "detail": "31.2 months since the halving",
     "short": "31 months after halving"
    },
    {
@@ -6675,45 +6675,45 @@
    "low": {
     "Regression Band": [
      144,
-     1771
+     1772
     ],
     "Puell Multiple": [
      7,
-     1746
+     1747
     ],
     "TTM Bitcoin Risk": [
-     118,
-     1546
+     119,
+     1547
     ],
     "Cycle timing": [
-     80,
-     1674
+     81,
+     1675
     ],
     "DVOL Fear": [
      1,
-     1226
+     1227
     ]
    },
    "high": {
     "Regression Band": [
      53,
-     1771
+     1772
     ],
     "Puell Multiple": [
      6,
-     1746
+     1747
     ],
     "TTM Bitcoin Risk": [
      10,
-     1546
+     1547
     ],
     "Cycle timing": [
      61,
-     1674
+     1675
     ],
     "TTM Total Market Risk": [
      19,
-     1503
+     1504
     ]
    }
   },
