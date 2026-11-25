@@ -9,12 +9,12 @@ export default {
     const u = new URL(req.url), org = req.headers.get('Origin') || '', ok = (env.ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
     const cors = {'Access-Control-Allow-Origin': ok.includes(org) ? org : (ok[0] || '*'), 'Vary': 'Origin', 'Access-Control-Allow-Methods': 'GET, OPTIONS'};
     if(req.method === 'OPTIONS') return new Response(null, {status: 204, headers: cors});
-    const stub = env.REC.get(env.REC.idFromName('main'), {locationHint: env.HINT || 'apac'});
+    const stub = env.REC.get(env.REC.idFromName(env.DOID || 'main'), {locationHint: env.HINT || 'weur'});
     const r = await stub.fetch(req.url.replace(/^https?:\/\/[^/]+/, 'https://rec'));
     const h = new Headers(r.headers); Object.entries(cors).forEach(([k, v]) => h.set(k, v)); if(!h.has('Cache-Control')) h.set('Cache-Control', 'public, max-age=8');
     return new Response(r.body, {status: r.status, headers: h});
   },
-  async scheduled(ev, env){ const stub = env.REC.get(env.REC.idFromName('main'), {locationHint: env.HINT || 'apac'}); await stub.fetch('https://rec/ping'); }
+  async scheduled(ev, env){ const stub = env.REC.get(env.REC.idFromName(env.DOID || 'main'), {locationHint: env.HINT || 'weur'}); await stub.fetch('https://rec/ping'); }
 };
 
 export class Rec {
@@ -56,7 +56,7 @@ export class Rec {
     s.tried = Date.now(); s.st = 'connecting'; s.b = null; s.a = null; s.buf = []; s.ready = false; s.last = 0; let ws;
     try{
       const url = s.ex === 'bybit' ? 'wss://stream.bybit.com/v5/public/' + (s.m === 'perp' ? 'linear' : 'spot')
-        : (s.m === 'perp' ? 'wss://fstream.binance.com/stream?streams=' : 'wss://stream.binance.com:9443/stream?streams=') + s.pair.toLowerCase() + '@depth@100ms/' + s.pair.toLowerCase() + '@aggTrade';
+        : (s.m === 'perp' ? 'wss://fstream.binance.com/stream?streams=' : 'wss://data-stream.binance.vision/stream?streams=') + s.pair.toLowerCase() + '@depth@100ms/' + s.pair.toLowerCase() + '@aggTrade';
       ws = new WebSocket(url);
     }catch(x){ s.st = 'error'; return; }
     s.ws = ws;
@@ -73,7 +73,7 @@ export class Rec {
   }
   async snap(s){
     try{
-      const url = s.m === 'perp' ? 'https://fapi.binance.com/fapi/v1/depth?symbol=' + s.pair + '&limit=1000' : 'https://api.binance.com/api/v3/depth?symbol=' + s.pair + '&limit=5000';
+      const url = s.m === 'perp' ? 'https://fapi.binance.com/fapi/v1/depth?symbol=' + s.pair + '&limit=1000' : 'https://data-api.binance.vision/api/v3/depth?symbol=' + s.pair + '&limit=5000';
       const r = await fetch(url); if(!r.ok){ s.st = 'blocked ' + r.status; try{ s.ws && s.ws.close(); }catch(x){} return; } const j = await r.json();
       s.b = new Map(); s.a = new Map(); j.bids.forEach(z => s.b.set(+z[0], +z[1])); j.asks.forEach(z => s.a.set(+z[0], +z[1])); s.last = j.lastUpdateId; s.synced = false;
       const q = s.buf; s.buf = []; s.ready = true; q.forEach(e => this.depth(s, e));

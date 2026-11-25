@@ -9,6 +9,8 @@
   "triggers": { "crons": ["* * * * *"] },
   "vars": {
     "SYMS": "BTC,ETH,SOL",
+    "DOID": "eu1",
+    "HINT": "weur",
     "ORIGINS": "https://ttm.markets,http://localhost:8765"
   }
 }
