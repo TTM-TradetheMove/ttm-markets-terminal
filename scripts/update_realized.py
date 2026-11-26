@@ -161,7 +161,7 @@ def main():
     series = [[d, round(p, 2), round(r, 2)] for i, (d, p, r) in enumerate(rows) if i >= cut or i % 7 == 0]
     price, real = rows[-1][1], rows[-1][2]
     out = {"updated": datetime.now(timezone.utc).isoformat(timespec="seconds"), "as_of": last_date, "price": round(price, 2),
-           "realized": round(real, 2), "realized_as_of": status.get("realized_as_of", last_date), "mvrv": round(price / real, 3), "series": series, "balanced": balanced_series([x[0] for x in series])}
+           "realized": round(real, 2), "realized_as_of": status.get("realized_as_of", last_date), "mvrv": round(price / real, 3), "series": series}
     json.dump(out, open(os.path.join(ROOT, "btc_realized.json"), "w"), separators=(",", ":"))
     json.dump(status, open(os.path.join(ROOT, "btc_realized_status.json"), "w"), indent=1)
     print("saved", last_date, out["price"], out["realized"], len(series), "points")
