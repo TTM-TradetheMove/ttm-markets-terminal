@@ -4513,12 +4513,24 @@ function saveAll(l){ return lsSet(SKEY, l.slice(0, 500)); }
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 function acct(id){
   id = id || S.acc || 'lev'; const start = num(BALS[id]) || 0; let real = 0, locked = 0, open = 0, closed = 0;
-  loadSaved().forEach(x => { if(accOf(x) !== id) return; if(x.status === 'closed' && x.res){ real += x.res.pnl; closed++; } else if(x.status === 'open' && x.snap){ locked += x.snap.margin; open++; } });
+  loadSaved().forEach(x => { if(accOf(x) !== id) return; if(x.status === 'closed' && x.res){ real += x.res.pnl; if(!isPartRow(x)) closed++; } else if(x.status === 'open' && x.snap){ locked += x.snap.margin; open++; } });
   const equity = start + real; return {id, start, real, locked, open, closed, equity, avail: Math.max(0, equity - locked)};
 }
 function acctAll(){ const t = {start: 0, real: 0, locked: 0, open: 0, closed: 0, equity: 0, avail: 0}; ACCS.forEach(a => { const x = acct(a[0]); Object.keys(t).forEach(k => t[k] += x[k]); }); return t; }
 const kind = (pnl, risk) => Math.abs(pnl) < 0.05 * risk ? 'be' : pnl > 0 ? 'win' : 'loss';
-const closedOf = id => loadSaved().filter(x => x.status === 'closed' && x.res && x.snap && (!id || id === 'all' || accOf(x) === id)).sort((a, b) => a.res.closed - b.res.closed);
+// A trade can be closed in steps (part closes are saved as their own small rows). For stats and the history table the whole trade counts once:
+// it starts when the first order opened and ends at the last close, and its P&L, risk and R add up every step. Balances still use the individual steps.
+const isPartRow = y => !!(y && (y.parent || /% closed\)$/.test(y.name || '')));
+function wholeTrades(list){
+  const used = new Set(), out = [], rd = v => Math.round(v * 100) / 100;
+  const merge = (x, parts) => { const legs = parts.concat([x]).filter(l => l.res && l.snap).sort((a, b) => (a.res.closed || 0) - (b.res.closed || 0)), sum = k => legs.reduce((t, l) => t + (+l.snap[k] || 0), 0);
+    const snap = Object.assign({}, x.snap, {riskUsd: sum('riskUsd') || x.snap.riskUsd, units: sum('units'), notional: sum('notional'), margin: sum('margin')}), pnl = rd(legs.reduce((t, l) => t + l.res.pnl, 0)), last = legs[legs.length - 1];
+    const how = legs.length > 1 ? 'Closed in ' + legs.length + ' steps: ' + legs.map(l => String(l.res.how || '').split(' · ')[0].replace(/; the rest stays open/, '')).join(' → ') : (x.res.how || '');
+    return Object.assign({}, x, {snap, res: {pnl, r: snap.riskUsd ? pnl / snap.riskUsd : x.res.r, how, closed: last.res.closed || x.res.closed, auto: x.res.auto}, legs, __i: list.indexOf(x), j: x.j || (parts.find(q => q.j) || {}).j}); };
+  list.forEach(x => { if(!x || !x.snap || isPartRow(x)) return; const parts = list.filter(y => isPartRow(y) && y.status === 'closed' && y.res && y.snap && isPartOf(y, x)); parts.forEach(y => used.add(y)); if(x.status === 'closed' && x.res) out.push(merge(x, parts)); });
+  list.forEach(y => { if(isPartRow(y) && !used.has(y) && y.status === 'closed' && y.res && y.snap) out.push(merge(y, [])); });
+  return out; }
+const closedOf = id => wholeTrades(loadSaved()).filter(x => !id || id === 'all' || accOf(x) === id).sort((a, b) => a.res.closed - b.res.closed);
 function tstats(cl){
   const wins = cl.filter(x => kind(x.res.pnl, x.snap.riskUsd) === 'win'), losses = cl.filter(x => kind(x.res.pnl, x.snap.riskUsd) === 'loss');
   const gw = wins.reduce((t, x) => t + x.res.pnl, 0), gl = -losses.reduce((t, x) => t + x.res.pnl, 0), net = cl.reduce((t, x) => t + x.res.pnl, 0);
@@ -4798,13 +4810,13 @@ function renderJournal(){
     $('jTfBest').innerHTML = b ? `<div class="rr-warn y" style="border-color:var(--gold);background:rgba(219,161,24,.08);color:var(--text)">Best time frame so far: <b style="color:var(--gold2)">${b.nm}</b> &mdash; net ${usd(b.t.net)} from ${b.t.n} trade${b.t.n > 1 ? 's' : ''}, ${b.t.wr == null ? 'no decided trades' : (b.t.wr * 100).toFixed(0) + '% win rate'}, average ${b.t.avgR.toFixed(2)}R.${closed.length < 10 ? ' This rests on only ' + closed.length + ' closed trade' + (closed.length > 1 ? 's' : '') + ', so treat it as an early read, not a pattern.' : ''}</div>` : '<p class="calendar-note" style="margin:0">Pick the time frame you trade on each setup. Once trades are closed, your best and worst time frames show up here.</p>'; }
   $('jOpenF').innerHTML = [['all', 'All', opens.length], ['play', 'In play', opens.filter(x => !openState(x).pending).length], ['pending', 'Awaiting entry', opens.filter(x => openState(x).pending).length]].map(a => `<button class="filter-chip ${jof === a[0] ? 'active' : ''}" data-of="${a[0]}">${a[1]} <small>${a[2]}</small></button>`).join('');
   $('jOpen').innerHTML = openCards(opens);
-  let rows = list.filter(x => x.snap && (x.status === 'open' || x.status === 'closed') && (jAccF === 'all' || accOf(x) === jAccF));
+  let rows = list.filter(x => x.snap && x.status === 'open' && (jAccF === 'all' || accOf(x) === jAccF)).concat(wholeTrades(list).filter(x => jAccF === 'all' || accOf(x) === jAccF));
   rows = rows.filter(x => jf === 'all' || (jf === 'open' ? x.status === 'open' : x.status === 'closed' && kind(x.res.pnl, x.snap.riskUsd) === jf));
   rows.sort((a, b) => ((b.res && b.res.closed) || b.opened || b.t) - ((a.res && a.res.closed) || a.opened || a.t));
   let t = '<thead><tr><th>Date</th><th>Trade</th><th>Account</th><th>Asset</th><th>Dir</th><th>Lev</th><th>Time frame</th><th>Entry</th><th>Result</th><th>P&amp;L</th><th>R</th><th>How it ended</th><th></th></tr></thead><tbody>';
   if(!rows.length) t += '<tr><td colspan="13" style="color:var(--mute)">Nothing here yet.</td></tr>';
-  rows.forEach(x => { const i = list.indexOf(x), r = x.res;
-    t += `<tr><td>${new Date(r ? r.closed : (x.opened || x.t)).toLocaleDateString()}</td><td><b>${esc(x.name)}</b></td><td>${esc(accName(accOf(x)))}</td><td>${esc(x.snap.asset)}</td><td style="color:${x.snap.long ? '#3fb47a' : '#e0554d'}">${x.snap.long ? 'Long' : 'Short'}</td><td>${x.snap.mkt === 'spot' ? 1 : x.snap.lev}×</td><td>${esc(tfName(tfOf(x)))}</td><td>${pr(x.snap.E)}</td><td>${pill(x)}</td>` +
+  rows.forEach(x => { const i = x.__i != null ? x.__i : list.indexOf(x), r = x.res, op = x.opened || x.t;
+    t += `<tr><td>${new Date(r ? r.closed : (x.opened || x.t)).toLocaleDateString()}${r && op && new Date(op).toLocaleDateString() !== new Date(r.closed).toLocaleDateString() ? '<br><small style="color:var(--mute)">opened ' + new Date(op).toLocaleDateString() + '</small>' : ''}</td><td><b>${esc(x.name)}</b>${x.legs && x.legs.length > 1 ? ' <small style="color:var(--mute)">(' + x.legs.length + ' closes)</small>' : ''}</td><td>${esc(accName(accOf(x)))}</td><td>${esc(x.snap.asset)}</td><td style="color:${x.snap.long ? '#3fb47a' : '#e0554d'}">${x.snap.long ? 'Long' : 'Short'}</td><td>${x.snap.mkt === 'spot' ? 1 : x.snap.lev}×</td><td>${esc(tfName(tfOf(x)))}</td><td>${pr(x.snap.E)}</td><td>${pill(x)}</td>` +
       (r ? `<td style="color:${r.pnl >= 0 ? '#3fb47a' : '#e0554d'}"><b>${usd(r.pnl)}</b></td><td>${r.r.toFixed(2)}R</td><td style="white-space:normal;min-width:150px;max-width:260px;color:var(--mute)"><div class="jhow" title="${esc(r.how || '')}">${esc(r.how || '')}</div>${jTagH(x)}</td>` : '<td>—</td><td>—</td><td style="color:var(--mute)">In play</td>') +
       `<td><div class="jact">${x.status === 'open' ? `<button class="rr-btn sm" data-j="close" data-i="${i}">Close</button>` : `<button class="rr-btn ghost sm" data-j="reopen" data-i="${i}">Reopen</button>`}${x.status === 'closed' ? `<button class="rr-btn ghost sm jic jrate ${x.j && x.j.rate === 'good' ? 'on-g' : ''}" data-j="rate" data-v="good" data-i="${i}" title="This one went well">👍</button><button class="rr-btn ghost sm jic jrate ${x.j && x.j.rate === 'bad' ? 'on-r' : ''}" data-j="rate" data-v="bad" data-i="${i}" title="This one did not go well">👎</button>` : ''}<button class="rr-btn ghost sm jic" data-j="journal" data-i="${i}" title="Journal this trade">📝</button><details class="jmore"><summary class="rr-btn ghost sm jic" title="More">⋯</summary><div class="jmenu"><button class="rr-btn ghost sm" data-j="load" data-i="${i}">Load</button><button class="rr-btn ghost sm" data-j="del" data-i="${i}">Delete</button></div></details></div></td></tr>`; });
   $('jHist').innerHTML = t + '</tbody>';
@@ -4989,7 +5001,7 @@ function wireJournal(){
     else if(a === 'addpos'){ const pp = priceOf(x.snap.asset), p0 = parseFloat(prompt('Add to ' + x.name + ': price to add at?', pp ? pp.p : x.snap.E)); if(!(p0 > 0)) return; const m0 = parseFloat(prompt('Margin to add (USD)?', Math.round(x.snap.margin / 2))); if(!(m0 > 0)) return; ensureOrders(x); x.orders.push({id: uid() + 'o', p: p0, m: m0, side: null, filled: true, ft: Date.now()}); syncOrders(x); saveAll(list); renderSaved(); render(); window.ttmTrack && ttmTrack('feat', 'add_position', {asset: String(x.snap.asset).slice(0, 12)}); }
     else if(a === 'be'){ x.snap.SL = x.snap.E; x.snap.slMoved = true; myPush(x, 'be:' + x.id, 'SL moved to entry', 'Stop is now at ' + pr(x.snap.E)); saveAll(list); renderSaved(); render(); }
     else if(a === 'reopen'){ x.status = 'open'; delete x.res; saveAll(list); renderSaved(); render(); }
-    else if(a === 'del'){ if(x.status === 'closed' || x.status === 'open'){ if(!confirm(x.status === 'open' ? 'Cancel this open trade and release its margin?' : 'Delete this closed trade from your history? Your balance will change back.')) return; } list.splice(i, 1); saveAll(list); renderSaved(); render(); } }
+    else if(a === 'del'){ if(x.status === 'closed' || x.status === 'open'){ if(!confirm(x.status === 'open' ? 'Cancel this open trade and release its margin?' : 'Delete this whole trade, with all its part closes, from your history? Your balance will change back.')) return; } if(x.status === 'closed' && !isPartRow(x)){ const gone = list.filter(y => y === x || (isPartRow(y) && isPartOf(y, x))); gone.forEach(y => list.splice(list.indexOf(y), 1)); } else list.splice(i, 1); saveAll(list); renderSaved(); render(); } }
   $('rrSaved').addEventListener('click', e => { const b = e.target.closest('button[data-a]'); if(b) act(b); });
   window.__addpos = id => { const i = loadSaved().findIndex(x => x && x.id === id); if(i >= 0) act({dataset: {j: 'addpos', i: String(i)}}); };
   ['jOpen', 'jHist', 'pfOpen'].forEach(id => $(id).addEventListener('click', e => { const b = e.target.closest('button[data-j]'); if(b){ const d = b.closest('details'); if(d) d.open = false; act(b); } }));
@@ -5578,8 +5590,8 @@ function buildTtmWorkbook(){
   if(!ak.length){ d.merge(r, 2, r, 6, 'No closed trades yet.', {color: C.mut, fill: C.panel, bd: C.line}); r++; }
   ak.forEach(k => { const t = tstats(am[k]), o = {fill: C.panel, bd: C.line}; d.set(r, 2, k, o); d.set(r, 3, t.n, o); d.set(r, 4, t.wr == null ? '—' : t.wr, Object.assign({fmt: fPct, h: 'right'}, o)); d.set(r, 5, t.net, Object.assign({fmt: fUSD, color: sg(t.net), h: 'right'}, o)); d.set(r, 6, t.avgR, Object.assign({fmt: fR, h: 'right'}, o)); r++; });
   r += 1; d.merge(r, 2, r, 13, 'Results are what was entered in the tracker, not read from an exchange. Past results do not predict future ones. Trade The Move is educational and is not financial advice.', {color: C.mut, sz: 9, i: 1});
-  const heads = ['Date', 'Trade', 'Account', 'Asset', 'Direction', 'Market', 'Leverage', 'Time frame', 'Entry', 'Stop', 'TP1', 'TP2', 'TP3', 'Investment (margin)', 'Position size ($)', 'Risk ($)', 'Result', 'P&L', 'R', 'How it ended'];
-  const widths = [13, 24, 20, 10, 11, 10, 10, 12, 13, 13, 13, 13, 13, 17, 16, 12, 12, 13, 9, 46];
+  const heads = ['Date', 'Trade', 'Account', 'Asset', 'Direction', 'Market', 'Leverage', 'Time frame', 'Entry', 'Stop', 'TP1', 'TP2', 'TP3', 'Investment (margin)', 'Position size ($)', 'Risk ($)', 'Result', 'P&L', 'R', 'How it ended', 'Opened', 'Closes'];
+  const widths = [13, 24, 20, 10, 11, 10, 10, 12, 13, 13, 13, 13, 13, 17, 16, 12, 12, 13, 9, 46, 13, 9];
   function tradeSheet(name, tab, items){
     const w = wb.sheet(name, tab); widths.forEach((x, i) => w.width(i + 1, x));
     w.merge(1, 1, 1, 8, name.toUpperCase(), {b: 1, sz: 16, color: C.gold}); w.height(1, 26);
@@ -5587,8 +5599,8 @@ function buildTtmWorkbook(){
     let rr = 4;
     if(!items.length) w.merge(rr, 1, rr, 8, 'Nothing here yet.', {color: C.mut});
     items.forEach((x, k) => { const sn = x.snap, rs = x.res, o = {fill: k % 2 ? 'FF0B0B0B' : C.panel, bd: C.line}, tp = i => sn.tps[i] ? sn.tps[i].P : '';
-      const vals = [new Date(rs ? rs.closed : (x.opened || x.t)), x.name, accName(accOf(x)), sn.asset, sn.long ? 'Long' : 'Short', sn.mkt === 'spot' ? 'Spot' : 'Futures', sn.mkt === 'spot' ? 1 : sn.lev, tfName(tfOf(x)), sn.E, sn.SL, tp(0), tp(1), tp(2), sn.margin, sn.notional, sn.riskUsd, rs ? (kind(rs.pnl, sn.riskUsd) === 'win' ? 'Win' : kind(rs.pnl, sn.riskUsd) === 'loss' ? 'Loss' : 'Break-even') : 'Open', rs ? rs.pnl : '', rs ? rs.r : '', rs ? rs.how : 'In play'];
-      const fm = [fDt, '', '', '', '', '', '0"×"', '', fPx, fPx, fPx, fPx, fPx, fUSD, fUSD, fUSD, '', fUSD, fR, ''];
+      const vals = [new Date(rs ? rs.closed : (x.opened || x.t)), x.name, accName(accOf(x)), sn.asset, sn.long ? 'Long' : 'Short', sn.mkt === 'spot' ? 'Spot' : 'Futures', sn.mkt === 'spot' ? 1 : sn.lev, tfName(tfOf(x)), sn.E, sn.SL, tp(0), tp(1), tp(2), sn.margin, sn.notional, sn.riskUsd, rs ? (kind(rs.pnl, sn.riskUsd) === 'win' ? 'Win' : kind(rs.pnl, sn.riskUsd) === 'loss' ? 'Loss' : 'Break-even') : 'Open', rs ? rs.pnl : '', rs ? rs.r : '', rs ? rs.how : 'In play', new Date(x.opened || x.t), x.legs ? x.legs.length : 1];
+      const fm = [fDt, '', '', '', '', '', '0"×"', '', fPx, fPx, fPx, fPx, fPx, fUSD, fUSD, fUSD, '', fUSD, fR, '', fDt, '0'];
       vals.forEach((v, i) => { let col = C.txt; if(i === 4) col = sn.long ? C.grn : C.red; if((i === 16 || i === 17) && rs) col = sg(rs.pnl); if(i === 18 && rs) col = sg(rs.r); if(i === 9) col = C.red; if(i >= 10 && i <= 12) col = C.grn;
         w.set(rr, i + 1, v, Object.assign({}, o, {color: col, fmt: fm[i] || undefined, h: i >= 8 && i <= 18 ? 'right' : 'left', b: i === 17 ? 1 : 0, wrap: i === 19 ? 1 : 0})); }); rr++; });
   }
