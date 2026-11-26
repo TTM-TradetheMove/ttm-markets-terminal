@@ -1751,7 +1751,7 @@ body.rm-full #rmIn{font-size:17px}
     <div class="rr-card"><h3>Journal insights</h3><p class="calendar-note" style="margin:0 0 10px">Tag each trade with its setup, any mistakes and whether you followed your rules (press <b>Journal</b> on a trade below). Once a few trades are tagged, this shows what really makes and loses you money.</p><div id="jIns"></div></div>
     <div class="rr-card" id="coachCard"><div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:220px"><h3 style="margin:0 0 4px">TTM Agent: review my trading</h3><p class="calendar-note" style="margin:0">Ask what is working, what keeps costing you, or how to improve. Pick spot or leverage, or a single coin. It reads your closed trades, tags, ratings and notes.</p></div><button type="button" class="rr-btn" id="coachOpen">Ask TTM Agent</button></div></div>
     <div class="rr-card"><h3>Trade history</h3>
-      <div class="filter-row" id="jFilter" style="margin-bottom:10px"><button class="filter-chip active" data-f="all">All</button><button class="filter-chip" data-f="open">Open</button><button class="filter-chip" data-f="win">Wins</button><button class="filter-chip" data-f="loss">Losses</button><button class="filter-chip" data-f="be">Break-even</button></div>
+      <div class="filter-row" id="jFilter" style="margin-bottom:10px"><button class="filter-chip active" data-f="all">All</button><button class="filter-chip" data-f="open">Open</button><button class="filter-chip" data-f="wait">Awaiting entry</button><button class="filter-chip" data-f="win">Wins</button><button class="filter-chip" data-f="loss">Losses</button><button class="filter-chip" data-f="be">Break-even</button></div>
       <div class="rr-wrap"><table class="rr-tbl" id="jHist"></table></div>
       <div class="rr-acts"><button type="button" class="rr-btn ghost sm" id="jExport">Backup (JSON)</button><button type="button" class="rr-btn ghost sm" id="jImportBtn">Restore (JSON)</button><input type="file" id="jImport" accept="application/json,.json" style="display:none"><button type="button" class="rr-btn ghost sm" id="jClear">Clear all trades</button></div>
       <p class="calendar-note" id="jNote" style="margin:8px 0 0">Stored in this browser only. Export a copy so you do not lose it if you clear site data or switch device. Results are what you enter, not read from an exchange: if your real fill, fees or funding differed, type your actual P&amp;L when closing.</p>
@@ -4572,7 +4572,7 @@ function settle(sn, hits, rest){
     return pnl + add + rp * mv - rp * sn.fee * (sn.E + rest); }
   return pnl + ru * mv - ru * sn.fee * (sn.E + rest);
 }
-function pill(x){ if(x.status === 'open') return '<span class="rr-pill open">Open</span>'; if(!x.res) return ''; const k = kind(x.res.pnl, x.snap.riskUsd); return `<span class="rr-pill ${k}">${k === 'win' ? 'Win' : k === 'loss' ? 'Loss' : 'Break-even'}</span>`; }
+function pill(x){ if(x.status === 'open'){ let w = false; try{ w = !!openState(x).pending; }catch(e){} return w ? '<span class="rr-pill open">Awaiting entry</span>' : '<span class="rr-pill open">Open</span>'; } if(!x.res) return ''; const k = kind(x.res.pnl, x.snap.riskUsd); return `<span class="rr-pill ${k}">${k === 'win' ? 'Win' : k === 'loss' ? 'Loss' : 'Break-even'}</span>`; }
 const esc = t => String(t).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
 function planCalc(x){ const st = Object.assign({}, DEF, x.s), save = S; S = st; let c; try{ c = calc(); }finally{ S = save; } return {st, c}; }
 function renderSaved(){
@@ -4811,7 +4811,7 @@ function renderJournal(){
   $('jOpenF').innerHTML = [['all', 'All', opens.length], ['play', 'In play', opens.filter(x => !openState(x).pending).length], ['pending', 'Awaiting entry', opens.filter(x => openState(x).pending).length]].map(a => `<button class="filter-chip ${jof === a[0] ? 'active' : ''}" data-of="${a[0]}">${a[1]} <small>${a[2]}</small></button>`).join('');
   $('jOpen').innerHTML = openCards(opens);
   let rows = list.filter(x => x.snap && x.status === 'open' && (jAccF === 'all' || accOf(x) === jAccF)).concat(wholeTrades(list).filter(x => jAccF === 'all' || accOf(x) === jAccF));
-  rows = rows.filter(x => jf === 'all' || (jf === 'open' ? x.status === 'open' : x.status === 'closed' && kind(x.res.pnl, x.snap.riskUsd) === jf));
+  rows = rows.filter(x => jf === 'all' || (jf === 'open' ? x.status === 'open' && !openState(x).pending : jf === 'wait' ? x.status === 'open' && openState(x).pending : x.status === 'closed' && kind(x.res.pnl, x.snap.riskUsd) === jf));
   rows.sort((a, b) => ((b.res && b.res.closed) || b.opened || b.t) - ((a.res && a.res.closed) || a.opened || a.t));
   let t = '<thead><tr><th>Date</th><th>Trade</th><th>Account</th><th>Asset</th><th>Dir</th><th>Lev</th><th>Time frame</th><th>Entry</th><th>Result</th><th>P&amp;L</th><th>R</th><th>How it ended</th><th></th></tr></thead><tbody>';
   if(!rows.length) t += '<tr><td colspan="13" style="color:var(--mute)">Nothing here yet.</td></tr>';
