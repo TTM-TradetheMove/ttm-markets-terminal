@@ -652,6 +652,15 @@ def compute_backtest(by_id):
         ln, lof = cnt(lo)
         hn, hof = cnt(hi)
         series.append([a, round(v, 2), ln, lof, hn, hof])
+    # use the exact turning-point days so the chart hover always matches the table rows
+    evd = {e["date"] for e in events}
+    series = [r for r in series if all(abs((date.fromisoformat(r[0]) - date.fromisoformat(d)).days) > 3 for d in evd)]
+    for a, v in px:
+        if a in evd:
+            lo, hi = sig(a)
+            (ln, lof), (hn, hof) = cnt(lo), cnt(hi)
+            series.append([a, round(v, 2), ln, lof, hn, hof])
+    series.sort()
     return {"events": events, "series": series, "rates": rates, "max_outside": mxo, "window_days": BT_WINDOW,
             "untested": ["Realised Price", "MVRV"], "from": series[0][0] if series else None}
 
