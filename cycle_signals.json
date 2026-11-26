@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-11-25T23:47:01.586310+00:00",
- "as_of": "2026-11-25",
- "price": 60232.55,
- "realized": 53447.67,
+ "generated_at": "2026-11-26T12:50:24.869478+00:00",
+ "as_of": "2026-11-26",
+ "price": 60921.48,
+ "realized": 53394.59,
  "cycle_high": {
   "price": 124824.45,
   "date": "2025-10-06"
@@ -18,21 +18,21 @@
     "k": "lr",
     "name": "Below the −1σ regression band",
     "on": true,
-    "detail": "price $60,233 vs band $69,277",
+    "detail": "price $60,921 vs band $69,309",
     "short": "Regression Band"
    },
    {
     "k": "rp",
     "name": "Below realised price",
     "on": false,
-    "detail": "price $60,233 vs realised $53,395",
+    "detail": "price $60,921 vs realised $53,395",
     "short": "Realised Price"
    },
    {
     "k": "pu",
     "name": "Puell multiple below 0.5 (miner stress)",
     "on": false,
-    "detail": "Puell 0.80",
+    "detail": "Puell 0.81",
     "short": "Puell Multiple"
    },
    {
@@ -46,14 +46,14 @@
     "k": "tm",
     "name": "11 to 15 months after the cycle high",
     "on": true,
-    "detail": "13.6 months since the high",
+    "detail": "13.7 months since the high",
     "short": "14 months after ATH"
    },
    {
     "k": "bp",
     "name": "Price within 10% of, or below, the Balanced Price",
     "on": false,
-    "detail": "price $60,233 vs Balanced $38,787",
+    "detail": "price $60,921 vs Balanced $38,787",
     "short": "Balanced Price"
    }
   ]
@@ -68,21 +68,21 @@
     "k": "lr",
     "name": "Above the +1σ regression band",
     "on": false,
-    "detail": "price $60,233 vs band $266,962",
+    "detail": "price $60,921 vs band $267,096",
     "short": "Regression Band"
    },
    {
     "k": "mv",
     "name": "MVRV above 3.5 (price vs realised price)",
     "on": false,
-    "detail": "MVRV 1.13",
+    "detail": "MVRV 1.14",
     "short": "MVRV"
    },
    {
     "k": "pu",
     "name": "Puell multiple above 4 (miner euphoria)",
     "on": false,
-    "detail": "Puell 0.80",
+    "detail": "Puell 0.81",
     "short": "Puell Multiple"
    },
    {
@@ -6682,11 +6682,11 @@
      1747
     ],
     "TTM Bitcoin Risk": [
-     119,
+     120,
      1547
     ],
     "Cycle timing": [
-     81,
+     82,
      1675
     ],
     "Balanced Price": [
