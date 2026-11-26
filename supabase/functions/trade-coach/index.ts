@@ -62,10 +62,13 @@ Deno.serve(async (req) => {
 
     const k = Deno.env.get("ANTHROPIC_API_KEY"); if (!k) return out({error: "The coach is not set up yet (missing key)."}, 500);
     const content = mode === "journal" ? JSON.stringify({question: q, summary: b.stats || null, trade_count: trades.length, trades}) : `{"question": ${JSON.stringify(q)}, "data": ${dataStr}}`;
-    const r = await fetch("https://api.anthropic.com/v1/messages", {method: "POST", headers: {"x-api-key": k, "anthropic-version": "2023-06-01", "content-type": "application/json"},
-      body: JSON.stringify({model: MODEL, max_tokens: 2000, system: SYSTEM + (MODE[mode] ? "\n\nContext: " + MODE[mode] : ""), messages: [{role: "user", content}]})});
-    const j = await r.json(); if (!r.ok) return out({error: "The coach could not answer right now. Try again soon."}, 502);
-    const answer = (j.content || []).filter((x: any) => x.type === "text").map((x: any) => x.text).join("").trim();
+    const ask = (extra: Record<string, unknown>) => fetch("https://api.anthropic.com/v1/messages", {method: "POST", headers: {"x-api-key": k, "anthropic-version": "2023-06-01", "content-type": "application/json"},
+      body: JSON.stringify(Object.assign({model: MODEL, max_tokens: 8000, system: SYSTEM + (MODE[mode] ? "\n\nContext: " + MODE[mode] : ""), messages: [{role: "user", content}]}, extra))});
+    const text = (j: any) => (j.content || []).filter((x: any) => x.type === "text").map((x: any) => x.text).join("").trim();
+    let r = await ask({}), j = await r.json(); if (!r.ok) return out({error: "The coach could not answer right now. Try again soon."}, 502);
+    let answer = text(j);
+    // The model can spend its whole budget thinking and leave no text. Ask once more with thinking off.
+    if (!answer) { r = await ask({thinking: {type: "disabled"}, max_tokens: 4000}); if (r.ok) { j = await r.json(); answer = text(j); } }
     if (!answer) return out({error: "The coach returned an empty answer (" + s(j.stop_reason, 30) + "; blocks: " + (j.content || []).map((x: any) => x.type).join(",") + "). Try again."}, 502);
     return out({answer, left: lim - used - 1, v: 1});
   } catch (_e) { return out({error: "Something went wrong. Try again."}, 500); }
