@@ -210,6 +210,27 @@ push({id: 'eclipse', name: 'Eclipse cycles: vertical lines (TTM)', pane: 'overla
   panel: a => { const now = Date.now(), n = ECL.find(e => e.t > now); if(!n) return null; const days = Math.ceil((n.t - now) / 864e5); return {pos: 'bl', title: 'Next eclipse', rows: [[[n.lab + ' · ' + ECN[n.k], n.c === 'r' ? '#ff6b61' : '#5fd69a']], [['In ' + days + ' days (' + new Date(n.t).toLocaleDateString('en-AU', {day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC'}) + ')', '#e8e8ea']]]}; }});
 
 
+/* 15b. Benner cycle (Samuel Benner, 1875): a historical "panic / good times / hard times" year chart, drawn as a wave. Educational only, not a forecast. */
+const BEN = (() => { const Cy = [1924, 1931, 1942, 1951, 1958, 1969, 1978, 1985, 1996, 2005, 2012, 2023, 2032, 2039, 2050, 2059], By = [1926, 1935, 1945, 1953, 1962, 1972, 1980, 1989, 1999, 2007, 2016, 2026, 2034, 2043, 2053], Ay = [1927, 1945, 1965, 1981, 1999, 2019, 2035, 2053], P = [];
+  Cy.forEach(y => P.push({y, k: 'C', v: 0})); By.forEach(y => { if(Ay.indexOf(y) < 0) P.push({y, k: 'B', v: 1}); }); Ay.forEach(y => P.push({y, k: 'A', v: 1.7}));
+  P.sort((a, b) => a.y - b.y || a.v - b.v); P.forEach(p => { p.t = Date.UTC(p.y, 6, 1); }); return P; })();
+const BENTX = {A: 'panic year', B: 'good-times year', C: 'hard-times year'}, BENC = {A: '#ff6b61', B: '#e8a838', C: '#5fd69a'};
+const benTix = (d, t) => { const n = d.length; if(n < 2) return 0; if(t <= d[0].t) return (t - d[0].t) / (d[1].t - d[0].t); if(t >= d[n - 1].t) return n - 1 + (t - d[n - 1].t) / (d[n - 1].t - d[n - 2].t); let lo = 0, hi = n - 1; while(hi - lo > 1){ const m = (lo + hi) >> 1; if(d[m].t <= t) lo = m; else hi = m; } return lo + (t - d[lo].t) / (d[hi].t - d[lo].t); };
+push({id: 'benner', name: 'Benner cycle 1875: panic / good / hard years (TTM)', pane: 'overlay', calc: () => null,
+  under: a => { const {c, g, X, d} = a; if(d.length < 2) return; c.save(); c.beginPath(); c.rect(0, g.mT, g.pw, g.mB - g.mT); c.clip();
+    for(let k = 0; k < BEN.length - 1; k++){ const p = BEN[k], q = BEN[k + 1], xa = X(benTix(d, p.t)), xb = X(benTix(d, q.t)); if(xb < 0 || xa > g.pw) continue; if(p.k === 'C' && q.k !== 'C') c.fillStyle = 'rgba(95,214,154,.07)'; else if(p.k !== 'C' && q.k === 'C') c.fillStyle = 'rgba(255,107,97,.07)'; else continue; c.fillRect(xa, g.mT, xb - xa, g.mB - g.mT); }
+    c.restore(); },
+  over: a => { const {c, g, X, d} = a; if(d.length < 2) return; const yb = g.mB - 18, amp = Math.min(46, (g.mB - g.mT) * .12), pts = BEN.map(p => ({x: X(benTix(d, p.t)), y: yb - p.v * amp, p}));
+    c.save(); c.beginPath(); c.rect(0, g.mT, g.pw, g.mB - g.mT); c.clip(); c.lineJoin = 'round';
+    c.strokeStyle = 'rgba(232,232,234,.55)'; c.lineWidth = 1.6; c.beginPath(); pts.forEach((q, i) => { if(!i) c.moveTo(q.x, q.y); else c.lineTo(q.x, q.y); }); c.stroke();
+    c.font = '700 9px system-ui,sans-serif'; c.textAlign = 'center';
+    pts.forEach(q => { if(q.x < -20 || q.x > g.pw + 20) return; const p = q.p, col = BENC[p.k]; if(p.k === 'A'){ c.strokeStyle = col; c.lineWidth = 1.2; c.setLineDash([4, 4]); c.beginPath(); c.moveTo(q.x, g.mT); c.lineTo(q.x, g.mB); c.stroke(); c.setLineDash([]); }
+      c.fillStyle = col; c.beginPath(); c.arc(q.x, q.y, 3, 0, 6.3); c.fill(); c.textBaseline = p.k === 'C' ? 'top' : 'bottom'; c.fillText((p.k === 'A' ? 'Panic ' : p.k === 'C' ? 'Low ' : 'High ') + p.y, q.x, p.k === 'C' ? q.y + 5 : q.y - 5); });
+    c.restore(); c.lineWidth = 1; },
+  panel: a => { const now = Date.now(), k = BEN.findIndex(p => p.t > now); if(k < 1) return null; const prev = BEN[k - 1], nx = BEN[k], nextC = BEN.slice(k).find(p => p.k === 'C'), nextA = BEN.slice(k).find(p => p.k === 'A'), fall = prev.k !== 'C' && nx.k === 'C';
+    return {pos: 'tr', title: 'Benner cycle (1875)', rows: [[[(fall ? 'Falling phase' : 'Rising phase') + ' · last turn ' + prev.y + ' (' + BENTX[prev.k] + ')', '#e8e8ea']], [['Next low year: ' + (nextC ? nextC.y : '-'), BENC.C]], [['Next panic year: ' + (nextA ? nextA.y : '-'), BENC.A]], [['Historical chart, not a forecast', '#8b8f9a']]]}; }});
+
+
 /* 16. Fomo Finder (CRYPTOZ): emotion score -3..+3 from RSI, price move over 5 bars and volume spikes */
 const bandPaint = (a, bands, lbl) => { const {c, g, yy, top, bot} = a; bands.forEach(b => { c.fillStyle = b[2]; c.fillRect(0, yy(b[1]), g.pw, yy(b[0]) - yy(b[1])); }); if(lbl){ c.font = '700 9px system-ui,sans-serif'; c.textAlign = 'right'; c.textBaseline = 'middle'; lbl.forEach(l => { c.fillStyle = l[2]; c.fillText(l[1], g.pw - 6, yy(l[0])); }); c.font = '11px system-ui,sans-serif'; c.textAlign = 'left'; } };
 push({id: 'fomo', name: 'Fomo Finder (TTM)', pane: 'sub', range: [-3.4, 3.4], lines: [-3, -2, -1, 0, 1, 2, 3],
