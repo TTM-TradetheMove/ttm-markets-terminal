@@ -1215,7 +1215,7 @@ body.rm-full #rmIn{font-size:17px}
     low_pu: 'The Puell Multiple compares miner income to its one-year average. A reading under 0.5 means miners are under heavy stress, which has often been seen near cycle lows.',
     low_rk: 'TTM Bitcoin Risk is our 0 to 1 score built from several price and on-chain measures. Below 0.20 is the cheapest area of its own history.',
     low_tm: 'In past cycles the low formed roughly 11 to 15 months after the cycle high. The shaded area is that window for the current cycle.',
-    low_fr: 'DVOL is the Bitcoin options fear index. Its score is where today sits within its own history. The top 10% means panic-level fear, which tends to cluster near lows.',
+    low_bp: 'Balanced Price is the realised price minus the "transferred price", a measure of how much old coins have been moving. In past bear markets Bitcoin bottomed at or close to this line. TTM works it out itself from public blockchain data. The signal is on when price is within 10% of it, or below.',
     top_lr: 'Price is above the upper regression band (the +1σ line of the log regression channel). Stretched readings like this have appeared near past cycle tops.',
     top_mv: 'MVRV is price divided by realised price. Above 3.5 means the average holder is sitting on a very large gain, which has marked past cycle tops.',
     top_pu: 'The Puell Multiple compares miner income to its one-year average. Above 4 means miner income is far above normal, a sign of euphoria seen near past tops.',
@@ -1242,6 +1242,7 @@ body.rm-full #rmIn{font-size:17px}
     if(k === 'lr') return {log: true, fmt: usd, s: [gold, {n: side === 'low' ? '−1σ band' : '+1σ band', c: side === 'low' ? G : R, w: 2, pts: ln(side === 'low' ? '-1σ' : '+1σ')}, {n: 'Trend', c: '#6c6c75', w: 1.2, pts: ln('Trend')}]};
     if(k === 'rp' || k === 'mv'){ var rz = RZ && RZ.series || []; return {log: true, fmt: usd, s: [{n: 'BTC price', c: Y, w: 2, pts: rz.map(function(p){ return [T(p[0]), p[1]]; })}, {n: k === 'mv' ? 'Realised price × 3.5 (MVRV 3.5)' : 'Realised price', c: k === 'mv' ? R : G, w: 2, pts: rz.map(function(p){ return [T(p[0]), p[2] * (k === 'mv' ? 3.5 : 1)]; })}].concat(k === 'mv' ? [{n: 'Realised price', c: '#6c6c75', w: 1.2, pts: rz.map(function(p){ return [T(p[0]), p[2]]; })}] : [])};
     }
+    if(k === 'bp'){ var rzb = RZ && RZ.series || [], bl = RZ && RZ.balanced || []; return {log: true, fmt: usd, s: [{n: 'BTC price', c: Y, w: 2, pts: rzb.map(function(p){ return [T(p[0]), p[1]]; })}, {n: 'Balanced Price', c: G, w: 2, pts: bl.map(function(p){ return [T(p[0]), p[1]]; })}, {n: 'Alert level (Balanced + 10%)', c: '#6c6c75', w: 1.2, pts: bl.map(function(p){ return [T(p[0]), p[1] * 1.1]; })}]}; }
     if(k === 'tm'){ var t0 = side === 'low' ? addM(hi.date, 11) : addM('2024-04-20', 12), t1 = side === 'low' ? addM(hi.date, 15) : addM('2024-04-20', 18); return {log: true, fmt: usd, s: [gold], band: {t0: t0, t1: t1, n: side === 'low' ? '11 to 15 months after the high' : '12 to 18 months after the halving', c: side === 'low' ? G : R}, vm: side === 'low' ? {t: T(hi.date), n: 'Cycle high'} : {t: T('2024-04-20'), n: 'Halving'}}; }
     var id = k === 'pu' ? 'puell' : k === 'rk' ? 'btcrisk' : k === 'fr' ? 'dvol' : 'totalrisk', c = byId(id); if(!c) return null;
     var th = k === 'pu' ? (side === 'low' ? 0.5 : 4) : k === 'rk' ? (side === 'low' ? 0.2 : 0.8) : k === 'fr' ? 0.9 : 0.8;
@@ -1283,8 +1284,8 @@ body.rm-full #rmIn{font-size:17px}
   }
   /* ---------- Backtest ---------- */
   var BT = null, BTM = null, btHit = [], BTC = '#3fb47a', BTH = '#e0554d';
-  var SHORTN = {'Regression Band': 'Regression', 'Puell Multiple': 'Puell', 'TTM Bitcoin Risk': 'BTC risk', 'Cycle timing': 'Timing', 'DVOL Fear': 'DVOL fear', 'TTM Total Market Risk': 'Total risk'};
-  var DEFN = {low: {'Regression Band': 'Price below the −1σ regression band', 'Puell Multiple': 'Puell Multiple below 0.5 (miner stress)', 'TTM Bitcoin Risk': 'TTM Bitcoin Risk below 0.20', 'Cycle timing': '11 to 15 months after the cycle high', 'DVOL Fear': 'DVOL fear in the top 10% of its history'},
+  var SHORTN = {'Regression Band': 'Regression', 'Puell Multiple': 'Puell', 'TTM Bitcoin Risk': 'BTC risk', 'Cycle timing': 'Timing', 'Balanced Price': 'Balanced', 'TTM Total Market Risk': 'Total risk'};
+  var DEFN = {low: {'Regression Band': 'Price below the −1σ regression band', 'Puell Multiple': 'Puell Multiple below 0.5 (miner stress)', 'TTM Bitcoin Risk': 'TTM Bitcoin Risk below 0.20', 'Cycle timing': '11 to 15 months after the cycle high', 'Balanced Price': 'Price within 10% of, or below, the Balanced Price'},
     high: {'Regression Band': 'Price above the +1σ regression band', 'Puell Multiple': 'Puell Multiple above 4 (miner euphoria)', 'TTM Bitcoin Risk': 'TTM Bitcoin Risk above 0.80', 'Cycle timing': '12 to 18 months after a halving', 'TTM Total Market Risk': 'TTM Total Market Risk above 0.80'}};
   function fmtD(s){ return new Date(s + 'T00:00:00Z').toLocaleDateString(undefined, {day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC'}); }
   function monY(s){ return new Date(s + 'T00:00:00Z').toLocaleDateString(undefined, {month: 'short', year: 'numeric', timeZone: 'UTC'}); }

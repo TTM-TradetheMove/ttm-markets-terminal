@@ -454,6 +454,15 @@ def chart_dvol():
 
 
 HALVING = date(2024, 4, 20)
+BP_BAND = 1.10  # "near or below the Balanced Price" = price at or under 110% of it
+
+
+def load_balanced(out_dir):
+    """TTM's own Balanced Price series ([date, value]) built by update_realized.py; no outside key needed."""
+    try:
+        return [(a, float(v)) for a, v in json.load(open(os.path.join(out_dir, "btc_realized.json"))).get("balanced", [])]
+    except Exception:  # noqa
+        return []
 
 
 def compute_cycle(by_id, out_dir):
@@ -481,7 +490,9 @@ def compute_cycle(by_id, out_dir):
     except Exception:  # noqa
         realized = None
     mvrv = px / realized if realized else None
-    risk, puell, dvol, tot = last("btcrisk"), last("puell"), last("dvol"), last("totalrisk")
+    risk, puell, tot = last("btcrisk"), last("puell"), last("totalrisk")
+    bal = load_balanced(out_dir)
+    bal = bal[-1][1] if bal and (date.fromisoformat(today) - date.fromisoformat(bal[-1][0])).days <= 14 else None
     since_halv = (date.fromisoformat(today) - HALVING).days / 30.44
     post = [(v, d) for d, v in px_rows if d >= HALVING.isoformat()]
     top_v, top_d = max(post) if post else (None, None)
@@ -494,7 +505,7 @@ def compute_cycle(by_id, out_dir):
         vote("pu", "Puell multiple below 0.5 (miner stress)", puell is not None and puell[1] < 0.5, f"Puell {puell[1]:.2f}" if puell else "no data", "Puell Multiple"),
         vote("rk", "TTM Bitcoin Risk below 0.20", risk is not None and risk[1] < 0.20, f"score {risk[1]:.2f}" if risk else "no data", "TTM Bitcoin Risk"),
         vote("tm", "11 to 15 months after the cycle high", since_top is not None and 11 <= since_top <= 15, f"{since_top:.1f} months since the high" if since_top is not None else "no data", f"{since_top:.0f} months after ATH" if since_top is not None else None),
-        vote("fr", "DVOL fear in the top 10% of its history", dvol is not None and dvol[1] >= 0.9, f"DVOL score {dvol[1]:.2f}" if dvol else "no data", "DVOL Fear"),
+        vote("bp", "Price within 10% of, or below, the Balanced Price", bal is not None and px <= bal * BP_BAND, f"price ${px:,.0f} vs Balanced ${bal:,.0f}" if bal else "no data", "Balanced Price"),
     ]
     top = [
         vote("lr", "Above the +1σ regression band", p1 is not None and px > p1, f"price ${px:,.0f} vs band ${p1:,.0f}" if p1 else "no data", "Regression Band"),
@@ -557,7 +568,7 @@ def compute_backtest(by_id):
         return [a for a, _ in rows], [v for _, v in rows]
     S = {"p1": mk(lines.get("+1σ")), "m1": mk(lines.get("-1σ")), "rk": mk((by_id.get("btcrisk") or {}).get("series")),
          "tt": mk((by_id.get("totalrisk") or {}).get("series")), "pu": mk((by_id.get("puell") or {}).get("series")),
-         "fr": mk((by_id.get("dvol") or {}).get("series"))}
+         "bp": mk(load_balanced(ROOT))}
     def asof(k, dt):
         ks, vs = S[k]
         i = bisect.bisect_right(ks, dt) - 1
@@ -579,7 +590,7 @@ def compute_backtest(by_id):
     def lasthalv(D):
         h = [x for x in BT_HALVINGS if x <= D]
         return h[-1] if h else None
-    LOWN = ["Regression Band", "Puell Multiple", "TTM Bitcoin Risk", "Cycle timing", "DVOL Fear"]
+    LOWN = ["Regression Band", "Puell Multiple", "TTM Bitcoin Risk", "Cycle timing", "Balanced Price"]
     HIGHN = ["Regression Band", "Puell Multiple", "TTM Bitcoin Risk", "Cycle timing", "TTM Total Market Risk"]
     cache = {}
     def sig(dt):
@@ -587,12 +598,12 @@ def compute_backtest(by_id):
             return cache[dt]
         D, p = date.fromisoformat(dt), pxd[dt]
         hv = lasthalv(D)
-        m1, p1, rk, tt, pu, fr = asof("m1", dt), asof("p1", dt), asof("rk", dt), asof("tt", dt), asof("pu", dt), asof("fr", dt)
+        m1, p1, rk, tt, pu, bp = asof("m1", dt), asof("p1", dt), asof("rk", dt), asof("tt", dt), asof("pu", dt), asof("bp", dt)
         topd = runmax.get((hv, dt)) if hv else None
         since_top = (D - date.fromisoformat(topd)).days / 30.44 if topd else None
         sh = (D - hv).days / 30.44 if hv else None
         n = lambda c, v: None if v is None else bool(c(v))
-        low = [n(lambda v: p < v, m1), n(lambda v: v < 0.5, pu), n(lambda v: v < 0.20, rk), n(lambda v: 11 <= v <= 15, since_top), n(lambda v: v >= 0.9, fr)]
+        low = [n(lambda v: p < v, m1), n(lambda v: v < 0.5, pu), n(lambda v: v < 0.20, rk), n(lambda v: 11 <= v <= 15, since_top), n(lambda v: p <= v * BP_BAND, bp)]
         high = [n(lambda v: p > v, p1), n(lambda v: v > 4, pu), n(lambda v: v > 0.80, rk), n(lambda v: 12 <= v <= 18, sh), n(lambda v: v > 0.80, tt)]
         cache[dt] = (low, high)
         return cache[dt]
