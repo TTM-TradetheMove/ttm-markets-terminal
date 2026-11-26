@@ -4608,7 +4608,7 @@ function tfTbl(cl){
 }
 // ---- journal: setup, mistakes, playbook rules and a note on each trade (stored on the trade, so it syncs with it)
 const J_SETUPS = ['Trend pullback', 'Breakout / retest', 'Liquidity sweep', 'Range', 'News / event', 'Other'], J_MIST = ['FOMO', 'Chased entry', 'Moved stop', 'Oversized', 'Exited early', 'Held too long', 'No plan', 'Revenge trade'], J_RULES0 = ['Waited for my setup', 'Stop set before entry', 'Risk within my plan', "Didn't move my stop"];
-const pbRules = () => { const r = lsGet('ttm_playbook_v1', null); return Array.isArray(r) && r.length ? r : J_RULES0.slice(); };
+const pbRules = () => { const r = lsGet('ttm_playbook_v1', null); return Array.isArray(r) ? r : J_RULES0.slice(); };
 const jTagH = x => { const j = x && x.j; if(!j) return ''; const c = t => `<span style="display:inline-block;margin:3px 4px 0 0;padding:1px 7px;border:1px solid var(--line);border-radius:999px;font-size:11px;color:var(--text)">${esc(t)}</span>`;
   return '<div>' + (j.rate ? c(j.rate === 'good' ? '👍 went well' : '👎 did not go well') : '') + (j.setup ? c(j.setup) : '') + (j.mist || []).map(m => c('⚠ ' + m)).join('') + (j.offered && j.offered.length ? c((j.rules || []).length === j.offered.length ? '✔ rules followed' : '✖ rule broken') : '') + (j.note ? `<span title="${esc(j.note)}" style="margin-left:2px;cursor:help">📝</span>` : '') + '</div>'; };
 let jcur = null;
@@ -4618,10 +4618,13 @@ function drawJournal(j){ const ck = (name, v, on) => `<label style="display:inli
   $('rrModalBody').innerHTML = `<h3 style="margin:0 0 10px">Journal this trade</h3>
     <label><small>Setup</small><br><select id="jnSetup" style="width:100%"><option value="">— choose —</option>${J_SETUPS.map(v => `<option ${j.setup === v ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select></label>
     <p style="margin:12px 0 2px"><small>Mistakes (tick any)</small></p><div>${J_MIST.map(v => ck('mist', v, (j.mist || []).indexOf(v) >= 0)).join('')}</div>
-    <p style="margin:12px 0 2px"><small>My playbook: did I follow each rule?</small></p><div>${jcur.rules.map(v => ck('rule', v, (j.rules || []).indexOf(v) >= 0)).join('')}</div>
+    <p style="margin:12px 0 2px"><small>My playbook: tick each rule you followed. Any rule left unticked counts as broken. Use ✕ to remove a rule you no longer want.</small></p><div>${jcur.rules.map(v => `<span style="display:inline-flex;align-items:center;margin:3px 10px 3px 0">${ck('rule', v, (j.rules || []).indexOf(v) >= 0).replace('margin:3px 10px 3px 0', 'margin:0')}<button type="button" data-jnrm="${esc(v)}" title="Remove this rule" style="background:none;border:0;color:var(--muted,#8b8f9a);cursor:pointer;padding:0 0 0 5px;font-size:13px">✕</button></span>`).join('')}</div>
     <div style="display:flex;gap:6px;margin-top:6px"><input id="jnNewRule" placeholder="Add a rule to your playbook" style="flex:1"><button type="button" class="rr-btn ghost sm" id="jnAddRule">Add rule</button></div>
     <label style="display:block;margin-top:12px"><small>Note (why you took it, what you learned)</small><br><textarea id="jnNote" rows="4" style="width:100%">${esc(j.note || '')}</textarea></label>
     <div class="rr-acts" style="margin-top:12px"><button type="button" class="rr-btn" id="jnSave">Save</button><button type="button" class="rr-btn ghost" id="jnCancel">Cancel</button></div>`; }
+document.addEventListener('click', e => { const rb = jcur && e.target.closest && e.target.closest('[data-jnrm]'); if(!rb) return; const v = rb.dataset.jnrm;
+  const g = {setup: $('jnSetup').value, mist: [...document.querySelectorAll('[data-jn=mist]:checked')].map(c => c.value), rules: [...document.querySelectorAll('[data-jn=rule]:checked')].map(c => c.value).filter(r => r !== v), note: $('jnNote').value.trim().slice(0, 1000)};
+  jcur.rules = jcur.rules.filter(r => r !== v); lsSet('ttm_playbook_v1', pbRules().filter(r => r !== v)); drawJournal(g); });
 document.addEventListener('click', e => { if(!jcur || !e.target.id) return;
   const grab = () => ({setup: $('jnSetup').value, mist: [...document.querySelectorAll('[data-jn=mist]:checked')].map(c => c.value), rules: [...document.querySelectorAll('[data-jn=rule]:checked')].map(c => c.value), note: $('jnNote').value.trim().slice(0, 1000)});
   if(e.target.id === 'jnCancel'){ $('rrModal').classList.remove('open'); jcur = null; }
