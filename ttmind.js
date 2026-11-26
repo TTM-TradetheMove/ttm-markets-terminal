@@ -211,7 +211,7 @@ push({id: 'eclipse', name: 'Eclipse cycles: vertical lines (TTM)', pane: 'overla
 
 
 /* 15b. Benner cycle (Samuel Benner, 1875): a historical "panic / good times / hard times" year chart, drawn as a wave. Educational only, not a forecast. */
-const BEN = (() => { const Cy = [1924, 1931, 1942, 1951, 1958, 1969, 1978, 1985, 1996, 2005, 2012, 2023, 2032, 2039, 2050, 2059], By = [1926, 1935, 1945, 1953, 1962, 1972, 1980, 1989, 1999, 2007, 2016, 2026, 2034, 2043, 2053], Ay = [1927, 1945, 1965, 1981, 1999, 2019, 2035, 2053], P = [];
+const BEN = (() => { const gen = (s, iv, end) => { const o = [s]; let i = 0; while(o[o.length - 1] <= end){ o.push(o[o.length - 1] + iv[i % iv.length]); i++; } return o; }, end = new Date().getFullYear() + 90, Cy = gen(1924, [7, 11, 9], end), By = gen(1926, [9, 10, 8], end), Ay = gen(1927, [18, 20, 16], end), P = [];
   Cy.forEach(y => P.push({y, k: 'C', v: 0})); By.forEach(y => { if(Ay.indexOf(y) < 0) P.push({y, k: 'B', v: 1}); }); Ay.forEach(y => P.push({y, k: 'A', v: 1.7}));
   P.sort((a, b) => a.y - b.y || a.v - b.v); P.forEach(p => { p.t = Date.UTC(p.y, 6, 1); }); return P; })();
 const BENTX = {A: 'panic year', B: 'good-times year', C: 'hard-times year'}, BENC = {A: '#ff6b61', B: '#e8a838', C: '#5fd69a'};
