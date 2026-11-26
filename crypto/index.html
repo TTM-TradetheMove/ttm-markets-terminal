@@ -1585,13 +1585,13 @@ body.rm-full #rmIn{font-size:17px}
       <p id="rpStatus" class="calendar-note" style="margin-top:8px">Loading…</p>
     </div>
     <div class="filter-row" id="rpRange" style="margin-bottom:10px">
-      <button class="filter-chip" data-y="2">2 years</button><button class="filter-chip active" data-y="4">4 years</button><button class="filter-chip" data-y="8">8 years</button><button class="filter-chip" data-y="0">All</button>
+      <button class="filter-chip" data-y="2">2 years</button><button class="filter-chip active" data-y="4">4 years</button><button class="filter-chip" data-y="8">8 years</button><button class="filter-chip" data-y="0">All</button><button class="filter-chip active" id="rpBal" title="Balanced Price = realized price minus transferred price. TTM calculation from the public blockchain, back to 2011.">Balanced Price</button>
     </div>
     <div id="rpBox" style="position:relative;background:var(--card,#16161a);border:1px solid var(--line,#2a2a2f);border-radius:14px;padding:10px 6px 6px">
       <canvas id="rpCv" style="width:100%;height:380px;display:block;touch-action:pan-y"></canvas>
       <div id="rpTip" style="position:absolute;display:none;pointer-events:none;background:#0d0d10;border:1px solid rgba(219,161,24,.5);border-radius:8px;padding:6px 9px;font-size:12px;line-height:1.5;white-space:nowrap"></div>
     </div>
-    <p class="calendar-note" style="margin-top:8px"><span style="color:#dba118">&#9632;</span> BTC price &nbsp; <span style="color:#3fb97a">&#9632;</span> Realized price &nbsp; <span style="color:rgba(224,85,77,.6)">&#9632;</span> shaded red while price is below realized. Premium and Pro members get an alert when price crosses the realized price. Source: Coin Metrics community data. Want to see Balanced Price (realized price minus transferred price) back to 2011? <a href="https://charts.bitbo.io/balanced-price/" target="_blank" rel="noopener noreferrer" style="color:#dba118">View it on Bitbo</a> (external site). Not financial advice.</p>
+    <p class="calendar-note" style="margin-top:8px"><span style="color:#dba118">&#9632;</span> BTC price &nbsp; <span style="color:#3fb97a">&#9632;</span> Realized price &nbsp; <span style="color:#9b7bff">&#9632;</span> Balanced Price (realized price minus transferred price, a model by David Puell; TTM calculation from Coin Metrics prices and public blockchain data, back to 2011) &nbsp; <span style="color:rgba(224,85,77,.6)">&#9632;</span> shaded red while price is below realized. Premium and Pro members get an alert when price crosses the realized price. Source: Coin Metrics community data. Not financial advice.</p>
   </div>
 </section>
 
@@ -6401,7 +6401,7 @@ window.ttmLuna = {cycles: CY, phaseNow};
 </script>
 <script>
 (function(){
-  var D = null, Y = 4, BAL = false, BM = {}, cv = document.getElementById('rpCv'); if(!cv) return;
+  var D = null, Y = 4, BAL = true, BM = {}, cv = document.getElementById('rpCv'); if(!cv) return;
   var fmt = function(n){ return n >= 1000 ? '$' + Math.round(n).toLocaleString('en-US') : '$' + n.toFixed(2); };
   function pts(){ if(!D) return []; var s = D.series, y = Y; if(!y) return s; var cut = Date.now() - y * 365.25 * 864e5; return s.filter(function(p){ return Date.parse(p[0]) >= cut; }); }
   function draw(hover){
@@ -6427,9 +6427,10 @@ window.ttmLuna = {cycles: CY, phaseNow};
   cv.addEventListener('mousemove', function(e){ var i = at(e); if(i != null) draw(i); }); cv.addEventListener('mouseleave', function(){ draw(null); });
   cv.addEventListener('touchstart', function(e){ var i = at(e); if(i != null) draw(i); }, {passive: true}); cv.addEventListener('touchmove', function(e){ var i = at(e); if(i != null) draw(i); }, {passive: true});
   document.getElementById('rpRange').addEventListener('click', function(e){ var b = e.target.closest('[data-y]'); if(!b) return; Y = +b.dataset.y; this.querySelectorAll('.filter-chip').forEach(function(x){ x.classList.toggle('active', x === b); }); draw(null); });
+  document.getElementById('rpBal').addEventListener('click', function(){ BAL = !BAL; this.classList.toggle('active', BAL); draw(null); });
   window.addEventListener('resize', function(){ draw(null); });
   fetch('../btc_realized.json?t=' + Math.floor(Date.now() / 600000), {cache: 'no-store'}).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }).then(function(d){
-    var st = document.getElementById('rpStatus'); if(!d || !d.series){ st.textContent = 'Realized price data is not available yet. It is built automatically every few hours.'; return; } D = d;
+    var st = document.getElementById('rpStatus'); if(!d || !d.series){ st.textContent = 'Realized price data is not available yet. It is built automatically every few hours.'; return; } D = d; (d.balanced || []).forEach(function(b){ BM[b[0]] = b[1]; });
     function paintStatus(){ var rel = (d.price / d.realized - 1) * 100; st.innerHTML = 'BTC <b>' + fmt(d.price) + '</b> <span style="opacity:.7">(live)</span> &middot; realized price <b style="color:#3fb97a">' + fmt(d.realized) + '</b> &middot; <b style="color:' + (rel < 0 ? '#e0554d' : '#3fb97a') + '">' + (rel >= 0 ? '+' : '') + rel.toFixed(1) + '%</b> vs realized &middot; MVRV ' + (d.price / d.realized).toFixed(2) + ' &middot; realized price as of ' + (d.realized_as_of || d.as_of); }
     paintStatus(); draw(null); if(window.ResizeObserver) new ResizeObserver(function(){ draw(null); }).observe(cv);
     function live(){ fetch('https://api.exchange.coinbase.com/products/BTC-USD/ticker').then(function(r){ return r.json(); }).then(function(t){ var px = +t.price; if(!(px > 0)) return; d.price = px; var last = d.series[d.series.length - 1], today = new Date().toISOString().slice(0, 10); if(last[0] === today){ last[1] = px; } else { d.series.push([today, px, last[2]]); } paintStatus(); draw(null); }).catch(function(){}); }

@@ -80,27 +80,43 @@ def from_bitcoin_data():
     return [(d, px[d], rp[d]) for d in sorted(rp) if d in px and rp[d] > 0]
 
 
-def balanced_series(dates):
-    """Balanced Price from bitcoin-data.com (free, from Nov 2022). Its formula differs from Glassnode's, so the level is lower. Falls back to the old file's values."""
-    old = []
+GENESIS = datetime(2009, 1, 3).date()
+HALVINGS = [datetime(2009, 1, 3).date(), datetime(2012, 11, 28).date(), datetime(2016, 7, 9).date(), datetime(2020, 5, 11).date(), datetime(2024, 4, 20).date(), datetime(2028, 4, 17).date()]
+
+
+def supply_on(t):
+    """Circulating supply from the halving schedule (within ~0.5% of the real figure, which is plenty for this line)."""
+    s, sub = 0.0, 50.0
+    for i in range(len(HALVINGS) - 1):
+        a, b = HALVINGS[i], HALVINGS[i + 1]
+        if t >= b:
+            s += 210000 * sub
+        else:
+            s += 210000 * sub * (t - a).days / (b - a).days
+            break
+        sub /= 2
+    return s
+
+
+def balanced_series(rows, dates):
+    """TTM's own Balanced Price = realized price - transferred price (David Puell's model).
+    Transferred price = sum over all days of (coin days destroyed x price) / (supply x days since genesis).
+    Daily coin days destroyed comes from data/btc_cdd.csv (built once from the public Bitcoin dataset in Google BigQuery, see scripts/cdd_bigquery.sql).
+    Days after the last CDD row keep the running total as it was (it moves very slowly)."""
     try:
-        old = json.load(open(os.path.join(ROOT, "btc_realized.json"))).get("balanced", [])
-    except Exception:  # noqa
-        pass
-    try:
-        raw = json.loads(fetch("https://bitcoin-data.com/v1/balanced-price"))
-        new = {str(d["d"])[:10]: float(d["balancedPrice"]) for d in raw if d.get("balancedPrice")}
-        if len(new) < 100:
-            raise ValueError("too few rows")
-        m = {d: v for d, v in old}
-        m.update(new)
-        STATUS["balanced"] = f"{len(new)} rows"
-        out = sorted(m.items())
+        cdd = {r["day"]: float(r["cdd"]) for r in csv.DictReader(open(os.path.join(ROOT, "data", "btc_cdd.csv")))}
     except Exception as e:  # noqa
-        STATUS["balanced"] = "failed: " + str(e)[:120]
-        out = [(d, v) for d, v in old]
-    m = dict(out)
-    return [[d, round(m[d], 2)] for d in dates if d in m]
+        STATUS["balanced"] = "no cdd file: " + str(e)[:100]
+        return []
+    cum, out = 0.0, {}
+    for d, p, r in rows:
+        t = datetime.strptime(d, "%Y-%m-%d").date()
+        cum += cdd.get(d, 0.0) * p
+        den = supply_on(t) * max(1, (t - GENESIS).days)
+        if t >= datetime(2010, 11, 7).date():
+            out[d] = r - cum / den
+    STATUS["balanced"] = f"{len(out)} days, last cdd {max(cdd) if cdd else None}"
+    return [[d, round(out[d], 2)] for d in dates if d in out and out[d] > 0]
 
 
 def extend_to_today(rows):
@@ -161,7 +177,7 @@ def main():
     series = [[d, round(p, 2), round(r, 2)] for i, (d, p, r) in enumerate(rows) if i >= cut or i % 7 == 0]
     price, real = rows[-1][1], rows[-1][2]
     out = {"updated": datetime.now(timezone.utc).isoformat(timespec="seconds"), "as_of": last_date, "price": round(price, 2),
-           "realized": round(real, 2), "realized_as_of": status.get("realized_as_of", last_date), "mvrv": round(price / real, 3), "series": series}
+           "realized": round(real, 2), "realized_as_of": status.get("realized_as_of", last_date), "mvrv": round(price / real, 3), "series": series, "balanced": balanced_series(rows, [x[0] for x in series])}
     json.dump(out, open(os.path.join(ROOT, "btc_realized.json"), "w"), separators=(",", ":"))
     json.dump(status, open(os.path.join(ROOT, "btc_realized_status.json"), "w"), indent=1)
     print("saved", last_date, out["price"], out["realized"], len(series), "points")
