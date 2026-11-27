@@ -97,9 +97,18 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
     B.forEach(function(b){ var v = b.c.ch ? b.c.ch[tf] : null, cl = color(v), r = b.r, on = b === hover || b === sel;
       ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, 7); var g = ctx.createRadialGradient(b.x - r * .3, b.y - r * .35, r * .1, b.x, b.y, r); g.addColorStop(0, cl[0]); g.addColorStop(1, shade(cl[0])); ctx.fillStyle = g; ctx.fill();
       ctx.lineWidth = on ? 3 : 1.5; ctx.strokeStyle = on ? '#f0b929' : cl[1]; ctx.stroke();
-      if(r >= 17){ ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; var fs = Math.max(9, Math.min(r * 0.42, 26)); ctx.font = '800 ' + fs + 'px Inter,system-ui,sans-serif'; ctx.fillText(b.c.s, b.x, b.y - (r >= 26 ? fs * 0.45 : 0));
-        if(r >= 26){ ctx.font = '700 ' + Math.max(9, fs * 0.62) + 'px Inter,system-ui,sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.88)'; ctx.fillText(pc(v), b.x, b.y + fs * 0.62); } } });
+      var im = r >= 12 ? logo(b.c) : null;
+      function pic(x, y, d){ ctx.save(); ctx.beginPath(); ctx.arc(x, y, d / 2, 0, 7); ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.fill(); ctx.clip(); ctx.drawImage(im, x - d / 2, y - d / 2, d, d); ctx.restore(); }
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff';
+      if(r >= 30){ var d = Math.min(r * 0.62, 64), fs = Math.max(10, Math.min(r * 0.3, 24)), top = b.y - ((im ? d : 0) + fs * 1.9) / 2;
+        if(im) pic(b.x, top + d / 2, d); ctx.font = '800 ' + fs + 'px Inter,system-ui,sans-serif'; ctx.fillText(b.c.s, b.x, top + (im ? d : 0) + fs * 0.75);
+        ctx.font = '700 ' + Math.max(9, fs * 0.7) + 'px Inter,system-ui,sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.fillText(pc(v), b.x, top + (im ? d : 0) + fs * 1.75);
+      } else if(r >= 17){ if(im){ pic(b.x, b.y - r * 0.28, r * 0.9); ctx.font = '800 ' + Math.max(8, r * 0.36) + 'px Inter,system-ui,sans-serif'; ctx.fillText(b.c.s, b.x, b.y + r * 0.52); } else { ctx.font = '800 ' + Math.max(9, r * 0.42) + 'px Inter,system-ui,sans-serif'; ctx.fillText(b.c.s, b.x, b.y); } }
+      else if(im){ pic(b.x, b.y, r * 1.4); }
+    });
   }
+  var IMG = {};
+  function logo(c){ var im = IMG[c.s]; if(!im){ im = IMG[c.s] = new Image(); im.crossOrigin = 'anonymous'; im.onload = function(){ im.ok = 1; kick(); draw(); }; im.onerror = function(){ im.bad = 1; }; im.src = c.i; } return im.ok ? im : null; }
   function shade(c){ var m = c.match(/\d+/g); return m ? 'rgb(' + m.map(function(x){ return Math.round(x * 0.62); }).join(',') + ')' : c; }
   function at(x, y){ for(var i = B.length - 1; i >= 0; i--){ var b = B[i]; if((x - b.x) * (x - b.x) + (y - b.y) * (y - b.y) <= b.r * b.r) return b; } return null; }
   function pos(e){ var r = cv.getBoundingClientRect(), t = e.touches ? e.touches[0] : e; return [t.clientX - r.left, t.clientY - r.top, t.clientX, t.clientY]; }
@@ -136,7 +145,7 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   function load(first){
     Promise.all([fetch('../rsi_heatmap.json?' + Math.floor(Date.now() / 6e4)).then(function(r){ return r.json(); }), fetch('../top_coins.json?' + Math.floor(Date.now() / 6e5)).then(function(r){ return r.json(); }).catch(function(){ return {coins: []}; })]).then(function(r){
       var meta = {}; (r[1].coins || []).forEach(function(c){ meta[c.s] = c; });
-      var nc = (r[0].coins || []).map(function(c){ var m = meta[c.s] || {}; var ch = c.ch || {'1d': c.c}, ref = {}; Object.keys(ch).forEach(function(k){ if(ch[k] != null && k !== '1d') ref[k] = c.p / (1 + ch[k] / 100); }); var o = {s: c.s, n: m.n || c.s, p: c.p, m: m.m || 0, v24: c.v24, cat: c.cat, ch: ch, ref: ref}; if(live[c.s]) applyLive(o, live[c.s]); return o; }).filter(function(c){ return c.p; });
+      var nc = (r[0].coins || []).map(function(c){ var m = meta[c.s] || {}; var ch = c.ch || {'1d': c.c}, ref = {}; Object.keys(ch).forEach(function(k){ if(ch[k] != null && k !== '1d') ref[k] = c.p / (1 + ch[k] / 100); }); var o = {s: c.s, n: m.n || c.s, p: c.p, i: m.i || ('https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/' + c.s.toLowerCase() + '.png'), m: m.m || 0, v24: c.v24, cat: c.cat, ch: ch, ref: ref}; if(live[c.s]) applyLive(o, live[c.s]); return o; }).filter(function(c){ return c.p; });
       var secs = {}; nc.forEach(function(c){ if(c.cat) secs[c.cat] = 1; }); var se = document.getElementById('sec'); if(se.options.length === 1) Object.keys(secs).sort().forEach(function(s){ var o = document.createElement('option'); o.value = s; o.textContent = s; se.appendChild(o); });
       var byS = {}; coins.forEach(function(c){ byS[c.s] = 1; }); var same = nc.length === coins.length && nc.every(function(c){ return byS[c.s]; });
       coins = nc; if(first || !same) layout(true); else { var map = {}; nc.forEach(function(c){ map[c.s] = c; }); B.forEach(function(b){ b.c = map[b.c.s] || b.c; }); draw(); }
