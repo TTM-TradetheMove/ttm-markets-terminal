@@ -1,7 +1,7 @@
 {
- "generated_at": "2026-11-27T13:06:32.950685+00:00",
+ "generated_at": "2026-11-27T23:43:56.991072+00:00",
  "as_of": "2026-11-27",
- "price": 61719.71,
+ "price": 59811.96,
  "realized": 53253.22,
  "cycle_high": {
   "price": 124824.45,
@@ -18,21 +18,21 @@
     "k": "lr",
     "name": "Below the −1σ regression band",
     "on": true,
-    "detail": "price $61,720 vs band $69,340",
+    "detail": "price $59,812 vs band $69,339",
     "short": "Regression Band"
    },
    {
     "k": "rp",
     "name": "Below realised price",
     "on": false,
-    "detail": "price $61,720 vs realised $53,253",
+    "detail": "price $59,812 vs realised $53,253",
     "short": "Realised Price"
    },
    {
     "k": "pu",
     "name": "Puell multiple below 0.5 (miner stress)",
     "on": false,
-    "detail": "Puell 0.82",
+    "detail": "Puell 0.80",
     "short": "Puell Multiple"
    },
    {
@@ -53,7 +53,7 @@
     "k": "bp",
     "name": "Price within 10% of, or below, the Balanced Price",
     "on": false,
-    "detail": "price $61,720 vs Balanced $38,648",
+    "detail": "price $59,812 vs Balanced $38,648",
     "short": "Balanced Price"
    }
   ]
@@ -68,21 +68,21 @@
     "k": "lr",
     "name": "Above the +1σ regression band",
     "on": false,
-    "detail": "price $61,720 vs band $267,229",
+    "detail": "price $59,812 vs band $267,227",
     "short": "Regression Band"
    },
    {
     "k": "mv",
     "name": "MVRV above 3.5 (price vs realised price)",
     "on": false,
-    "detail": "MVRV 1.16",
+    "detail": "MVRV 1.12",
     "short": "MVRV"
    },
    {
     "k": "pu",
     "name": "Puell multiple above 4 (miner euphoria)",
     "on": false,
-    "detail": "Puell 0.82",
+    "detail": "Puell 0.80",
     "short": "Puell Multiple"
    },
    {
