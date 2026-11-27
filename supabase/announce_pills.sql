@@ -4,8 +4,8 @@
 
 -- STEP 1: test it on just yourself. Run this alone first.
 insert into public.ttm_announce (title, body, url, audience, image) values
- ('💊 New: TTM Pills (free)', 'Every crypto coin as a live pill. Biggest gainers on top, biggest losers at the bottom. Tap to open, and add it to your Home Screen as an app.', './pills/', 'admin', 'https://ttm.markets/promo/ttm_offer_x.png');
+ ('💊 New: TTM Pills (free)', 'Every crypto coin as a live pill. Biggest gainers on top, biggest losers at the bottom. Tap to open, and add it to your Home Screen as an app.', './pills/', 'admin', 'https://ttm.markets/img/announce/ttm-pills.png');
 
 -- STEP 2: when the test looks right, send to everyone with alerts on. Run this separately.
 -- insert into public.ttm_announce (title, body, url, audience, image) values
---  ('💊 New: TTM Pills (free)', 'Every crypto coin as a live pill. Biggest gainers on top, biggest losers at the bottom. Tap to open, and add it to your Home Screen as an app.', './pills/', 'all', 'https://ttm.markets/promo/ttm_offer_x.png');
+--  ('💊 New: TTM Pills (free)', 'Every crypto coin as a live pill. Biggest gainers on top, biggest losers at the bottom. Tap to open, and add it to your Home Screen as an app.', './pills/', 'all', 'https://ttm.markets/img/announce/ttm-pills.png');
