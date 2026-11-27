@@ -47,7 +47,7 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
 </header>
 <div class="bar">
   <div class="chips" id="tf"></div>
-  <span><label class="t" for="sz">Size</label><select id="sz"><option value="m">Market cap</option><option value="v">24h volume</option></select></span>
+  <span><label class="t" for="sz">Size</label><select id="sz"><option value="b">Balanced (easy to read)</option><option value="m">True market cap</option><option value="v">24h volume</option></select></span>
   <span><label class="t" for="sec">Sector</label><select id="sec"><option value="">All sectors</option></select></span>
   <span class="chips" id="vw"><button class="chip on" data-v="all">All</button><button class="chip" data-v="watch">★ Watchlist <span id="wn"></span></button></span>
   <button class="chip" id="hid">Hidden (0)</button>
@@ -64,7 +64,7 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
 <script>
 (function(){
   var cv = document.getElementById('cv'), ctx = cv.getContext('2d'), wrap = document.getElementById('wrap'), tip = document.getElementById('tip'), card = document.getElementById('card');
-  var TFS = [['5m', '5M'], ['15m', '15M'], ['1h', '1H'], ['4h', '4H'], ['1d', '24H'], ['1w', '1W'], ['1m', '1M']], tf = '1d', sizeBy = 'm', sector = '', query = '';
+  var TFS = [['5m', '5M'], ['15m', '15M'], ['1h', '1H'], ['4h', '4H'], ['1d', '24H'], ['1w', '1W'], ['1m', '1M']], tf = '1d', sizeBy = 'b', sector = '', query = '';
   var coins = [], B = [], W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2), hover = null, sel = null, raf = 0, calm = 0, drag = null;
   var tfEl = document.getElementById('tf'), view = 'all', WL = {}, HID = {};
   try{ var sv = JSON.parse(localStorage.getItem('ttm_bub_v1') || '{}'); (sv.w || []).forEach(function(x){ WL[x] = 1; }); (sv.h || []).forEach(function(x){ HID[x] = 1; }); }catch(e){}
@@ -92,16 +92,16 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   function resize(){ var r = cv.getBoundingClientRect(); W = r.width; H = r.height; cv.width = W * DPR; cv.height = H * DPR; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); layout(false); }
   function visible(){ return coins.filter(function(c){ return !HID[c.s] && (view !== 'watch' || WL[c.s]) && (!sector || c.cat === sector) && (!query || c.s.toLowerCase().indexOf(query) === 0 || (c.n || '').toLowerCase().indexOf(query) >= 0); }); }
   function layout(fresh){
-    var list = visible(), vals = list.map(function(c){ return Math.max(sizeBy === 'm' ? (c.m || c.v24 * 20 || 1) : (c.v24 || 1), 1); }), tot = vals.reduce(function(a, b){ return a + b; }, 0) || 1;
-    var area = W * H * 0.52, old = {}; B.forEach(function(b){ old[b.c.s] = b; });
+    var list = visible(), vals = list.map(function(c){ var x = Math.max(sizeBy === 'v' ? (c.v24 || 1) : (c.m || c.v24 * 20 || 1), 1); return sizeBy === 'b' ? Math.pow(x, 0.5) : x; }), tot = vals.reduce(function(a, b){ return a + b; }, 0) || 1;
+    var area = W * H * (sizeBy === 'b' ? 0.66 : 0.52), old = {}; B.forEach(function(b){ old[b.c.s] = b; });
     B = list.map(function(c, i){ var r = Math.sqrt(vals[i] / tot * area / Math.PI), o = old[c.s];
-      return {c: c, tr: Math.max(r, 11), r: o ? o.r : 2, x: o && !fresh ? o.x : W / 2 + (Math.random() - .5) * W * .6, y: o && !fresh ? o.y : H / 2 + (Math.random() - .5) * H * .6, vx: 0, vy: 0}; });
-    var mx = Math.min(W, H) * 0.30; B.forEach(function(b){ if(b.tr > mx) b.tr = mx; }); calm = 0; kick();
+      return {c: c, tr: Math.max(r, sizeBy === 'b' ? 15 : 11), r: o ? o.r : 2, x: o && !fresh ? o.x : W / 2 + (Math.random() - .5) * W * .6, y: o && !fresh ? o.y : H / 2 + (Math.random() - .5) * H * .6, vx: 0, vy: 0}; });
+    var mx = Math.min(W, H) * (sizeBy === 'b' ? 0.22 : 0.30); B.forEach(function(b){ if(b.tr > mx) b.tr = mx; }); calm = 0; kick();
   }
   function kick(){ if(!raf) raf = requestAnimationFrame(step); }
   function step(){
     raf = 0; var n = B.length, cx = W / 2, cy = H / 2, moved = 0;
-    for(var i = 0; i < n; i++){ var a = B[i]; a.r += (a.tr - a.r) * 0.18; a.vx += (cx - a.x) * 0.0016 * (W / H > 1.2 ? 1 : 1.4); a.vy += (cy - a.y) * 0.0022; }
+    for(var i = 0; i < n; i++){ var a = B[i]; a.r += (a.tr - a.r) * 0.18; a.vx += (cx - a.x) * 0.0016 * (W / H > 1.2 ? 1 : 1.4); a.vy += (cy - a.y) * 0.0022 * Math.min(1, (H / W) * 1.6 + 0.3); }
     for(var k = 0; k < 2; k++) for(i = 0; i < n; i++) for(var j = i + 1; j < n; j++){ var p = B[i], q = B[j], dx = q.x - p.x, dy = q.y - p.y, d = Math.sqrt(dx * dx + dy * dy) || 0.01, m = p.r + q.r + 1.5;
       if(d < m){ var f = (m - d) / d * 0.5, fx = dx * f, fy = dy * f, wp = q.r / (p.r + q.r), wq = p.r / (p.r + q.r); if(p !== drag){ p.x -= fx * wp * 2; p.y -= fy * wp * 2; } if(q !== drag){ q.x += fx * wq * 2; q.y += fy * wq * 2; } } }
     for(i = 0; i < n; i++){ a = B[i]; if(a === drag) continue; a.vx *= 0.82; a.vy *= 0.82; a.x += a.vx; a.y += a.vy; a.x = Math.max(a.r, Math.min(W - a.r, a.x)); a.y = Math.max(a.r, Math.min(H - a.r, a.y)); moved += Math.abs(a.vx) + Math.abs(a.vy) + Math.abs(a.tr - a.r); }
@@ -174,7 +174,7 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
       if(!nc.some(function(c){ return c.ch && c.ch['5m'] != null; })) { [].forEach.call(tfEl.children, function(b, i){ if(i !== 4) b.title = 'Appears after the next data update'; }); }
     }).catch(function(){ document.getElementById('upd').textContent = 'The market data is not available right now. Try again in a minute.'; });
   }
-  window.addEventListener('resize', resize); resize(); load(true); setInterval(function(){ load(false); }, 90000);
+  if(window.ResizeObserver){ var ro = new ResizeObserver(function(){ resize(); }); ro.observe(wrap); } else window.addEventListener('resize', resize); resize(); load(true); setInterval(function(){ load(false); }, 90000);
 })();
 </script>
 </body>
