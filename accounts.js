@@ -370,12 +370,13 @@ setInterval(() => { if(USER && !document.hidden && can('sync') && !dirtyT) syncI
 // ---------- level badges: shows on every section link which plan unlocks it (from the admin access ticks)
 const LVLCSS = document.createElement('style');
 LVLCSS.textContent = '.lvl{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.06em;border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:middle;line-height:1.5;white-space:nowrap;text-transform:uppercase}nav .lvl,a .lvl{font-size:8px;padding:1px 4px}'
-  + '.lvl-free{background:linear-gradient(135deg,#d9a066,#a8693a);color:#1a0f06}.lvl-premium{background:linear-gradient(135deg,#f1f3f6,#aab1bd);color:#10131a}.lvl-pro{background:linear-gradient(135deg,#f6d36b,#d4a017);color:#1a1300}'
+  + '.lvl-free{background:linear-gradient(135deg,#d9a066,#a8693a);color:#1a0f06}.lvl-premium{background:linear-gradient(135deg,#f1f3f6,#aab1bd);color:#10131a}.lvl-pro{background:linear-gradient(135deg,#f6d36b,#d4a017);color:#1a1300}.lvl-lens{background:#111;color:#f2c14e;box-shadow:0 0 0 1px #d4a017 inset}'
   + '.lvl-team{background:#fff;color:#000;box-shadow:0 0 0 1px #000 inset}.lvl-beta{background:#1fb8a6;color:#021a17}.lvl-soon{background:transparent;color:var(--gold2,#f2c14e);box-shadow:0 0 0 1px var(--gold,#dba118) inset}.lvl-off{background:#444;color:#ddd}.lvl-new{background:#e0554d;color:#fff}'
   + '.lvl-head{grid-column:1/-1;margin:14px 0 2px;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mute,#9a968c);display:flex;align-items:center;gap:10px}.lvl-head::after{content:"";flex:1;height:1px;background:var(--line,#2a2a2e)}.lvl-head:first-child{margin-top:0}.lvl-head em{font-style:normal;color:var(--gold2,#f2c14e);font-size:10px;letter-spacing:.06em}';
 document.head.appendChild(LVLCSS);
 function lvlOf(key){
   const a = SET.access[key] || DEF[key]; if(!a) return ['FREE', 'free'];
+  if(key === 'c:ttmcharts') return ['LENS PASS', 'lens'];   // sold separately: always shown to everyone
   if(a.indexOf('soon') >= 0) return ['COMING SOON', 'soon'];
   const l = a.filter(x => x !== 'beta' && x !== 'new');
   if(l.indexOf('free') >= 0) return ['FREE', 'free'];
@@ -386,7 +387,7 @@ function lvlOf(key){
   return ['COMING SOON', 'soon'];
 }
 const isNewKey = key => { const a = SET.access[key] || [], d = (SET.newSince || {})[key]; return a.indexOf('new') >= 0 && !!d && (Date.now() - new Date(d + 'T00:00:00').getTime()) <= 30 * 864e5; };
-const LVLRANK = {free: 0, premium: 1, pro: 2, team: 3, beta: 4, soon: 5, off: 5}, LVLHEAD = {free: 'Free plan', premium: 'Premium plan', pro: 'Pro plan', team: 'Team · in development', beta: 'Beta testing', soon: 'Coming soon'}, LVLSUB = {premium: 'everything in Free, plus', pro: 'everything above, plus'};
+const LVLRANK = {free: 0, premium: 1, pro: 2, lens: 2.5, team: 3, beta: 4, soon: 5, off: 5}, LVLHEAD = {free: 'Free plan', premium: 'Premium plan', pro: 'Pro plan', lens: 'TTM LENS pass', team: 'Team · in development', beta: 'Beta testing', soon: 'Coming soon'}, LVLSUB = {premium: 'everything in Free, plus', pro: 'everything above, plus'};
 function lvlBadges(){
   if(TERM !== 'crypto' && TERM !== 'tradfi') return; const pre = TERM === 'crypto' ? 'c:' : 't:', show = on() && SET.charging;
   document.querySelectorAll('.lvl, .lvl-head').forEach(x => x.remove());
@@ -418,7 +419,7 @@ function applyGates(){
         : `<h3>🔒 ${e(title)}</h3><p>${key === 'c:ttmcharts' ? 'TTM LENS is for members with a TTM LENS pass, or members TTM has given access to.' : 'This section is included with the <b>' + e(needText(key)) + '</b> plan.'}${USER ? ` You are on <b>${e(pname(PROF.plan))}</b>.${BILL ? '' : ' Paid plans are not open for self-sign-up yet.'}` : ' Sign in to see what your plan includes.'}</p>${USER ? buyBtn(key) + '<button class="ttm-btn ghost" id="lockDm">Direct Message TTM</button>' : '<button class="ttm-btn" id="lockSignIn">Sign in / create free account</button>'}`; }
     else if(lp) lp.remove();
     betaMark(sec, key, wrap, !lock && betaKey(key));
-    const isSoon = (SET.access[key] || []).indexOf('soon') >= 0, offAll = lock && !isSoon && (SET.access[key] || []).filter(x => x !== 'beta' && x !== 'new').length === 0; document.querySelectorAll(`a[href="#${sec.id}"]`).forEach(a => { if(lock) a.setAttribute('data-lk', '1'); else a.removeAttribute('data-lk'); if(offAll || (lock && freeHide())) a.setAttribute('data-hid', '1'); else a.removeAttribute('data-hid'); });
+    const isSoon = (SET.access[key] || []).indexOf('soon') >= 0, offAll = lock && !isSoon && (SET.access[key] || []).filter(x => x !== 'beta' && x !== 'new').length === 0; document.querySelectorAll(`a[href="#${sec.id}"]`).forEach(a => { if(lock) a.setAttribute('data-lk', '1'); else a.removeAttribute('data-lk'); if(offAll || (lock && freeHide() && key !== 'c:ttmcharts')) a.setAttribute('data-hid', '1'); else a.removeAttribute('data-hid'); });
     if(offAll || (lock && isSoon)){ const l2 = wrap.querySelector(':scope > .lock-panel'); if(l2) l2.innerHTML = '<h3>Coming soon</h3><p>This section is being built and is not open yet.</p>'; } });
   lvlBadges();
   // the crypto calculator without the tracker: hide the parts that need it
