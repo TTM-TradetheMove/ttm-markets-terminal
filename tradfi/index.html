@@ -358,7 +358,7 @@ td.num{font-variant-numeric:tabular-nums;color:var(--mute)}
 .th-ex{margin:10px 0 6px;padding-top:10px;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;font-size:11px}
 .th-ex-row{display:grid;grid-template-columns:1fr auto;gap:3px 8px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.03)}
 .th-ex-row.open{border-color:rgba(52,211,153,.35)}
-.th-hol{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}.th-hol h3{font-size:14px;margin:0 0 8px;color:var(--gold2,#f2c14e)}.th-hol-row{display:grid;grid-template-columns:96px 1fr;gap:8px;padding:6px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,.05)}.th-hol-row em{font-style:normal;font-weight:800;font-size:11px;letter-spacing:.04em;text-transform:uppercase}.th-hol-row em.c{color:#f87171}.th-hol-row em.e{color:#fbbf24}.th-hol-row small{color:var(--mute)}
+.th-hol{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}.th-hol h3{font-size:14px;margin:0 0 8px;color:var(--gold2,#f2c14e)}.th-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}.th-tile{display:flex;gap:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.03)}.th-tile-d{min-width:46px;text-align:center;line-height:1.1}.th-tile-d b{display:block;font-size:26px;color:var(--gold2,#f2c14e)}.th-tile-d span{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}.th-tile-b{font-size:13px;display:flex;flex-direction:column;gap:6px;min-width:0}.th-tile-b em{font-style:normal;font-weight:800;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;margin-right:4px}.th-tile-b em.c{color:#f87171}.th-tile-b em.e{color:#fbbf24}.th-tile-b small{display:block;color:var(--mute);font-size:11.5px}.th-tile-in{margin-top:auto;color:var(--gold) !important;font-weight:700}
 .th-ex-row.brk{border-color:rgba(251,191,36,.35)}
 .th-ex-row .n{font-weight:700;color:var(--text,#e5e7eb)}
 .th-ex-row .s{font-size:9px;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:999px;border:1px solid var(--line);color:var(--mute)}
@@ -829,7 +829,7 @@ select,select option{color-scheme:dark}select option{background:#16161a;color:#e
         </div>
       </div>
       <p class="midterm-note">The top box is the session that most recently went live — when New York's core session starts while London is still open, it takes the top spot and reads "Overlap with London"; once London closes it becomes "Core — solo, no overlap". Before that, New York shows "Pre-market" and London stays on top. After the 16:00 ET close it shows "Post-market". Each box lists its exchanges with their open hours and lunch breaks, and the overlap box counts times when exchanges from two different regions are open at once. Cash markets run Monday–Friday, so everything reads Closed over the weekend and counts down to the next open.</p>
-      <div class="th-hol" id="thHol"></div>
+      <div class="th-hol" id="thHol"><h3>Coming up: market holidays and early closes</h3><p class="calendar-note">Loading the exchange holiday calendar…</p></div>
     </div>
   </div>
 </section>
@@ -1841,9 +1841,12 @@ function renderHolidays(){
     Object.keys(HOL[k].holidays).forEach(d => { if(d >= t0 && d <= t1) (by[d] = by[d] || []).push({nm, t: 'closed', n: HOL[k].holidays[d]}); });
     Object.keys(HOL[k].early).forEach(d => { if(d >= t0 && d <= t1) (by[d] = by[d] || []).push({nm, t: 'early', c: HOL[k].early[d]}); }); });
   const mm = m => String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0'), days = Object.keys(by).sort();
-  el.innerHTML = '<h3>Upcoming market holidays</h3>' + (days.length ? days.map(d => { const dt = new Date(d + 'T12:00:00Z'), cl = by[d].filter(x => x.t === 'closed'), er = by[d].filter(x => x.t === 'early');
-    const names = [...new Set(cl.map(x => x.n))].join(' / ');
-    return '<div class="th-hol-row"><b>' + dt.toLocaleDateString('en-AU', {weekday:'short', day:'numeric', month:'short', timeZone:'UTC'}) + '</b><span>' + (cl.length ? '<em class="c">Closed</em> ' + hesc(cl.map(x => x.nm).join(', ')) + (names ? ' <small>(' + hesc(names) + ')</small>' : '') : '') + (er.length ? (cl.length ? '<br>' : '') + '<em class="e">Early close</em> ' + hesc(er.map(x => x.nm + ' ' + mm(x.c)).join(', ')) + ' <small>local</small>' : '') + '</span></div>'; }).join('') : '<p class="calendar-note">No market holidays in the next 75 days.</p>') +
+  const tiles = days.slice(0, 12).map(d => { const dt = new Date(d + 'T12:00:00Z'), cl = by[d].filter(x => x.t === 'closed'), er = by[d].filter(x => x.t === 'early'), names = [...new Set(cl.map(x => x.n))].join(' / '), dd = Math.round((dt - new Date(t0 + 'T12:00:00Z')) / 864e5);
+    return '<div class="th-tile"><div class="th-tile-d"><span>' + dt.toLocaleDateString('en-AU', {weekday:'short', timeZone:'UTC'}) + '</span><b>' + dt.getUTCDate() + '</b><span>' + dt.toLocaleDateString('en-AU', {month:'short', timeZone:'UTC'}) + '</span></div><div class="th-tile-b">' +
+      (cl.length ? '<div><em class="c">Closed</em> ' + hesc(cl.map(x => x.nm).join(', ')) + (names ? '<small>' + hesc(names) + '</small>' : '') + '</div>' : '') +
+      (er.length ? '<div><em class="e">Early close</em> ' + hesc(er.map(x => x.nm + ' ' + mm(x.c)).join(', ')) + '<small>local time</small></div>' : '') +
+      '<small class="th-tile-in">' + (dd <= 0 ? 'Today' : dd === 1 ? 'Tomorrow' : 'In ' + dd + ' days') + '</small></div></div>'; }).join('');
+  el.innerHTML = '<h3>Coming up: market holidays and early closes</h3>' + (days.length ? '<div class="th-tiles">' + tiles + '</div>' : '<p class="calendar-note">No market holidays in the next 75 days.</p>') +
     '<p class="calendar-note" style="margin:8px 0 0">Dates come from each exchange\'s own calendar and are used by the session clocks above, so a closed day shows as a holiday and the overlap skips it. Always confirm with the exchange.</p>';
 }
 function phaseWindows(now, session){
