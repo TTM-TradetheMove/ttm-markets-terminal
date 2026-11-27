@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UA = {"User-Agent": "Mozilla/5.0 (compatible; TTMMarketsTerminalBot/1.0)"}
 TFS = [("15m", "15m"), ("1h", "1H"), ("4h", "4H"), ("8h", "8H"), ("12h", "12H"), ("1d", "1D"), ("1w", "1W")]
-FETCHES = [("15m", "15m"), ("1H", "1H"), ("4H", "4H"), ("12H", "12H"), ("1D", "1D"), ("1W", "1W")]  # one API call each; 8h is built from 4H
+FETCHES = [("5m", "5m"), ("15m", "15m"), ("1H", "1H"), ("4H", "4H"), ("12H", "12H"), ("1D", "1D"), ("1W", "1W")]  # one API call each; 8h is built from 4H
 COINS = ["BTC", "ETH", "XRP", "BNB", "SOL", "DOGE", "TRX", "ADA", "HYPE", "LINK", "XLM", "SUI", "BCH", "AVAX",
          "LTC", "HBAR", "TON", "DOT", "UNI", "AAVE", "NEAR", "APT", "ARB", "OP", "ATOM", "FIL", "ETC", "ICP",
          "INJ", "PEPE", "SHIB", "TAO", "ONDO", "WLD", "CRV", "ENA", "SEI", "TIA", "JUP", "RENDER",
@@ -103,9 +103,13 @@ def one(job):
     rows = sorted(d["data"], key=lambda c: int(c[0]))  # API returns newest first
     qv = lambda c: float(c[7]) if len(c) > 7 and c[7] not in ("", None) else 0.0
     out = {}
-    label = {"15m": "15m", "1H": "1h", "4H": "4h", "12H": "12h", "1D": "1d", "1W": "1w"}[bar]
+    label = {"5m": "5m", "15m": "15m", "1H": "1h", "4H": "4h", "12H": "12h", "1D": "1d", "1W": "1w"}[bar]
     base = [(int(c[0]), float(c[4]), qv(c), (c[8] == "1") if len(c) > 8 else True, float(c[1])) for c in rows]
     out[label] = (rsi([b[1] for b in base][-200:]),) + vol_stats(base)
+    # rolling price change for the Bubbles page: candles back = 1h from 15m bars, 4h from 1H bars, 1w and 1m from daily bars
+    for key, bars_back, want in (("5m", 1, "5m"), ("15m", 3, "5m"), ("1h", 4, "15m"), ("4h", 4, "1h"), ("1w", 7, "1d"), ("1m", 30, "1d")):
+        if label == want and len(base) > bars_back and base[-1 - bars_back][1]:
+            out["_ch_" + key] = (round((base[-1][1] / base[-1 - bars_back][1] - 1) * 100, 2),)
     if bar == "4H":  # 8h = pairs of 4H candles aligned to 00:00 / 08:00 / 16:00 UTC
         now_ms, groups = int(time.time() * 1000), {}
         for ts, close, q, _, o in base:
@@ -137,14 +141,15 @@ def main():
     out = []
     for c in coins:
         r = res.get(c, {})
-        if sum(1 for v in r.values() if v[0] is not None) < 3:
+        if sum(1 for k, v in r.items() if not k.startswith('_') and v[0] is not None) < 3:
             continue
         tfl = [l for l, _ in TFS]
         out.append({"s": c, "p": tk[c][0], "c": tk[c][1], "cat": CAT_OF.get(c, "Other"), "v24": tk[c][2],
                     "r": {l: (r[l][0] if l in r else None) for l in tfl},
                     "vr": {l: (r[l][1] if l in r else None) for l in tfl},
                     "vq": {l: (r[l][2] if l in r else None) for l in tfl},
-                    "vd": {l: (r[l][3] if l in r else None) for l in tfl}})
+                    "vd": {l: (r[l][3] if l in r else None) for l in tfl},
+                    "ch": {"5m": (r.get("_ch_5m") or (None,))[0], "15m": (r.get("_ch_15m") or (None,))[0], "1h": (r.get("_ch_1h") or (None,))[0], "4h": (r.get("_ch_4h") or (None,))[0], "1d": tk[c][1], "1w": (r.get("_ch_1w") or (None,))[0], "1m": (r.get("_ch_1m") or (None,))[0]}})
     if len(out) < 10:
         raise SystemExit("too few coins computed - not overwriting rsi_heatmap.json")
     payload = {"generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(), "source": "OKX",
