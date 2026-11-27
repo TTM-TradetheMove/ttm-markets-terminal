@@ -1,0 +1,48 @@
+name: Update bubbles data
+
+on:
+  schedule:
+    - cron: "4-59/10 * * * *"
+  workflow_dispatch: {}
+  push:
+    paths:
+      - scripts/update_bubbles.py
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-bubbles
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch bubbles data
+        run: python3 scripts/update_bubbles.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "ttm-calendar-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add bubbles.json
+          if git diff --cached --quiet; then
+            echo "No changes to bubbles.json"
+          else
+            git commit -m "Auto-update bubbles data"
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "Push attempt $i failed, retrying..."
+              sleep 5
+            done
+          fi

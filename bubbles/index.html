@@ -49,7 +49,8 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   <div class="chips" id="tf"></div>
   <span><label class="t" for="sz">Size</label><select id="sz"><option value="b">Balanced (easy to read)</option><option value="m">True market cap</option><option value="v">24h volume</option></select></span>
   <span><label class="t" for="sec">Sector</label><select id="sec"><option value="">All sectors</option></select></span>
-  <span class="chips" id="vw"><button class="chip on" data-v="all">All</button><button class="chip" data-v="watch">★ Watchlist <span id="wn"></span></button></span>
+  <span class="chips" id="rg"><button class="chip on" data-g="top">Top 125</button><button class="chip" data-g="next">Next 125</button><button class="chip" data-g="all">All 250</button></span>
+  <span class="chips" id="vw"><button class="chip on" data-v="all">Market</button><button class="chip" data-v="watch">★ Watchlist <span id="wn"></span></button></span>
   <button class="chip" id="hid">Hidden (0)</button>
   <input id="q" type="search" placeholder="Find a coin" autocomplete="off" style="width:130px">
   <div class="legend"><span>Falling</span><i></i><span>Rising</span></div>
@@ -66,11 +67,12 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   var cv = document.getElementById('cv'), ctx = cv.getContext('2d'), wrap = document.getElementById('wrap'), tip = document.getElementById('tip'), card = document.getElementById('card');
   var TFS = [['5m', '5M'], ['15m', '15M'], ['1h', '1H'], ['4h', '4H'], ['1d', '24H'], ['1w', '1W'], ['1m', '1M']], tf = '1d', sizeBy = 'b', sector = '', query = '';
   var coins = [], B = [], W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2), hover = null, sel = null, raf = 0, calm = 0, drag = null;
-  var tfEl = document.getElementById('tf'), view = 'all', WL = {}, HID = {};
+  var tfEl = document.getElementById('tf'), view = 'all', range = 'top', WL = {}, HID = {};
   try{ var sv = JSON.parse(localStorage.getItem('ttm_bub_v1') || '{}'); (sv.w || []).forEach(function(x){ WL[x] = 1; }); (sv.h || []).forEach(function(x){ HID[x] = 1; }); }catch(e){}
   function save(){ try{ localStorage.setItem('ttm_bub_v1', JSON.stringify({w: Object.keys(WL), h: Object.keys(HID)})); }catch(e){} counts(); }
   function counts(){ document.getElementById('hid').textContent = 'Hidden (' + Object.keys(HID).length + ')'; var n = Object.keys(WL).length; document.getElementById('wn').textContent = n ? '(' + n + ')' : ''; }
   [].forEach.call(document.querySelectorAll('#vw .chip'), function(b){ b.onclick = function(){ view = b.getAttribute('data-v'); [].forEach.call(document.querySelectorAll('#vw .chip'), function(c){ c.classList.toggle('on', c === b); }); rebuild(true); }; });
+  [].forEach.call(document.querySelectorAll('#rg .chip'), function(b){ b.onclick = function(){ range = b.getAttribute('data-g'); [].forEach.call(document.querySelectorAll('#rg .chip'), function(c){ c.classList.toggle('on', c === b); }); rebuild(true); }; });
   document.getElementById('hid').onclick = function(){ var hp = document.getElementById('hp'); if(hp.style.display === 'block'){ hp.style.display = 'none'; return; } hidePanel(); hp.style.display = 'block'; };
   function hidePanel(){ var hp = document.getElementById('hp'), k = Object.keys(HID).sort();
     hp.innerHTML = '<b>Hidden coins</b>' + (k.length ? ' <button id="ra" style="float:right">Restore all</button>' : '') + (k.length ? k.map(function(x){ return '<div class="it"><span>' + esc(x) + '</span><button data-r="' + esc(x) + '">Restore</button></div>'; }).join('') : '<p style="color:var(--mute)">Nothing hidden. Open any bubble and press Hide to remove it from your chart.</p>');
@@ -91,7 +93,7 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
 
   var lw = 0, lh = 0;
   function resize(){ var r = cv.getBoundingClientRect(); if(Math.abs(r.width - lw) < 2 && Math.abs(r.height - lh) < 2) return; lw = r.width; lh = r.height; W = r.width; H = r.height; cv.width = W * DPR; cv.height = H * DPR; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); layout(true); }
-  function visible(){ return coins.filter(function(c){ return !HID[c.s] && (view !== 'watch' || WL[c.s]) && (!sector || c.cat === sector) && (!query || c.s.toLowerCase().indexOf(query) === 0 || (c.n || '').toLowerCase().indexOf(query) >= 0); }); }
+  function visible(){ return coins.filter(function(c){ return !HID[c.s] && (range === 'all' || (range === 'top' ? c.rk < 125 : c.rk >= 125)) && (view !== 'watch' || WL[c.s]) && (!sector || c.cat === sector) && (!query || c.s.toLowerCase().indexOf(query) === 0 || (c.n || '').toLowerCase().indexOf(query) >= 0); }); }
   function layout(fresh){
     var list = visible(), vals = list.map(function(c){ var x = Math.max(sizeBy === 'v' ? (c.v24 || 1) : (c.m || c.v24 * 20 || 1), 1); return sizeBy === 'b' ? Math.pow(x, 0.5) : x; }), tot = vals.reduce(function(a, b){ return a + b; }, 0) || 1;
     var area = W * H * (sizeBy === 'b' ? 0.52 : 0.46), old = {}; B.forEach(function(b){ old[b.c.s] = b; });
@@ -166,11 +168,12 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
     setInterval(function(){ if(ws && ws.readyState === 1) ws.send('ping'); }, 20000);
   }
   function load(first){
-    Promise.all([fetch('../rsi_heatmap.json?' + Math.floor(Date.now() / 6e4)).then(function(r){ return r.json(); }), fetch('../top_coins.json?' + Math.floor(Date.now() / 6e5)).then(function(r){ return r.json(); }).catch(function(){ return {coins: []}; })]).then(function(r){
+    Promise.all([fetch('../bubbles.json?' + Math.floor(Date.now() / 6e4)).then(function(r){ if(!r.ok) throw 0; return r.json(); }).catch(function(){ return fetch('../rsi_heatmap.json?' + Math.floor(Date.now() / 6e4)).then(function(r){ return r.json(); }); }), fetch('../top_coins.json?' + Math.floor(Date.now() / 6e5)).then(function(r){ return r.json(); }).catch(function(){ return {coins: []}; })]).then(function(r){
       var meta = {}; (r[1].coins || []).forEach(function(c){ meta[c.s] = c; });
-      var nc = (r[0].coins || []).map(function(c){ var m = meta[c.s] || {}; var ch = c.ch || {'1d': c.c}, ref = {}; Object.keys(ch).forEach(function(k){ if(ch[k] != null && k !== '1d') ref[k] = c.p / (1 + ch[k] / 100); }); var o = {s: c.s, n: m.n || c.s, p: c.p, i: m.i || ('https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/' + c.s.toLowerCase() + '.png'), m: m.m || 0, v24: c.v24, cat: c.cat, ch: ch, ref: ref}; if(live[c.s]) applyLive(o, live[c.s]); return o; }).filter(function(c){ return c.p; });
+      var nc = (r[0].coins || []).map(function(c){ var m = meta[c.s] || {}; var ch = c.ch || {'1d': c.c}, ref = {}; Object.keys(ch).forEach(function(k){ if(ch[k] != null && k !== '1d') ref[k] = c.p / (1 + ch[k] / 100); }); var o = {s: c.s, n: c.n || m.n || c.s, p: c.p, i: c.i || m.i || ('https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/' + c.s.toLowerCase() + '.png'), m: c.m || m.m || 0, v24: c.v24, cat: c.cat, ch: ch, ref: ref}; if(live[c.s]) applyLive(o, live[c.s]); return o; }).filter(function(c){ return c.p; });
       var secs = {}; nc.forEach(function(c){ if(c.cat) secs[c.cat] = 1; }); var se = document.getElementById('sec'); if(se.options.length === 1) Object.keys(secs).sort().forEach(function(s){ var o = document.createElement('option'); o.value = s; o.textContent = s; se.appendChild(o); });
       var byS = {}; coins.forEach(function(c){ byS[c.s] = 1; }); var same = nc.length === coins.length && nc.every(function(c){ return byS[c.s]; });
+      nc.sort(function(a, b){ return (b.m || b.v24 || 0) - (a.m || a.v24 || 0); }); nc.forEach(function(c, i){ c.rk = i; });
       coins = nc; if(first || !same) layout(true); else { var map = {}; nc.forEach(function(c){ map[c.s] = c; }); B.forEach(function(b){ b.c = map[b.c.s] || b.c; }); draw(); }
       if(first) connect();
       var t = r[0].generated_at ? new Date(r[0].generated_at) : null; document.getElementById('upd').textContent = nc.length + ' coins · reference data ' + (t ? t.toLocaleString() : 'recently');
