@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="copyright" content="TTM - Trade The Move. All rights reserved.">
+<link rel="icon" type="image/png" href="../favicon.png"><link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<title>TTM Pills: live crypto movers, free | Trade The Move</title>
+<meta name="description" content="Free live crypto pills. See the biggest movers at a glance: size is the size of the move, colour is up or down over 5 minutes, 1 hour, 24 hours, a week or a month. Built by Trade The Move.">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Trade The Move">
+<meta property="og:title" content="TTM Pills: free live crypto movers">
+<meta property="og:description" content="See the whole crypto market in one picture. Free, no sign-up.">
+<meta property="og:url" content="https://ttm.markets/pills/">
+<meta property="og:image" content="https://ttm.markets/promo/ttm_offer_x.png">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root{--bg:#0b0b0c;--bg2:#121214;--card:#17171a;--line:#2a2a2e;--gold:#dba118;--gold2:#f0b929;--text:#e8e6e1;--mute:#9a978f;--green:#3fb97a;--red:#e5534b}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--gold2)}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--text)}.brand img{height:44px}.brand b{font-size:18px;letter-spacing:.02em}.brand span{color:var(--gold2)}
+.cta{background:linear-gradient(135deg,#f6d36b,#d4a017);color:#1a1300;font-weight:800;padding:10px 16px;border-radius:999px;text-decoration:none;font-size:14px;white-space:nowrap}
+.bar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:12px 18px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:999px;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer}.chip.on{background:var(--gold);color:#1a1300;border-color:var(--gold)}
+select,input{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px}
+label.t{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.06em;margin-right:4px}
+#wrap{position:relative;margin:0 12px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#17171b 0%,#0e0e10 70%)}
+canvas{display:block;width:100%;height:calc(100vh - 235px);min-height:420px;touch-action:none;cursor:pointer}
+#tip{position:fixed;pointer-events:none;z-index:5;background:#0f0f12ee;border:1px solid var(--gold);border-radius:10px;padding:9px 12px;font-size:12.5px;line-height:1.55;display:none;max-width:260px}
+#tip b{font-size:14px;color:var(--gold2)}
+#card{position:absolute;right:12px;bottom:12px;z-index:4;background:#121214f2;border:1px solid var(--gold);border-radius:14px;padding:14px 16px;width:min(310px,calc(100% - 24px));display:none;font-size:13px;line-height:1.6}
+#card{max-height:calc(100% - 24px);overflow:auto;width:min(360px,calc(100% - 24px))}#card h3{margin:0 0 2px;font-size:19px;padding-right:22px}#card .price{font-size:22px;font-weight:800;margin:2px 0 8px}#card .tfg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}#card .tfg div{background:#ffffff0d;border:1px solid transparent;border-radius:8px;padding:5px 6px;text-align:center;line-height:1.3}#card .tfg span{display:block;font-size:10px;color:var(--mute)}#card .tfg b{font-size:12.5px}#card .tfg .up b{color:var(--green)}#card .tfg .dn b{color:var(--red)}#card .tfg .cur{border-color:var(--gold)}#card a.act{text-decoration:none;text-align:center;display:block;color:var(--text)}#card .x{position:absolute;right:10px;top:8px;background:none;border:0;color:var(--mute);font-size:20px;cursor:pointer}
+#card .row{display:flex;justify-content:space-between;border-bottom:1px solid #ffffff10;padding:3px 0}#card .go{display:block;text-align:center;margin-top:10px;background:var(--gold);color:#1a1300;font-weight:800;padding:9px;border-radius:10px;text-decoration:none}
+#hp{position:absolute;left:12px;top:12px;z-index:4;background:#121214f5;border:1px solid var(--line);border-radius:14px;padding:12px 14px;width:min(300px,calc(100% - 24px));max-height:70%;overflow:auto;display:none;font-size:13px}
+#hp .it{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #ffffff10}#hp button,#card .act{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer}
+#card .acts{display:flex;gap:8px;margin:0 0 10px}#card .act{flex:1;padding:8px}#card .act.on{background:var(--gold);color:#1a1300;border-color:var(--gold)}
+.pos{color:var(--green)}.neg{color:var(--red)}
+.legend{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mute);margin-left:auto}.legend i{display:inline-block;width:120px;height:9px;border-radius:5px;background:linear-gradient(90deg,#e5534b,#5a2a2a 45%,#1d3a2b 55%,#3fb97a)}
+footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
+@media(max-width:640px){.brand b{font-size:15px}.legend{display:none}canvas{height:calc(100vh - 270px)}}
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="../"><img src="../img/logo0.png" alt="TTM"><b>TTM <span>Pills</span></b></a>
+  <a class="cta" href="../crypto/">Open the TTM Terminal</a>
+</header>
+<div class="bar">
+  <div class="chips" id="tf"></div>
+  <span><label class="t" for="sz">Size</label><select id="sz"><option value="p">% move (bigger move = bigger)</option><option value="b">Balanced market cap</option><option value="m">True market cap</option><option value="v">24h volume</option></select></span>
+  <span><label class="t" for="sec">Sector</label><select id="sec"><option value="">All sectors</option></select></span>
+  <span class="chips" id="rg"><button class="chip on" data-g="top">Top 125</button><button class="chip" data-g="next">Next 125</button><button class="chip" data-g="all">All 250</button></span>
+  <span class="chips" id="vw"><button class="chip on" data-v="all">Market</button><button class="chip" data-v="watch">★ Watchlist <span id="wn"></span></button></span>
+  <button class="chip" id="hid">Hidden (0)</button>
+  <input id="q" type="search" placeholder="Find a coin" autocomplete="off" style="width:130px">
+  <div class="legend"><span>Falling</span><i></i><span>Rising</span></div>
+</div>
+<div id="wrap"><canvas id="cv"></canvas><div id="hp"></div><div id="card"></div></div>
+<div id="tip"></div>
+<footer>
+  <div><b id="live" style="margin-right:8px">○ delayed</b><span id="upd">Loading the market…</span></div>
+  <div>Prices from OKX, market caps from CoinGecko, prices stream live. Size shows how big the price move is (or market cap, if you change the Size option), colour shows whether it is up or down over the period you pick. Educational only, not financial advice.</div>
+  <div style="margin-top:6px"><a href="../">TTM</a> · <a href="../crypto/">Crypto terminal</a> · <a href="../tradfi/">TradFi terminal</a></div>
+</footer>
+<script>
+(function(){
+  var cv = document.getElementById('cv'), ctx = cv.getContext('2d'), wrap = document.getElementById('wrap'), tip = document.getElementById('tip'), card = document.getElementById('card');
+  var TFS = [['5m', '5M'], ['15m', '15M'], ['1h', '1H'], ['4h', '4H'], ['1d', '24H'], ['1w', '1W'], ['1m', '1M']], tf = '1d', sizeBy = 'p', sector = '', query = '';
+  var coins = [], B = [], W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2), hover = null, sel = null, raf = 0, calm = 0, drag = null;
+  var tfEl = document.getElementById('tf'), view = 'all', shape = 'pill', range = 'top', WL = {}, HID = {};
+  try{ var sv = JSON.parse(localStorage.getItem('ttm_bub_v1') || '{}'); (sv.w || []).forEach(function(x){ WL[x] = 1; }); (sv.h || []).forEach(function(x){ HID[x] = 1; }); }catch(e){}
+  function save(){ try{ localStorage.setItem('ttm_bub_v1', JSON.stringify({w: Object.keys(WL), h: Object.keys(HID)})); }catch(e){} counts(); }
+  function counts(){ document.getElementById('hid').textContent = 'Hidden (' + Object.keys(HID).length + ')'; var n = Object.keys(WL).length; document.getElementById('wn').textContent = n ? '(' + n + ')' : ''; }
+  [].forEach.call(document.querySelectorAll('#vw .chip'), function(b){ b.onclick = function(){ view = b.getAttribute('data-v'); [].forEach.call(document.querySelectorAll('#vw .chip'), function(c){ c.classList.toggle('on', c === b); }); rebuild(true); }; });
+  [].forEach.call(document.querySelectorAll('#sh .chip'), function(b){ b.onclick = function(){ shape = b.getAttribute('data-s'); [].forEach.call(document.querySelectorAll('#sh .chip'), function(c){ c.classList.toggle('on', c === b); }); rebuild(true); }; });
+  [].forEach.call(document.querySelectorAll('#rg .chip'), function(b){ b.onclick = function(){ range = b.getAttribute('data-g'); [].forEach.call(document.querySelectorAll('#rg .chip'), function(c){ c.classList.toggle('on', c === b); }); rebuild(true); }; });
+  document.getElementById('hid').onclick = function(){ var hp = document.getElementById('hp'); if(hp.style.display === 'block'){ hp.style.display = 'none'; return; } hidePanel(); hp.style.display = 'block'; };
+  function hidePanel(){ var hp = document.getElementById('hp'), k = Object.keys(HID).sort();
+    hp.innerHTML = '<b>Hidden coins</b>' + (k.length ? ' <button id="ra" style="float:right">Restore all</button>' : '') + (k.length ? k.map(function(x){ return '<div class="it"><span>' + esc(x) + '</span><button data-r="' + esc(x) + '">Restore</button></div>'; }).join('') : '<p style="color:var(--mute)">Nothing hidden. Open any pill and press Hide to remove it from your chart.</p>');
+    [].forEach.call(hp.querySelectorAll('[data-r]'), function(b){ b.onclick = function(){ delete HID[b.getAttribute('data-r')]; save(); hidePanel(); rebuild(true); }; });
+    var ra = document.getElementById('ra'); if(ra) ra.onclick = function(){ HID = {}; save(); hidePanel(); rebuild(true); }; }
+  counts();
+  TFS.forEach(function(t){ var b = document.createElement('button'); b.className = 'chip' + (t[0] === tf ? ' on' : ''); b.textContent = t[1]; b.onclick = function(){ tf = t[0]; [].forEach.call(tfEl.children, function(c){ c.classList.toggle('on', c === b); }); if(sizeBy === 'p') layout(false); else rebuild(false); }; tfEl.appendChild(b); });
+  document.getElementById('sz').onchange = function(){ sizeBy = this.value; rebuild(true); };
+  document.getElementById('sec').onchange = function(){ sector = this.value; rebuild(true); };
+  document.getElementById('q').oninput = function(){ query = this.value.trim().toLowerCase(); rebuild(true); };
+
+  function fmtP(p){ return p >= 1000 ? '$' + p.toLocaleString(undefined, {maximumFractionDigits: 0}) : p >= 1 ? '$' + p.toFixed(2) : p >= 0.01 ? '$' + p.toFixed(4) : '$' + p.toPrecision(3); }
+  function fmtB(n){ return n >= 1e12 ? '$' + (n / 1e12).toFixed(2) + 'T' : n >= 1e9 ? '$' + (n / 1e9).toFixed(1) + 'B' : n >= 1e6 ? '$' + (n / 1e6).toFixed(0) + 'M' : '$' + Math.round(n).toLocaleString(); }
+  function pc(v){ return v == null ? '–' : (v > 0 ? '+' : '') + v.toFixed(Math.abs(v) >= 10 ? 1 : 2) + '%'; }
+  function color(v){ if(v == null) return ['#2a2a2e', '#555']; var a = Math.min(Math.abs(v) / 12, 1), g = v >= 0;
+    var base = g ? [29, 58, 43] : [90, 42, 42], top = g ? [63, 185, 122] : [229, 83, 75], c = base.map(function(x, i){ return Math.round(x + (top[i] - x) * a); });
+    return ['rgb(' + c.join(',') + ')', 'rgb(' + top.join(',') + ')']; }
+
+  var lw = 0, lh = 0;
+  function resize(){ var r = cv.getBoundingClientRect(); if(Math.abs(r.width - lw) < 2 && Math.abs(r.height - lh) < 2) return; lw = r.width; lh = r.height; W = r.width; H = r.height; cv.width = W * DPR; cv.height = H * DPR; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); layout(true); }
+  function visible(){ return coins.filter(function(c){ return !HID[c.s] && (!c.ch || c.ch[tf] != null) && (range === 'all' || (range === 'top' ? c.rk < 125 : c.rk >= 125)) && (view !== 'watch' || WL[c.s]) && (!sector || c.cat === sector) && (!query || c.s.toLowerCase().indexOf(query) === 0 || (c.n || '').toLowerCase().indexOf(query) >= 0); }); }
+  function layout(fresh){
+    var list = visible(), vals = list.map(function(c){ if(sizeBy === 'p') return Math.pow(Math.max(Math.abs((c.ch && c.ch[tf]) || 0), 0.2), 0.8); var x = Math.max(sizeBy === 'v' ? (c.v24 || 1) : (c.m || c.v24 * 20 || 1), 1); return shape === 'pill' ? Math.pow(x, 0.32) : sizeBy === 'b' ? Math.pow(x, 0.5) : x; }), tot = vals.reduce(function(a, b){ return a + b; }, 0) || 1;
+    var area = W * H * (shape === 'pill' ? 0.5 : sizeBy !== 'm' && sizeBy !== 'v' ? 0.52 : 0.46), old = {}; B.forEach(function(b){ old[b.c.s] = b; });
+    B = list.map(function(c, i){ var r = Math.sqrt(vals[i] / tot * area / Math.PI), o = old[c.s];
+      return {c: c, tr: Math.max(r, shape === 'pill' ? 22 : sizeBy === 'b' || sizeBy === 'p' ? 15 : 11), r: o ? o.r : 2, x: o && !fresh ? o.x : W / 2 + (Math.random() - .5) * W * .6, y: o && !fresh ? o.y : H / 2 + (Math.random() - .5) * H * .6, vx: 0, vy: 0}; });
+    var mx = Math.min(W, H) * (shape === 'pill' ? 0.17 : sizeBy === 'b' || sizeBy === 'p' ? 0.22 : 0.30); B.forEach(function(b){ if(b.tr > mx) b.tr = mx; }); if(shape === 'pill') packPills(); if(sel){ var ns = null; B.forEach(function(b){ if(b.c.s === sel.c.s) ns = b; }); sel = ns; } hover = null; if(fresh && shape !== 'pill') for(var it = 0; it < 220; it++){ B.forEach(function(b){ b.r = b.tr; }); sim(); }
+    calm = 0; kick();
+  }
+  function kick(){ if(!raf) raf = requestAnimationFrame(step); }
+  function step(){ raf = 0; var moved = sim(); draw(); calm = moved < 0.6 ? calm + 1 : 0; if(calm < 45 || drag) kick(); }
+  function hh(b){ return shape === 'pill' ? (b.ph || 12) : b.r; }
+  function hw(b){ return shape === 'pill' ? hh(b) * 2.8 : b.r; }
+  function packPills(){
+    var items = B.slice().sort(sizeBy === 'p' ? function(a, b){ return ((b.c.ch && b.c.ch[tf]) || 0) - ((a.c.ch && a.c.ch[tf]) || 0); } : function(a, b){ return b.tr - a.tr; }), gap = 7, pad = 12, maxW = W - pad * 2, maxH = H - pad * 2, lo = 0.2, hi = 3.2, best = null;
+    function rows(sc){ var rs = [], cur = {it: [], w: 0, h: 0}; items.forEach(function(b){ var h = Math.max(b.tr * 0.56, 8) * sc, w = h * 5.6; if(cur.it.length && cur.w + w + gap > maxW){ rs.push(cur); cur = {it: [], w: 0, h: 0}; } cur.it.push({b: b, h: h, w: w}); cur.w += w + (cur.it.length > 1 ? gap : 0); cur.h = Math.max(cur.h, h * 2); }); rs.push(cur); return rs; }
+    function total(rs){ return rs.reduce(function(a, r){ return a + r.h; }, 0) + gap * (rs.length - 1); }
+    for(var i = 0; i < 24; i++){ var mid = (lo + hi) / 2, rs = rows(mid); if(total(rs) <= maxH){ best = rs; lo = mid; } else hi = mid; }
+    best = best || rows(lo); var y = pad + Math.max(0, (maxH - total(best)) / 2);
+    best.forEach(function(r){ var x = pad + Math.max(0, (maxW - r.w) / 2); r.it.forEach(function(o){ o.b.ph = o.h; o.b.tx = x + o.w / 2; o.b.ty = y + r.h / 2; x += o.w + gap; if(o.b.x == null || o.b.fresh){ o.b.x = o.b.tx; o.b.y = o.b.ty; } }); y += r.h + gap; });
+  }
+  function sim(){
+    if(shape === 'pill'){ var mv = 0; B.forEach(function(a){ if(a === drag) return; var dx = (a.tx - a.x) * 0.22, dy = (a.ty - a.y) * 0.22; a.x += dx; a.y += dy; mv += Math.abs(dx) + Math.abs(dy); }); return mv; }
+    var n = B.length, cx = W / 2, cy = H / 2, moved = 0;
+    for(var i = 0; i < n; i++){ var a = B[i]; a.r += (a.tr - a.r) * 0.18; var asp = Math.min(1, H / W); a.vx += (cx - a.x) * 0.0022 * (0.1 + asp * 0.45); a.vy += (cy - a.y) * 0.0022; }
+    for(var k = 0; k < (shape === 'pill' ? 7 : 4); k++) for(i = 0; i < n; i++) for(var j = i + 1; j < n; j++){ var p = B[i], q = B[j], dx = q.x - p.x, dy = q.y - p.y, d = Math.sqrt(dx * dx + dy * dy) || 0.01, m = p.r + q.r + 1.5;
+      if(shape === 'pill'){ var ow = hw(p) + hw(q) + 2 - Math.abs(dx), oh = hh(p) + hh(q) + 2 - Math.abs(dy);
+        if(ow > 0 && oh > 0){ if(ow < oh){ var sx = (dx < 0 ? -1 : 1) * ow / 2; if(p !== drag) p.x -= sx; if(q !== drag) q.x += sx; } else { var sy = (dy < 0 ? -1 : 1) * oh / 2; if(p !== drag) p.y -= sy; if(q !== drag) q.y += sy; } } continue; }
+      if(d < m){ var f = (m - d) / d * 0.5, fx = dx * f, fy = dy * f, wp = q.r / (p.r + q.r), wq = p.r / (p.r + q.r); if(p !== drag){ p.x -= fx * wp * 2; p.y -= fy * wp * 2; } if(q !== drag){ q.x += fx * wq * 2; q.y += fy * wq * 2; } } }
+    for(i = 0; i < n; i++){ a = B[i]; if(a === drag) continue; a.vx *= 0.82; a.vy *= 0.82; a.x += a.vx; a.y += a.vy; a.x = Math.max(hw(a), Math.min(W - hw(a), a.x)); a.y = Math.max(hh(a), Math.min(H - hh(a), a.y)); moved += Math.abs(a.vx) + Math.abs(a.vy) + Math.abs(a.tr - a.r); }
+    return moved;
+  }
+  function draw(){
+    ctx.clearRect(0, 0, W, H);
+    if(!B.length && coins.length){ ctx.fillStyle = '#9a978f'; ctx.font = '600 15px Inter,system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(view === 'watch' ? 'Your watchlist is empty. Open a pill and press Save.' : 'No coins match.', W / 2, H / 2); }
+    B.forEach(function(b){ var v = b.c.ch ? b.c.ch[tf] : null, cl = color(v), r = b.r, on = b === hover || b === sel;
+      if(shape === 'pill'){ var ph = hh(b), pw = hw(b), x0 = b.x - pw, y0 = b.y - ph; ctx.beginPath(); ctx.moveTo(x0 + ph, y0); ctx.lineTo(x0 + 2 * pw - ph, y0); ctx.arc(x0 + 2 * pw - ph, b.y, ph, -Math.PI / 2, Math.PI / 2); ctx.lineTo(x0 + ph, y0 + 2 * ph); ctx.arc(x0 + ph, b.y, ph, Math.PI / 2, Math.PI * 1.5); ctx.closePath();
+        var pg = ctx.createLinearGradient(x0, y0, x0, y0 + 2 * ph); pg.addColorStop(0, cl[0]); pg.addColorStop(1, shade(cl[0])); ctx.fillStyle = pg; ctx.fill(); ctx.lineWidth = on ? 3 : 1.5; ctx.strokeStyle = on ? '#f0b929' : cl[1]; ctx.stroke();
+        var pim = logo(b.c), ld = ph * 1.38, lx = x0 + ph; ctx.textBaseline = 'middle';
+        if(pim){ ctx.save(); ctx.beginPath(); ctx.arc(lx, b.y, ld / 2, 0, 7); ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.fill(); ctx.clip(); ctx.drawImage(pim, lx - ld / 2, b.y - ld / 2, ld, ld); ctx.restore(); }
+        var tx = x0 + ph * 2.05, two = ph >= 17, fz = Math.max(10, Math.min(ph * (two ? 0.6 : 0.78), 26)); ctx.textAlign = 'left'; ctx.fillStyle = '#fff'; ctx.font = '800 ' + fz + 'px Inter,system-ui,sans-serif';
+        if(two){ ctx.fillText(b.c.s, tx, b.y - fz * 0.55); ctx.font = '700 ' + Math.max(9, fz * 0.82) + 'px Inter,system-ui,sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.fillText(pc(v), tx, b.y + fz * 0.62); }
+        else { var tw = ctx.measureText(b.c.s).width; ctx.fillText(b.c.s, tx, b.y); ctx.font = '700 ' + Math.max(8, fz * 0.8) + 'px Inter,system-ui,sans-serif'; var pt = pc(v), pwid = ctx.measureText(pt).width; if(tx + tw + pwid + ph * 0.9 + 6 < x0 + 2 * pw){ ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.textAlign = 'right'; ctx.fillText(pt, x0 + 2 * pw - ph * 0.7, b.y); } }
+        if(WL[b.c.s]){ ctx.fillStyle = '#f0b929'; ctx.font = '700 12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('★', x0 + 2 * pw - ph * 0.6, y0 + 6); }
+        return; }
+      ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, 7); var g = ctx.createRadialGradient(b.x - r * .3, b.y - r * .35, r * .1, b.x, b.y, r); g.addColorStop(0, cl[0]); g.addColorStop(1, shade(cl[0])); ctx.fillStyle = g; ctx.fill();
+      ctx.lineWidth = on ? 3 : 1.5; ctx.strokeStyle = on ? '#f0b929' : cl[1]; ctx.stroke();
+      if(WL[b.c.s] && r >= 17){ ctx.fillStyle = '#f0b929'; ctx.font = '700 ' + Math.max(11, Math.min(r * 0.28, 20)) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('★', b.x + r * 0.62, b.y - r * 0.62); }
+      var im = r >= 12 ? logo(b.c) : null;
+      function pic(x, y, d){ ctx.save(); ctx.beginPath(); ctx.arc(x, y, d / 2, 0, 7); ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.fill(); ctx.clip(); ctx.drawImage(im, x - d / 2, y - d / 2, d, d); ctx.restore(); }
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff';
+      if(r >= 30){ var d = Math.min(r * 0.62, 64), fs = Math.max(10, Math.min(r * 0.3, 24)), top = b.y - ((im ? d : 0) + fs * 1.9) / 2;
+        if(im) pic(b.x, top + d / 2, d); ctx.font = '800 ' + fs + 'px Inter,system-ui,sans-serif'; ctx.fillText(b.c.s, b.x, top + (im ? d : 0) + fs * 0.75);
+        ctx.font = '700 ' + Math.max(9, fs * 0.7) + 'px Inter,system-ui,sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.fillText(pc(v), b.x, top + (im ? d : 0) + fs * 1.75);
+      } else if(r >= 17){ if(im){ pic(b.x, b.y - r * 0.28, r * 0.9); ctx.font = '800 ' + Math.max(8, r * 0.36) + 'px Inter,system-ui,sans-serif'; ctx.fillText(b.c.s, b.x, b.y + r * 0.52); } else { ctx.font = '800 ' + Math.max(9, r * 0.42) + 'px Inter,system-ui,sans-serif'; ctx.fillText(b.c.s, b.x, b.y); } }
+      else if(im){ pic(b.x, b.y, r * 1.4); }
+    });
+  }
+  var IMG = {};
+  function logo(c){ var im = IMG[c.s]; if(!im){ im = IMG[c.s] = new Image(); im.crossOrigin = 'anonymous'; im.onload = function(){ im.ok = 1; kick(); draw(); }; im.onerror = function(){ im.bad = 1; }; im.src = c.i; } return im.ok ? im : null; }
+  function shade(c){ var m = c.match(/\d+/g); return m ? 'rgb(' + m.map(function(x){ return Math.round(x * 0.62); }).join(',') + ')' : c; }
+  function at(x, y){ for(var i = B.length - 1; i >= 0; i--){ var b = B[i]; if(shape === 'pill' ? (Math.abs(x - b.x) <= hw(b) && Math.abs(y - b.y) <= hh(b)) : ((x - b.x) * (x - b.x) + (y - b.y) * (y - b.y) <= b.r * b.r)) return b; } return null; }
+  function pos(e){ var r = cv.getBoundingClientRect(), t = e.touches ? e.touches[0] : e; return [t.clientX - r.left, t.clientY - r.top, t.clientX, t.clientY]; }
+  cv.addEventListener('mousemove', function(e){ var p = pos(e); if(drag){ drag.x = p[0]; drag.y = p[1]; return; } var b = at(p[0], p[1]); if(b !== hover){ hover = b; draw(); }
+    if(b){ var c = b.c, v = c.ch ? c.ch[tf] : null; tip.innerHTML = '<b>' + esc(c.n || c.s) + '</b> ' + esc(c.s) + '<br>' + fmtP(c.p) + ' · <span class="' + (v >= 0 ? 'pos' : 'neg') + '">' + pc(v) + '</span><br>Market cap ' + (c.m ? fmtB(c.m) : '–'); tip.style.display = 'block'; tip.style.left = Math.min(p[2] + 14, innerWidth - 270) + 'px'; tip.style.top = (p[3] + 14) + 'px'; } else tip.style.display = 'none'; });
+  cv.addEventListener('mouseleave', function(){ hover = null; tip.style.display = 'none'; draw(); });
+  var downAt = null;
+  function down(e){ var p = pos(e), b = at(p[0], p[1]); downAt = [p[0], p[1], b]; if(b){ drag = b; kick(); } }
+  function up(e){ if(drag){ var moved = downAt && downAt[2] === drag && Math.abs(drag.x - downAt[0]) + Math.abs(drag.y - downAt[1]) < 6; var b = drag; drag = null; if(moved) select(b); else if(downAt && downAt[2] === b){ calm = 0; kick(); } } else if(downAt && !downAt[2]){ select(null); } downAt = null; }
+  cv.addEventListener('mousedown', down); window.addEventListener('mouseup', up);
+  setInterval(function(){ if(sizeBy === 'p' && !drag && wsOk && !document.hidden) layout(false); }, 4000);
+  cv.addEventListener('touchstart', function(e){ down(e); }, {passive: true}); cv.addEventListener('touchmove', function(e){ if(drag){ var p = pos(e); drag.x = p[0]; drag.y = p[1]; e.preventDefault(); } }, {passive: false}); cv.addEventListener('touchend', up);
+  function esc(t){ return String(t == null ? '' : t).replace(/[&<>"]/g, function(c){ return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]; }); }
+  function select(b){ sel = b; draw(); if(!b){ card.style.display = 'none'; card.innerHTML = ''; return; } var c = b.c, wl = !!WL[c.s], cg = c.id ? 'https://www.coingecko.com/en/coins/' + encodeURIComponent(c.id) : 'https://www.coingecko.com/en/search?query=' + encodeURIComponent(c.s);
+    var open = card.getAttribute('data-chart') === c.s;
+    card.innerHTML = '<button class="x" aria-label="Close">×</button><h3>' + esc(c.n || c.s) + ' <small style="color:var(--mute)">' + esc(c.s) + (c.rk != null ? ' · #' + (c.rk + 1) : '') + '</small></h3>' +
+      '<div class="price">' + fmtP(c.p) + '</div>' +
+      '<div class="tfg">' + TFS.map(function(t){ var v = c.ch ? c.ch[t[0]] : null; return '<div class="' + (v == null ? '' : v >= 0 ? 'up' : 'dn') + (t[0] === tf ? ' cur' : '') + '"><span>' + t[1] + '</span><b>' + pc(v) + '</b></div>'; }).join('') + '</div>' +
+      '<div class="acts"><button class="act' + (wl ? ' on' : '') + '" id="aw">' + (wl ? '★ Saved' : '☆ Save') + '</button><button class="act" id="ah">Hide</button><a class="act" href="' + cg + '" target="_blank" rel="noopener">CoinGecko ↗</a></div>' +
+      '<div class="row"><span>Market cap</span><b>' + (c.m ? fmtB(c.m) : '–') + '</b></div><div class="row"><span>24h volume</span><b>' + fmtB(c.v24 || 0) + '</b></div><div class="row"><span>Sector</span><b>' + esc(c.cat || '–') + '</b></div>' +
+      (c.nl ? '' : '<button class="act" id="ac" style="width:100%;margin-top:10px">' + (open ? 'Hide chart' : 'Show live chart') + '</button>' + (open ? '<iframe title="Chart" loading="lazy" src="https://s.tradingview.com/widgetembed/?symbol=' + encodeURIComponent('OKX:' + c.s + 'USDT') + '&interval=60&theme=dark&style=1&hidesidetoolbar=1&symboledit=0&saveimage=0&withdateranges=1" style="width:100%;height:260px;border:0;margin-top:8px;border-radius:10px"></iframe>' : '')) +
+      '<a class="go" href="../crypto/#rsi">See ' + esc(c.s) + ' RSI and volume in the TTM terminal</a>';
+    card.style.display = 'block'; card.querySelector('.x').onclick = function(){ card.removeAttribute('data-chart'); select(null); };
+    document.getElementById('aw').onclick = function(){ if(WL[c.s]) delete WL[c.s]; else WL[c.s] = 1; save(); if(view === 'watch' && !WL[c.s]){ select(null); rebuild(true); } else select(b); };
+    document.getElementById('ah').onclick = function(){ HID[c.s] = 1; delete WL[c.s]; save(); select(null); rebuild(true); var hp = document.getElementById('hp'); if(hp.style.display === 'block') hidePanel(); };
+    var ac = document.getElementById('ac'); if(ac) ac.onclick = function(){ if(card.getAttribute('data-chart') === c.s) card.removeAttribute('data-chart'); else card.setAttribute('data-chart', c.s); select(b); }; }
+  function rebuild(fresh){ if(fresh){ layout(true); } else { draw(); } if(sel && B.indexOf(sel) < 0) select(null); }
+  var live = {}, ws = null, wsOk = false, lastDraw = 0;
+  function applyLive(c, t){ c.p = t.last; if(t.open) c.ch['1d'] = (t.last / t.open - 1) * 100; Object.keys(c.ref).forEach(function(k){ c.ch[k] = (t.last / c.ref[k] - 1) * 100; }); }
+  function setStatus(){ var e = document.getElementById('live'); if(e){ e.textContent = wsOk ? '● LIVE' : '○ delayed'; e.style.color = wsOk ? '#3fb97a' : '#9a978f'; } }
+  function connect(){
+    if(!window.WebSocket || ws) return;
+    try{ ws = new WebSocket('wss://ws.okx.com:8443/ws/v5/public'); }catch(e){ return; }
+    ws.onopen = function(){ var lv = coins.filter(function(c){ return !c.nl; }); for(var i = 0; i < lv.length; i += 60) ws.send(JSON.stringify({op: 'subscribe', args: lv.slice(i, i + 60).map(function(c){ return {channel: 'tickers', instId: c.s + '-USDT'}; })})); };
+    ws.onmessage = function(ev){ var d; try{ d = JSON.parse(ev.data); }catch(e){ return; } if(!d.data || !d.arg) return;
+      d.data.forEach(function(t){ var s = t.instId.replace('-USDT', ''), last = parseFloat(t.last), open = parseFloat(t.open24h); if(!(last > 0)) return; live[s] = {last: last, open: open > 0 ? open : null};
+        for(var i = 0; i < coins.length; i++) if(coins[i].s === s){ applyLive(coins[i], live[s]); break; } });
+      if(!wsOk){ wsOk = true; setStatus(); } var n = Date.now(); if(n - lastDraw > 400){ lastDraw = n; if(sel) select(sel); draw(); } };
+    ws.onclose = ws.onerror = function(){ ws = null; wsOk = false; setStatus(); setTimeout(connect, 5000); };
+    setInterval(function(){ if(ws && ws.readyState === 1) ws.send('ping'); }, 20000);
+  }
+  function load(first){
+    Promise.all([fetch('../bubbles.json?' + Math.floor(Date.now() / 6e4)).then(function(r){ if(!r.ok) throw 0; return r.json(); }).catch(function(){ return fetch('../rsi_heatmap.json?' + Math.floor(Date.now() / 6e4)).then(function(r){ return r.json(); }); }), fetch('../top_coins.json?' + Math.floor(Date.now() / 6e5)).then(function(r){ return r.json(); }).catch(function(){ return {coins: []}; })]).then(function(r){
+      var meta = {}; (r[1].coins || []).forEach(function(c){ meta[c.s] = c; });
+      var nc = (r[0].coins || []).map(function(c){ var m = meta[c.s] || {}; var ch = c.ch || {'1d': c.c}, ref = {}; Object.keys(ch).forEach(function(k){ if(ch[k] != null && k !== '1d') ref[k] = c.p / (1 + ch[k] / 100); }); var o = {id: m.id, nl: c.nl, s: c.s, n: c.n || m.n || c.s, p: c.p, i: c.i || m.i || ('https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/' + c.s.toLowerCase() + '.png'), m: c.m || m.m || 0, v24: c.v24, cat: c.cat, ch: ch, ref: ref}; if(live[c.s]) applyLive(o, live[c.s]); return o; }).filter(function(c){ return c.p; });
+      var secs = {}; nc.forEach(function(c){ if(c.cat) secs[c.cat] = 1; }); var se = document.getElementById('sec'); if(se.options.length === 1) Object.keys(secs).sort().forEach(function(s){ var o = document.createElement('option'); o.value = s; o.textContent = s; se.appendChild(o); });
+      var byS = {}; coins.forEach(function(c){ byS[c.s] = 1; }); var same = nc.length === coins.length && nc.every(function(c){ return byS[c.s]; });
+      nc.sort(function(a, b){ return (b.m || b.v24 || 0) - (a.m || a.v24 || 0); }); nc.forEach(function(c, i){ c.rk = i; });
+      coins = nc; if(first || !same) layout(true); else { var map = {}; nc.forEach(function(c){ map[c.s] = c; }); B.forEach(function(b){ b.c = map[b.c.s] || b.c; }); draw(); }
+      if(first) connect();
+      var t = r[0].generated_at ? new Date(r[0].generated_at) : null; document.getElementById('upd').textContent = nc.length + ' coins' + (nc.some(function(c){ return c.nl; }) ? ' (5M, 15M and 4H cover coins listed on OKX)' : '') + ' · reference data ' + (t ? t.toLocaleString() : 'recently');
+      if(!nc.some(function(c){ return c.ch && c.ch['5m'] != null; })) { [].forEach.call(tfEl.children, function(b, i){ if(i !== 4) b.title = 'Appears after the next data update'; }); }
+    }).catch(function(){ document.getElementById('upd').textContent = 'The market data is not available right now. Try again in a minute.'; });
+  }
+  if(window.ResizeObserver){ var ro = new ResizeObserver(function(){ resize(); }); ro.observe(wrap); } else window.addEventListener('resize', resize); resize(); load(true); setInterval(function(){ load(false); }, 90000);
+})();
+</script>
+</body>
+</html>
