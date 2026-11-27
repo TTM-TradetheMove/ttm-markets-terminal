@@ -47,7 +47,7 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
 </header>
 <div class="bar">
   <div class="chips" id="tf"></div>
-  <span><label class="t" for="sz">Size</label><select id="sz"><option value="b">Balanced (easy to read)</option><option value="m">True market cap</option><option value="v">24h volume</option></select></span>
+  <span><label class="t" for="sz">Size</label><select id="sz"><option value="p">% move (bigger move = bigger)</option><option value="b">Balanced market cap</option><option value="m">True market cap</option><option value="v">24h volume</option></select></span>
   <span><label class="t" for="sec">Sector</label><select id="sec"><option value="">All sectors</option></select></span>
   <span class="chips" id="sh"><button class="chip on" data-s="bubble">Bubbles</button><button class="chip" data-s="pill">Pills</button></span>
   <span class="chips" id="rg"><button class="chip on" data-g="top">Top 125</button><button class="chip" data-g="next">Next 125</button><button class="chip" data-g="all">All 250</button></span>
@@ -60,13 +60,13 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
 <div id="tip"></div>
 <footer>
   <div><b id="live" style="margin-right:8px">○ delayed</b><span id="upd">Loading the market…</span></div>
-  <div>Prices from OKX, market caps from CoinGecko, prices stream live. Bubble size shows market cap (or 24h volume), colour shows the price change over the period you pick. Educational only, not financial advice.</div>
+  <div>Prices from OKX, market caps from CoinGecko, prices stream live. Size shows how big the price move is (or market cap, if you change the Size option), colour shows whether it is up or down over the period you pick. Educational only, not financial advice.</div>
   <div style="margin-top:6px"><a href="../">TTM</a> · <a href="../crypto/">Crypto terminal</a> · <a href="../tradfi/">TradFi terminal</a></div>
 </footer>
 <script>
 (function(){
   var cv = document.getElementById('cv'), ctx = cv.getContext('2d'), wrap = document.getElementById('wrap'), tip = document.getElementById('tip'), card = document.getElementById('card');
-  var TFS = [['5m', '5M'], ['15m', '15M'], ['1h', '1H'], ['4h', '4H'], ['1d', '24H'], ['1w', '1W'], ['1m', '1M']], tf = '1d', sizeBy = 'b', sector = '', query = '';
+  var TFS = [['5m', '5M'], ['15m', '15M'], ['1h', '1H'], ['4h', '4H'], ['1d', '24H'], ['1w', '1W'], ['1m', '1M']], tf = '1d', sizeBy = 'p', sector = '', query = '';
   var coins = [], B = [], W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2), hover = null, sel = null, raf = 0, calm = 0, drag = null;
   var tfEl = document.getElementById('tf'), view = 'all', shape = 'bubble', range = 'top', WL = {}, HID = {};
   try{ var sv = JSON.parse(localStorage.getItem('ttm_bub_v1') || '{}'); (sv.w || []).forEach(function(x){ WL[x] = 1; }); (sv.h || []).forEach(function(x){ HID[x] = 1; }); }catch(e){}
@@ -81,7 +81,7 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
     [].forEach.call(hp.querySelectorAll('[data-r]'), function(b){ b.onclick = function(){ delete HID[b.getAttribute('data-r')]; save(); hidePanel(); rebuild(true); }; });
     var ra = document.getElementById('ra'); if(ra) ra.onclick = function(){ HID = {}; save(); hidePanel(); rebuild(true); }; }
   counts();
-  TFS.forEach(function(t){ var b = document.createElement('button'); b.className = 'chip' + (t[0] === tf ? ' on' : ''); b.textContent = t[1]; b.onclick = function(){ tf = t[0]; [].forEach.call(tfEl.children, function(c){ c.classList.toggle('on', c === b); }); rebuild(false); }; tfEl.appendChild(b); });
+  TFS.forEach(function(t){ var b = document.createElement('button'); b.className = 'chip' + (t[0] === tf ? ' on' : ''); b.textContent = t[1]; b.onclick = function(){ tf = t[0]; [].forEach.call(tfEl.children, function(c){ c.classList.toggle('on', c === b); }); if(sizeBy === 'p') layout(false); else rebuild(false); }; tfEl.appendChild(b); });
   document.getElementById('sz').onchange = function(){ sizeBy = this.value; rebuild(true); };
   document.getElementById('sec').onchange = function(){ sector = this.value; rebuild(true); };
   document.getElementById('q').oninput = function(){ query = this.value.trim().toLowerCase(); rebuild(true); };
@@ -97,11 +97,11 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   function resize(){ var r = cv.getBoundingClientRect(); if(Math.abs(r.width - lw) < 2 && Math.abs(r.height - lh) < 2) return; lw = r.width; lh = r.height; W = r.width; H = r.height; cv.width = W * DPR; cv.height = H * DPR; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); layout(true); }
   function visible(){ return coins.filter(function(c){ return !HID[c.s] && (!c.ch || c.ch[tf] != null) && (range === 'all' || (range === 'top' ? c.rk < 125 : c.rk >= 125)) && (view !== 'watch' || WL[c.s]) && (!sector || c.cat === sector) && (!query || c.s.toLowerCase().indexOf(query) === 0 || (c.n || '').toLowerCase().indexOf(query) >= 0); }); }
   function layout(fresh){
-    var list = visible(), vals = list.map(function(c){ var x = Math.max(sizeBy === 'v' ? (c.v24 || 1) : (c.m || c.v24 * 20 || 1), 1); return shape === 'pill' ? Math.pow(x, 0.32) : sizeBy === 'b' ? Math.pow(x, 0.5) : x; }), tot = vals.reduce(function(a, b){ return a + b; }, 0) || 1;
-    var area = W * H * (shape === 'pill' ? 0.5 : sizeBy === 'b' ? 0.52 : 0.46), old = {}; B.forEach(function(b){ old[b.c.s] = b; });
+    var list = visible(), vals = list.map(function(c){ if(sizeBy === 'p') return Math.pow(Math.max(Math.abs((c.ch && c.ch[tf]) || 0), 0.2), 0.8); var x = Math.max(sizeBy === 'v' ? (c.v24 || 1) : (c.m || c.v24 * 20 || 1), 1); return shape === 'pill' ? Math.pow(x, 0.32) : sizeBy === 'b' ? Math.pow(x, 0.5) : x; }), tot = vals.reduce(function(a, b){ return a + b; }, 0) || 1;
+    var area = W * H * (shape === 'pill' ? 0.5 : sizeBy !== 'm' && sizeBy !== 'v' ? 0.52 : 0.46), old = {}; B.forEach(function(b){ old[b.c.s] = b; });
     B = list.map(function(c, i){ var r = Math.sqrt(vals[i] / tot * area / Math.PI), o = old[c.s];
-      return {c: c, tr: Math.max(r, shape === 'pill' ? 22 : sizeBy === 'b' ? 15 : 11), r: o ? o.r : 2, x: o && !fresh ? o.x : W / 2 + (Math.random() - .5) * W * .6, y: o && !fresh ? o.y : H / 2 + (Math.random() - .5) * H * .6, vx: 0, vy: 0}; });
-    var mx = Math.min(W, H) * (shape === 'pill' ? 0.17 : sizeBy === 'b' ? 0.22 : 0.30); B.forEach(function(b){ if(b.tr > mx) b.tr = mx; }); if(shape === 'pill') packPills(); if(fresh && shape !== 'pill') for(var it = 0; it < 220; it++){ B.forEach(function(b){ b.r = b.tr; }); sim(); }
+      return {c: c, tr: Math.max(r, shape === 'pill' ? 22 : sizeBy === 'b' || sizeBy === 'p' ? 15 : 11), r: o ? o.r : 2, x: o && !fresh ? o.x : W / 2 + (Math.random() - .5) * W * .6, y: o && !fresh ? o.y : H / 2 + (Math.random() - .5) * H * .6, vx: 0, vy: 0}; });
+    var mx = Math.min(W, H) * (shape === 'pill' ? 0.17 : sizeBy === 'b' || sizeBy === 'p' ? 0.22 : 0.30); B.forEach(function(b){ if(b.tr > mx) b.tr = mx; }); if(shape === 'pill') packPills(); if(sel){ var ns = null; B.forEach(function(b){ if(b.c.s === sel.c.s) ns = b; }); sel = ns; } hover = null; if(fresh && shape !== 'pill') for(var it = 0; it < 220; it++){ B.forEach(function(b){ b.r = b.tr; }); sim(); }
     calm = 0; kick();
   }
   function kick(){ if(!raf) raf = requestAnimationFrame(step); }
@@ -165,6 +165,7 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   function down(e){ var p = pos(e), b = at(p[0], p[1]); downAt = [p[0], p[1], b]; if(b){ drag = b; kick(); } }
   function up(e){ if(drag){ var moved = downAt && downAt[2] === drag && Math.abs(drag.x - downAt[0]) + Math.abs(drag.y - downAt[1]) < 6; var b = drag; drag = null; if(moved) select(b); else if(downAt && downAt[2] === b){ calm = 0; kick(); } } else if(downAt && !downAt[2]){ select(null); } downAt = null; }
   cv.addEventListener('mousedown', down); window.addEventListener('mouseup', up);
+  setInterval(function(){ if(sizeBy === 'p' && !drag && wsOk && !document.hidden) layout(false); }, 4000);
   cv.addEventListener('touchstart', function(e){ down(e); }, {passive: true}); cv.addEventListener('touchmove', function(e){ if(drag){ var p = pos(e); drag.x = p[0]; drag.y = p[1]; e.preventDefault(); } }, {passive: false}); cv.addEventListener('touchend', up);
   function esc(t){ return String(t == null ? '' : t).replace(/[&<>"]/g, function(c){ return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]; }); }
   function select(b){ sel = b; draw(); if(!b){ card.style.display = 'none'; card.innerHTML = ''; return; } var c = b.c, wl = !!WL[c.s], cg = c.id ? 'https://www.coingecko.com/en/coins/' + encodeURIComponent(c.id) : 'https://www.coingecko.com/en/search?query=' + encodeURIComponent(c.s);
