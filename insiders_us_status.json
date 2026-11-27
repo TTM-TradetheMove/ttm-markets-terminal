@@ -1,11 +1,13 @@
 {
- "generated_at": "2026-11-26T14:07:25+00:00",
+ "generated_at": "2026-11-27T00:42:55+00:00",
  "filings_read": 0,
  "errors": 3,
- "trades": 17067,
- "days_done": 60,
+ "trades": 16859,
+ "days_done": 61,
  "log_tail": [
-  "days to do: 4",
+  "days to do: 5",
+  "  fetch failed https://www.sec.gov/Archives/edgar/daily-index/2026/QTR4/form.20261127.idx (HTTPError 403) try 1",
+  "  fetch failed https://www.sec.gov/Archives/edgar/daily-index/2026/QTR4/form.20261127.idx (HTTPError 403) try 2",
   "  fetch failed https://www.sec.gov/Archives/edgar/daily-index/2026/QTR4/form.20261126.idx (HTTPError 403) try 1",
   "  fetch failed https://www.sec.gov/Archives/edgar/daily-index/2026/QTR4/form.20261126.idx (HTTPError 403) try 2",
   "2026-10-19: 475 Form 4 filings, 1 new",
