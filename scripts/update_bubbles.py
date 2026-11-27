@@ -42,6 +42,13 @@ def main():
                 tk[t["instId"][:-5]] = (last, round((last / op - 1) * 100, 2) if op else None, round(float(t.get("volCcy24h") or 0)))
             except Exception:
                 pass
+    def junk(c):
+        s = c["s"]
+        if not s.isascii() or not s.replace("0", "").replace("1", "").replace("2", "").replace("3", "").replace("4", "").replace("5", "").replace("6", "").replace("7", "").replace("8", "").replace("9", "").isalpha() or s.startswith("PC0"):
+            return True
+        p = c.get("p") or 0  # pegged to a dollar and flat: a stablecoin or tokenised cash fund
+        return 0.95 < p < 1.05 and abs(c.get("c24") or 0) < 1 and abs(c.get("c30") or 0) < 5
+    top = [c for c in top if not junk(c)]
     coins = [c for c in top if c["s"] in tk]
     print(f"{len(coins)}/{len(top)} top coins trade on OKX spot")
     jobs = [(c["s"], bar, lim, w) for c in coins for bar, lim, w in PLAN]
@@ -59,6 +66,12 @@ def main():
         if c.get("i"):
             item["i"] = c["i"]
         out.append(item)
+    have = {i["s"] for i in out}
+    for c in top:  # not on OKX: CoinGecko's own changes (no 5m / 15m / 4h, no live stream)
+        if c["s"] in have or c.get("c24") is None or not c.get("p"):
+            continue
+        out.append({"s": c["s"], "n": c.get("n"), "p": c["p"], "m": c.get("m") or 0, "v24": c.get("v") or 0, "cat": R.CAT_OF.get(c["s"], "Other"), "nl": 1,
+                    "ch": {"5m": None, "15m": None, "1h": c.get("c1"), "4h": None, "1d": c.get("c24"), "1w": c.get("c7"), "1m": c.get("c30")}, **({"i": c["i"]} if c.get("i") else {})})
     if len(out) < 40:
         raise SystemExit("too few coins computed - not overwriting bubbles.json")
     payload = {"generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(), "source": "OKX + CoinGecko", "coins": out}

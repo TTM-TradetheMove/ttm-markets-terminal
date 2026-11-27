@@ -49,6 +49,7 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   <div class="chips" id="tf"></div>
   <span><label class="t" for="sz">Size</label><select id="sz"><option value="b">Balanced (easy to read)</option><option value="m">True market cap</option><option value="v">24h volume</option></select></span>
   <span><label class="t" for="sec">Sector</label><select id="sec"><option value="">All sectors</option></select></span>
+  <span class="chips" id="sh"><button class="chip on" data-s="bubble">Bubbles</button><button class="chip" data-s="pill">Pills</button></span>
   <span class="chips" id="rg"><button class="chip on" data-g="top">Top 125</button><button class="chip" data-g="next">Next 125</button><button class="chip" data-g="all">All 250</button></span>
   <span class="chips" id="vw"><button class="chip on" data-v="all">Market</button><button class="chip" data-v="watch">★ Watchlist <span id="wn"></span></button></span>
   <button class="chip" id="hid">Hidden (0)</button>
@@ -67,11 +68,12 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   var cv = document.getElementById('cv'), ctx = cv.getContext('2d'), wrap = document.getElementById('wrap'), tip = document.getElementById('tip'), card = document.getElementById('card');
   var TFS = [['5m', '5M'], ['15m', '15M'], ['1h', '1H'], ['4h', '4H'], ['1d', '24H'], ['1w', '1W'], ['1m', '1M']], tf = '1d', sizeBy = 'b', sector = '', query = '';
   var coins = [], B = [], W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2), hover = null, sel = null, raf = 0, calm = 0, drag = null;
-  var tfEl = document.getElementById('tf'), view = 'all', range = 'top', WL = {}, HID = {};
+  var tfEl = document.getElementById('tf'), view = 'all', shape = 'bubble', range = 'top', WL = {}, HID = {};
   try{ var sv = JSON.parse(localStorage.getItem('ttm_bub_v1') || '{}'); (sv.w || []).forEach(function(x){ WL[x] = 1; }); (sv.h || []).forEach(function(x){ HID[x] = 1; }); }catch(e){}
   function save(){ try{ localStorage.setItem('ttm_bub_v1', JSON.stringify({w: Object.keys(WL), h: Object.keys(HID)})); }catch(e){} counts(); }
   function counts(){ document.getElementById('hid').textContent = 'Hidden (' + Object.keys(HID).length + ')'; var n = Object.keys(WL).length; document.getElementById('wn').textContent = n ? '(' + n + ')' : ''; }
   [].forEach.call(document.querySelectorAll('#vw .chip'), function(b){ b.onclick = function(){ view = b.getAttribute('data-v'); [].forEach.call(document.querySelectorAll('#vw .chip'), function(c){ c.classList.toggle('on', c === b); }); rebuild(true); }; });
+  [].forEach.call(document.querySelectorAll('#sh .chip'), function(b){ b.onclick = function(){ shape = b.getAttribute('data-s'); [].forEach.call(document.querySelectorAll('#sh .chip'), function(c){ c.classList.toggle('on', c === b); }); rebuild(true); }; });
   [].forEach.call(document.querySelectorAll('#rg .chip'), function(b){ b.onclick = function(){ range = b.getAttribute('data-g'); [].forEach.call(document.querySelectorAll('#rg .chip'), function(c){ c.classList.toggle('on', c === b); }); rebuild(true); }; });
   document.getElementById('hid').onclick = function(){ var hp = document.getElementById('hp'); if(hp.style.display === 'block'){ hp.style.display = 'none'; return; } hidePanel(); hp.style.display = 'block'; };
   function hidePanel(){ var hp = document.getElementById('hp'), k = Object.keys(HID).sort();
@@ -93,29 +95,51 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
 
   var lw = 0, lh = 0;
   function resize(){ var r = cv.getBoundingClientRect(); if(Math.abs(r.width - lw) < 2 && Math.abs(r.height - lh) < 2) return; lw = r.width; lh = r.height; W = r.width; H = r.height; cv.width = W * DPR; cv.height = H * DPR; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); layout(true); }
-  function visible(){ return coins.filter(function(c){ return !HID[c.s] && (range === 'all' || (range === 'top' ? c.rk < 125 : c.rk >= 125)) && (view !== 'watch' || WL[c.s]) && (!sector || c.cat === sector) && (!query || c.s.toLowerCase().indexOf(query) === 0 || (c.n || '').toLowerCase().indexOf(query) >= 0); }); }
+  function visible(){ return coins.filter(function(c){ return !HID[c.s] && (!c.ch || c.ch[tf] != null) && (range === 'all' || (range === 'top' ? c.rk < 125 : c.rk >= 125)) && (view !== 'watch' || WL[c.s]) && (!sector || c.cat === sector) && (!query || c.s.toLowerCase().indexOf(query) === 0 || (c.n || '').toLowerCase().indexOf(query) >= 0); }); }
   function layout(fresh){
-    var list = visible(), vals = list.map(function(c){ var x = Math.max(sizeBy === 'v' ? (c.v24 || 1) : (c.m || c.v24 * 20 || 1), 1); return sizeBy === 'b' ? Math.pow(x, 0.5) : x; }), tot = vals.reduce(function(a, b){ return a + b; }, 0) || 1;
-    var area = W * H * (sizeBy === 'b' ? 0.52 : 0.46), old = {}; B.forEach(function(b){ old[b.c.s] = b; });
+    var list = visible(), vals = list.map(function(c){ var x = Math.max(sizeBy === 'v' ? (c.v24 || 1) : (c.m || c.v24 * 20 || 1), 1); return shape === 'pill' ? Math.pow(x, 0.32) : sizeBy === 'b' ? Math.pow(x, 0.5) : x; }), tot = vals.reduce(function(a, b){ return a + b; }, 0) || 1;
+    var area = W * H * (shape === 'pill' ? 0.5 : sizeBy === 'b' ? 0.52 : 0.46), old = {}; B.forEach(function(b){ old[b.c.s] = b; });
     B = list.map(function(c, i){ var r = Math.sqrt(vals[i] / tot * area / Math.PI), o = old[c.s];
-      return {c: c, tr: Math.max(r, sizeBy === 'b' ? 15 : 11), r: o ? o.r : 2, x: o && !fresh ? o.x : W / 2 + (Math.random() - .5) * W * .6, y: o && !fresh ? o.y : H / 2 + (Math.random() - .5) * H * .6, vx: 0, vy: 0}; });
-    var mx = Math.min(W, H) * (sizeBy === 'b' ? 0.22 : 0.30); B.forEach(function(b){ if(b.tr > mx) b.tr = mx; }); if(fresh) for(var it = 0; it < 220; it++){ B.forEach(function(b){ b.r = b.tr; }); sim(); }
+      return {c: c, tr: Math.max(r, shape === 'pill' ? 22 : sizeBy === 'b' ? 15 : 11), r: o ? o.r : 2, x: o && !fresh ? o.x : W / 2 + (Math.random() - .5) * W * .6, y: o && !fresh ? o.y : H / 2 + (Math.random() - .5) * H * .6, vx: 0, vy: 0}; });
+    var mx = Math.min(W, H) * (shape === 'pill' ? 0.17 : sizeBy === 'b' ? 0.22 : 0.30); B.forEach(function(b){ if(b.tr > mx) b.tr = mx; }); if(shape === 'pill') packPills(); if(fresh && shape !== 'pill') for(var it = 0; it < 220; it++){ B.forEach(function(b){ b.r = b.tr; }); sim(); }
     calm = 0; kick();
   }
   function kick(){ if(!raf) raf = requestAnimationFrame(step); }
   function step(){ raf = 0; var moved = sim(); draw(); calm = moved < 0.6 ? calm + 1 : 0; if(calm < 45 || drag) kick(); }
+  function hh(b){ return shape === 'pill' ? (b.ph || 12) : b.r; }
+  function hw(b){ return shape === 'pill' ? hh(b) * 2.8 : b.r; }
+  function packPills(){
+    var items = B.slice().sort(function(a, b){ return b.tr - a.tr; }), gap = 7, pad = 12, maxW = W - pad * 2, maxH = H - pad * 2, lo = 0.2, hi = 3.2, best = null;
+    function rows(sc){ var rs = [], cur = {it: [], w: 0, h: 0}; items.forEach(function(b){ var h = Math.max(b.tr * 0.56, 8) * sc, w = h * 5.6; if(cur.it.length && cur.w + w + gap > maxW){ rs.push(cur); cur = {it: [], w: 0, h: 0}; } cur.it.push({b: b, h: h, w: w}); cur.w += w + (cur.it.length > 1 ? gap : 0); cur.h = Math.max(cur.h, h * 2); }); rs.push(cur); return rs; }
+    function total(rs){ return rs.reduce(function(a, r){ return a + r.h; }, 0) + gap * (rs.length - 1); }
+    for(var i = 0; i < 24; i++){ var mid = (lo + hi) / 2, rs = rows(mid); if(total(rs) <= maxH){ best = rs; lo = mid; } else hi = mid; }
+    best = best || rows(lo); var y = pad + Math.max(0, (maxH - total(best)) / 2);
+    best.forEach(function(r){ var x = pad + Math.max(0, (maxW - r.w) / 2); r.it.forEach(function(o){ o.b.ph = o.h; o.b.tx = x + o.w / 2; o.b.ty = y + r.h / 2; x += o.w + gap; if(o.b.x == null || o.b.fresh){ o.b.x = o.b.tx; o.b.y = o.b.ty; } }); y += r.h + gap; });
+  }
   function sim(){
+    if(shape === 'pill'){ var mv = 0; B.forEach(function(a){ if(a === drag) return; var dx = (a.tx - a.x) * 0.22, dy = (a.ty - a.y) * 0.22; a.x += dx; a.y += dy; mv += Math.abs(dx) + Math.abs(dy); }); return mv; }
     var n = B.length, cx = W / 2, cy = H / 2, moved = 0;
     for(var i = 0; i < n; i++){ var a = B[i]; a.r += (a.tr - a.r) * 0.18; var asp = Math.min(1, H / W); a.vx += (cx - a.x) * 0.0022 * (0.1 + asp * 0.45); a.vy += (cy - a.y) * 0.0022; }
-    for(var k = 0; k < 4; k++) for(i = 0; i < n; i++) for(var j = i + 1; j < n; j++){ var p = B[i], q = B[j], dx = q.x - p.x, dy = q.y - p.y, d = Math.sqrt(dx * dx + dy * dy) || 0.01, m = p.r + q.r + 1.5;
+    for(var k = 0; k < (shape === 'pill' ? 7 : 4); k++) for(i = 0; i < n; i++) for(var j = i + 1; j < n; j++){ var p = B[i], q = B[j], dx = q.x - p.x, dy = q.y - p.y, d = Math.sqrt(dx * dx + dy * dy) || 0.01, m = p.r + q.r + 1.5;
+      if(shape === 'pill'){ var ow = hw(p) + hw(q) + 2 - Math.abs(dx), oh = hh(p) + hh(q) + 2 - Math.abs(dy);
+        if(ow > 0 && oh > 0){ if(ow < oh){ var sx = (dx < 0 ? -1 : 1) * ow / 2; if(p !== drag) p.x -= sx; if(q !== drag) q.x += sx; } else { var sy = (dy < 0 ? -1 : 1) * oh / 2; if(p !== drag) p.y -= sy; if(q !== drag) q.y += sy; } } continue; }
       if(d < m){ var f = (m - d) / d * 0.5, fx = dx * f, fy = dy * f, wp = q.r / (p.r + q.r), wq = p.r / (p.r + q.r); if(p !== drag){ p.x -= fx * wp * 2; p.y -= fy * wp * 2; } if(q !== drag){ q.x += fx * wq * 2; q.y += fy * wq * 2; } } }
-    for(i = 0; i < n; i++){ a = B[i]; if(a === drag) continue; a.vx *= 0.82; a.vy *= 0.82; a.x += a.vx; a.y += a.vy; a.x = Math.max(a.r, Math.min(W - a.r, a.x)); a.y = Math.max(a.r, Math.min(H - a.r, a.y)); moved += Math.abs(a.vx) + Math.abs(a.vy) + Math.abs(a.tr - a.r); }
+    for(i = 0; i < n; i++){ a = B[i]; if(a === drag) continue; a.vx *= 0.82; a.vy *= 0.82; a.x += a.vx; a.y += a.vy; a.x = Math.max(hw(a), Math.min(W - hw(a), a.x)); a.y = Math.max(hh(a), Math.min(H - hh(a), a.y)); moved += Math.abs(a.vx) + Math.abs(a.vy) + Math.abs(a.tr - a.r); }
     return moved;
   }
   function draw(){
     ctx.clearRect(0, 0, W, H);
     if(!B.length && coins.length){ ctx.fillStyle = '#9a978f'; ctx.font = '600 15px Inter,system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(view === 'watch' ? 'Your watchlist is empty. Open a bubble and press Add to watchlist.' : 'No coins match.', W / 2, H / 2); }
     B.forEach(function(b){ var v = b.c.ch ? b.c.ch[tf] : null, cl = color(v), r = b.r, on = b === hover || b === sel;
+      if(shape === 'pill'){ var ph = hh(b), pw = hw(b), x0 = b.x - pw, y0 = b.y - ph; ctx.beginPath(); ctx.moveTo(x0 + ph, y0); ctx.lineTo(x0 + 2 * pw - ph, y0); ctx.arc(x0 + 2 * pw - ph, b.y, ph, -Math.PI / 2, Math.PI / 2); ctx.lineTo(x0 + ph, y0 + 2 * ph); ctx.arc(x0 + ph, b.y, ph, Math.PI / 2, Math.PI * 1.5); ctx.closePath();
+        var pg = ctx.createLinearGradient(x0, y0, x0, y0 + 2 * ph); pg.addColorStop(0, cl[0]); pg.addColorStop(1, shade(cl[0])); ctx.fillStyle = pg; ctx.fill(); ctx.lineWidth = on ? 3 : 1.5; ctx.strokeStyle = on ? '#f0b929' : cl[1]; ctx.stroke();
+        var pim = logo(b.c), ld = ph * 1.38, lx = x0 + ph; ctx.textBaseline = 'middle';
+        if(pim){ ctx.save(); ctx.beginPath(); ctx.arc(lx, b.y, ld / 2, 0, 7); ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.fill(); ctx.clip(); ctx.drawImage(pim, lx - ld / 2, b.y - ld / 2, ld, ld); ctx.restore(); }
+        var tx = x0 + ph * 2.05, two = ph >= 17, fz = Math.max(10, Math.min(ph * (two ? 0.6 : 0.78), 26)); ctx.textAlign = 'left'; ctx.fillStyle = '#fff'; ctx.font = '800 ' + fz + 'px Inter,system-ui,sans-serif';
+        if(two){ ctx.fillText(b.c.s, tx, b.y - fz * 0.55); ctx.font = '700 ' + Math.max(9, fz * 0.82) + 'px Inter,system-ui,sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.fillText(pc(v), tx, b.y + fz * 0.62); }
+        else { var tw = ctx.measureText(b.c.s).width; ctx.fillText(b.c.s, tx, b.y); ctx.font = '700 ' + Math.max(8, fz * 0.8) + 'px Inter,system-ui,sans-serif'; var pt = pc(v), pwid = ctx.measureText(pt).width; if(tx + tw + pwid + ph * 0.9 + 6 < x0 + 2 * pw){ ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.textAlign = 'right'; ctx.fillText(pt, x0 + 2 * pw - ph * 0.7, b.y); } }
+        if(WL[b.c.s]){ ctx.fillStyle = '#f0b929'; ctx.font = '700 12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('★', x0 + 2 * pw - ph * 0.6, y0 + 6); }
+        return; }
       ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, 7); var g = ctx.createRadialGradient(b.x - r * .3, b.y - r * .35, r * .1, b.x, b.y, r); g.addColorStop(0, cl[0]); g.addColorStop(1, shade(cl[0])); ctx.fillStyle = g; ctx.fill();
       ctx.lineWidth = on ? 3 : 1.5; ctx.strokeStyle = on ? '#f0b929' : cl[1]; ctx.stroke();
       if(WL[b.c.s] && r >= 17){ ctx.fillStyle = '#f0b929'; ctx.font = '700 ' + Math.max(11, Math.min(r * 0.28, 20)) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('★', b.x + r * 0.62, b.y - r * 0.62); }
@@ -132,7 +156,7 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   var IMG = {};
   function logo(c){ var im = IMG[c.s]; if(!im){ im = IMG[c.s] = new Image(); im.crossOrigin = 'anonymous'; im.onload = function(){ im.ok = 1; kick(); draw(); }; im.onerror = function(){ im.bad = 1; }; im.src = c.i; } return im.ok ? im : null; }
   function shade(c){ var m = c.match(/\d+/g); return m ? 'rgb(' + m.map(function(x){ return Math.round(x * 0.62); }).join(',') + ')' : c; }
-  function at(x, y){ for(var i = B.length - 1; i >= 0; i--){ var b = B[i]; if((x - b.x) * (x - b.x) + (y - b.y) * (y - b.y) <= b.r * b.r) return b; } return null; }
+  function at(x, y){ for(var i = B.length - 1; i >= 0; i--){ var b = B[i]; if(shape === 'pill' ? (Math.abs(x - b.x) <= hw(b) && Math.abs(y - b.y) <= hh(b)) : ((x - b.x) * (x - b.x) + (y - b.y) * (y - b.y) <= b.r * b.r)) return b; } return null; }
   function pos(e){ var r = cv.getBoundingClientRect(), t = e.touches ? e.touches[0] : e; return [t.clientX - r.left, t.clientY - r.top, t.clientX, t.clientY]; }
   cv.addEventListener('mousemove', function(e){ var p = pos(e); if(drag){ drag.x = p[0]; drag.y = p[1]; return; } var b = at(p[0], p[1]); if(b !== hover){ hover = b; draw(); }
     if(b){ var c = b.c, v = c.ch ? c.ch[tf] : null; tip.innerHTML = '<b>' + esc(c.n || c.s) + '</b> ' + esc(c.s) + '<br>' + fmtP(c.p) + ' · <span class="' + (v >= 0 ? 'pos' : 'neg') + '">' + pc(v) + '</span><br>Market cap ' + (c.m ? fmtB(c.m) : '–'); tip.style.display = 'block'; tip.style.left = Math.min(p[2] + 14, innerWidth - 270) + 'px'; tip.style.top = (p[3] + 14) + 'px'; } else tip.style.display = 'none'; });
@@ -159,7 +183,7 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   function connect(){
     if(!window.WebSocket || ws) return;
     try{ ws = new WebSocket('wss://ws.okx.com:8443/ws/v5/public'); }catch(e){ return; }
-    ws.onopen = function(){ for(var i = 0; i < coins.length; i += 60) ws.send(JSON.stringify({op: 'subscribe', args: coins.slice(i, i + 60).map(function(c){ return {channel: 'tickers', instId: c.s + '-USDT'}; })})); };
+    ws.onopen = function(){ var lv = coins.filter(function(c){ return !c.nl; }); for(var i = 0; i < lv.length; i += 60) ws.send(JSON.stringify({op: 'subscribe', args: lv.slice(i, i + 60).map(function(c){ return {channel: 'tickers', instId: c.s + '-USDT'}; })})); };
     ws.onmessage = function(ev){ var d; try{ d = JSON.parse(ev.data); }catch(e){ return; } if(!d.data || !d.arg) return;
       d.data.forEach(function(t){ var s = t.instId.replace('-USDT', ''), last = parseFloat(t.last), open = parseFloat(t.open24h); if(!(last > 0)) return; live[s] = {last: last, open: open > 0 ? open : null};
         for(var i = 0; i < coins.length; i++) if(coins[i].s === s){ applyLive(coins[i], live[s]); break; } });
@@ -170,13 +194,13 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   function load(first){
     Promise.all([fetch('../bubbles.json?' + Math.floor(Date.now() / 6e4)).then(function(r){ if(!r.ok) throw 0; return r.json(); }).catch(function(){ return fetch('../rsi_heatmap.json?' + Math.floor(Date.now() / 6e4)).then(function(r){ return r.json(); }); }), fetch('../top_coins.json?' + Math.floor(Date.now() / 6e5)).then(function(r){ return r.json(); }).catch(function(){ return {coins: []}; })]).then(function(r){
       var meta = {}; (r[1].coins || []).forEach(function(c){ meta[c.s] = c; });
-      var nc = (r[0].coins || []).map(function(c){ var m = meta[c.s] || {}; var ch = c.ch || {'1d': c.c}, ref = {}; Object.keys(ch).forEach(function(k){ if(ch[k] != null && k !== '1d') ref[k] = c.p / (1 + ch[k] / 100); }); var o = {s: c.s, n: c.n || m.n || c.s, p: c.p, i: c.i || m.i || ('https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/' + c.s.toLowerCase() + '.png'), m: c.m || m.m || 0, v24: c.v24, cat: c.cat, ch: ch, ref: ref}; if(live[c.s]) applyLive(o, live[c.s]); return o; }).filter(function(c){ return c.p; });
+      var nc = (r[0].coins || []).map(function(c){ var m = meta[c.s] || {}; var ch = c.ch || {'1d': c.c}, ref = {}; Object.keys(ch).forEach(function(k){ if(ch[k] != null && k !== '1d') ref[k] = c.p / (1 + ch[k] / 100); }); var o = {nl: c.nl, s: c.s, n: c.n || m.n || c.s, p: c.p, i: c.i || m.i || ('https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/' + c.s.toLowerCase() + '.png'), m: c.m || m.m || 0, v24: c.v24, cat: c.cat, ch: ch, ref: ref}; if(live[c.s]) applyLive(o, live[c.s]); return o; }).filter(function(c){ return c.p; });
       var secs = {}; nc.forEach(function(c){ if(c.cat) secs[c.cat] = 1; }); var se = document.getElementById('sec'); if(se.options.length === 1) Object.keys(secs).sort().forEach(function(s){ var o = document.createElement('option'); o.value = s; o.textContent = s; se.appendChild(o); });
       var byS = {}; coins.forEach(function(c){ byS[c.s] = 1; }); var same = nc.length === coins.length && nc.every(function(c){ return byS[c.s]; });
       nc.sort(function(a, b){ return (b.m || b.v24 || 0) - (a.m || a.v24 || 0); }); nc.forEach(function(c, i){ c.rk = i; });
       coins = nc; if(first || !same) layout(true); else { var map = {}; nc.forEach(function(c){ map[c.s] = c; }); B.forEach(function(b){ b.c = map[b.c.s] || b.c; }); draw(); }
       if(first) connect();
-      var t = r[0].generated_at ? new Date(r[0].generated_at) : null; document.getElementById('upd').textContent = nc.length + ' coins · reference data ' + (t ? t.toLocaleString() : 'recently');
+      var t = r[0].generated_at ? new Date(r[0].generated_at) : null; document.getElementById('upd').textContent = nc.length + ' coins' + (nc.some(function(c){ return c.nl; }) ? ' (5M, 15M and 4H cover coins listed on OKX)' : '') + ' · reference data ' + (t ? t.toLocaleString() : 'recently');
       if(!nc.some(function(c){ return c.ch && c.ch['5m'] != null; })) { [].forEach.call(tfEl.children, function(b, i){ if(i !== 4) b.title = 'Appears after the next data update'; }); }
     }).catch(function(){ document.getElementById('upd').textContent = 'The market data is not available right now. Try again in a minute.'; });
   }
