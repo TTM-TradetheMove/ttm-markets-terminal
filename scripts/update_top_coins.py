@@ -30,7 +30,7 @@ def coingecko():
         d = getj(f"https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=150&page={page}&sparkline=false&price_change_percentage=1h,24h,7d,30d")
         if not d:
             break
-        rows += [{"s": c["symbol"].upper(), "n": c["name"], "r": c.get("market_cap_rank"), "p": c.get("current_price"), "m": c.get("market_cap"), "i": c.get("image"), "v": c.get("total_volume"), "c1": c.get("price_change_percentage_1h_in_currency"), "c24": c.get("price_change_percentage_24h_in_currency"), "c7": c.get("price_change_percentage_7d_in_currency"), "c30": c.get("price_change_percentage_30d_in_currency")} for c in d]
+        rows += [{"s": c["symbol"].upper(), "n": c["name"], "r": c.get("market_cap_rank"), "p": c.get("current_price"), "m": c.get("market_cap"), "i": c.get("image"), "id": c.get("id"), "v": c.get("total_volume"), "c1": c.get("price_change_percentage_1h_in_currency"), "c24": c.get("price_change_percentage_24h_in_currency"), "c7": c.get("price_change_percentage_7d_in_currency"), "c30": c.get("price_change_percentage_30d_in_currency")} for c in d]
         time.sleep(2)
     return rows
 
@@ -52,7 +52,7 @@ def main():
         if not c["s"] or c["s"] in STABLES or c["s"] in seen or not c["p"]:
             continue
         seen.add(c["s"])
-        out.append({"s": c["s"], "n": c["n"], "r": c["r"], "p": c["p"], "m": round(c["m"] or 0), **({"i": c["i"]} if c.get("i") else {}), **{k: round(c[k], 2) for k in ("c1", "c24", "c7", "c30") if c.get(k) is not None}, **({"v": round(c["v"])} if c.get("v") else {})})
+        out.append({"s": c["s"], "n": c["n"], "r": c["r"], "p": c["p"], "m": round(c["m"] or 0), **({"i": c["i"]} if c.get("i") else {}), **({"id": c["id"]} if c.get("id") else {}), **{k: round(c[k], 2) for k in ("c1", "c24", "c7", "c30") if c.get(k) is not None}, **({"v": round(c["v"])} if c.get("v") else {})})
         if len(out) >= 250:
             break
     json.dump({"generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(), "source": src, "coins": out}, open(OUT, "w"), separators=(",", ":"))
