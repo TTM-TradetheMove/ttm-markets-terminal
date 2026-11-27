@@ -163,7 +163,7 @@ function can(key){
   if(PROF && PROF.team && a.indexOf('team') >= 0) return true;
   return a.indexOf(plan) >= 0 || a.indexOf('free') >= 0;
 }
-const buyBtn = key => { if(!USER || !BILL) return ''; const p = key === 'c:ttmcharts' ? 'lens' : (needText(key).split(' or ')[0] === 'Premium' ? 'premium' : 'pro'); return `<button class="ttm-btn" id="lockBuy" data-p="${p}">${p === 'lens' ? 'Get TTM LENS' : 'Upgrade to ' + (p === 'pro' ? 'Pro' : 'Premium')}</button> `; };
+const buyBtn = key => { if(!USER && key === 'c:ttmcharts') return '<button class="ttm-btn" id="lockSignIn">Sign in to get TTM LENS</button> '; if(!USER || !BILL) return ''; const p = key === 'c:ttmcharts' ? 'lens' : (needText(key).split(' or ')[0] === 'Premium' ? 'premium' : 'pro'); return `<button class="ttm-btn" id="lockBuy" data-p="${p}">${p === 'lens' ? 'Get TTM LENS' : 'Upgrade to ' + (p === 'pro' ? 'Pro' : 'Premium')}</button> `; };
 const needText = key => { const a = (SET.access[key] || []).filter(x => x === 'free' || x === 'premium'); const l = a.length ? a.map(pname) : []; return (l.length ? l.join(' or ') + ' or ' : '') + 'Pro'; };
 function upsell(key){
   track('lock', TERM + '|feat:' + key);
