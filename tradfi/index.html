@@ -1832,7 +1832,7 @@ function localISO(now, zone){
   const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', {timeZone: zone, year:'numeric', month:'2-digit', day:'2-digit'}).formatToParts(now).map(x => [x.type, x.value]));
   return p.year + '-' + p.month + '-' + p.day;
 }
-function holidayToday(zone, now){ const h = HOL && HOL[ZONE_EX[zone]]; if(!h) return null; const iso = localISO(now, zone); return h.holidays[iso] ? {n: h.holidays[iso]} : (h.early[iso] != null ? {early: h.early[iso]} : null); }
+function holidayToday(zone, now){ const h = HOL && HOL[ZONE_EX[zone]]; if(!h) return null; const iso = localISO(now, zone); return h.holidays[iso] ? {n: h.holidays[iso]} : (h.early[iso] != null ? {early: h.early[iso], why: (h.early_why || {})[iso]} : null); }
 function renderHolidays(){
   const hesc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const el = document.getElementById('thHol'); if(!el || !HOL) return;
@@ -1840,12 +1840,12 @@ function renderHolidays(){
   const NM = {}; Object.values(TH_EX).forEach(l => l.forEach(x => { NM[ZONE_EX[x.zone]] = x.n; }));
   Object.keys(HOL).forEach(k => { const nm = NM[k] || k;
     Object.keys(HOL[k].holidays).forEach(d => { if(d >= t0 && d <= t1) (by[d] = by[d] || []).push({nm, t: 'closed', n: HOL[k].holidays[d]}); });
-    Object.keys(HOL[k].early).forEach(d => { if(d >= t0 && d <= t1) (by[d] = by[d] || []).push({nm, t: 'early', c: HOL[k].early[d]}); }); });
+    Object.keys(HOL[k].early).forEach(d => { if(d >= t0 && d <= t1) (by[d] = by[d] || []).push({nm, t: 'early', c: HOL[k].early[d], why: (HOL[k].early_why || {})[d]}); }); });
   const mm = m => String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0'), days = Object.keys(by).sort();
   const tiles = days.slice(0, 12).map(d => { const dt = new Date(d + 'T12:00:00Z'), cl = by[d].filter(x => x.t === 'closed'), er = by[d].filter(x => x.t === 'early'), names = [...new Set(cl.map(x => x.n))].join(' / '), dd = Math.round((dt - new Date(t0 + 'T12:00:00Z')) / 864e5);
     return '<div class="th-tile"><div class="th-tile-d"><span>' + dt.toLocaleDateString('en-AU', {weekday:'short', timeZone:'UTC'}) + '</span><b>' + dt.getUTCDate() + '</b><span>' + dt.toLocaleDateString('en-AU', {month:'short', timeZone:'UTC'}) + '</span></div><div class="th-tile-b">' +
       (cl.length ? '<div><em class="c">Closed</em> ' + hesc(cl.map(x => x.nm).join(', ')) + (names ? '<small>' + hesc(names) + '</small>' : '') + '</div>' : '') +
-      (er.length ? '<div><em class="e">Early close</em> ' + hesc(er.map(x => x.nm + ' ' + mm(x.c)).join(', ')) + '<small>local time</small></div>' : '') +
+      (er.length ? '<div><em class="e">Early close</em> ' + hesc(er.map(x => x.nm + ' ' + mm(x.c)).join(', ')) + '<small>' + hesc([...new Set(er.map(x => x.why).filter(Boolean))].join(' / ') || 'local time') + '</small></div>' : '') +
       '<small class="th-tile-in">' + (dd <= 0 ? 'Today' : dd === 1 ? 'Tomorrow' : 'In ' + dd + ' days') + '</small></div></div>'; }).join('');
   el.innerHTML = '<h3>Coming up: market holidays and early closes</h3>' + (days.length ? '<div class="th-tiles">' + tiles + '</div>' : '<p class="calendar-note">No market holidays in the next 75 days.</p>') +
     '<p class="calendar-note" style="margin:8px 0 0">Dates come from each exchange\'s own calendar and are used by the session clocks above, so a closed day shows as a holiday and the overlap skips it. Always confirm with the exchange.</p>';
@@ -1937,7 +1937,7 @@ function renderSessionExchanges(key, now){
     const nxt = w.filter(x => x.openUTC > now).sort((a,b) => a.openUTC - b.openUTC)[0];
     const brk = !cur && ex.segs.length > 1 && prev && nxt && (nxt.openUTC - prev.closeUTC) < 2*3600e3;
     const ht = holidayToday(ex.zone, now), state = cur ? 'Open' : brk ? 'Lunch break' : 'Closed';
-    const flag = ht && ht.n ? '<b class="th-flag hol">HOLIDAY · ' + ht.n + '</b>' : ht && ht.early != null ? '<b class="th-flag early">EARLY CLOSE ' + mm2(ht.early) + '</b>' : '';
+    const flag = ht && ht.n ? '<b class="th-flag hol">HOLIDAY · ' + ht.n + '</b>' : ht && ht.early != null ? '<b class="th-flag early">EARLY CLOSE ' + mm2(ht.early) + (ht.why ? ' · ' + ht.why : '') + '</b>' : '';
     const cd = cur ? 'Closes in ' + formatCountdown((cur.closeUTC - now)/1000)
              : nxt ? (brk ? 'Reopens in ' : 'Opens in ') + formatCountdown((nxt.openUTC - now)/1000) : '—';
     return `<div class="th-ex-row ${cur ? 'open' : brk ? 'brk' : ''}${ht && ht.n ? ' hol' : ht && ht.early != null ? ' erl' : ''}"><span class="n">${ex.n}</span><span class="s">${state}</span>${flag}
@@ -2155,7 +2155,7 @@ function renderExchanges(){
                       : (s.nxt ? (s.brk ? 'Reopens in ' : 'Opens in ') + formatCountdown((s.nxt.openUTC - now)/1000) : '—');
     const ht = holidayToday(e.zone, now), label = s.open ? 'Open' : s.brk ? 'Lunch break' : (ht && ht.n ? 'Holiday' : 'Closed');
     return `<div class="tf-ex ${s.open ? 'open' : ''}"${s.brk ? ' style="border-color:rgba(251,191,36,.4)"' : ''}><div class="nm">${esc(e.name)}<span class="tf-pill ${s.open ? 'ok' : s.brk ? 'warn' : ''}">${label}</span></div>
-      <div class="rg">${esc(e.region)} · ${esc(e.city)}</div>${ht && ht.n ? '<div class="th-flag hol" style="margin:4px 0 0">HOLIDAY · ' + esc(ht.n) + '</div>' : ht && ht.early != null ? '<div class="th-flag early" style="margin:4px 0 0">EARLY CLOSE ' + mm(ht.early) + '</div>' : ''}<div class="tm">${t}</div><div class="cd">${cd}</div>
+      <div class="rg">${esc(e.region)} · ${esc(e.city)}</div>${ht && ht.n ? '<div class="th-flag hol" style="margin:4px 0 0">HOLIDAY · ' + esc(ht.n) + '</div>' : ht && ht.early != null ? '<div class="th-flag early" style="margin:4px 0 0">EARLY CLOSE ' + mm(ht.early) + (ht.why ? ' · ' + esc(ht.why) : '') + '</div>' : ''}<div class="tm">${t}</div><div class="cd">${cd}</div>
       <div class="cd">${e.segs.map(([o,c]) => mm(o) + '–' + mm(c)).join(' · ')} local</div></div>`;
   }).join('');
 }

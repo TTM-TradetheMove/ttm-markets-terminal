@@ -169,7 +169,8 @@ def build():
                     closed.append(f"{nm} ({ex['holidays'][iso]})")
                 elif iso in ex.get("early", {}):
                     m = ex["early"][iso]
-                    early.append(f"{nm} early close {m // 60}:{m % 60:02d} local")
+                    why = (ex.get("early_why") or {}).get(iso)
+                    early.append(f"{nm} early close {m // 60}:{m % 60:02d} local" + (f" ({why})" if why else ""))
         lines = []
         if closed:
             lines.append("Closed: " + ", ".join(closed))
@@ -177,7 +178,11 @@ def build():
             lines.append("Early close: " + ", ".join(early))
         if lines:
             lines.append("Thinner liquidity is common around these closes, in crypto too.")
-            S.append({"h": "Market holidays (next 24h)", "lines": lines})
+            S.insert(0, {"h": "⚠️ Market holidays and early closes (next 24h)", "lines": lines})
+            if closed:
+                head_bits.append(closed[0].split(" (")[0] + " closed")
+            if early:
+                head_bits.append(early[0].split(" early")[0] + " early close")
 
     # ---- today's high-impact calendar (next 24h)
     cal = load("calendar_data.json") or {}

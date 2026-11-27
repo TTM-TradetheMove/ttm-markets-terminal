@@ -57,7 +57,27 @@ def build(cal_names, normal_close):
                 early[pd.Timestamp(d).date().isoformat()] = int(mins)
     except Exception:  # noqa
         print("early closes unavailable:"); traceback.print_exc(file=sys.stdout)
-    return {"holidays": hol, "early": early}
+    for k, v in list(hol.items()):
+        hol[k] = (v.replace("Weekend ", "").replace(" (2000 onwards)", "").replace("Boxing Day", "Boxing Day (observed)") if v.startswith("Weekend ") else v.replace(" (2000 onwards)", ""))
+    why = {}
+    gen = "Market holiday"
+    for k in early:
+        d0 = date.fromisoformat(k)
+        prev = next((hol[(d0 - timedelta(days=n)).isoformat()] for n in (1, 2, 3) if (d0 - timedelta(days=n)).isoformat() in hol and hol[(d0 - timedelta(days=n)).isoformat()] != gen), None)
+        nxt = next((hol[(d0 + timedelta(days=n)).isoformat()] for n in (1, 2, 3, 4) if (d0 + timedelta(days=n)).isoformat() in hol), None)
+        if d0.month == 12 and d0.day == 24:
+            why[k] = "Christmas Eve"
+        elif d0.month == 12 and d0.day == 31:
+            why[k] = "New Year's Eve"
+        elif prev:
+            why[k] = "Day after " + prev
+        elif nxt and nxt != gen:
+            why[k] = "Day before " + nxt
+        elif nxt:
+            why[k] = "Day before a market holiday"
+        else:
+            why[k] = "Shortened trading day"
+    return {"holidays": hol, "early": early, "early_why": why}
 
 
 def main():
