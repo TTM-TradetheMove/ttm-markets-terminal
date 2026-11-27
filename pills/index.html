@@ -59,7 +59,7 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
 <div id="tip"></div>
 <footer>
   <div><b id="live" style="margin-right:8px">○ delayed</b><span id="upd">Loading the market…</span></div>
-  <div>Prices from OKX, market caps from CoinGecko, prices stream live. Size shows how big the price move is (or market cap, if you change the Size option), colour shows whether it is up or down over the period you pick. Educational only, not financial advice.</div>
+  <div>Prices stream live. Size shows how big the price move is (or market cap, if you change the Size option), colour shows whether it is up or down over the period you pick. Educational only, not financial advice.</div>
   <div style="margin-top:6px"><a href="../">TTM</a> · <a href="../crypto/">Crypto terminal</a> · <a href="../tradfi/">TradFi terminal</a></div>
 </footer>
 <script>
@@ -128,7 +128,7 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   }
   function draw(){
     ctx.clearRect(0, 0, W, H);
-    if(!B.length && coins.length){ ctx.fillStyle = '#9a978f'; ctx.font = '600 15px Inter,system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(view === 'watch' ? 'Your watchlist is empty. Open a pill and press Save.' : 'No coins match.', W / 2, H / 2); }
+    if(!B.length && coins.length){ ctx.fillStyle = '#9a978f'; ctx.font = '600 15px Inter,system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(view === 'watch' ? 'Your watchlist is empty. Open a pill and press Save.' : range === 'next' ? 'More coins are loading and will appear after the next data update. Try again in a few minutes.' : 'No coins match.', W / 2, H / 2); }
     B.forEach(function(b){ var v = b.c.ch ? b.c.ch[tf] : null, cl = color(v), r = b.r, on = b === hover || b === sel;
       if(shape === 'pill'){ var ph = hh(b), pw = hw(b), x0 = b.x - pw, y0 = b.y - ph; ctx.beginPath(); ctx.moveTo(x0 + ph, y0); ctx.lineTo(x0 + 2 * pw - ph, y0); ctx.arc(x0 + 2 * pw - ph, b.y, ph, -Math.PI / 2, Math.PI / 2); ctx.lineTo(x0 + ph, y0 + 2 * ph); ctx.arc(x0 + ph, b.y, ph, Math.PI / 2, Math.PI * 1.5); ctx.closePath();
         var pg = ctx.createLinearGradient(x0, y0, x0, y0 + 2 * ph); pg.addColorStop(0, cl[0]); pg.addColorStop(1, shade(cl[0])); ctx.fillStyle = pg; ctx.fill(); ctx.lineWidth = on ? 3 : 1.5; ctx.strokeStyle = on ? '#f0b929' : cl[1]; ctx.stroke();
@@ -203,7 +203,7 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
       nc.sort(function(a, b){ return (b.m || b.v24 || 0) - (a.m || a.v24 || 0); }); nc.forEach(function(c, i){ c.rk = i; });
       coins = nc; if(first || !same) layout(true); else { var map = {}; nc.forEach(function(c){ map[c.s] = c; }); B.forEach(function(b){ b.c = map[b.c.s] || b.c; }); draw(); }
       if(first) connect();
-      var t = r[0].generated_at ? new Date(r[0].generated_at) : null; document.getElementById('upd').textContent = nc.length + ' coins' + (nc.some(function(c){ return c.nl; }) ? ' (5M, 15M and 4H cover coins listed on OKX)' : '') + ' · reference data ' + (t ? t.toLocaleString() : 'recently');
+      var t = r[0].generated_at ? new Date(r[0].generated_at) : null; document.getElementById('upd').textContent = nc.length + ' coins' + (nc.some(function(c){ return c.nl; }) ? ' (5M, 15M and 4H show the most liquid coins)' : '') + ' · reference data ' + (t ? t.toLocaleString() : 'recently');
       if(!nc.some(function(c){ return c.ch && c.ch['5m'] != null; })) { [].forEach.call(tfEl.children, function(b, i){ if(i !== 4) b.title = 'Appears after the next data update'; }); }
     }).catch(function(){ document.getElementById('upd').textContent = 'The market data is not available right now. Try again in a minute.'; });
   }
