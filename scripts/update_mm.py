@@ -89,7 +89,7 @@ def run_positions(wallets, hist, now):
                           "upnl": p["upnl"] if p else 0, "lev": p["lev"] if p else None, "liq": p["liq"] if p else None, "change24h": chg})
         out.append({"id": w["id"], "firm": w["firm"], "address": w["address"], "label": w.get("label"), "source": w.get("source"),
                     "attribution": w.get("attribution"), "equity": st["equity"], "longs": longs, "shorts": shorts, "focus": focus,
-                    "others": sorted([p for p in st["positions"] if p["coin"] not in FOCUS], key=lambda p: -p["notional"])[:6],
+                    "others": sorted([p for p in st["positions"] if p["coin"] not in FOCUS], key=lambda p: -p["notional"])[:40],
                     "has24h": prev is not None})
     return out, snap
 
