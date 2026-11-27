@@ -89,23 +89,26 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
     var base = g ? [29, 58, 43] : [90, 42, 42], top = g ? [63, 185, 122] : [229, 83, 75], c = base.map(function(x, i){ return Math.round(x + (top[i] - x) * a); });
     return ['rgb(' + c.join(',') + ')', 'rgb(' + top.join(',') + ')']; }
 
-  function resize(){ var r = cv.getBoundingClientRect(); W = r.width; H = r.height; cv.width = W * DPR; cv.height = H * DPR; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); layout(false); }
+  var lw = 0, lh = 0;
+  function resize(){ var r = cv.getBoundingClientRect(); if(Math.abs(r.width - lw) < 2 && Math.abs(r.height - lh) < 2) return; lw = r.width; lh = r.height; W = r.width; H = r.height; cv.width = W * DPR; cv.height = H * DPR; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); layout(true); }
   function visible(){ return coins.filter(function(c){ return !HID[c.s] && (view !== 'watch' || WL[c.s]) && (!sector || c.cat === sector) && (!query || c.s.toLowerCase().indexOf(query) === 0 || (c.n || '').toLowerCase().indexOf(query) >= 0); }); }
   function layout(fresh){
     var list = visible(), vals = list.map(function(c){ var x = Math.max(sizeBy === 'v' ? (c.v24 || 1) : (c.m || c.v24 * 20 || 1), 1); return sizeBy === 'b' ? Math.pow(x, 0.5) : x; }), tot = vals.reduce(function(a, b){ return a + b; }, 0) || 1;
-    var area = W * H * (sizeBy === 'b' ? 0.66 : 0.52), old = {}; B.forEach(function(b){ old[b.c.s] = b; });
+    var area = W * H * (sizeBy === 'b' ? 0.52 : 0.46), old = {}; B.forEach(function(b){ old[b.c.s] = b; });
     B = list.map(function(c, i){ var r = Math.sqrt(vals[i] / tot * area / Math.PI), o = old[c.s];
       return {c: c, tr: Math.max(r, sizeBy === 'b' ? 15 : 11), r: o ? o.r : 2, x: o && !fresh ? o.x : W / 2 + (Math.random() - .5) * W * .6, y: o && !fresh ? o.y : H / 2 + (Math.random() - .5) * H * .6, vx: 0, vy: 0}; });
-    var mx = Math.min(W, H) * (sizeBy === 'b' ? 0.22 : 0.30); B.forEach(function(b){ if(b.tr > mx) b.tr = mx; }); calm = 0; kick();
+    var mx = Math.min(W, H) * (sizeBy === 'b' ? 0.22 : 0.30); B.forEach(function(b){ if(b.tr > mx) b.tr = mx; }); if(fresh) for(var it = 0; it < 220; it++){ B.forEach(function(b){ b.r = b.tr; }); sim(); }
+    calm = 0; kick();
   }
   function kick(){ if(!raf) raf = requestAnimationFrame(step); }
-  function step(){
-    raf = 0; var n = B.length, cx = W / 2, cy = H / 2, moved = 0;
-    for(var i = 0; i < n; i++){ var a = B[i]; a.r += (a.tr - a.r) * 0.18; a.vx += (cx - a.x) * 0.0016 * (W / H > 1.2 ? 1 : 1.4); a.vy += (cy - a.y) * 0.0022 * Math.min(1, (H / W) * 1.6 + 0.3); }
-    for(var k = 0; k < 2; k++) for(i = 0; i < n; i++) for(var j = i + 1; j < n; j++){ var p = B[i], q = B[j], dx = q.x - p.x, dy = q.y - p.y, d = Math.sqrt(dx * dx + dy * dy) || 0.01, m = p.r + q.r + 1.5;
+  function step(){ raf = 0; var moved = sim(); draw(); calm = moved < 0.6 ? calm + 1 : 0; if(calm < 45 || drag) kick(); }
+  function sim(){
+    var n = B.length, cx = W / 2, cy = H / 2, moved = 0;
+    for(var i = 0; i < n; i++){ var a = B[i]; a.r += (a.tr - a.r) * 0.18; var asp = Math.min(1, H / W); a.vx += (cx - a.x) * 0.0022 * (0.1 + asp * 0.45); a.vy += (cy - a.y) * 0.0022; }
+    for(var k = 0; k < 4; k++) for(i = 0; i < n; i++) for(var j = i + 1; j < n; j++){ var p = B[i], q = B[j], dx = q.x - p.x, dy = q.y - p.y, d = Math.sqrt(dx * dx + dy * dy) || 0.01, m = p.r + q.r + 1.5;
       if(d < m){ var f = (m - d) / d * 0.5, fx = dx * f, fy = dy * f, wp = q.r / (p.r + q.r), wq = p.r / (p.r + q.r); if(p !== drag){ p.x -= fx * wp * 2; p.y -= fy * wp * 2; } if(q !== drag){ q.x += fx * wq * 2; q.y += fy * wq * 2; } } }
     for(i = 0; i < n; i++){ a = B[i]; if(a === drag) continue; a.vx *= 0.82; a.vy *= 0.82; a.x += a.vx; a.y += a.vy; a.x = Math.max(a.r, Math.min(W - a.r, a.x)); a.y = Math.max(a.r, Math.min(H - a.r, a.y)); moved += Math.abs(a.vx) + Math.abs(a.vy) + Math.abs(a.tr - a.r); }
-    draw(); calm = moved < 0.6 ? calm + 1 : 0; if(calm < 30 || drag) kick();
+    return moved;
   }
   function draw(){
     ctx.clearRect(0, 0, W, H);
