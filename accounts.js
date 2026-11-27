@@ -408,6 +408,12 @@ function lvlBadges(){
 }
 window.ttmLvl = lvlBadges;
 // ---------- locking sections, links and tool parts
+// what TTM LENS looks like, shown to anyone who has not got it yet
+function lensShowcase(){
+  const u = f => new URL('img/' + f, BASE).href, f = ['Live candles for every coin on Bybit, Binance and Bitget (spot and perp)', 'Drawing tools: trend line, ray, Fib, box, path and measure', 'TTM indicators plus the usual ones (moving averages, RSI and more), with alerts', 'Bar replay: pick a candle, press play and watch the chart unfold', 'Paper trading and competitions', 'Works on your phone'];
+  return `<div class="lens-show" style="margin-top:18px;text-align:left"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:10px"><img src="${u('lens-preview-btc.png')}" alt="TTM LENS on Bitcoin with indicators" style="width:100%;height:auto !important;border-radius:10px;border:1px solid #2a2a2e" loading="lazy"><img src="${u('lens-preview-spx.png')}" alt="TTM LENS on the S&amp;P 500 with indicators" style="width:100%;height:auto !important;border-radius:10px;border:1px solid #2a2a2e" loading="lazy"></div><p style="font-size:11px;color:var(--mute,#9a978f);margin:6px 0 10px">Illustration built from TTM data, not a live screenshot.</p><ul style="margin:0;padding-left:18px;font-size:13.5px;line-height:1.7">${f.map(x => '<li>' + x + '</li>').join('')}</ul></div>`;
+}
+window.ttmLensShowcase = lensShowcase;
 function applyGates(){
   if(TERM !== 'crypto' && TERM !== 'tradfi') return; const pre = TERM === 'crypto' ? 'c:' : 't:';
   document.querySelectorAll('body > section[id]').forEach(sec => { const key = pre + sec.id; if(!(key in SET.access) && !(key in DEF)) return;
@@ -422,6 +428,7 @@ function applyGates(){
     const isSoon = (SET.access[key] || []).indexOf('soon') >= 0, offAll = lock && !isSoon && (SET.access[key] || []).filter(x => x !== 'beta' && x !== 'new').length === 0; document.querySelectorAll(`a[href="#${sec.id}"]`).forEach(a => { if(lock) a.setAttribute('data-lk', '1'); else a.removeAttribute('data-lk'); if(offAll || (lock && freeHide() && key !== 'c:ttmcharts')) a.setAttribute('data-hid', '1'); else a.removeAttribute('data-hid'); });
     if(offAll || (lock && isSoon)){ const l2 = wrap.querySelector(':scope > .lock-panel'); if(l2) l2.innerHTML = '<h3>Coming soon</h3><p>This section is being built and is not open yet.</p>'; } });
   lvlBadges();
+  try{ const lp = document.querySelector('#ttmcharts .lock-panel'); if(lp && !lp.querySelector('.lens-show')) lp.insertAdjacentHTML('beforeend', lensShowcase()); }catch(x){}
   // the crypto calculator without the tracker: hide the parts that need it
   const rr = $('riskreward'); if(rr) rr.classList.toggle('no-tracker', !can('c:tradejournal'));
 }
