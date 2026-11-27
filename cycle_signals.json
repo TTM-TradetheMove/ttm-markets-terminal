@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-11-26T23:59:50.021538+00:00",
- "as_of": "2026-11-26",
- "price": 60795.89,
- "realized": 53394.59,
+ "generated_at": "2026-11-27T13:06:32.950685+00:00",
+ "as_of": "2026-11-27",
+ "price": 61719.71,
+ "realized": 53253.22,
  "cycle_high": {
   "price": 124824.45,
   "date": "2025-10-06"
@@ -18,21 +18,21 @@
     "k": "lr",
     "name": "Below the −1σ regression band",
     "on": true,
-    "detail": "price $60,796 vs band $69,309",
+    "detail": "price $61,720 vs band $69,340",
     "short": "Regression Band"
    },
    {
     "k": "rp",
     "name": "Below realised price",
     "on": false,
-    "detail": "price $60,796 vs realised $53,395",
+    "detail": "price $61,720 vs realised $53,253",
     "short": "Realised Price"
    },
    {
     "k": "pu",
     "name": "Puell multiple below 0.5 (miner stress)",
     "on": false,
-    "detail": "Puell 0.81",
+    "detail": "Puell 0.82",
     "short": "Puell Multiple"
    },
    {
@@ -53,7 +53,7 @@
     "k": "bp",
     "name": "Price within 10% of, or below, the Balanced Price",
     "on": false,
-    "detail": "price $60,796 vs Balanced $38,787",
+    "detail": "price $61,720 vs Balanced $38,648",
     "short": "Balanced Price"
    }
   ]
@@ -68,21 +68,21 @@
     "k": "lr",
     "name": "Above the +1σ regression band",
     "on": false,
-    "detail": "price $60,796 vs band $267,095",
+    "detail": "price $61,720 vs band $267,229",
     "short": "Regression Band"
    },
    {
     "k": "mv",
     "name": "MVRV above 3.5 (price vs realised price)",
     "on": false,
-    "detail": "MVRV 1.14",
+    "detail": "MVRV 1.16",
     "short": "MVRV"
    },
    {
     "k": "pu",
     "name": "Puell multiple above 4 (miner euphoria)",
     "on": false,
-    "detail": "Puell 0.81",
+    "detail": "Puell 0.82",
     "short": "Puell Multiple"
    },
    {
@@ -6682,11 +6682,11 @@
      1747
     ],
     "TTM Bitcoin Risk": [
-     120,
+     121,
      1547
     ],
     "Cycle timing": [
-     82,
+     83,
      1675
     ],
     "Balanced Price": [
