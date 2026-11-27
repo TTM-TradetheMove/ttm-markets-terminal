@@ -512,6 +512,7 @@ select{color-scheme:dark}select option,select optgroup{background:#16161a;color:
 .th-ex-row{display:grid;grid-template-columns:1fr auto;gap:3px 8px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.03)}
 .th-ex-row.open{border-color:rgba(52,211,153,.35)}
 .th-hol{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}.th-hol h3{font-size:14px;margin:0 0 8px;color:var(--gold2,#f2c14e)}.th-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}.th-tile{display:flex;gap:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.03)}.th-tile-d{min-width:46px;text-align:center;line-height:1.1}.th-tile-d b{display:block;font-size:26px;color:var(--gold2,#f2c14e)}.th-tile-d span{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}.th-tile-b{font-size:13px;display:flex;flex-direction:column;gap:6px;min-width:0}.th-tile-b em{font-style:normal;font-weight:800;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;margin-right:4px}.th-tile-b em.c{color:#f87171}.th-tile-b em.e{color:#fbbf24}.th-tile-b small{display:block;color:var(--mute);font-size:11.5px}.th-tile-in{margin-top:auto;color:var(--gold) !important;font-weight:700}
+.th-ex-row>.th-flag{grid-column:1/-1;display:block;text-align:center;margin:2px 0;padding:5px 8px;font-size:11.5px}.th-flag{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;vertical-align:middle}.th-flag.hol{background:#dc2626;color:#fff;box-shadow:0 0 10px rgba(220,38,38,.55)}.th-flag.early{background:#f59e0b;color:#1a1300;box-shadow:0 0 10px rgba(245,158,11,.5)}.th-ex-row.hol{border-color:#dc2626 !important;background:rgba(220,38,38,.10)}.th-ex-row.erl{border-color:#f59e0b !important;background:rgba(245,158,11,.10)}
 .th-ex-row.brk{border-color:rgba(251,191,36,.35)}
 .th-ex-row .n{font-weight:700;color:var(--text,#e5e7eb)}
 .th-ex-row .s{font-size:9px;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:999px;border:1px solid var(--line);color:var(--mute)}
@@ -3619,11 +3620,11 @@ function renderSessionExchanges(key, now){
     const prev = w.filter(x => x.closeUTC <= now).sort((a,b) => b.closeUTC - a.closeUTC)[0];
     const nxt = w.filter(x => x.openUTC > now).sort((a,b) => a.openUTC - b.openUTC)[0];
     const brk = !cur && ex.segs.length > 1 && prev && nxt && (nxt.openUTC - prev.closeUTC) < 2*3600e3;
-    const ht = holidayToday(ex.zone, now), state = cur ? 'Open' : brk ? 'Lunch break' : (ht && ht.n ? 'Holiday' : 'Closed');
-    const early = ht && ht.early != null ? ' · early close ' + mm2(ht.early) : '', hname = ht && ht.n ? ' · ' + ht.n : '';
+    const ht = holidayToday(ex.zone, now), state = cur ? 'Open' : brk ? 'Lunch break' : 'Closed';
+    const flag = ht && ht.n ? '<b class="th-flag hol">HOLIDAY · ' + ht.n + '</b>' : ht && ht.early != null ? '<b class="th-flag early">EARLY CLOSE ' + mm2(ht.early) + '</b>' : '';
     const cd = cur ? 'Closes in ' + formatCountdown((cur.closeUTC - now)/1000)
              : nxt ? (brk ? 'Reopens in ' : 'Opens in ') + formatCountdown((nxt.openUTC - now)/1000) : '—';
-    return `<div class="th-ex-row ${cur ? 'open' : brk ? 'brk' : ''}"><span class="n">${ex.n}</span><span class="s">${state}${hname}${early}</span>
+    return `<div class="th-ex-row ${cur ? 'open' : brk ? 'brk' : ''}${ht && ht.n ? ' hol' : ht && ht.early != null ? ' erl' : ''}"><span class="n">${ex.n}</span><span class="s">${state}</span>${flag}
       <span class="h">${ex.segs.map(([o,c]) => mm2(o) + '–' + mm2(c)).join(' · ')} ${ex.city}${ex.segs.length > 1 ? ' (lunch break ' + mm2(ex.segs[0][1]) + '–' + mm2(ex.segs[1][0]) + ')' : ''}</span>
       <span class="c">${cd}</span></div>`;
   }).join('');
