@@ -1467,7 +1467,7 @@ body.rm-full #rmIn{font-size:17px}
             (f.change24h ? '<span class="mm-chg">24h: ' + esc(f.change24h) + '</span>' : (w.has24h ? '<small style="margin-top:4px">No change in 24h</small>' : '')) + '</div>'; }).join('');
         var oth = (w.others || []).length ? '<small style="display:block;margin-top:8px;color:var(--mute)">Other positions: ' + w.others.map(function(o){ return esc(o.coin) + ' ' + o.side + ' ' + usd(o.notional); }).join(' · ') + '</small>' : '';
         return '<div class="mm-w"><div class="mm-wh"><b>' + esc(w.firm) + '</b><span>Total long ' + usd(w.longs) + ' · short ' + usd(w.shorts) + ' · <b>' + esc(bias) + '</b></span></div><div class="mm-t">' + cards + '</div>' + oth +
-          '<small style="display:block;margin-top:8px;color:var(--mute)">' + esc(w.label || '') + ' · ' + short(w.address) + ' · ' + esc(w.attribution || 'third-party attribution') + (w.source ? ' · <a href="' + esc(w.source) + '" target="_blank" rel="noopener">source</a>' : '') + (w.has24h ? '' : ' · the 24h comparison appears after a day of readings') + '</small></div>'; }).join('');
+          '<small style="display:block;margin-top:8px;color:var(--mute)">' + esc(w.label || '') + ' · ' + short(w.address) + ' · ' + esc(w.attribution || 'third-party attribution') + (w.has24h ? '' : ' · the 24h comparison appears after a day of readings') + '</small></div>'; }).join('');
     }
     if(!M || !M.chains || !M.chains.length){ mv.innerHTML = '<p class="calendar-note">No ETH, BTC, SOL or XRP wallets are tracked yet. Wallet moves appear here once addresses with a public source are added.</p>'; }
     else if(!M.moves.length){ mv.innerHTML = '<p class="calendar-note">No moves above ' + usd(M.min_usd) + ' in the last 30 days.</p>'; }
