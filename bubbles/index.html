@@ -31,6 +31,9 @@ canvas{display:block;width:100%;height:calc(100vh - 235px);min-height:420px;touc
 #card{position:absolute;right:12px;bottom:12px;z-index:4;background:#121214f2;border:1px solid var(--gold);border-radius:14px;padding:14px 16px;width:min(310px,calc(100% - 24px));display:none;font-size:13px;line-height:1.6}
 #card h3{margin:0 0 4px;font-size:18px}#card .x{position:absolute;right:10px;top:8px;background:none;border:0;color:var(--mute);font-size:20px;cursor:pointer}
 #card .row{display:flex;justify-content:space-between;border-bottom:1px solid #ffffff10;padding:3px 0}#card .go{display:block;text-align:center;margin-top:10px;background:var(--gold);color:#1a1300;font-weight:800;padding:9px;border-radius:10px;text-decoration:none}
+#hp{position:absolute;left:12px;top:12px;z-index:4;background:#121214f5;border:1px solid var(--line);border-radius:14px;padding:12px 14px;width:min(300px,calc(100% - 24px));max-height:70%;overflow:auto;display:none;font-size:13px}
+#hp .it{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #ffffff10}#hp button,#card .act{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer}
+#card .acts{display:flex;gap:8px;margin-top:10px}#card .act{flex:1;padding:8px}#card .act.on{background:var(--gold);color:#1a1300;border-color:var(--gold)}
 .pos{color:var(--green)}.neg{color:var(--red)}
 .legend{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mute);margin-left:auto}.legend i{display:inline-block;width:120px;height:9px;border-radius:5px;background:linear-gradient(90deg,#e5534b,#5a2a2a 45%,#1d3a2b 55%,#3fb97a)}
 footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
@@ -46,10 +49,12 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   <div class="chips" id="tf"></div>
   <span><label class="t" for="sz">Size</label><select id="sz"><option value="m">Market cap</option><option value="v">24h volume</option></select></span>
   <span><label class="t" for="sec">Sector</label><select id="sec"><option value="">All sectors</option></select></span>
+  <span class="chips" id="vw"><button class="chip on" data-v="all">All</button><button class="chip" data-v="watch">★ Watchlist <span id="wn"></span></button></span>
+  <button class="chip" id="hid">Hidden (0)</button>
   <input id="q" type="search" placeholder="Find a coin" autocomplete="off" style="width:130px">
   <div class="legend"><span>Falling</span><i></i><span>Rising</span></div>
 </div>
-<div id="wrap"><canvas id="cv"></canvas><div id="card"></div></div>
+<div id="wrap"><canvas id="cv"></canvas><div id="hp"></div><div id="card"></div></div>
 <div id="tip"></div>
 <footer>
   <div><b id="live" style="margin-right:8px">○ delayed</b><span id="upd">Loading the market…</span></div>
@@ -61,7 +66,17 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   var cv = document.getElementById('cv'), ctx = cv.getContext('2d'), wrap = document.getElementById('wrap'), tip = document.getElementById('tip'), card = document.getElementById('card');
   var TFS = [['5m', '5M'], ['15m', '15M'], ['1h', '1H'], ['4h', '4H'], ['1d', '24H'], ['1w', '1W'], ['1m', '1M']], tf = '1d', sizeBy = 'm', sector = '', query = '';
   var coins = [], B = [], W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2), hover = null, sel = null, raf = 0, calm = 0, drag = null;
-  var tfEl = document.getElementById('tf');
+  var tfEl = document.getElementById('tf'), view = 'all', WL = {}, HID = {};
+  try{ var sv = JSON.parse(localStorage.getItem('ttm_bub_v1') || '{}'); (sv.w || []).forEach(function(x){ WL[x] = 1; }); (sv.h || []).forEach(function(x){ HID[x] = 1; }); }catch(e){}
+  function save(){ try{ localStorage.setItem('ttm_bub_v1', JSON.stringify({w: Object.keys(WL), h: Object.keys(HID)})); }catch(e){} counts(); }
+  function counts(){ document.getElementById('hid').textContent = 'Hidden (' + Object.keys(HID).length + ')'; var n = Object.keys(WL).length; document.getElementById('wn').textContent = n ? '(' + n + ')' : ''; }
+  [].forEach.call(document.querySelectorAll('#vw .chip'), function(b){ b.onclick = function(){ view = b.getAttribute('data-v'); [].forEach.call(document.querySelectorAll('#vw .chip'), function(c){ c.classList.toggle('on', c === b); }); rebuild(true); }; });
+  document.getElementById('hid').onclick = function(){ var hp = document.getElementById('hp'); if(hp.style.display === 'block'){ hp.style.display = 'none'; return; } hidePanel(); hp.style.display = 'block'; };
+  function hidePanel(){ var hp = document.getElementById('hp'), k = Object.keys(HID).sort();
+    hp.innerHTML = '<b>Hidden coins</b>' + (k.length ? ' <button id="ra" style="float:right">Restore all</button>' : '') + (k.length ? k.map(function(x){ return '<div class="it"><span>' + esc(x) + '</span><button data-r="' + esc(x) + '">Restore</button></div>'; }).join('') : '<p style="color:var(--mute)">Nothing hidden. Open any bubble and press Hide to remove it from your chart.</p>');
+    [].forEach.call(hp.querySelectorAll('[data-r]'), function(b){ b.onclick = function(){ delete HID[b.getAttribute('data-r')]; save(); hidePanel(); rebuild(true); }; });
+    var ra = document.getElementById('ra'); if(ra) ra.onclick = function(){ HID = {}; save(); hidePanel(); rebuild(true); }; }
+  counts();
   TFS.forEach(function(t){ var b = document.createElement('button'); b.className = 'chip' + (t[0] === tf ? ' on' : ''); b.textContent = t[1]; b.onclick = function(){ tf = t[0]; [].forEach.call(tfEl.children, function(c){ c.classList.toggle('on', c === b); }); rebuild(false); }; tfEl.appendChild(b); });
   document.getElementById('sz').onchange = function(){ sizeBy = this.value; rebuild(true); };
   document.getElementById('sec').onchange = function(){ sector = this.value; rebuild(true); };
@@ -75,7 +90,7 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
     return ['rgb(' + c.join(',') + ')', 'rgb(' + top.join(',') + ')']; }
 
   function resize(){ var r = cv.getBoundingClientRect(); W = r.width; H = r.height; cv.width = W * DPR; cv.height = H * DPR; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); layout(false); }
-  function visible(){ return coins.filter(function(c){ return (!sector || c.cat === sector) && (!query || c.s.toLowerCase().indexOf(query) === 0 || (c.n || '').toLowerCase().indexOf(query) >= 0); }); }
+  function visible(){ return coins.filter(function(c){ return !HID[c.s] && (view !== 'watch' || WL[c.s]) && (!sector || c.cat === sector) && (!query || c.s.toLowerCase().indexOf(query) === 0 || (c.n || '').toLowerCase().indexOf(query) >= 0); }); }
   function layout(fresh){
     var list = visible(), vals = list.map(function(c){ return Math.max(sizeBy === 'm' ? (c.m || c.v24 * 20 || 1) : (c.v24 || 1), 1); }), tot = vals.reduce(function(a, b){ return a + b; }, 0) || 1;
     var area = W * H * 0.52, old = {}; B.forEach(function(b){ old[b.c.s] = b; });
@@ -94,9 +109,11 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   }
   function draw(){
     ctx.clearRect(0, 0, W, H);
+    if(!B.length && coins.length){ ctx.fillStyle = '#9a978f'; ctx.font = '600 15px Inter,system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(view === 'watch' ? 'Your watchlist is empty. Open a bubble and press Add to watchlist.' : 'No coins match.', W / 2, H / 2); }
     B.forEach(function(b){ var v = b.c.ch ? b.c.ch[tf] : null, cl = color(v), r = b.r, on = b === hover || b === sel;
       ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, 7); var g = ctx.createRadialGradient(b.x - r * .3, b.y - r * .35, r * .1, b.x, b.y, r); g.addColorStop(0, cl[0]); g.addColorStop(1, shade(cl[0])); ctx.fillStyle = g; ctx.fill();
       ctx.lineWidth = on ? 3 : 1.5; ctx.strokeStyle = on ? '#f0b929' : cl[1]; ctx.stroke();
+      if(WL[b.c.s] && r >= 17){ ctx.fillStyle = '#f0b929'; ctx.font = '700 ' + Math.max(11, Math.min(r * 0.28, 20)) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('★', b.x + r * 0.62, b.y - r * 0.62); }
       var im = r >= 12 ? logo(b.c) : null;
       function pic(x, y, d){ ctx.save(); ctx.beginPath(); ctx.arc(x, y, d / 2, 0, 7); ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.fill(); ctx.clip(); ctx.drawImage(im, x - d / 2, y - d / 2, d, d); ctx.restore(); }
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff';
@@ -125,8 +142,11 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
     card.innerHTML = '<button class="x" aria-label="Close">×</button><h3>' + esc(c.n || c.s) + ' <small style="color:var(--mute)">' + esc(c.s) + '</small></h3><div class="row"><span>Price</span><b>' + fmtP(c.p) + '</b></div>' +
       TFS.map(function(t){ var v = c.ch ? c.ch[t[0]] : null; return '<div class="row"><span>' + t[1] + ' change</span><b class="' + (v >= 0 ? 'pos' : 'neg') + '">' + pc(v) + '</b></div>'; }).join('') +
       '<div class="row"><span>Market cap</span><b>' + (c.m ? fmtB(c.m) : '–') + '</b></div><div class="row"><span>24h volume</span><b>' + fmtB(c.v24 || 0) + '</b></div><div class="row"><span>Sector</span><b>' + esc(c.cat || '–') + '</b></div>' +
+      '<div class="acts"><button class="act' + (WL[c.s] ? ' on' : '') + '" id="aw">' + (WL[c.s] ? '★ In watchlist' : '☆ Add to watchlist') + '</button><button class="act" id="ah">Hide coin</button></div>' +
       '<a class="go" href="../crypto/#rsi">See ' + esc(c.s) + ' RSI and volume in the TTM terminal</a>';
-    card.style.display = 'block'; card.querySelector('.x').onclick = function(){ select(null); }; }
+    card.style.display = 'block'; card.querySelector('.x').onclick = function(){ select(null); };
+    document.getElementById('aw').onclick = function(){ if(WL[c.s]) delete WL[c.s]; else WL[c.s] = 1; save(); if(view === 'watch' && !WL[c.s]){ select(null); rebuild(true); } else select(b); };
+    document.getElementById('ah').onclick = function(){ HID[c.s] = 1; delete WL[c.s]; save(); select(null); rebuild(true); var hp = document.getElementById('hp'); if(hp.style.display === 'block') hidePanel(); }; }
   function rebuild(fresh){ if(fresh){ layout(true); } else { draw(); } if(sel && B.indexOf(sel) < 0) select(null); }
   var live = {}, ws = null, wsOk = false, lastDraw = 0;
   function applyLive(c, t){ c.p = t.last; if(t.open) c.ch['1d'] = (t.last / t.open - 1) * 100; Object.keys(c.ref).forEach(function(k){ c.ch[k] = (t.last / c.ref[k] - 1) * 100; }); }
