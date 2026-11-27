@@ -82,3 +82,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+# refreshed after top_coins gained CoinGecko change fields
