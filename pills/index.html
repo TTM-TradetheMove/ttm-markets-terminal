@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="copyright" content="TTM - Trade The Move. All rights reserved.">
-<link rel="icon" type="image/png" href="../favicon.png"><link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0b0b0c"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="TTM Pills"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>TTM Pills: live crypto movers, free | Trade The Move</title>
 <meta name="description" content="Free live crypto pills. See the biggest movers at a glance: size is the size of the move, colour is up or down over 5 minutes, 1 hour, 24 hours, a week or a month. Built by Trade The Move.">
 <meta property="og:type" content="website"><meta property="og:site_name" content="Trade The Move">
@@ -15,17 +15,17 @@
 <meta name="twitter:card" content="summary_large_image">
 <style>
 :root{--bg:#0b0b0c;--bg2:#121214;--card:#17171a;--line:#2a2a2e;--gold:#dba118;--gold2:#f0b929;--text:#e8e6e1;--mute:#9a978f;--green:#3fb97a;--red:#e5534b}
-*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-a{color:var(--gold2)}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);min-height:100vh;color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--gold2)}body{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;padding-top:env(safe-area-inset-top)}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--text)}.brand img{height:44px}.brand b{font-size:18px;letter-spacing:.02em}.brand span{color:var(--gold2)}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--text)}.brand img{height:44px}.brand b.pillmark{white-space:nowrap;font-size:15px;font-weight:900;letter-spacing:.14em;color:#1a1300;background:linear-gradient(180deg,#f6d36b,#c49214);border-radius:999px;padding:8px 20px;box-shadow:0 0 0 2px #0b0b0c,0 0 0 3.5px #dba118,0 6px 18px #dba11833}.hr{display:flex;align-items:center;gap:10px}.hbtn{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:999px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer}.hbtn:hover{border-color:var(--gold)}#hm{position:fixed;inset:0;z-index:20;background:#000000b8;display:none;align-items:center;justify-content:center;padding:14px}#hm .box{background:#121214;border:1px solid var(--gold);border-radius:16px;max-width:620px;width:100%;max-height:92vh;overflow:auto;padding:20px 22px;font-size:14px;line-height:1.6}#hm h2{margin:0 0 4px;font-size:20px}#hm h3{margin:16px 0 4px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold2)}#hm ul{margin:4px 0;padding-left:20px}#hm .top{display:flex;align-items:center;gap:12px}#hm .top img{height:40px}#hm .close{margin-left:auto;background:none;border:0;color:var(--mute);font-size:26px;cursor:pointer}#hm .go{display:block;text-align:center;margin-top:16px;background:linear-gradient(135deg,#f6d36b,#d4a017);color:#1a1300;font-weight:800;padding:11px;border-radius:12px;text-decoration:none;border:0;width:100%;font-size:14px;cursor:pointer}#hm .tw{display:inline-block;padding:1px 8px;border-radius:999px;font-weight:700;font-size:12px}.brand span{color:var(--gold2)}
 .cta{background:linear-gradient(135deg,#f6d36b,#d4a017);color:#1a1300;font-weight:800;padding:10px 16px;border-radius:999px;text-decoration:none;font-size:14px;white-space:nowrap}
 .bar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:12px 18px}
 .chips{display:flex;gap:6px;flex-wrap:wrap}.chip{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:999px;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer}.chip.on{background:var(--gold);color:#1a1300;border-color:var(--gold)}
 select,input{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px}
 label.t{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.06em;margin-right:4px}
-#wrap{position:relative;margin:0 12px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#17171b 0%,#0e0e10 70%)}
-canvas{display:block;width:100%;height:calc(100vh - 235px);min-height:420px;touch-action:none;cursor:pointer}
+#wrap{position:relative;flex:1;min-height:440px;margin:0 12px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#17171b 0%,#0e0e10 70%)}
+canvas{position:absolute;z-index:1;inset:0;display:block;width:100%;height:100%;touch-action:manipulation;cursor:pointer}#wm{position:absolute;left:14px;bottom:10px;width:min(210px,30%);opacity:.16;pointer-events:none;z-index:0}
 #tip{position:fixed;pointer-events:none;z-index:5;background:#0f0f12ee;border:1px solid var(--gold);border-radius:10px;padding:9px 12px;font-size:12.5px;line-height:1.55;display:none;max-width:260px}
 #tip b{font-size:14px;color:var(--gold2)}
 #card{position:absolute;right:12px;bottom:12px;z-index:4;background:#121214f2;border:1px solid var(--gold);border-radius:14px;padding:14px 16px;width:min(310px,calc(100% - 24px));display:none;font-size:13px;line-height:1.6}
@@ -37,13 +37,13 @@ canvas{display:block;width:100%;height:calc(100vh - 235px);min-height:420px;touc
 .pos{color:var(--green)}.neg{color:var(--red)}
 .legend{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mute);margin-left:auto}.legend i{display:inline-block;width:120px;height:9px;border-radius:5px;background:linear-gradient(90deg,#e5534b,#5a2a2a 45%,#1d3a2b 55%,#3fb97a)}
 footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
-@media(max-width:640px){.brand b{font-size:15px}.legend{display:none}canvas{height:calc(100vh - 270px)}}
+@media(max-width:640px){header{padding:8px 12px;flex-wrap:nowrap}.brand{gap:8px}.brand b.pillmark{font-size:11px;padding:6px 12px}.legend{display:none}.brand img{display:none}.hbtn span{display:none}.hbtn{padding:8px 11px}.cta{padding:8px 12px;font-size:12px}.hr{gap:6px}.bar{flex-wrap:nowrap;overflow-x:auto;padding:8px 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none}.bar::-webkit-scrollbar{display:none}.bar>*,.bar .chips{flex-shrink:0;flex-wrap:nowrap}#wrap{margin:0 6px;min-height:380px}}@media (display-mode: standalone){footer .src{display:none}}
 </style>
 </head>
 <body>
 <header>
-  <a class="brand" href="../"><img src="../img/logo0.png" alt="TTM"><b>TTM <span>Pills</span></b></a>
-  <a class="cta" href="../crypto/">Open the TTM Terminal</a>
+  <a class="brand" href="../"><img src="../img/logo0.png" alt="Trade The Move"><b class="pillmark">TTM PILLS</b></a>
+  <div class="hr"><button class="hbtn" id="help" type="button" aria-label="How to use">ⓘ <span>How to use</span></button><a class="cta" href="../crypto/">Open the TTM Terminal</a></div>
 </header>
 <div class="bar">
   <div class="chips" id="tf"></div>
@@ -55,12 +55,39 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   <input id="q" type="search" placeholder="Find a coin" autocomplete="off" style="width:130px">
   <div class="legend"><span>Falling</span><i></i><span>Rising</span></div>
 </div>
-<div id="wrap"><canvas id="cv"></canvas><div id="hp"></div><div id="card"></div></div>
+<div id="wrap"><canvas id="cv"></canvas><img id="wm" src="../img/logo0.png" alt=""><div id="hp"></div><div id="card"></div></div>
 <div id="tip"></div>
+<div id="hm" role="dialog" aria-modal="true" aria-label="How to use TTM Pills"><div class="box">
+  <div class="top"><img src="../img/logo0.png" alt="Trade The Move"><button class="close" id="hx" aria-label="Close">×</button></div>
+  <h2>How TTM Pills works</h2>
+  <div style="color:var(--mute)">The whole crypto market on one screen. Free, no sign-up.</div>
+  <h3>Reading the chart</h3>
+  <ul><li><b>Colour</b>: <span class="tw" style="background:#1d3a2b;color:#3fb97a">green</span> is up, <span class="tw" style="background:#5a2a2a;color:#e5534b">red</span> is down. The stronger the colour, the bigger the move.</li>
+  <li><b>Size</b>: the bigger the price move, the bigger the pill. Flat coins are small.</li>
+  <li><b>Position</b>: the biggest gainers fill the top rows. The biggest losers are at the bottom, with the biggest loser at the bottom right.</li>
+  <li><b>Live</b>: the green LIVE tag at the bottom means prices are streaming in as they happen.</li></ul>
+  <h3>Controls</h3>
+  <ul><li><b>5M to 1M</b>: pick the time window for the move.</li>
+  <li><b>Top 125 / Next 125 / All</b>: the biggest coins by market cap, the next group, or everything.</li>
+  <li><b>Sector</b> and <b>Find a coin</b>: narrow the chart to one theme or one token.</li>
+  <li><b>Size</b>: switch to market cap or 24h volume if you prefer.</li></ul>
+  <h3>Click any pill</h3>
+  <ul><li>See the price, every time window, market cap and volume.</li>
+  <li><b>Save</b> adds it to your <b>Watchlist</b>. <b>Hide</b> removes it from your chart (get it back under <b>Hidden</b>).</li>
+  <li><b>CoinGecko</b> opens the coin's data page. <b>TTM LENS</b> opens the full chart for TTM members.</li>
+  <li>Your saved and hidden coins stay on this device.</li></ul>
+  <h3>Use it like an app</h3>
+  <ul><li><b>iPhone / iPad</b> (Safari): tap Share, then <b>Add to Home Screen</b>.</li>
+  <li><b>Android</b> (Chrome): tap the menu, then <b>Install app</b> or <b>Add to Home screen</b>.</li>
+  <li><b>Computer</b> (Chrome or Edge): click the install icon at the right of the address bar.</li></ul>
+  <button class="go" id="inst" style="display:none">Install TTM Pills</button>
+  <button class="go" id="hok" style="background:var(--card);color:var(--text);border:1px solid var(--line);margin-top:10px">Got it</button>
+  <div style="margin-top:12px;font-size:12px;color:var(--mute)">Educational only, not financial advice.</div>
+</div></div>
 <footer>
   <div><b id="live" style="margin-right:8px">○ delayed</b><span id="upd">Loading the market…</span></div>
   <div>Prices stream live. Size shows how big the price move is (or market cap, if you change the Size option), colour shows whether it is up or down over the period you pick. Educational only, not financial advice.</div>
-  <div style="margin-top:6px"><a href="../">TTM</a> · <a href="../crypto/">Crypto terminal</a> · <a href="../tradfi/">TradFi terminal</a></div>
+  <div class="src" style="margin-top:6px"><a href="../">TTM</a> · <a href="../crypto/">Crypto terminal</a> · <a href="../tradfi/">TradFi terminal</a></div>
 </footer>
 <script>
 (function(){
@@ -134,7 +161,8 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
         var pg = ctx.createLinearGradient(x0, y0, x0, y0 + 2 * ph); pg.addColorStop(0, cl[0]); pg.addColorStop(1, shade(cl[0])); ctx.fillStyle = pg; ctx.fill(); ctx.lineWidth = on ? 3 : 1.5; ctx.strokeStyle = on ? '#f0b929' : cl[1]; ctx.stroke();
         var pim = logo(b.c), ld = ph * 1.38, lx = x0 + ph; ctx.textBaseline = 'middle';
         if(pim){ ctx.save(); ctx.beginPath(); ctx.arc(lx, b.y, ld / 2, 0, 7); ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.fill(); ctx.clip(); ctx.drawImage(pim, lx - ld / 2, b.y - ld / 2, ld, ld); ctx.restore(); }
-        var tx = x0 + ph * 2.05, two = ph >= 17, fz = Math.max(10, Math.min(ph * (two ? 0.6 : 0.78), 26)); ctx.textAlign = 'left'; ctx.fillStyle = '#fff'; ctx.font = '800 ' + fz + 'px Inter,system-ui,sans-serif';
+        function fit(txt, w, fz2, wt){ while(fz2 > 7){ ctx.font = wt + ' ' + fz2 + 'px Inter,system-ui,sans-serif'; if(ctx.measureText(txt).width <= w) break; fz2 -= 1; } return fz2; }
+        var tx = x0 + ph * 2.05, avail = 2 * pw - ph * 2.05 - ph * 0.7, two = ph >= 17, fz = Math.max(10, Math.min(ph * (two ? 0.6 : 0.78), 26)); ctx.textAlign = 'left'; ctx.fillStyle = '#fff'; fz = fit(b.c.s, avail, fz, 800); ctx.font = '800 ' + fz + 'px Inter,system-ui,sans-serif';
         if(two){ ctx.fillText(b.c.s, tx, b.y - fz * 0.55); ctx.font = '700 ' + Math.max(9, fz * 0.82) + 'px Inter,system-ui,sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.fillText(pc(v), tx, b.y + fz * 0.62); }
         else { var tw = ctx.measureText(b.c.s).width; ctx.fillText(b.c.s, tx, b.y); ctx.font = '700 ' + Math.max(8, fz * 0.8) + 'px Inter,system-ui,sans-serif'; var pt = pc(v), pwid = ctx.measureText(pt).width; if(tx + tw + pwid + ph * 0.9 + 6 < x0 + 2 * pw){ ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.textAlign = 'right'; ctx.fillText(pt, x0 + 2 * pw - ph * 0.7, b.y); } }
         if(WL[b.c.s]){ ctx.fillStyle = '#f0b929'; ctx.font = '700 12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('★', x0 + 2 * pw - ph * 0.6, y0 + 6); }
@@ -207,7 +235,15 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
       if(!nc.some(function(c){ return c.ch && c.ch['5m'] != null; })) { [].forEach.call(tfEl.children, function(b, i){ if(i !== 4) b.title = 'Appears after the next data update'; }); }
     }).catch(function(){ document.getElementById('upd').textContent = 'The market data is not available right now. Try again in a minute.'; });
   }
-  if(window.ResizeObserver){ var ro = new ResizeObserver(function(){ resize(); }); ro.observe(wrap); } else window.addEventListener('resize', resize); resize(); load(true); setInterval(function(){ load(false); }, 90000);
+    var hm = document.getElementById('hm'), dp = null;
+  function hOpen(){ hm.style.display = 'flex'; } function hClose(){ hm.style.display = 'none'; try{ localStorage.setItem('ttm_pills_help', '1'); }catch(e){} }
+  document.getElementById('help').onclick = hOpen; document.getElementById('hx').onclick = hClose; document.getElementById('hok').onclick = hClose; hm.onclick = function(e){ if(e.target === hm) hClose(); };
+  window.addEventListener('keydown', function(e){ if(e.key === 'Escape') hClose(); });
+  window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); dp = e; document.getElementById('inst').style.display = 'block'; });
+  document.getElementById('inst').onclick = function(){ if(dp){ dp.prompt(); dp = null; this.style.display = 'none'; } };
+  try{ if(!localStorage.getItem('ttm_pills_help') && !window.matchMedia('(display-mode: standalone)').matches) setTimeout(hOpen, 900); }catch(e){}
+  try{ if('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js').catch(function(){}); }catch(e){}
+if(window.ResizeObserver){ var ro = new ResizeObserver(function(){ resize(); }); ro.observe(wrap); } else window.addEventListener('resize', resize); resize(); load(true); setInterval(function(){ load(false); }, 90000);
 })();
 </script>
 </body>

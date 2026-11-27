@@ -46,6 +46,11 @@ def main():
         s = c["s"]
         if not s.isascii() or not s.replace("0", "").replace("1", "").replace("2", "").replace("3", "").replace("4", "").replace("5", "").replace("6", "").replace("7", "").replace("8", "").replace("9", "").isalpha() or s.startswith("PC0"):
             return True
+        nm = (c.get("n") or "").lower()  # tokenised funds / gold / euro / stable and wrapped or staked copies
+        if any(w in nm for w in ("usd", "treasury", "tokenized", "tokenised", "gold", "silver", "euro", "t-bill", "money market", "stablecoin", "wrapped", "staked", "bridged", "fund", "institutional", "heloc", "private credit")):
+            return True
+        if s in ("KAU", "KAG", "A7A5", "OUSG", "USTB", "USTBL", "JAAA", "EURSAFO", "EURCV", "EUTBL", "REUSD", "SAFO", "YLDS", "USDAI", "AUSD", "CRVUSD", "GHO", "NVDAB", "NVDAX", "USX", "OUSD", "APXUSD", "USDGO", "USD0", "CASH", "BUIDL", "SOFID"):
+            return True
         p = c.get("p") or 0  # pegged to a dollar and flat: a stablecoin or tokenised cash fund
         return 0.95 < p < 1.05 and abs(c.get("c24") or 0) < 1 and abs(c.get("c30") or 0) < 5
     top = [c for c in top if not junk(c)]
