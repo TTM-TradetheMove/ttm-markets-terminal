@@ -1,24 +1,27 @@
 {
- "generated_at": "2026-11-27T01:53:33+00:00",
- "error": "liquidity series unavailable (Fed assets 390 rows, Treasury cash 0); kept previous file",
+ "generated_at": "2026-11-27T16:54:03+00:00",
+ "bytes": 38202,
  "log_tail": [
   "nyfed SOMA: 390 rows",
   "nyfed RRP: 1869 rows via =2019-06-01&endDate=2026-11-27&operationTypes=Reverse%20Repo",
   "  fetch failed https://data-api.ecb.europa.eu/service/data/ILM/W.U2.C.T000000.Z5.Z01.E?startPeriod=2019-0 (HTTPError 400) try 1",
+  "fiscaldata TGA: 1742 rows",
   "  fetch failed https://data-api.ecb.europa.eu/service/data/ILM/W.U2.C.T000000.Z5.Z01.E?startPeriod=2019-0 (HTTPError 400) try 2",
   "ecb assets W.U2.C.T000000.Z5.Z01.E: 0 rows (reply starts: '')",
   "ecb assets W.U2.C.T000000.Z5.Z01: 390 rows",
-  "  fetch failed https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/dts/operatin (HTTPError 504) try 1",
-  "  fetch failed https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/dts/operatin (HTTPError 504) try 2",
-  "  fetch failed https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/dts/operatin (HTTPError 504) try 3",
-  "fiscaldata TGA: 0 rows",
   "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=M2SL&cosd=2018-01-01 (TimeoutError ) try 1",
   "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=JPNASSETS&cosd=2019-06-01 (TimeoutError ) try 1",
-  "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=WTREGEN&cosd=2019-06-01 (TimeoutError ) try 1",
   "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=M2SL&cosd=2018-01-01 (TimeoutError ) try 2",
   "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=JPNASSETS&cosd=2019-06-01 (TimeoutError ) try 2",
-  "  fetch failed https://fred.stlouisfed.org/graph/fredgraph.csv?id=WTREGEN&cosd=2019-06-01 (TimeoutError ) try 2",
-  "rows: WALCL=390, WTREGEN=0, RRPONTSYD=1869, ECB=390, BOJ=0, M2=0, EUR=1300, JPY=1300, BTC=3652, SPX=2513",
-  "liquidity series unavailable (Fed assets 390 rows, Treasury cash 0); kept previous file"
- ]
+  "rows: WALCL=390, WTREGEN=1742, RRPONTSYD=1869, ECB=390, BOJ=0, M2=0, EUR=1300, JPY=1300, BTC=3653, SPX=2514"
+ ],
+ "weeks": 359,
+ "last": "2026-11-18",
+ "fed_src": "soma",
+ "rrp_rows": 1869,
+ "have_ecb": true,
+ "have_boj": false,
+ "have_m2": false,
+ "have_btc": true,
+ "have_spx": true
 }
