@@ -511,6 +511,7 @@ select{color-scheme:dark}select option,select optgroup{background:#16161a;color:
 .th-ex{margin:10px 0 6px;padding-top:10px;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;font-size:11px}
 .th-ex-row{display:grid;grid-template-columns:1fr auto;gap:3px 8px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.03)}
 .th-ex-row.open{border-color:rgba(52,211,153,.35)}
+.th-hol{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}.th-hol h3{font-size:14px;margin:0 0 8px;color:var(--gold2,#f2c14e)}.th-hol-row{display:grid;grid-template-columns:96px 1fr;gap:8px;padding:6px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,.05)}.th-hol-row em{font-style:normal;font-weight:800;font-size:11px;letter-spacing:.04em;text-transform:uppercase}.th-hol-row em.c{color:#f87171}.th-hol-row em.e{color:#fbbf24}.th-hol-row small{color:var(--mute)}
 .th-ex-row.brk{border-color:rgba(251,191,36,.35)}
 .th-ex-row .n{font-weight:700;color:var(--text,#e5e7eb)}
 .th-ex-row .s{font-size:9px;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:999px;border:1px solid var(--line);color:var(--mute)}
@@ -1097,6 +1098,7 @@ body.rm-full #rmIn{font-size:17px}
         </div>
       </div>
       <p class="midterm-note">The top box is the session that most recently went live — when New York's core session starts while London is still open, it takes the top spot and reads "Overlap with London"; once London closes it becomes "Core — solo, no overlap". Before that, New York shows "Pre-market" and London stays on top. After the 16:00 ET close it shows "Post-market". The overlap box below counts times when exchanges from two different regions are open at once. On weekends the same session times and overlaps still run — they are just labelled Weekend, because cash markets are shut. Each box also lists its exchanges (ASX and Tokyo, LSE and Xetra, NYSE/Nasdaq) with open hours, Tokyo's lunch break and when they run together. Crypto trades 24/7, but flows and volatility still tend to follow these cash-market sessions.</p>
+      <div class="th-hol" id="thHol"></div>
     </div>
   </div>
 </section>
@@ -3505,6 +3507,29 @@ function deriveCore(now, key){
   }
   return cur;
 }
+// Exchange holidays and early closes (exchange_holidays.json, rebuilt weekly by a GitHub Action)
+let HOL = null;
+const ZONE_EX = {'Australia/Sydney':'asx','Asia/Tokyo':'tse','Asia/Hong_Kong':'hkex','Asia/Singapore':'sgx','Europe/London':'lse','Europe/Berlin':'xet','America/New_York':'nyse'};
+fetch('../exchange_holidays.json?' + Date.now().toString(36).slice(0, 6)).then(r => r.ok ? r.json() : null).then(j => { if(j && j.exchanges){ HOL = j.exchanges; try{ renderHolidays(); }catch(e){} } }).catch(() => {});
+function localISO(now, zone){
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', {timeZone: zone, year:'numeric', month:'2-digit', day:'2-digit'}).formatToParts(now).map(x => [x.type, x.value]));
+  return p.year + '-' + p.month + '-' + p.day;
+}
+function holidayToday(zone, now){ const h = HOL && HOL[ZONE_EX[zone]]; if(!h) return null; const iso = localISO(now, zone); return h.holidays[iso] ? {n: h.holidays[iso]} : (h.early[iso] != null ? {early: h.early[iso]} : null); }
+function renderHolidays(){
+  const hesc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const el = document.getElementById('thHol'); if(!el || !HOL) return;
+  const now = new Date(), lim = new Date(now.getTime() + 75*864e5), t0 = now.toISOString().slice(0, 10), t1 = lim.toISOString().slice(0, 10), by = {};
+  const NM = {}; Object.values(TH_EX).forEach(l => l.forEach(x => { NM[ZONE_EX[x.zone]] = x.n; }));
+  Object.keys(HOL).forEach(k => { const nm = NM[k] || k;
+    Object.keys(HOL[k].holidays).forEach(d => { if(d >= t0 && d <= t1) (by[d] = by[d] || []).push({nm, t: 'closed', n: HOL[k].holidays[d]}); });
+    Object.keys(HOL[k].early).forEach(d => { if(d >= t0 && d <= t1) (by[d] = by[d] || []).push({nm, t: 'early', c: HOL[k].early[d]}); }); });
+  const mm = m => String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0'), days = Object.keys(by).sort();
+  el.innerHTML = '<h3>Upcoming market holidays</h3>' + (days.length ? days.map(d => { const dt = new Date(d + 'T12:00:00Z'), cl = by[d].filter(x => x.t === 'closed'), er = by[d].filter(x => x.t === 'early');
+    const names = [...new Set(cl.map(x => x.n))].join(' / ');
+    return '<div class="th-hol-row"><b>' + dt.toLocaleDateString('en-AU', {weekday:'short', day:'numeric', month:'short', timeZone:'UTC'}) + '</b><span>' + (cl.length ? '<em class="c">Closed</em> ' + hesc(cl.map(x => x.nm).join(', ')) + (names ? ' <small>(' + hesc(names) + ')</small>' : '') : '') + (er.length ? (cl.length ? '<br>' : '') + '<em class="e">Early close</em> ' + hesc(er.map(x => x.nm + ' ' + mm(x.c)).join(', ')) + ' <small>local</small>' : '') + '</span></div>'; }).join('') : '<p class="calendar-note">No market holidays in the next 75 days.</p>') +
+    '<p class="calendar-note" style="margin:8px 0 0">Dates come from each exchange\'s own calendar and are used by the session clocks above, so a closed day shows as a holiday and the overlap skips it. Always confirm with the exchange.</p>';
+}
 function phaseWindows(now, session){
   if(session.derive) return deriveCore(now, session.derive);
   const zone = session.zone;
@@ -3516,11 +3541,21 @@ function phaseWindows(now, session){
     const dt = new Date(Date.UTC(y, m-1, d + off));
     const dow = dt.getUTCDay();
     const yy = dt.getUTCFullYear(), mm = dt.getUTCMonth()+1, dd = dt.getUTCDate();
-    session.phases.forEach(p => out.push({
-      phase: p.name,
-      openUTC:  zonedLocalToUTC(yy, mm, dd, Math.floor(p.open/60),  p.open % 60,  zone),
-      closeUTC: zonedLocalToUTC(yy, mm, dd, Math.floor(p.close/60), p.close % 60, zone),
-    }));
+    const hx = HOL && HOL[ZONE_EX[zone]], iso = yy + '-' + String(mm).padStart(2,'0') + '-' + String(dd).padStart(2,'0');
+    if(hx && hx.holidays[iso]) continue;   // exchange closed all day
+    const E = hx ? hx.early[iso] : null;   // early close, local minutes
+    session.phases.forEach(p => {
+      let o = p.open, c = p.close;
+      if(E != null){
+        if(p.name === 'post'){ o = E; c = E + 240; }
+        else if(p.name !== 'pre'){ if(o >= E) return; c = Math.min(c, E); }
+      }
+      out.push({
+        phase: p.name,
+        openUTC:  zonedLocalToUTC(yy, mm, dd, Math.floor(o/60),  o % 60,  zone),
+        closeUTC: zonedLocalToUTC(yy, mm, dd, Math.floor(c/60), c % 60, zone),
+      });
+    });
   }
   return out;
 }
@@ -3581,10 +3616,11 @@ function renderSessionExchanges(key, now){
     const prev = w.filter(x => x.closeUTC <= now).sort((a,b) => b.closeUTC - a.closeUTC)[0];
     const nxt = w.filter(x => x.openUTC > now).sort((a,b) => a.openUTC - b.openUTC)[0];
     const brk = !cur && ex.segs.length > 1 && prev && nxt && (nxt.openUTC - prev.closeUTC) < 2*3600e3;
-    const state = cur ? 'Open' : brk ? 'Lunch break' : 'Closed';
+    const ht = holidayToday(ex.zone, now), state = cur ? 'Open' : brk ? 'Lunch break' : (ht && ht.n ? 'Holiday' : 'Closed');
+    const early = ht && ht.early != null ? ' · early close ' + mm2(ht.early) : '', hname = ht && ht.n ? ' · ' + ht.n : '';
     const cd = cur ? 'Closes in ' + formatCountdown((cur.closeUTC - now)/1000)
              : nxt ? (brk ? 'Reopens in ' : 'Opens in ') + formatCountdown((nxt.openUTC - now)/1000) : '—';
-    return `<div class="th-ex-row ${cur ? 'open' : brk ? 'brk' : ''}"><span class="n">${ex.n}</span><span class="s">${state}</span>
+    return `<div class="th-ex-row ${cur ? 'open' : brk ? 'brk' : ''}"><span class="n">${ex.n}</span><span class="s">${state}${hname}${early}</span>
       <span class="h">${ex.segs.map(([o,c]) => mm2(o) + '–' + mm2(c)).join(' · ')} ${ex.city}${ex.segs.length > 1 ? ' (lunch break ' + mm2(ex.segs[0][1]) + '–' + mm2(ex.segs[1][0]) + ')' : ''}</span>
       <span class="c">${cd}</span></div>`;
   }).join('');

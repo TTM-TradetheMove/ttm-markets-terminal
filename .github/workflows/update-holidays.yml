@@ -1,0 +1,43 @@
+name: Update exchange holidays
+
+on:
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch: {}
+  push:
+    paths:
+      - scripts/update_holidays.py
+      - .github/workflows/update-holidays.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-holidays
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install exchange_calendars
+      - run: python3 scripts/update_holidays.py
+      - name: Commit and push if changed
+        run: |
+          git config user.name "ttm-holidays-bot"
+          git config user.email "actions@users.noreply.github.com"
+          if git diff --quiet -- exchange_holidays.json && [ -z "$(git ls-files --others --exclude-standard exchange_holidays.json)" ]; then
+            echo "No changes"
+          else
+            git add exchange_holidays.json
+            git commit -m "Auto-update exchange holidays"
+            for i in 1 2 3 4; do
+              git pull --rebase -X theirs origin main && git push && break
+              sleep $((i * 5))
+            done
+          fi

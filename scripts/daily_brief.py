@@ -149,6 +149,36 @@ def build():
         if tm.get("risk"):
             head_bits.append(f"risk {tm['risk']['label'].lower()}")
 
+    # ---- exchange holidays and early closes (from exchange_holidays.json, built by update_holidays.py)
+    hd = load("exchange_holidays.json") or {}
+    if hd.get("exchanges"):
+        ZN = {"asx": ("ASX", "Australia/Sydney"), "tse": ("Tokyo", "Asia/Tokyo"), "hkex": ("Hong Kong", "Asia/Hong_Kong"), "sgx": ("Singapore", "Asia/Singapore"),
+              "lse": ("London", "Europe/London"), "xet": ("Xetra", "Europe/Berlin"), "nyse": ("NYSE / Nasdaq", "America/New_York")}
+        closed, early = [], []
+        for k, (nm, tz) in ZN.items():
+            ex = hd["exchanges"].get(k)
+            if not ex:
+                continue
+            seen = set()
+            for dt in (NOW, NOW + timedelta(hours=24)):
+                iso = dt.astimezone(ZoneInfo(tz)).strftime("%Y-%m-%d")
+                if iso in seen:
+                    continue
+                seen.add(iso)
+                if iso in ex["holidays"]:
+                    closed.append(f"{nm} ({ex['holidays'][iso]})")
+                elif iso in ex.get("early", {}):
+                    m = ex["early"][iso]
+                    early.append(f"{nm} early close {m // 60}:{m % 60:02d} local")
+        lines = []
+        if closed:
+            lines.append("Closed: " + ", ".join(closed))
+        if early:
+            lines.append("Early close: " + ", ".join(early))
+        if lines:
+            lines.append("Thinner liquidity is common around these closes, in crypto too.")
+            S.append({"h": "Market holidays (next 24h)", "lines": lines})
+
     # ---- today's high-impact calendar (next 24h)
     cal = load("calendar_data.json") or {}
     ev = []
