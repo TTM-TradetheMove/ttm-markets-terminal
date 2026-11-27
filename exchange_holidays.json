@@ -4,7 +4,7 @@
   "asx": {
    "holidays": {
     "2026-12-25": "Christmas",
-    "2026-12-28": "Weekend Boxing Day",
+    "2026-12-28": "Boxing Day (observed)",
     "2027-01-01": "New Year's Day",
     "2027-01-26": "Australia Day",
     "2027-03-26": "Good Friday",
@@ -14,6 +14,10 @@
    "early": {
     "2026-12-24": 850,
     "2026-12-31": 850
+   },
+   "early_why": {
+    "2026-12-24": "Christmas Eve",
+    "2026-12-31": "New Year's Eve"
    }
   },
   "tse": {
@@ -21,7 +25,7 @@
     "2026-11-23": "Labor Thanksgiving Day",
     "2026-12-31": "New Year's Holiday (Dec 31)",
     "2027-01-01": "New Year's Day",
-    "2027-01-11": "Coming of Age Day (2000 onwards)",
+    "2027-01-11": "Coming of Age Day",
     "2027-02-11": "National Foundation Day",
     "2027-02-23": "Emperor Naruhito's Birthday",
     "2027-03-22": "Market holiday",
@@ -37,7 +41,8 @@
     "2027-11-03": "Culture Day",
     "2027-11-23": "Labor Thanksgiving Day"
    },
-   "early": {}
+   "early": {},
+   "early_why": {}
   },
   "hkex": {
    "holidays": {
@@ -59,18 +64,24 @@
     "2026-12-24": 720,
     "2026-12-31": 720,
     "2027-02-05": 720
+   },
+   "early_why": {
+    "2026-12-24": "Christmas Eve",
+    "2026-12-31": "New Year's Eve",
+    "2027-02-05": "Day before a market holiday"
    }
   },
   "sgx": {
    "holidays": {
     "2026-12-25": "Market holiday"
    },
-   "early": {}
+   "early": {},
+   "early_why": {}
   },
   "lse": {
    "holidays": {
     "2026-12-25": "Christmas",
-    "2026-12-28": "Weekend Boxing Day",
+    "2026-12-28": "Boxing Day (observed)",
     "2027-01-01": "New Year's Day",
     "2027-03-26": "Good Friday",
     "2027-03-29": "Easter Monday",
@@ -81,6 +92,10 @@
    "early": {
     "2026-12-24": 750,
     "2026-12-31": 750
+   },
+   "early_why": {
+    "2026-12-24": "Christmas Eve",
+    "2026-12-31": "New Year's Eve"
    }
   },
   "xet": {
@@ -94,6 +109,9 @@
    },
    "early": {
     "2026-12-30": 840
+   },
+   "early_why": {
+    "2026-12-30": "Day before New Year's Eve"
    }
   },
   "nyse": {
@@ -114,6 +132,11 @@
     "2026-11-27": 780,
     "2026-12-24": 780,
     "2027-11-26": 780
+   },
+   "early_why": {
+    "2026-11-27": "Day after Thanksgiving",
+    "2026-12-24": "Christmas Eve",
+    "2027-11-26": "Day after Thanksgiving"
    }
   }
  }
