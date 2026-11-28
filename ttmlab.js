@@ -83,7 +83,7 @@ function buckets(R, h){
 /* ---------- line chart ---------- */
 function LC(cv, o){
   const ctx = cv.getContext('2d'), P = {l: 56, r: 12, t: 12, b: 24}; let box = null;
-  const ext = () => { let xmin = Infinity, xmax = -Infinity, ymin = Infinity, ymax = -Infinity; o.series.forEach(s => s.x.forEach((x, i) => { const y = s.y[i]; if(y == null || isNaN(y) || (o.logY && y <= 0)) return; if(o.xMin != null && x < o.xMin) return; if(o.xMax != null && x > o.xMax) return; if(x < xmin) xmin = x; if(x > xmax) xmax = x; if(y < ymin) ymin = y; if(y > ymax) ymax = y; })); if(o.yMin != null) ymin = o.yMin; if(o.yMax != null) ymax = o.yMax; return {xmin, xmax, ymin, ymax}; };
+  const ext = () => { let xmin = Infinity, xmax = -Infinity, ymin = Infinity, ymax = -Infinity; o.series.filter(s => !s.off).forEach(s => s.x.forEach((x, i) => { const y = s.y[i]; if(y == null || isNaN(y) || (o.logY && y <= 0)) return; if(o.xMin != null && x < o.xMin) return; if(o.xMax != null && x > o.xMax) return; if(x < xmin) xmin = x; if(x > xmax) xmax = x; if(y < ymin) ymin = y; if(y > ymax) ymax = y; })); if(o.yMin != null) ymin = o.yMin; if(o.yMax != null) ymax = o.yMax; return {xmin, xmax, ymin, ymax}; };
   function draw(hx){
     const dpr = window.devicePixelRatio || 1, W = cv.clientWidth || 600, H = o.h || 300; cv.style.height = H + 'px'; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
     const e = ext(); if(!isFinite(e.xmin)){ ctx.fillStyle = '#8a8a92'; ctx.font = '13px system-ui'; ctx.fillText('No data', 20, 30); return; }
@@ -101,7 +101,7 @@ function LC(cv, o){
       else { let d = new Date(e.xmin); d = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1); const stepM = sp > 400 ? 3 : 1; let k = 0; for(; d <= e.xmax; k++){ const dd = new Date(d); if(k % stepM === 0) ctx.fillText(MON[dd.getUTCMonth()] + ' ' + String(dd.getUTCFullYear()).slice(2), X(d), H - 7); d = Date.UTC(dd.getUTCFullYear(), dd.getUTCMonth() + 1, 1); } } }
     else { for(let k = 0; k <= 6; k++){ const x = e.xmin + (e.xmax - e.xmin) * k / 6; ctx.fillText((o.fmtX || (q => Math.round(q)))(x), X(x), H - 7); } }
     (o.hl || []).forEach(h => { const y = Y(h.y); ctx.strokeStyle = h.c || '#555'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(P.l, y); ctx.lineTo(W - P.r, y); ctx.stroke(); ctx.setLineDash([]); if(h.t){ ctx.fillStyle = h.c || '#888'; ctx.textAlign = 'left'; ctx.fillText(h.t, P.l + 6, y - 4); ctx.textAlign = 'center'; } });
-    o.series.forEach(s => { ctx.lineWidth = s.w || 1.6; ctx.setLineDash(s.dash || []); let pen = false, px = 0, py = 0;
+    o.series.forEach(s => { if(s.off) return; ctx.lineWidth = s.w || 1.6; ctx.setLineDash(s.dash || []); let pen = false, px = 0, py = 0;
       for(let i = 0; i < s.x.length; i++){ const x = s.x[i], y = s.y[i]; if(y == null || isNaN(y) || (o.logY && y <= 0) || (o.xMin != null && x < o.xMin) || (o.xMax != null && x > o.xMax)){ pen = false; continue; } const cx = X(x), cy = Y(y);
         if(s.by){ if(pen){ ctx.strokeStyle = s.by(i); ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(cx, cy); ctx.stroke(); } }
         else { if(!pen){ ctx.strokeStyle = s.c || GOLD; ctx.beginPath(); ctx.moveTo(cx, cy); pen = true; } else ctx.lineTo(cx, cy); }
@@ -109,15 +109,15 @@ function LC(cv, o){
       if(!s.by && pen) ctx.stroke(); ctx.setLineDash([]); });
     box = {X, Y, e};
     if(hx != null){ const x = X(hx); ctx.strokeStyle = '#ffffff55'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, P.t); ctx.lineTo(x, H - P.b); ctx.stroke();
-      o.series.forEach(s => { const i = near(s.x, hx); if(i < 0 || s.y[i] == null || isNaN(s.y[i])) return; ctx.fillStyle = s.by ? s.by(i) : (s.c || GOLD); ctx.beginPath(); ctx.arc(X(s.x[i]), Y(s.y[i]), 3.5, 0, 6.3); ctx.fill(); }); }
+      o.series.forEach(s => { if(s.off) return; const i = near(s.x, hx); if(i < 0 || s.y[i] == null || isNaN(s.y[i])) return; ctx.fillStyle = s.by ? s.by(i) : (s.c || GOLD); ctx.beginPath(); ctx.arc(X(s.x[i]), Y(s.y[i]), 3.5, 0, 6.3); ctx.fill(); }); }
   }
   const near = (xs, v) => { let lo = 0, hi = xs.length - 1; if(!xs.length) return -1; while(lo < hi){ const m = (lo + hi) >> 1; if(xs[m] < v) lo = m + 1; else hi = m; } if(lo > 0 && Math.abs(xs[lo - 1] - v) < Math.abs(xs[lo] - v)) lo--; return lo; };
   function move(ev){ if(!box || !o.tipEl) return; const r = cv.getBoundingClientRect(), t = ev.touches ? ev.touches[0] : ev, px = t.clientX - r.left, hx = box.e.xmin + (px - P.l) / ((cv.clientWidth - P.l - P.r) || 1) * (box.e.xmax - box.e.xmin);
     if(hx < box.e.xmin || hx > box.e.xmax) return; draw(hx);
-    const head = (o.fmtX2 || o.fmtX || (q => q))(hx), rows = o.series.filter(s => s.name).map(s => { const i = near(s.x, hx), y = s.y[i]; return y == null || isNaN(y) ? '' : '<span style="color:' + (s.c || GOLD) + '">' + esc(s.name) + '</span> <b>' + (s.fmt || o.fmtY || (q => q))(y) + '</b>'; }).filter(Boolean).join(' &nbsp;·&nbsp; ');
+    const head = (o.fmtX2 || o.fmtX || (q => q))(hx), rows = o.series.filter(s => s.name && !s.off).map(s => { const i = near(s.x, hx), y = s.y[i]; return y == null || isNaN(y) ? '' : '<span style="color:' + (s.c || GOLD) + '">' + esc(s.name) + '</span> <b>' + (s.fmt || o.fmtY || (q => q))(y) + '</b>'; }).filter(Boolean).join(' &nbsp;·&nbsp; ');
     o.tipEl.innerHTML = '<b>' + esc(head) + '</b> &nbsp; ' + rows; }
   cv.addEventListener('mousemove', move); cv.addEventListener('touchstart', move, {passive: true}); cv.addEventListener('touchmove', move, {passive: true}); cv.addEventListener('mouseleave', () => draw());
-  window.addEventListener('resize', () => draw()); draw(); return {draw};
+  window.addEventListener('resize', () => draw()); draw(); return {draw, o};
 }
 const cvTip = (box, id, h) => { const w = document.createElement('div'); w.className = 'lb-card'; w.innerHTML = '<h3></h3><p></p><canvas id="' + id + '"></canvas><div class="lb-tip" id="' + id + 'T"></div>'; return w; };
 function card(box, title, sub, id, o){ const w = document.createElement('div'); w.className = 'lb-card'; w.innerHTML = '<h3>' + esc(title) + '</h3><p>' + sub + '</p><canvas></canvas><div class="lb-tip">Hover or tap the chart to read values.</div>'; box.appendChild(w); o.tipEl = w.querySelector('.lb-tip'); return LC(w.querySelector('canvas'), o); }
@@ -143,13 +143,16 @@ async function renderCycle(box){
     + '<div class="lb-st"><small>Past cycles bottomed</small><b>' + dmin + ' to ' + dmax + ' days</b><em>after the top (average ' + davg + ')</em></div>'
     + '<div class="lb-st"><small>Past drawdowns</small><b>' + past.map(p => pct(p.dd)).join(', ') + '</b><em>top to bottom, 2013, 2017, 2021</em></div>';
   box.appendChild(g);
+  const bar = document.createElement('div'); bar.className = 'lb-tabs'; box.appendChild(bar);
   const trace = (c, from, maxD, base) => { const x = [], y = []; for(let i = from; i <= last && (ts[i] - ts[from]) / DAY <= maxD; i++){ x.push((ts[i] - ts[from]) / DAY); y.push(ps[i] / (base || ps[from])); } return {x, y}; };
-  card(box, 'This cycle against the last three, from each top', 'Each line starts at its own cycle top (100%) and shows how far price fell and how long it took. The gold line is the current cycle.', 'co1', {h: 340, logY: true, fmtY: v => Math.round(v * 100) + '%', fmtX: v => Math.round(v) + 'd', fmtX2: v => 'Day ' + Math.round(v), xMin: 0, xMax: 1100,
+  const ch1 = card(box, 'This cycle against the last three, from each top', 'Each line starts at its own cycle top (100%) and shows how far price fell and how long it took. The gold line is the current cycle.', 'co1', {h: 340, logY: true, fmtY: v => Math.round(v * 100) + '%', fmtX: v => Math.round(v) + 'd', fmtX2: v => 'Day ' + Math.round(v), xMin: 0, xMax: 1100,
     series: cy.map(c => { const t = trace(c, c.pk, 1100); return {x: t.x, y: t.y, c: c.c, w: c.n === 'Current cycle' ? 2.6 : 1.4, name: c.n}; }), hl: [{y: 1, c: '#555'}, {y: .5, c: '#444', t: '-50%'}, {y: .2, c: '#444', t: '-80%'}]});
   const hv = [['2012 halving', '2012-11-28', '#8b8b94'], ['2016 halving', '2016-07-09', '#5aa9e6'], ['2020 halving', '2020-05-11', '#b07cf7'], ['2024 halving', '2024-04-20', GOLD]];
   const hd = hv.map(([n, d, c]) => { const i = at(d); const x = [], y = []; for(let k = i; k <= last && (ts[k] - ts[i]) / DAY <= 1500; k++){ x.push((ts[k] - ts[i]) / DAY); y.push(ps[k] / ps[i]); } return {n, c, i, x, y}; });
-  card(box, 'Return since each halving', 'Price as a multiple of the price on halving day. 1x means back to the halving price.', 'co2', {h: 320, logY: true, fmtY: v => (v >= 10 ? Math.round(v) : v.toFixed(1)) + 'x', fmtX: v => Math.round(v) + 'd', fmtX2: v => 'Day ' + Math.round(v), xMin: 0, xMax: 1500,
+  const ch2 = card(box, 'Return since each halving', 'Price as a multiple of the price on halving day. 1x means back to the halving price.', 'co2', {h: 320, logY: true, fmtY: v => (v >= 10 ? Math.round(v) : v.toFixed(1)) + 'x', fmtX: v => Math.round(v) + 'd', fmtX2: v => 'Day ' + Math.round(v), xMin: 0, xMax: 1500,
     series: hd.map(h => ({x: h.x, y: h.y, c: h.c, w: h.n === '2024 halving' ? 2.6 : 1.4, name: h.n})), hl: [{y: 1, c: '#555', t: '1x'}]});
+  bar.innerHTML = '<span style="align-self:center;font-size:12px;color:#8a8a92">Show cycles:</span>';
+  cy.forEach((c, k) => { const b = document.createElement('button'); b.className = 'on'; b.innerHTML = '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:' + c.c + ';margin-right:6px"></span>' + c.n; b.onclick = () => { const off = b.classList.toggle('on') === false; ch1.o.series[k].off = off; ch2.o.series[k].off = off; ch1.draw(); ch2.draw(); }; bar.appendChild(b); });
   const t = document.createElement('div'); t.className = 'lb-card';
   t.innerHTML = '<h3>Cycle tops and bottoms</h3><p>Found from daily closes. The current bottom is the lowest close so far, not a final one.</p><table class="lb-t"><thead><tr><th>Cycle</th><th>Top</th><th>Bottom</th><th>Days top to bottom</th><th>Drop</th></tr></thead><tbody>'
     + cy.map(c => '<tr><td style="color:' + c.c + ';font-weight:700">' + c.n + '</td><td>' + dstr(ts[c.pk]) + '<br><small style="color:#8a8a92">' + usd(ps[c.pk]) + '</small></td><td>' + dstr(ts[c.bt]) + (c.done ? '' : ' (so far)') + '<br><small style="color:#8a8a92">' + usd(ps[c.bt]) + '</small></td><td>' + c.days + '</td><td style="color:#e5534b">' + pct(c.dd) + '</td></tr>').join('')
