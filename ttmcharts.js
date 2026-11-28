@@ -878,7 +878,7 @@ const ACCN = [['all', 'All my portfolios'], ['spot', 'Spot portfolio'], ['lev', 
 const myTrades = () => { let l = []; try{ l = JSON.parse(localStorage.getItem('ttm_rr_saved_v1') || '[]'); }catch(x){} return Array.isArray(l) ? l.filter(x => x && x.snap) : []; };
 const isStkEx = () => !!(VX(S.ex) || (EX[S.ex] && EX[S.ex].stk));
 const audV = () => curOn() || !!(EX[S.ex] && EX[S.ex].aud && !VX(S.ex));
-const trkK = () => { if(!audV()) return 1; if(!FX){ fxLoad().then(() => { try{ paint(); }catch(e){} }); return null; } return FX.r[FX.r.length - 1] || 1; };
+const trkK = () => { if(!audV() || isStkEx()) return 1; if(!FX){ fxLoad().then(() => { try{ paint(); }catch(e){} }); return null; } return FX.r[FX.r.length - 1] || 1; };
 const trkTrades = () => { const A = symOf(S.sym), perp = /perp/.test(String(S.ex)), stk = isStkEx(); return myTrades().filter(x => x.status === 'open' && x.snap && x.snap.asset === A && (stk ? (x.snap.acc === 'tradfi' || x.snap.acc === 'tokenised') : (x.snap.acc !== 'tradfi' && (((x.snap.acc || 'lev') === 'lev' || x.snap.acc === 'coinm') === perp)))); };
 const trkUnits = n => n.units || (n.notional && n.E ? n.notional / n.E : (n.riskUsd && n.SL > 0 && n.SL < 1e11 && n.E !== n.SL ? n.riskUsd / Math.abs(n.E - n.SL) : 0)), pnlTxt = v => (v >= 0 ? '+' : '−') + Math.abs(v).toLocaleString(undefined, {maximumFractionDigits: 2}) + (audV() ? ' AUD' : ' USD');
 const trkLines = () => { const out = [], K = trkK(); if(K == null) return out; const lastP = S.data.length ? S.data[S.data.length - 1].c / K : null; trkTrades().forEach(t => { const n = t.snap, ov = S.trkOv && S.trkOv.id === t.id ? S.trkOv : null, pend = t.fill === 'pending', nm = t.name || n.asset;
