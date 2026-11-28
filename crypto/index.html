@@ -818,7 +818,7 @@ body.rm-full #rmIn{font-size:17px}
 <script>
 (function(){
   var box = document.getElementById('aiRep'); if(!box) return; box.style.display = 'none';
-  var AIADMIN = false; (function chk(n){ if(window.ttmIsAdmin && window.ttmWho && ttmWho().ready && (ttmWho().user || n > 40)){ AIADMIN = !!(ttmIsAdmin() || (window.ttmCharging && ttmCharging() ? ttmCan('c:askai') : ttmWho().team)); box.style.display = AIADMIN ? '' : 'none'; return; } if(n < 80) setTimeout(function(){ chk(n + 1); }, 250); })(0);
+  var AIADMIN = false; (function chk(n){ if(window.ttmIsAdmin && window.ttmWho && ttmWho().ready && (ttmWho().user || n > 40)){ AIADMIN = !!(ttmIsAdmin() || (window.ttmCharging && ttmCharging() ? ttmCan('c:askai') : ttmWho().team)); box.style.display = AIADMIN ? '' : 'none'; if(AIADMIN){ try{ var qs = new URLSearchParams(location.search), ak = (qs.get('ask') || '').replace(/[^A-Za-z0-9.\-]/g, '').slice(0, 20); if(ak){ setTimeout(function(){ var tk0 = document.getElementById('airTok'); if(tk0){ tk0.value = ak; document.getElementById('airT').click(); } }, 700); } }catch(e){} } return; } if(n < 80) setTimeout(function(){ chk(n + 1); }, 250); })(0);
   var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var strip = function(s){ return String(s == null ? '' : s).replace(/<\/?cite[^>]*>/g, ''); };
   var G = '#3fb47a', R = '#e0554d', Y = '#dba118', MU = '#8a8a92';
