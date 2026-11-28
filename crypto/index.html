@@ -810,7 +810,8 @@ body.rm-full #rmIn{font-size:17px}
     if(!b || !b.sections) return;
     var ageH = (Date.now() - Date.parse(b.generated_at)) / 36e5, old = ageH > 36;
     box.innerHTML = '<h3 style="margin:0 0 2px">☀️ ' + esc(b.title) + '</h3><div class="calendar-note" style="margin:0 0 10px">' + esc(b.headline) + (old ? ' · <b style="color:#e0554d">older brief, the next one is written at 7am Melbourne time</b>' : '') + '</div>' +
-      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">' + b.sections.map(function(s){ return '<div><b style="color:var(--gold2)">' + esc(s.h) + '</b><ul style="margin:4px 0 0;padding-left:18px;font-size:13px;line-height:1.55">' + s.lines.map(function(l){ return '<li>' + esc(l) + '</li>'; }).join('') + '</ul></div>'; }).join('') + '</div>';
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px" id="dbGrid">' + b.sections.map(function(s){ return '<div><b style="color:var(--gold2)">' + esc(s.h) + '</b><ul style="margin:4px 0 0;padding-left:18px;font-size:13px;line-height:1.55">' + s.lines.map(function(l){ return '<li>' + esc(l) + '</li>'; }).join('') + '</ul></div>'; }).join('') + '</div>';
+    try{ var g = document.getElementById('dbGrid'), cells = g ? Array.prototype.slice.call(g.children) : [], hd = function(n){ return cells.filter(function(c){ var t = c.querySelector('b'); return t && t.textContent.trim().toLowerCase() === n; })[0]; }, se = hd('sentiment'), de = hd('derivatives'); if(se && de){ de.style.marginTop = '14px'; se.appendChild(de); } }catch(e){}
     box.style.display = ''; var w = document.getElementById('briefWrap'); if(w) w.style.display = '';
   }).catch(function(){});
 })();
@@ -6124,7 +6125,7 @@ fill(); paint();
 <script src="../chartpro.js?v=2"></script>
 <script src="../tfpublish.js?v=1"></script><script src="../tfwatch.js?v=2"></script><script src="../ttmcharts.js?v=94"></script>
 <script src="../education.js?v=2"></script>
-<script src="../ttmind.js?v=37"></script><script src="../ttmmoon.js?v=3"></script>
+<script src="../ttmind.js?v=37"></script><script src="../ttmmoon.js?v=4"></script>
 <script src="../ttmpaper.js?v=15"></script>
 <script src="../accounts.js?v=1795849900"></script>
 <script>
