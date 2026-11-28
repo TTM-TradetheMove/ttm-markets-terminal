@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-28T00:41:02+00:00",
+ "updated": "2026-11-28T08:30:16+00:00",
  "wallets": [
   {
    "id": "wintermute-hl-1",
@@ -8,454 +8,454 @@
    "label": "Wintermute-linked Hyperliquid wallet",
    "source": "https://crypto.news/wintermutes-hyperliquid-shorts-reach-126m/",
    "attribution": "Identified by on-chain researchers (Onchain Lens); not confirmed by Wintermute",
-   "equity": 30777948.999658,
-   "longs": 13283602.591686001,
-   "shorts": 55277375.318295,
+   "equity": 30962302.445712,
+   "longs": 7921393.729241,
+   "shorts": 56730973.455925,
    "focus": [
     {
      "coin": "BTC",
      "side": "long",
-     "notional": 6513275.69256,
-     "entry": 59675.0,
-     "upnl": 30518.440837,
+     "notional": 1349063.04015,
+     "entry": 59678.6,
+     "upnl": -715.400632,
      "lev": 20,
      "liq": null,
-     "change24h": null
+     "change24h": "flipped to long"
     },
     {
      "coin": "ETH",
      "side": "short",
-     "notional": 16073522.05505,
-     "entry": 1694.88,
-     "upnl": 293373.348371,
+     "notional": 16619364.36212,
+     "entry": 1689.04,
+     "upnl": 342951.347667,
      "lev": 15,
-     "liq": "4421.4413656385",
-     "change24h": null
+     "liq": "4322.7691150291",
+     "change24h": "reduced 46%"
     },
     {
      "coin": "XRP",
      "side": "short",
-     "notional": 811663.8024,
-     "entry": 0.94793,
-     "upnl": -1828.111772,
+     "notional": 655175.8875,
+     "entry": 0.947822,
+     "upnl": 4574.984864,
      "lev": 10,
-     "liq": "31.9606945897",
-     "change24h": null
+     "liq": "39.2440535216",
+     "change24h": "reduced 74%"
     },
     {
      "coin": "SOL",
      "side": "short",
-     "notional": 11622827.30472,
-     "entry": 71.552,
-     "upnl": -31739.569226,
+     "notional": 11463100.92535,
+     "entry": 71.5551,
+     "upnl": 62841.32635,
      "lev": 20,
-     "liq": "235.2899235382",
-     "change24h": null
+     "liq": "236.683985872",
+     "change24h": "reduced 27%"
     }
    ],
    "others": [
     {
      "coin": "ZEC",
      "side": "short",
-     "size": 8516.94,
-     "notional": 6282180.1134,
-     "entry": 736.4222,
-     "upnl": -10116.210857,
+     "size": 8475.06,
+     "notional": 6223660.311,
+     "entry": 740.3734,
+     "upnl": 51048.963554,
      "lev": 5,
-     "liq": "3709.3572914139"
+     "liq": "3739.6154218744"
     },
     {
      "coin": "HYPE",
      "side": "short",
-     "size": 63300.49,
-     "notional": 4038444.66102,
-     "entry": 63.6472,
-     "upnl": -9542.898403,
+     "size": 84148.76,
+     "notional": 5369953.1194,
+     "entry": 63.5535,
+     "upnl": -22000.362197,
      "lev": 3,
-     "liq": "465.2511538578"
+     "liq": "366.9520829309"
     },
     {
      "coin": "DOGE",
      "side": "short",
-     "size": 43984865.0,
-     "notional": 2543952.637005,
-     "entry": 0.056699,
-     "upnl": -50046.577555,
+     "size": 43435786.0,
+     "notional": 2468238.53945,
+     "entry": 0.056703,
+     "upnl": -5284.203339,
      "lev": 10,
-     "liq": "0.6371297364"
+     "liq": "0.6471333176"
     },
     {
      "coin": "TRX",
      "side": "long",
-     "size": 6610123.0,
-     "notional": 1986936.87257,
-     "entry": 0.308136,
-     "upnl": -49880.774461,
+     "size": 6628261.0,
+     "notional": 1992322.69138,
+     "entry": 0.308076,
+     "upnl": -49689.847112,
      "lev": 10,
      "liq": null
     },
     {
      "coin": "PUMP",
      "side": "short",
-     "size": 696533132.0,
-     "notional": 1812379.209464,
-     "entry": 0.002548,
-     "upnl": -36963.506018,
+     "size": 690466371.0,
+     "notional": 1783474.636293,
+     "entry": 0.002552,
+     "upnl": -21326.376285,
      "lev": 3,
-     "liq": "0.0392310776"
+     "liq": "0.0397631328"
     },
     {
      "coin": "VVV",
      "side": "short",
-     "size": 43931.89,
-     "notional": 1129682.192216,
-     "entry": 26.3218,
-     "upnl": 26688.224841,
+     "size": 46337.52,
+     "notional": 1238138.5344,
+     "entry": 26.2953,
+     "upnl": -19676.08257,
      "lev": 3,
-     "liq": "555.5343108942"
-    },
-    {
-     "coin": "CASHCAT",
-     "side": "short",
-     "size": 19012411.0,
-     "notional": 852801.695405,
-     "entry": 0.04324,
-     "upnl": -30690.968738,
-     "lev": 1,
-     "liq": "0.0741784989"
+     "liq": "532.2276921034"
     },
     {
      "coin": "XPL",
      "side": "short",
-     "size": 17713077.0,
-     "notional": 830211.91899,
-     "entry": 0.045562,
-     "upnl": -23155.099891,
+     "size": 18205259.0,
+     "notional": 832872.393991,
+     "entry": 0.045565,
+     "upnl": -3336.79916,
      "lev": 5,
-     "liq": "1.4461346698"
+     "liq": "1.415798902"
     },
     {
-     "coin": "TRUMP",
-     "side": "long",
-     "size": 940395.2,
-     "notional": 823315.9976,
-     "entry": 0.87894,
-     "upnl": -3238.220309,
-     "lev": 10,
-     "liq": null
+     "coin": "CASHCAT",
+     "side": "short",
+     "size": 18593084.0,
+     "notional": 803927.765992,
+     "entry": 0.043251,
+     "upnl": 244.706311,
+     "lev": 1,
+     "liq": "0.0741995943"
     },
     {
      "coin": "PAXG",
      "side": "long",
-     "size": 210.612,
-     "notional": 769775.697564,
-     "entry": 3599.254,
-     "upnl": 11729.496779,
+     "size": 205.328,
+     "notional": 749344.536,
+     "entry": 3600.294,
+     "upnl": 10103.227154,
      "lev": 5,
      "liq": null
     },
     {
      "coin": "kPEPE",
      "side": "short",
-     "size": 203987086.0,
-     "notional": 721094.34901,
+     "size": 202832159.0,
+     "notional": 704436.088207,
      "entry": 0.003528,
-     "upnl": -1353.070393,
+     "upnl": 11249.662251,
      "lev": 10,
-     "liq": "0.1288516095"
+     "liq": "0.1302806952"
     },
     {
-     "coin": "LINK",
-     "side": "short",
-     "size": 76136.1,
-     "notional": 713768.32389,
-     "entry": 9.97752,
-     "upnl": 45881.614152,
+     "coin": "TRUMP",
+     "side": "long",
+     "size": 909675.8,
+     "notional": 697875.983486,
+     "entry": 0.86838,
+     "upnl": -92072.11812,
      "lev": 10,
-     "liq": "345.1328781855"
+     "liq": null
     },
     {
      "coin": "VIRTUAL",
      "side": "short",
-     "size": 1924322.7,
-     "notional": 709420.806582,
-     "entry": 0.49232,
-     "upnl": 237971.221145,
+     "size": 1926582.4,
+     "notional": 693646.727296,
+     "entry": 0.4911,
+     "upnl": 252502.849944,
      "lev": 5,
-     "liq": "13.1974106605"
+     "liq": "13.2552099692"
     },
     {
      "coin": "WLD",
      "side": "short",
-     "size": 2839719.9,
-     "notional": 699508.202967,
-     "entry": 0.27173,
-     "upnl": 72140.142194,
+     "size": 2841870.3,
+     "notional": 682048.872,
+     "entry": 0.27169,
+     "upnl": 90060.877479,
      "lev": 10,
-     "liq": "9.2486091298"
+     "liq": "9.2909747033"
+    },
+    {
+     "coin": "LINK",
+     "side": "short",
+     "size": 73186.4,
+     "notional": 671807.24016,
+     "entry": 9.97752,
+     "upnl": 58411.988556,
+     "lev": 10,
+     "liq": "360.6403507241"
     },
     {
      "coin": "TAO",
      "side": "short",
-     "size": 3435.465,
-     "notional": 642260.18175,
-     "entry": 189.226,
-     "upnl": 7819.238092,
+     "size": 3450.464,
+     "notional": 641061.70656,
+     "entry": 189.198,
+     "upnl": 11761.748876,
      "lev": 5,
-     "liq": "7372.7766955308"
-    },
-    {
-     "coin": "LIT",
-     "side": "long",
-     "size": 231909.0,
-     "notional": 621376.9746,
-     "entry": 2.562101,
-     "upnl": 27202.49196,
-     "lev": 3,
-     "liq": null
-    },
-    {
-     "coin": "UNI",
-     "side": "short",
-     "size": 119254.0,
-     "notional": 578465.3778,
-     "entry": 4.84042,
-     "upnl": -1225.925546,
-     "lev": 10,
-     "liq": "219.2624022225"
-    },
-    {
-     "coin": "JUP",
-     "side": "long",
-     "size": 1876972.0,
-     "notional": 466652.77864,
-     "entry": 0.241538,
-     "upnl": 13292.160191,
-     "lev": 5,
-     "liq": null
+     "liq": "7385.8672961897"
     },
     {
      "coin": "NEAR",
      "side": "short",
-     "size": 148856.6,
-     "notional": 449308.76144,
-     "entry": 3.04833,
-     "upnl": 4455.340614,
+     "size": 207393.2,
+     "notional": 627551.08388,
+     "entry": 3.05242,
+     "upnl": 5500.567475,
      "lev": 10,
-     "liq": "174.8302235411"
+     "liq": "127.0616609003"
+    },
+    {
+     "coin": "UNI",
+     "side": "short",
+     "size": 130083.9,
+     "notional": 610301.62524,
+     "entry": 4.82203,
+     "upnl": 16966.992961,
+     "lev": 10,
+     "liq": "202.4482588474"
+    },
+    {
+     "coin": "LIT",
+     "side": "long",
+     "size": 182621.0,
+     "notional": 478762.86602,
+     "entry": 2.564078,
+     "upnl": 10508.25269,
+     "lev": 3,
+     "liq": null
+    },
+    {
+     "coin": "JUP",
+     "side": "long",
+     "size": 1845101.0,
+     "notional": 451570.01874,
+     "entry": 0.241611,
+     "upnl": 5772.260014,
+     "lev": 5,
+     "liq": null
     },
     {
      "coin": "LTC",
      "side": "short",
-     "size": 9718.92,
-     "notional": 440451.73548,
-     "entry": 42.7658,
-     "upnl": -24813.916329,
+     "size": 10032.3,
+     "notional": 441993.0411,
+     "entry": 42.8283,
+     "upnl": -12326.457139,
      "lev": 10,
-     "liq": "2676.8589740117"
+     "liq": "2609.0329102134"
     },
     {
      "coin": "kBONK",
      "side": "short",
-     "size": 197149711.0,
-     "notional": 430180.669402,
-     "entry": 0.00234,
-     "upnl": 31291.098636,
+     "size": 196864575.0,
+     "notional": 413809.33665,
+     "entry": 0.002338,
+     "upnl": 46636.117507,
      "lev": 10,
-     "liq": "0.1319118039"
+     "liq": "0.1328207385"
     },
     {
      "coin": "ARB",
      "side": "long",
-     "size": 3543933.8,
-     "notional": 406914.478916,
+     "size": 3472884.4,
+     "notional": 392297.021824,
      "entry": 0.11303,
-     "upnl": 6339.503865,
+     "upnl": -268.342997,
      "lev": 10,
      "liq": null
     },
     {
      "coin": "CRV",
      "side": "short",
-     "size": 2256340.1,
-     "notional": 401267.523384,
-     "entry": 0.19459,
-     "upnl": 37797.178289,
+     "size": 2273529.0,
+     "notional": 392024.60547,
+     "entry": 0.19414,
+     "upnl": 49370.030554,
      "lev": 10,
-     "liq": "11.5136787704"
-    },
-    {
-     "coin": "TIA",
-     "side": "short",
-     "size": 1023950.2,
-     "notional": 351051.086568,
-     "entry": 0.34375,
-     "upnl": 938.589332,
-     "lev": 5,
-     "liq": "24.4520751059"
-    },
-    {
-     "coin": "ASTER",
-     "side": "short",
-     "size": 689573.0,
-     "notional": 347868.89131,
-     "entry": 0.524473,
-     "upnl": 13793.956727,
-     "lev": 3,
-     "liq": "36.3043869175"
-    },
-    {
-     "coin": "LDO",
-     "side": "short",
-     "size": 1295216.8,
-     "notional": 307937.7942,
-     "entry": 0.29175,
-     "upnl": 69946.395738,
-     "lev": 5,
-     "liq": "19.2976140386"
+     "liq": "11.491783796"
     },
     {
      "coin": "WLFI",
      "side": "long",
-     "size": 8364389.0,
-     "notional": 293046.368615,
-     "entry": 0.03871,
-     "upnl": -30743.820081,
+     "size": 20163607.0,
+     "notional": 387242.072435,
+     "entry": 0.020322,
+     "upnl": -22537.758691,
      "lev": 5,
      "liq": null
     },
     {
+     "coin": "ASTER",
+     "side": "short",
+     "size": 689969.0,
+     "notional": 344315.23007,
+     "entry": 0.524397,
+     "upnl": 17502.471423,
+     "lev": 3,
+     "liq": "36.5058759709"
+    },
+    {
+     "coin": "TIA",
+     "side": "short",
+     "size": 1019703.2,
+     "notional": 343588.99324,
+     "entry": 0.34374,
+     "upnl": 6926.810245,
+     "lev": 5,
+     "liq": "24.7005172691"
+    },
+    {
+     "coin": "LDO",
+     "side": "short",
+     "size": 1266344.9,
+     "notional": 296767.927315,
+     "entry": 0.28975,
+     "upnl": 70157.35208,
+     "lev": 5,
+     "liq": "19.8527079274"
+    },
+    {
      "coin": "POPCAT",
      "side": "short",
-     "size": 10386760.0,
-     "notional": 292532.70864,
-     "entry": 0.026496,
-     "upnl": -17319.855374,
+     "size": 10515007.0,
+     "notional": 288111.1918,
+     "entry": 0.026517,
+     "upnl": -9281.030459,
      "lev": 3,
-     "liq": "2.2690928407"
+     "liq": "2.2550706799"
     },
     {
      "coin": "SUI",
      "side": "long",
-     "size": 353993.5,
-     "notional": 238400.46251,
-     "entry": 0.66523,
-     "upnl": 2913.267179,
+     "size": 395504.3,
+     "notional": 264940.420484,
+     "entry": 0.66552,
+     "upnl": 1723.745465,
      "lev": 10,
      "liq": null
     },
     {
      "coin": "WIF",
      "side": "short",
-     "size": 1555098.0,
-     "notional": 221197.13952,
-     "entry": 0.142637,
-     "upnl": 618.353103,
+     "size": 1549426.0,
+     "notional": 216842.1687,
+     "entry": 0.142602,
+     "upnl": 4110.366037,
      "lev": 5,
-     "liq": "16.0169026313"
+     "liq": "16.1740216547"
     },
     {
      "coin": "FARTCOIN",
      "side": "long",
-     "size": 2683752.5,
-     "notional": 216686.17685,
+     "size": 2670342.5,
+     "notional": 209328.148575,
      "entry": 0.11332,
-     "upnl": -87444.560046,
+     "upnl": -93282.927618,
      "lev": 3,
      "liq": null
-    },
-    {
-     "coin": "AVAX",
-     "side": "short",
-     "size": 28329.37,
-     "notional": 187738.73499,
-     "entry": 6.6749,
-     "upnl": 1358.030002,
-     "lev": 10,
-     "liq": "909.8314637346"
     },
     {
      "coin": "PENGU",
      "side": "short",
-     "size": 40957753.0,
-     "notional": 183040.198157,
-     "entry": 0.004404,
-     "upnl": -2659.755161,
+     "size": 44375455.0,
+     "notional": 192944.47834,
+     "entry": 0.004409,
+     "upnl": 2747.03399,
      "lev": 5,
-     "liq": "0.6072036302"
-    },
-    {
-     "coin": "ENA",
-     "side": "short",
-     "size": 1644489.0,
-     "notional": 171010.41111,
-     "entry": 0.109496,
-     "upnl": 9055.45158,
-     "lev": 5,
-     "liq": "15.6638227609"
-    },
-    {
-     "coin": "SEI",
-     "side": "short",
-     "size": 4214581.0,
-     "notional": 161587.03554,
-     "entry": 0.039559,
-     "upnl": 5137.985552,
-     "lev": 5,
-     "liq": "5.8957801841"
-    },
-    {
-     "coin": "AAVE",
-     "side": "short",
-     "size": 1623.25,
-     "notional": 154797.6651,
-     "entry": 95.7126,
-     "upnl": 567.86725,
-     "lev": 10,
-     "liq": "15859.2382105333"
-    },
-    {
-     "coin": "ADA",
-     "side": "short",
-     "size": 973730.0,
-     "notional": 144452.8455,
-     "entry": 0.151454,
-     "upnl": 3023.016222,
-     "lev": 10,
-     "liq": "26.4278946163"
-    },
-    {
-     "coin": "EIGEN",
-     "side": "short",
-     "size": 1228753.71,
-     "notional": 137128.914036,
-     "entry": 0.1989,
-     "upnl": 107301.449868,
-     "lev": 5,
-     "liq": "20.2024090105"
-    },
-    {
-     "coin": "SNX",
-     "side": "long",
-     "size": 908397.0,
-     "notional": 133924.96971,
-     "entry": 0.16585,
-     "upnl": -16738.137344,
-     "lev": 3,
-     "liq": null
+     "liq": "0.5641982034"
     },
     {
      "coin": "GRAM",
      "side": "short",
-     "size": 132210.0,
-     "notional": 129568.70862,
-     "entry": 0.988641,
-     "upnl": 1139.596298,
+     "size": 175881.0,
+     "notional": 171640.860852,
+     "entry": 0.982899,
+     "upnl": 1232.412999,
      "lev": 5,
-     "liq": "187.7030846168"
+     "liq": "142.2282587009"
+    },
+    {
+     "coin": "ENA",
+     "side": "short",
+     "size": 1670639.0,
+     "notional": 171156.96555,
+     "entry": 0.109379,
+     "upnl": 11576.853154,
+     "lev": 5,
+     "liq": "15.5126724088"
+    },
+    {
+     "coin": "SEI",
+     "side": "short",
+     "size": 4023333.0,
+     "notional": 154757.503845,
+     "entry": 0.039521,
+     "upnl": 4249.5446,
+     "lev": 5,
+     "liq": "6.2133472451"
+    },
+    {
+     "coin": "AVAX",
+     "side": "short",
+     "size": 23433.3,
+     "notional": 152780.42934,
+     "entry": 6.6746,
+     "upnl": 3628.334468,
+     "lev": 10,
+     "liq": "1105.2021815613"
+    },
+    {
+     "coin": "AAVE",
+     "side": "short",
+     "size": 1611.4,
+     "notional": 150852.8224,
+     "entry": 95.5058,
+     "upnl": 3045.317104,
+     "lev": 10,
+     "liq": "16070.928566922"
+    },
+    {
+     "coin": "ADA",
+     "side": "short",
+     "size": 999669.0,
+     "notional": 146401.52505,
+     "entry": 0.151336,
+     "upnl": 4885.003972,
+     "lev": 10,
+     "liq": "25.9010185642"
+    },
+    {
+     "coin": "EIGEN",
+     "side": "short",
+     "size": 1226256.97,
+     "notional": 131945.249972,
+     "entry": 0.1986,
+     "upnl": 111590.859508,
+     "lev": 5,
+     "liq": "20.3673074802"
+    },
+    {
+     "coin": "SNX",
+     "side": "long",
+     "size": 916111.9,
+     "notional": 128512.177332,
+     "entry": 0.1656,
+     "upnl": -23198.074878,
+     "lev": 3,
+     "liq": null
     }
    ],
-   "has24h": false
+   "has24h": true
   }
  ],
  "tracked": 1
