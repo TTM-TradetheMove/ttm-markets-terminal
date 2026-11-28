@@ -170,7 +170,7 @@ push({id: 'moon', name: 'Moon cycle (TTM)', pane: 'overlay', calc: r => { const 
 
 /* 10. TTM dashboard: moon + EMA trend bias */
 push({id: 'dash', name: 'TTM dashboard (moon + EMA bias)', pane: 'overlay', calc: r => { const cl = closes(r), f = emaA(cl, 9), s = emaA(cl, 21), i = r.length - 1; return {bias: f[i] == null || s[i] == null ? '⚪ Neutral' : f[i] > s[i] ? '🟢 Bull trend' : f[i] < s[i] ? '🔴 Bear trend' : '⚪ Neutral', col: f[i] > s[i] ? '#2ecc71' : f[i] < s[i] ? '#ff3b30' : '#8b8f9a'}; },
-  panel: a => { const p = phaseOf(a.d[a.d.length - 1].t), mb = moonBias(p); return {pos: 'br', title: 'TTM INDICATORS', rows: [[['Moon', '#e8e8ea'], [moonState(p) + '  ' + mb[0], mb[1]]], [['EMA', '#e8e8ea'], [a.res.bias, a.res.col]]]}; }});
+  panel: a => { const L = a.d.length, lt = a.d[L - 1].t, st = L > 1 ? lt - a.d[L - 2].t : 0, now = Date.now(), p = phaseOf(st && now >= lt && now < lt + st ? now : lt), mb = moonBias(p); return {pos: 'br', title: 'TTM INDICATORS', rows: [[['Moon', '#e8e8ea'], [moonState(p) + '  ' + mb[0], mb[1]]], [['EMA', '#e8e8ea'], [a.res.bias, a.res.col]]]}; }});
 
 /* 11. Altcoin season index (how many of 19 big coins beat BTC over 90 days, from daily candles on the chosen exchange) */
 const ALTS = ['ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'AVAX', 'DOT', 'POL', 'LINK', 'LTC', 'UNI', 'XLM', 'NEAR', 'APT', 'ATOM', 'S', 'ALGO', 'VET'];
