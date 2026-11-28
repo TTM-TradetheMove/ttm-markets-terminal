@@ -162,7 +162,7 @@ const phaseOf = t => { let k = Math.floor((t / 864e5 + 2440587.5 - 2451550.09766
 const moonId = p => (p < .034 || p > .966) ? 1 : (p > .216 && p < .284) ? 2 : (p > .466 && p < .534) ? 3 : (p > .716 && p < .784) ? 4 : 0;
 const MOON = {1: ['🌑', 'New Moon'], 2: ['🌓', 'First Quarter'], 3: ['🌕', 'Full Moon'], 4: ['🌗', 'Last Quarter']};
 const moonState = p => { const m = moonId(p); return m ? MOON[m][0] + ' ' + MOON[m][1] : p < .5 ? '🌒 Waxing' : '🌘 Waning'; };
-const moonBias = p => { const m = moonId(p); return (m === 1 || m === 3) ? ['⚠️ Reversal zone', '#ff9800'] : p < .5 ? ['🟢 Bull build', '#2ecc71'] : ['🔴 Bear build', '#ff3b30']; };
+const moonBias = p => { const m = moonId(p); return (m === 1 || m === 3) ? ['⚠️ Reversal zone', '#ff9800'] : p >= .5 ? ['🟢 Bull build', '#2ecc71'] : ['🔴 Bear build', '#ff3b30']; };
 window.TTM_MOON = {phaseOf, moonEvents, moonId, moonBias, moonState, MOON};
 push({id: 'moon', name: 'Moon cycle (TTM)', pane: 'overlay', calc: r => { const ev = []; if(r.length < 2) return ev; const st = r[1].t - r[0].t; let j = 0; moonEvents(r[0].t, r[r.length - 1].t + st).forEach(e => { while(j < r.length - 1 && r[j + 1].t <= e.t) j++; ev.push({i: j, m: e.m}); }); return ev; },
   alerts: [{k: '1', name: 'New Moon'}, {k: '2', name: 'First Quarter'}, {k: '3', name: 'Full Moon'}, {k: '4', name: 'Last Quarter'}], alertHits: (r, ev) => ev.map(e => ({i: e.i, k: String(e.m)})),
