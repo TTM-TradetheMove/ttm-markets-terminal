@@ -1,0 +1,48 @@
+name: Update pills data (stocks)
+
+on:
+  schedule:
+    - cron: "6-59/10 * * * 1-5"
+  workflow_dispatch: {}
+  push:
+    paths:
+      - scripts/update_pills_stocks.py
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-pills-stocks
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch stock pills data
+        run: python3 scripts/update_pills_stocks.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "ttm-calendar-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add pills_us.json pills_au.json
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Auto-update stock pills data"
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "Push attempt $i failed, retrying..."
+              sleep 5
+            done
+          fi

@@ -46,6 +46,7 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   <div class="hr"><button class="hbtn" id="help" type="button" aria-label="How to use">ⓘ <span>How to use</span></button><a class="cta" href="../crypto/">Open the TTM Terminal</a></div>
 </header>
 <div class="bar">
+  <span class="chips" id="mk"><button class="chip on" data-m="crypto">Crypto</button><button class="chip" data-m="us">US stocks</button><button class="chip" data-m="au">ASX stocks</button></span>
   <div class="chips" id="tf"></div>
   <span><label class="t" for="sz">Size</label><select id="sz"><option value="p">% move (bigger move = bigger)</option><option value="b">Balanced market cap</option><option value="m">True market cap</option><option value="v">24h volume</option></select></span>
   <span><label class="t" for="sec">Sector</label><select id="sec"><option value="">All sectors</option></select></span>
@@ -86,7 +87,7 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
 </div></div>
 <footer>
   <div><b id="live" style="margin-right:8px">○ delayed</b><span id="upd">Loading the market…</span></div>
-  <div>Prices stream live. Size shows how big the price move is (or market cap, if you change the Size option), colour shows whether it is up or down over the period you pick. Educational only, not financial advice.</div>
+  <div id="ft"><span id="ftl">Prices stream live.</span> Size shows how big the price move is (or market cap, if you change the Size option), colour shows whether it is up or down over the period you pick. Educational only, not financial advice.</div>
   <div class="src" style="margin-top:6px"><a href="../">TTM</a> · <a href="../crypto/">Crypto terminal</a> · <a href="../tradfi/">TradFi terminal</a></div>
 </footer>
 <script>
@@ -95,8 +96,11 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   var TFS = [['5m', '5M'], ['15m', '15M'], ['1h', '1H'], ['4h', '4H'], ['1d', '24H'], ['1w', '1W'], ['1m', '1M']], tf = '1d', sizeBy = 'p', sector = '', query = '';
   var coins = [], B = [], W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2), hover = null, sel = null, raf = 0, calm = 0, drag = null;
   var tfEl = document.getElementById('tf'), view = 'all', shape = 'pill', range = 'top', WL = {}, HID = {};
-  try{ var sv = JSON.parse(localStorage.getItem('ttm_bub_v1') || '{}'); (sv.w || []).forEach(function(x){ WL[x] = 1; }); (sv.h || []).forEach(function(x){ HID[x] = 1; }); }catch(e){}
-  function save(){ try{ localStorage.setItem('ttm_bub_v1', JSON.stringify({w: Object.keys(WL), h: Object.keys(HID)})); }catch(e){} counts(); }
+  var mkt = 'crypto'; try{ var qm = new URLSearchParams(location.search).get('m'); mkt = /^(us|au)$/.test(qm) ? qm : (/^(us|au)$/.test(localStorage.getItem('ttm_pills_mkt')) && !qm ? localStorage.getItem('ttm_pills_mkt') : 'crypto'); }catch(e){}
+  var wlKey = function(){ return mkt === 'crypto' ? 'ttm_bub_v1' : 'ttm_bub_' + mkt; };
+  function loadWL(){ WL = {}; HID = {}; try{ var sv = JSON.parse(localStorage.getItem(wlKey()) || '{}'); (sv.w || []).forEach(function(x){ WL[x] = 1; }); (sv.h || []).forEach(function(x){ HID[x] = 1; }); }catch(e){} }
+  loadWL();
+  function save(){ try{ localStorage.setItem(wlKey(), JSON.stringify({w: Object.keys(WL), h: Object.keys(HID)})); }catch(e){} counts(); }
   function counts(){ document.getElementById('hid').textContent = 'Hidden (' + Object.keys(HID).length + ')'; var n = Object.keys(WL).length; document.getElementById('wn').textContent = n ? '(' + n + ')' : ''; }
   [].forEach.call(document.querySelectorAll('#vw .chip'), function(b){ b.onclick = function(){ view = b.getAttribute('data-v'); [].forEach.call(document.querySelectorAll('#vw .chip'), function(c){ c.classList.toggle('on', c === b); }); rebuild(true); }; });
   [].forEach.call(document.querySelectorAll('#sh .chip'), function(b){ b.onclick = function(){ shape = b.getAttribute('data-s'); [].forEach.call(document.querySelectorAll('#sh .chip'), function(c){ c.classList.toggle('on', c === b); }); rebuild(true); }; });
@@ -181,7 +185,7 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
     });
   }
   var IMG = {};
-  function logo(c){ var im = IMG[c.s]; if(!im){ im = IMG[c.s] = new Image(); im.crossOrigin = 'anonymous'; im.onload = function(){ im.ok = 1; kick(); draw(); }; im.onerror = function(){ im.bad = 1; }; im.src = c.i; } return im.ok ? im : null; }
+  function logo(c){ if(!c.i) return null; var im = IMG[c.s]; if(!im){ im = IMG[c.s] = new Image(); im.crossOrigin = 'anonymous'; im.onload = function(){ im.ok = 1; kick(); draw(); }; im.onerror = function(){ im.bad = 1; }; im.src = c.i; } return im.ok ? im : null; }
   function shade(c){ var m = c.match(/\d+/g); return m ? 'rgb(' + m.map(function(x){ return Math.round(x * 0.62); }).join(',') + ')' : c; }
   function at(x, y){ for(var i = B.length - 1; i >= 0; i--){ var b = B[i]; if(shape === 'pill' ? (Math.abs(x - b.x) <= hw(b) && Math.abs(y - b.y) <= hh(b)) : ((x - b.x) * (x - b.x) + (y - b.y) * (y - b.y) <= b.r * b.r)) return b; } return null; }
   function pos(e){ var r = cv.getBoundingClientRect(), t = (e.changedTouches && e.changedTouches[0]) || (e.touches && e.touches[0]) || e; return [t.clientX - r.left, t.clientY - r.top, t.clientX, t.clientY]; }
@@ -195,14 +199,14 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   setInterval(function(){ if(sizeBy === 'p' && !drag && wsOk && !document.hidden) layout(false); }, 4000);
   cv.addEventListener('touchstart', function(e){ down(e); }, {passive: true}); cv.addEventListener('touchmove', function(e){ if(drag){ var p = pos(e); drag.x = p[0]; drag.y = p[1]; e.preventDefault(); } }, {passive: false}); cv.addEventListener('touchend', up);
   function esc(t){ return String(t == null ? '' : t).replace(/[&<>"]/g, function(c){ return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]; }); }
-  function select(b){ sel = b; draw(); if(!b){ card.style.display = 'none'; card.innerHTML = ''; return; } var c = b.c, wl = !!WL[c.s], cg = c.id ? 'https://www.coingecko.com/en/coins/' + encodeURIComponent(c.id) : 'https://www.coingecko.com/en/search?query=' + encodeURIComponent(c.s);
+  function select(b){ sel = b; draw(); if(!b){ card.style.display = 'none'; card.innerHTML = ''; return; } var c = b.c, wl = !!WL[c.s], cg = mkt !== 'crypto' ? '' : c.id ? 'https://www.coingecko.com/en/coins/' + encodeURIComponent(c.id) : 'https://www.coingecko.com/en/search?query=' + encodeURIComponent(c.s);
         card.innerHTML = '<button class="x" aria-label="Close">×</button><h3>' + esc(c.n || c.s) + ' <small style="color:var(--mute)">' + esc(c.s) + (c.rk != null ? ' · #' + (c.rk + 1) : '') + '</small></h3>' +
       '<div class="price">' + fmtP(c.p) + '</div>' +
       '<div class="tfg">' + TFS.map(function(t){ var v = c.ch ? c.ch[t[0]] : null; return '<div class="' + (v == null ? '' : v >= 0 ? 'up' : 'dn') + (t[0] === tf ? ' cur' : '') + '"><span>' + t[1] + '</span><b>' + pc(v) + '</b></div>'; }).join('') + '</div>' +
-      '<div class="acts"><button class="act' + (wl ? ' on' : '') + '" id="aw">' + (wl ? '★ Saved' : '☆ Save') + '</button><button class="act" id="ah">Hide</button><a class="act" href="' + cg + '" target="_blank" rel="noopener">CoinGecko ↗</a></div>' +
-      '<div class="row"><span>Market cap</span><b>' + (c.m ? fmtB(c.m) : '–') + '</b></div><div class="row"><span>24h volume</span><b>' + fmtB(c.v24 || 0) + '</b></div><div class="row"><span>Sector</span><b>' + esc(c.cat || '–') + '</b></div>' +
-      '<a class="act lens" href="../charts/index.html?sym=' + encodeURIComponent(c.s) + '" target="_blank" rel="noopener">Open ' + esc(c.s) + ' chart in TTM LENS ↗</a>' +
-      '<a class="go" href="../crypto/#rsi">See ' + esc(c.s) + ' RSI and volume in the TTM terminal</a>';
+      '<div class="acts"><button class="act' + (wl ? ' on' : '') + '" id="aw">' + (wl ? '★ Saved' : '☆ Save') + '</button><button class="act" id="ah">Hide</button>' + (cg ? '<a class="act" href="' + cg + '" target="_blank" rel="noopener">CoinGecko ↗</a>' : '') + '</div>' +
+      '<div class="row"><span>Market cap</span><b>' + (c.m ? fmtB(c.m) : '–') + '</b></div><div class="row"><span>' + (mkt === 'crypto' ? '24h volume' : 'Volume traded') + '</span><b>' + fmtB(c.v24 || 0) + '</b></div><div class="row"><span>Sector</span><b>' + esc(c.cat || '–') + '</b></div>' +
+      '<a class="act lens" href="../charts/index.html?sym=' + encodeURIComponent(c.s) + (mkt === 'crypto' ? '' : '&ex=' + (mkt === 'us' ? 'stocks_us' : 'stocks_au')) + '" target="_blank" rel="noopener">Open ' + esc(c.s) + ' chart in TTM LENS ↗</a>' +
+      '' + (mkt === 'crypto' ? '<a class="go" href="../crypto/#rsi">See ' + esc(c.s) + ' RSI and volume in the TTM terminal</a>' : '<a class="go" href="../tradfi/">Open the TTM TradFi terminal</a>');
     card.style.right = b.x < W / 2 ? '12px' : 'auto'; card.style.left = b.x < W / 2 ? 'auto' : '12px'; tip.style.display = 'none'; card.style.display = 'block'; card.querySelector('.x').onclick = function(){ card.removeAttribute('data-chart'); select(null); };
     document.getElementById('aw').onclick = function(){ if(WL[c.s]) delete WL[c.s]; else WL[c.s] = 1; save(); if(view === 'watch' && !WL[c.s]){ select(null); rebuild(true); } else select(b); };
     document.getElementById('ah').onclick = function(){ HID[c.s] = 1; delete WL[c.s]; save(); select(null); rebuild(true); var hp = document.getElementById('hp'); if(hp.style.display === 'block') hidePanel(); };
@@ -210,19 +214,32 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   function rebuild(fresh){ if(fresh){ layout(true); } else { draw(); } if(sel && B.indexOf(sel) < 0) select(null); }
   var live = {}, ws = null, wsOk = false, lastDraw = 0;
   function applyLive(c, t){ c.p = t.last; if(t.open) c.ch['1d'] = (t.last / t.open - 1) * 100; Object.keys(c.ref).forEach(function(k){ c.ch[k] = (t.last / c.ref[k] - 1) * 100; }); }
-  function setStatus(){ var e = document.getElementById('live'); if(e){ e.textContent = wsOk ? '● LIVE' : '○ delayed'; e.style.color = wsOk ? '#3fb97a' : '#9a978f'; } }
+  function setStatus(){ var e = document.getElementById('live'); if(e){ e.textContent = mkt !== 'crypto' ? '○ delayed ~10 min' : wsOk ? '● LIVE' : '○ delayed'; e.style.color = wsOk ? '#3fb97a' : '#9a978f'; } }
   function connect(){
-    if(!window.WebSocket || ws) return;
+    if(mkt !== 'crypto' || !window.WebSocket || ws) return;
     try{ ws = new WebSocket('wss://ws.okx.com:8443/ws/v5/public'); }catch(e){ return; }
     ws.onopen = function(){ var lv = coins.filter(function(c){ return !c.nl; }); for(var i = 0; i < lv.length; i += 60) ws.send(JSON.stringify({op: 'subscribe', args: lv.slice(i, i + 60).map(function(c){ return {channel: 'tickers', instId: c.s + '-USDT'}; })})); };
-    ws.onmessage = function(ev){ var d; try{ d = JSON.parse(ev.data); }catch(e){ return; } if(!d.data || !d.arg) return;
+    ws.onmessage = function(ev){ var d; try{ d = JSON.parse(ev.data); }catch(e){ return; } if(mkt !== 'crypto' || !d.data || !d.arg) return;
       d.data.forEach(function(t){ var s = t.instId.replace('-USDT', ''), last = parseFloat(t.last), open = parseFloat(t.open24h); if(!(last > 0)) return; live[s] = {last: last, open: open > 0 ? open : null};
         for(var i = 0; i < coins.length; i++) if(coins[i].s === s){ applyLive(coins[i], live[s]); break; } });
       if(!wsOk){ wsOk = true; setStatus(); } var n = Date.now(); if(n - lastDraw > 400){ lastDraw = n; if(sel) select(sel); draw(); } };
-    ws.onclose = ws.onerror = function(){ ws = null; wsOk = false; setStatus(); setTimeout(connect, 5000); };
+    ws.onclose = ws.onerror = function(){ ws = null; wsOk = false; setStatus(); if(mkt === 'crypto') setTimeout(connect, 5000); };
     setInterval(function(){ if(ws && ws.readyState === 1) ws.send('ping'); }, 20000);
   }
+  function loadStocks(first){
+    fetch('../pills_' + mkt + '.json?' + Math.floor(Date.now() / 6e4)).then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(j){
+      if(mkt === 'crypto') return;
+      var nc = (j.coins || []).map(function(c){ return {s: c.s, n: c.n || c.s, p: c.p, m: c.m || 0, v24: c.v24, cat: c.cat, ch: c.ch || {}, ref: {}}; }).filter(function(c){ return c.p; });
+      var secs = {}; nc.forEach(function(c){ if(c.cat) secs[c.cat] = 1; }); var se = document.getElementById('sec'); if(se.options.length === 1) Object.keys(secs).sort().forEach(function(s){ var o = document.createElement('option'); o.value = s; o.textContent = s; se.appendChild(o); });
+      var byS = {}; coins.forEach(function(c){ byS[c.s] = 1; }); var same = nc.length === coins.length && nc.every(function(c){ return byS[c.s]; });
+      nc.sort(function(a, b){ return (b.m || b.v24 || 0) - (a.m || a.v24 || 0); }); nc.forEach(function(c, i){ c.rk = i; });
+      coins = nc; if(first || !same) layout(true); else { var map = {}; nc.forEach(function(c){ map[c.s] = c; }); B.forEach(function(b){ b.c = map[b.c.s] || b.c; }); draw(); }
+      var t0 = j.generated_at ? new Date(j.generated_at) : null; document.getElementById('upd').textContent = nc.length + ' ' + (mkt === 'us' ? 'US' : 'ASX') + ' stocks · prices delayed about 15 to 20 minutes · updated ' + (t0 ? t0.toLocaleString() : 'recently') + (nc.length ? '' : ' · markets may be closed');
+      setStatus();
+    }).catch(function(){ if(mkt !== 'crypto') document.getElementById('upd').textContent = 'The stock data has not been built yet. It appears after the first data update (about 10 minutes after launch). Try again soon.'; });
+  }
   function load(first){
+    if(mkt !== 'crypto') return loadStocks(first);
     Promise.all([fetch('../bubbles.json?' + Math.floor(Date.now() / 6e4)).then(function(r){ if(!r.ok) throw 0; return r.json(); }).catch(function(){ return fetch('../rsi_heatmap.json?' + Math.floor(Date.now() / 6e4)).then(function(r){ return r.json(); }); }), fetch('../top_coins.json?' + Math.floor(Date.now() / 6e5)).then(function(r){ return r.json(); }).catch(function(){ return {coins: []}; })]).then(function(r){
       var meta = {}; (r[1].coins || []).forEach(function(c){ meta[c.s] = c; });
       var nc = (r[0].coins || []).map(function(c){ var m = meta[c.s] || {}; var ch = c.ch || {'1d': c.c}, ref = {}; Object.keys(ch).forEach(function(k){ if(ch[k] != null && k !== '1d') ref[k] = c.p / (1 + ch[k] / 100); }); var o = {id: m.id, nl: c.nl, s: c.s, n: c.n || m.n || c.s, p: c.p, i: c.i || m.i || ('https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/' + c.s.toLowerCase() + '.png'), m: c.m || m.m || 0, v24: c.v24, cat: c.cat, ch: ch, ref: ref}; if(live[c.s]) applyLive(o, live[c.s]); return o; }).filter(function(c){ return c.p; });
@@ -243,6 +260,9 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   document.getElementById('inst').onclick = function(){ if(dp){ dp.prompt(); dp = null; this.style.display = 'none'; } };
   try{ if(!localStorage.getItem('ttm_pills_help') && !window.matchMedia('(display-mode: standalone)').matches) setTimeout(hOpen, 900); }catch(e){}
   try{ if('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js').catch(function(){}); }catch(e){}
+[].forEach.call(document.querySelectorAll('#mk .chip'), function(b){ b.onclick = function(){ var m = b.getAttribute('data-m'); if(m === mkt) return; mkt = m; try{ localStorage.setItem('ttm_pills_mkt', m); }catch(e){} syncMk(); select(null); coins = []; B = []; view = 'all'; range = 'top'; [].forEach.call(document.querySelectorAll('#vw .chip'), function(c){ c.classList.toggle('on', c.getAttribute('data-v') === 'all'); }); [].forEach.call(document.querySelectorAll('#rg .chip'), function(c){ c.classList.toggle('on', c.getAttribute('data-g') === 'top'); }); var se = document.getElementById('sec'); while(se.options.length > 1) se.remove(1); se.value = ''; var qq = document.getElementById('q'); qq.value = ''; loadWL(); counts(); draw(); load(true); if(m === 'crypto') connect(); }; });
+  function syncMk(){ [].forEach.call(document.querySelectorAll('#mk .chip'), function(c){ c.classList.toggle('on', c.getAttribute('data-m') === mkt); }); document.getElementById('q').placeholder = mkt === 'crypto' ? 'Find a coin' : 'Find a stock'; document.getElementById('ftl').textContent = mkt === 'crypto' ? 'Prices stream live.' : 'Stock prices are delayed and refresh about every 10 minutes while the market is open. Moves outside trading hours show the last session.'; setStatus(); }
+  syncMk(); counts();
 if(window.ResizeObserver){ var ro = new ResizeObserver(function(){ resize(); }); ro.observe(wrap); } else window.addEventListener('resize', resize); resize(); load(true); setInterval(function(){ load(false); }, 90000);
 })();
 </script>
