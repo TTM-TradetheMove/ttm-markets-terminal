@@ -148,12 +148,13 @@ function moonPhaseJD(k, ph){ // Meeus ch.49, ph: 0 new, .25 FQ, .5 full, .75 LQ
   const A = [299.77 + 0.107408 * K - 0.009173 * T * T, 251.88 + 0.016321 * K, 251.83 + 26.651886 * K, 349.42 + 36.412478 * K, 84.66 + 18.206239 * K, 141.74 + 53.303771 * K, 207.14 + 2.453732 * K, 154.84 + 7.30686 * K, 34.52 + 27.261239 * K, 207.19 + 0.121824 * K, 291.34 + 1.844379 * K, 161.72 + 24.198154 * K, 239.56 + 25.513099 * K, 331.55 + 3.592518 * K],
     Cf = [0.000325, 0.000165, 0.000164, 0.000126, 0.00011, 0.000062, 0.00006, 0.000056, 0.000047, 0.000042, 0.000040, 0.000037, 0.000035, 0.000023];
   A.forEach((a, i) => { c += Cf[i] * sn(a); });
+  const f180 = ((F % 180) + 180) % 180; moonPhaseJD.dn = Math.min(f180, 180 - f180);   // degrees from the moon's node: small means an eclipse
   return J + c;
 }
 const jdMs = jd => (jd - 2440587.5) * 864e5;
 function moonEvents(t0, t1){ // exact instants between t0 and t1 (ms): [{t, m}] m: 1 new, 2 FQ, 3 full, 4 LQ
   const out = [], k0 = Math.floor((t0 / 864e5 + 2440587.5 - 2451550.09766) / 29.530588861) - 2, k1 = Math.ceil((t1 / 864e5 + 2440587.5 - 2451550.09766) / 29.530588861) + 1;
-  for(let k = k0; k <= k1; k++) [[0, 1], [.25, 2], [.5, 3], [.75, 4]].forEach(([ph, m]) => { const t = jdMs(moonPhaseJD(k, ph)); if(t >= t0 && t <= t1) out.push({t, m}); });
+  for(let k = k0; k <= k1; k++) [[0, 1], [.25, 2], [.5, 3], [.75, 4]].forEach(([ph, m]) => { const t = jdMs(moonPhaseJD(k, ph)), dn = moonPhaseJD.dn; if(t >= t0 && t <= t1) out.push({t, m, ecl: m === 1 && dn < 15.4 ? 's' : m === 3 && dn < 9.9 ? 'l' : ''}); });
   return out.sort((a, b) => a.t - b.t);
 }
 const nmCache = {}, newMoonMs = k => nmCache[k] || (nmCache[k] = jdMs(moonPhaseJD(k, 0)));
@@ -164,9 +165,9 @@ const MOON = {1: ['🌑', 'New Moon'], 2: ['🌓', 'First Quarter'], 3: ['🌕',
 const moonState = p => { const m = moonId(p); return m ? MOON[m][0] + ' ' + MOON[m][1] : p < .5 ? '🌒 Waxing' : '🌘 Waning'; };
 const moonBias = p => { const m = moonId(p); return (m === 1 || m === 3) ? ['⚠️ Reversal zone', '#ff9800'] : p >= .5 ? ['🟢 Bull build', '#2ecc71'] : ['🔴 Bear build', '#ff3b30']; };
 window.TTM_MOON = {phaseOf, moonEvents, moonId, moonBias, moonState, MOON};
-push({id: 'moon', name: 'Moon cycle (TTM)', pane: 'overlay', calc: r => { const ev = []; if(r.length < 2) return ev; const st = r[1].t - r[0].t; let j = 0; moonEvents(r[0].t, r[r.length - 1].t + st).forEach(e => { while(j < r.length - 1 && r[j + 1].t <= e.t) j++; ev.push({i: j, m: e.m}); }); return ev; },
+push({id: 'moon', name: 'Moon cycle (TTM)', pane: 'overlay', calc: r => { const ev = []; if(r.length < 2) return ev; const st = r[1].t - r[0].t; let j = 0; moonEvents(r[0].t, r[r.length - 1].t + st).forEach(e => { while(j < r.length - 1 && r[j + 1].t <= e.t) j++; ev.push({i: j, m: e.m, x: e.ecl}); }); return ev; },
   alerts: [{k: '1', name: 'New Moon'}, {k: '2', name: 'First Quarter'}, {k: '3', name: 'Full Moon'}, {k: '4', name: 'Last Quarter'}], alertHits: (r, ev) => ev.map(e => ({i: e.i, k: String(e.m)})),
-  over: a => { const {c, X, Y, d, i0, i1} = a; (a.res || []).forEach(e => { if(e.i < i0 || e.i > i1) return; const up = e.m >= 3, r = d[e.i], x = X(e.i), y = up ? Y(r.h) - 24 : Y(r.l) + 32; c.font = '30px system-ui,sans-serif'; c.textAlign = 'center'; c.fillText(MOON[e.m][0], x, y); c.font = '700 14px system-ui,sans-serif'; c.fillStyle = '#e8e8ea'; c.fillText(MOON[e.m][1], x, up ? y - 25 : y + 25); c.font = '11px system-ui,sans-serif'; }); }});
+  over: a => { const {c, X, Y, d, i0, i1} = a; (a.res || []).forEach(e => { if(e.i < i0 || e.i > i1) return; const up = e.m >= 3, r = d[e.i], x = X(e.i), y = up ? Y(r.h) - 24 : Y(r.l) + 32; c.font = '30px system-ui,sans-serif'; c.textAlign = 'center'; c.fillText(MOON[e.m][0], x, y); c.font = '700 14px system-ui,sans-serif'; c.fillStyle = '#e8e8ea'; c.fillText(MOON[e.m][1], x, up ? y - 25 : y + 25); if(e.x){ c.font = '700 13px system-ui,sans-serif'; c.fillStyle = e.x === 's' ? '#e8b038' : '#ff7a3d'; c.fillText((e.x === 's' ? '☀ Solar' : '🌘 Lunar') + ' eclipse', x, up ? y - 43 : y + 44); c.fillStyle = '#e8e8ea'; } c.font = '11px system-ui,sans-serif'; }); }});
 
 /* 10. TTM dashboard: moon + EMA trend bias */
 push({id: 'dash', name: 'TTM dashboard (moon + EMA bias)', pane: 'overlay', calc: r => { const cl = closes(r), f = emaA(cl, 9), s = emaA(cl, 21), i = r.length - 1; return {bias: f[i] == null || s[i] == null ? '⚪ Neutral' : f[i] > s[i] ? '🟢 Bull trend' : f[i] < s[i] ? '🔴 Bear trend' : '⚪ Neutral', col: f[i] > s[i] ? '#2ecc71' : f[i] < s[i] ? '#ff3b30' : '#8b8f9a'}; },
