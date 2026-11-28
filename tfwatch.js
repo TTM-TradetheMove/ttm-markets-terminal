@@ -16,6 +16,7 @@ let cfg = null; const quotes = {};
 async function quote(m){ try{ cfg = cfg || await (await fetch('../ttm_config.json')).json(); const r = await fetch(cfg.supabase_url + '/functions/v1/stock-live?m=' + m, {headers: {apikey: cfg.supabase_anon_key || ''}}); if(!r.ok) return null; const j = await r.json(); return j && j.q ? j.q : null; }catch(e){ return null; } }
 let busy = false;
 async function check(){ if(busy || document.hidden || !admin()) return; busy = true; try{
+  try{ if(window.ttmSync && ttmSync.pull) await ttmSync.pull(); }catch(e){}
   let L = rd(); const W = L.filter(x => x.status === 'open' && isTf(x) && x.s && x.s.mk && (x.fill === 'pending' || (x.snap.tps || []).some(t => t && t.P > 0 && !t.hit)));
   if(!W.length) return; const mk = {}; W.forEach(x => mk[x.s.mk] = 1); for(const m of Object.keys(mk)) quotes[m] = await quote(m);
   let ch = false; L = rd();
