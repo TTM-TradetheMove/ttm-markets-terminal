@@ -146,7 +146,7 @@ header.site{
   animation:ticker-scroll 70s linear infinite;
 }
 .ticker-track span{margin:0 18px;color:var(--mute)}
-.ticker-track span b{color:var(--gold2);font-weight:600}
+.ticker-track span b{color:var(--gold2);font-weight:600}.ticker-track em{font-style:normal;font-weight:700;margin-left:4px}.ticker-track em.tk-up{color:#3fb97a}.ticker-track em.tk-dn{color:#e5534b}
 @keyframes ticker-scroll{
   0%{transform:translateX(0)}
   100%{transform:translateX(-50%)}
@@ -2630,8 +2630,14 @@ const SERIES = [
 
 // ---- Ticker strip ----
 const tickerTrack = document.getElementById('tickerTrack');
-const tickerText = ASSETS.map(a => `<span><b>${a.ticker}</b> ${a.name}</span>`).join('');
-tickerTrack.innerHTML = tickerText + tickerText; // doubled for seamless loop
+let tickChg = {};
+function tickerRender(){
+  const one = ASSETS.map(a => { const c = tickChg[a.ticker]; return `<span><b>${a.ticker}</b> ${a.name}${c == null ? '' : ` <em class="tk-${c >= 0 ? 'up' : 'dn'}">${c >= 0 ? '+' : ''}${c.toFixed(1)}%</em>`}</span>`; }).join('');
+  tickerTrack.innerHTML = one + one; // doubled for seamless loop
+}
+tickerRender();
+async function tickerLoad(){ try{ const r = await fetch('https://api.bitget.com/api/v2/spot/market/tickers', {cache: 'no-store'}); if(!r.ok) return; const d = await r.json(), m = {}; (d.data || []).forEach(t => { if(!t.symbol || !t.symbol.endsWith('USDT')) return; const o = +t.open || +t.openUtc, l = +t.lastPr; m[t.symbol.slice(0, -4)] = o > 0 && l > 0 ? (l / o - 1) * 100 : (t.change24h != null ? +t.change24h * 100 : null); }); tickChg = m; tickerRender(); }catch(e){} }
+tickerLoad(); setInterval(tickerLoad, 60000);
 
 // ---- Asset select ----
 const assetSelect = document.getElementById('assetSelect');
