@@ -1198,9 +1198,11 @@ function chatUi(){
 }
 const css5 = document.createElement('style');
 const cssM = document.createElement('style');
-cssM.textContent = '@media(max-width:640px){header.top .inner,.site-inner{flex-wrap:wrap;gap:8px 8px;padding:10px 12px}header.top .brandname,.site-inner .brandname{display:none}header.top img.logo,.site-inner img.logo{height:46px;margin-right:auto}'
-  + 'header.top .inner>.acct-btn,header.top .inner>a,header.top .inner>button,.site-inner>.acct-btn,.site-inner>.tg-btn,.site-inner>#ttmCommBtn,.site-inner>button,.site-inner>.hdr{flex:1 1 calc(33% - 8px);max-width:none!important;min-width:0;text-align:center;justify-content:center;font-size:13px;padding:9px 6px;overflow:visible;text-overflow:clip;margin:0!important}'
-  + 'header.top .inner>.acct-btn#ttmShopBtn{flex-basis:calc(50% - 8px)}header.top .inner>img.logo,.site-inner>img.logo{flex:0 0 auto}.site-inner>.back-link{flex:0 0 auto}}';
+cssM.textContent = '@media(max-width:640px){header.top .inner,.site-inner{flex-wrap:wrap;gap:8px;padding:10px 12px;align-items:center}header.top .brandname,.site-inner .brandname{display:none}'
+  + 'header.top img.logo,.site-inner img.logo{height:38px;flex:0 0 auto}header.top .inner>img.logo{margin-right:auto}.site-inner>img.logo{margin:0 auto}'
+  + '.site-inner>.back-link{flex:0 0 auto;color:#f5f3ee;border-color:#e8b038;background:#1a1a1d;font-size:13px;font-weight:700;padding:7px 11px}'
+  + '.eye-btn{flex:0 0 auto!important;width:38px;height:38px;padding:0!important;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;margin:0!important}'
+  + 'header.top .inner>.acct-btn,header.top .inner>a.acct-btn,.site-inner>.acct-btn,.site-inner>.tg-btn,.site-inner>#ttmCommBtn,.site-inner>.hdr,header.top .inner>#ttmCommBtn{flex:1 1 calc(25% - 8px);max-width:none!important;min-width:0;text-align:center;justify-content:center;font-size:12px;padding:7px 4px;overflow:visible;text-overflow:clip;margin:0!important;line-height:1.3}}';
 document.head.appendChild(cssM);
 css5.textContent = `#ttmCommBtn{text-decoration:none;font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap}#ttmCommBtn i{font-style:normal;background:#e0554d;color:#fff;border-radius:999px;padding:1px 7px;margin-left:8px;font-size:12px}#ttmCommBtn.hdr{display:inline-flex;align-items:center;border:1px solid var(--gold,#e8b038);color:#0b0b0c;border-radius:999px;padding:7px 14px;margin-right:8px;background:var(--gold,#e8b038)}#ttmCommBtn.hdr:hover{background:var(--gold2,#e8b038)}#ttmCommBtn.fab{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:2600;background:var(--gold,#e8b038);color:#111;border-radius:999px;padding:11px 16px;box-shadow:0 6px 22px rgba(0,0,0,.5);font-size:13.5px}`;
 document.head.appendChild(css5);
