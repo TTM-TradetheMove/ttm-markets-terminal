@@ -163,6 +163,7 @@ const moonId = p => (p < .034 || p > .966) ? 1 : (p > .216 && p < .284) ? 2 : (p
 const MOON = {1: ['🌑', 'New Moon'], 2: ['🌓', 'First Quarter'], 3: ['🌕', 'Full Moon'], 4: ['🌗', 'Last Quarter']};
 const moonState = p => { const m = moonId(p); return m ? MOON[m][0] + ' ' + MOON[m][1] : p < .5 ? '🌒 Waxing' : '🌘 Waning'; };
 const moonBias = p => { const m = moonId(p); return (m === 1 || m === 3) ? ['⚠️ Reversal zone', '#ff9800'] : p < .5 ? ['🟢 Bull build', '#2ecc71'] : ['🔴 Bear build', '#ff3b30']; };
+window.TTM_MOON = {phaseOf, moonEvents, moonId, moonBias, moonState, MOON};
 push({id: 'moon', name: 'Moon cycle (TTM)', pane: 'overlay', calc: r => { const ev = []; if(r.length < 2) return ev; const st = r[1].t - r[0].t; let j = 0; moonEvents(r[0].t, r[r.length - 1].t + st).forEach(e => { while(j < r.length - 1 && r[j + 1].t <= e.t) j++; ev.push({i: j, m: e.m}); }); return ev; },
   alerts: [{k: '1', name: 'New Moon'}, {k: '2', name: 'First Quarter'}, {k: '3', name: 'Full Moon'}, {k: '4', name: 'Last Quarter'}], alertHits: (r, ev) => ev.map(e => ({i: e.i, k: String(e.m)})),
   over: a => { const {c, X, Y, d, i0, i1} = a; (a.res || []).forEach(e => { if(e.i < i0 || e.i > i1) return; const up = e.m >= 3, r = d[e.i], x = X(e.i), y = up ? Y(r.h) - 24 : Y(r.l) + 32; c.font = '30px system-ui,sans-serif'; c.textAlign = 'center'; c.fillText(MOON[e.m][0], x, y); c.font = '700 14px system-ui,sans-serif'; c.fillStyle = '#e8e8ea'; c.fillText(MOON[e.m][1], x, up ? y - 25 : y + 25); c.font = '11px system-ui,sans-serif'; }); }});
