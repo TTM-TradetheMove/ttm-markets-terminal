@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stock ticker list for TTM LENS -> stock_list.json  {asof, us:[[sym,name,mcap]], au:[[code,name,mcap]]}
+"""Stock ticker list for TTM LENS -> stock_list.json  {asof, us:[[sym,name,mcap,sector]], au:[[code,name,mcap,sector]]}
 US comes from screener_us.json (rebuilt nightly by the screener job). ASX comes from the ASX company directory (markitdigital).
 If the ASX download fails, the last good ASX list is kept."""
 import csv, io, json, os, re, time, urllib.request
@@ -19,7 +19,7 @@ try:
     for r in sorted(rows, key=lambda r: -(r.get("mc") or 0))[:3000]:
         s = (r.get("s") or "").upper().replace("/", "-").replace(".", "-")
         if s and s not in seen and re.fullmatch(r"[A-Z0-9\-]{1,10}", s):
-            seen.add(s); us.append([s, clean(r.get("n")), int(r.get("mc") or 0)])
+            seen.add(s); us.append([s, clean(r.get("n")), int(r.get("mc") or 0), (r.get("sec") or "").strip()])
 except Exception as e:
     print("US list failed:", e); us = old.get("us", [])
 au = []
@@ -31,7 +31,8 @@ try:
         if re.fullmatch(r"[A-Z0-9]{2,5}", code):
             try: mc = int(float(r.get("Market Cap") or 0))
             except Exception: mc = 0
-            au.append([code, clean((r.get("Company name") or "").title()), mc])
+            ik = next((k for k in r if k and "industry" in k.lower()), None)
+            au.append([code, clean((r.get("Company name") or "").title()), mc, ((r.get(ik) if ik else "") or "").strip().title().replace(" And ", " & ")])
     au.sort(key=lambda x: -x[2])
 except Exception as e:
     print("ASX list failed:", e); au = old.get("au", [])
