@@ -6,17 +6,17 @@ const CORS = {"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers"
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 const SITE = Deno.env.get("SITE_URL") ? Deno.env.get("SITE_URL")!.replace(/\/?$/, "/") : "https://ttm.markets/";
 const TTL = 45000, UNI_TTL = 600000, MAX = 250;
-const cache: Record<string, {t: number, body: string}> = {}, uni: Record<string, {t: number, s: string[]}> = {}, busy: Record<string, Promise<string> | undefined> = {};
+const cache: Record<string, {t: number, body: string}> = {}, uni: Record<string, {t: number, s: string[], y: Record<string, string>}> = {}, busy: Record<string, Promise<string> | undefined> = {};
 const r2 = (x: number, d = 2) => Math.round(x * 10 ** d) / 10 ** d;
 const pc = (a: number, b: number | null | undefined) => (b && b > 0) ? r2((a / b - 1) * 100, 2) : null;
 
 async function universe(m: string): Promise<string[]> {
   const u = uni[m]; if (u && Date.now() - u.t < UNI_TTL) return u.s;
-  try { const r = await fetch(SITE + `pills_${m}.json?_=${Math.floor(Date.now() / 600000)}`); const j = await r.json(); const s = (j.coins || []).slice(0, MAX).map((c: any) => String(c.s)); if (s.length) { uni[m] = {t: Date.now(), s}; return s; } } catch (_e) { /* fall through */ }
+  try { const r = await fetch(SITE + `pills_${m}.json?_=${Math.floor(Date.now() / 600000)}`); const j = await r.json(); const s = (j.coins || []).slice(0, MAX).map((c: any) => String(c.s)), y: Record<string, string> = {}; (j.coins || []).forEach((c: any) => { if (c.y) y[String(c.s)] = String(c.y); }); if (s.length) { uni[m] = {t: Date.now(), s, y}; return s; } } catch (_e) { /* fall through */ }
   return u ? u.s : [];
 }
 async function one(code: string, m: string): Promise<[string, (number | null)[]] | null> {
-  const sym = m === "au" ? code + ".AX" : code;
+  const sym = m === "cx" ? (uni.cx?.y[code] || code) : m === "au" ? code + ".AX" : code;
   for (const host of ["query1", "query2"]) {
     try {
       const x = await fetch(`https://${host}.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?range=1d&interval=1m&includePrePost=false`, {headers: {"User-Agent": UA, "Accept": "application/json"}});
@@ -39,7 +39,7 @@ async function build(m: string): Promise<string> {
 }
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, {headers: CORS});
-  const m = new URL(req.url).searchParams.get("m") === "au" ? "au" : "us";
+  const m0 = new URL(req.url).searchParams.get("m"), m = m0 === "au" ? "au" : m0 === "cx" ? "cx" : "us";
   const c = cache[m]; if (c && Date.now() - c.t < TTL) return new Response(c.body, {headers: {...CORS, "Content-Type": "application/json", "Cache-Control": "public, max-age=30"}});
   const p = busy[m] || (busy[m] = build(m).finally(() => { busy[m] = undefined; }));
   const body = await p; if (!body.includes('"error"')) cache[m] = {t: Date.now(), body};

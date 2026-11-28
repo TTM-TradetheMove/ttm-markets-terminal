@@ -46,7 +46,7 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   <div class="hr"><button class="hbtn" id="help" type="button" aria-label="How to use">ⓘ <span>How to use</span></button><a class="cta" href="../crypto/">Open the TTM Terminal</a></div>
 </header>
 <div class="bar">
-  <span class="chips" id="mk"><button class="chip on" data-m="crypto">Crypto</button><button class="chip" data-m="us">US stocks</button><button class="chip" data-m="au">ASX stocks</button></span>
+  <span class="chips" id="mk"><button class="chip on" data-m="crypto">Crypto</button><button class="chip" data-m="us">US stocks</button><button class="chip" data-m="au">ASX stocks</button><button class="chip" data-m="cx">Commodities &amp; indices</button></span>
   <div class="chips" id="tf"></div>
   <span><label class="t" for="sz">Size</label><select id="sz"><option value="p">% move (bigger move = bigger)</option><option value="b">Balanced market cap</option><option value="m">True market cap</option><option value="v">24h volume</option></select></span>
   <span><label class="t" for="sec">Sector</label><select id="sec"><option value="">All sectors</option></select></span>
@@ -96,7 +96,7 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   var TFS = [['5m', '5M'], ['15m', '15M'], ['1h', '1H'], ['4h', '4H'], ['1d', '24H'], ['1w', '1W'], ['1m', '1M']], tf = '1d', sizeBy = 'p', sector = '', query = '';
   var coins = [], B = [], W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2), hover = null, sel = null, raf = 0, calm = 0, drag = null;
   var tfEl = document.getElementById('tf'), view = 'all', shape = 'pill', range = 'top', WL = {}, HID = {};
-  var mkt = 'crypto'; try{ var qm = new URLSearchParams(location.search).get('m'); mkt = /^(us|au)$/.test(qm) ? qm : (/^(us|au)$/.test(localStorage.getItem('ttm_pills_mkt')) && !qm ? localStorage.getItem('ttm_pills_mkt') : 'crypto'); }catch(e){}
+  var mkt = 'crypto'; try{ var qm = new URLSearchParams(location.search).get('m'); mkt = /^(us|au|cx)$/.test(qm) ? qm : (/^(us|au|cx)$/.test(localStorage.getItem('ttm_pills_mkt')) && !qm ? localStorage.getItem('ttm_pills_mkt') : 'crypto'); }catch(e){}
   var wlKey = function(){ return mkt === 'crypto' ? 'ttm_bub_v1' : 'ttm_bub_' + mkt; };
   function loadWL(){ WL = {}; HID = {}; try{ var sv = JSON.parse(localStorage.getItem(wlKey()) || '{}'); (sv.w || []).forEach(function(x){ WL[x] = 1; }); (sv.h || []).forEach(function(x){ HID[x] = 1; }); }catch(e){} }
   loadWL();
@@ -204,8 +204,8 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
       '<div class="price">' + fmtP(c.p) + '</div>' +
       '<div class="tfg">' + TFS.map(function(t){ var v = c.ch ? c.ch[t[0]] : null; return '<div class="' + (v == null ? '' : v >= 0 ? 'up' : 'dn') + (t[0] === tf ? ' cur' : '') + '"><span>' + t[1] + '</span><b>' + pc(v) + '</b></div>'; }).join('') + '</div>' +
       '<div class="acts"><button class="act' + (wl ? ' on' : '') + '" id="aw">' + (wl ? '★ Saved' : '☆ Save') + '</button><button class="act" id="ah">Hide</button>' + (cg ? '<a class="act" href="' + cg + '" target="_blank" rel="noopener">CoinGecko ↗</a>' : '') + '</div>' +
-      '<div class="row"><span>Market cap</span><b>' + (c.m ? fmtB(c.m) : '–') + '</b></div><div class="row"><span>' + (mkt === 'crypto' ? '24h volume' : 'Volume traded') + '</span><b>' + fmtB(c.v24 || 0) + '</b></div><div class="row"><span>Sector</span><b>' + esc(c.cat || '–') + '</b></div>' +
-      '<a class="act lens" href="../charts/index.html?sym=' + encodeURIComponent(c.s) + (mkt === 'crypto' ? '' : '&ex=' + (mkt === 'us' ? 'stocks_us' : 'stocks_au')) + '" target="_blank" rel="noopener">Open ' + esc(c.s) + ' chart in TTM LENS ↗</a>' +
+      (mkt === 'cx' ? '' : '<div class="row"><span>Market cap</span><b>' + (c.m ? fmtB(c.m) : '–') + '</b></div>') + '<div class="row"><span>' + (mkt === 'crypto' ? '24h volume' : 'Volume traded') + '</span><b>' + fmtB(c.v24 || 0) + '</b></div><div class="row"><span>' + (mkt === 'cx' ? 'Group' : 'Sector') + '</span><b>' + esc(c.cat || '–') + '</b></div>' +
+      (mkt === 'cx' ? '' : '<a class="act lens" href="../charts/index.html?sym=' + encodeURIComponent(c.s) + (mkt === 'crypto' ? '' : '&ex=' + (mkt === 'us' ? 'stocks_us' : 'stocks_au')) + '" target="_blank" rel="noopener">Open ' + esc(c.s) + ' chart in TTM LENS ↗</a>') +
       '' + (mkt === 'crypto' ? '<a class="go" href="../crypto/#rsi">See ' + esc(c.s) + ' RSI and volume in the TTM terminal</a>' : '<a class="go" href="../tradfi/">Open the TTM TradFi terminal</a>');
     card.style.right = b.x < W / 2 ? '12px' : 'auto'; card.style.left = b.x < W / 2 ? 'auto' : '12px'; tip.style.display = 'none'; card.style.display = 'block'; card.querySelector('.x').onclick = function(){ card.removeAttribute('data-chart'); select(null); };
     document.getElementById('aw').onclick = function(){ if(WL[c.s]) delete WL[c.s]; else WL[c.s] = 1; save(); if(view === 'watch' && !WL[c.s]){ select(null); rebuild(true); } else select(b); };
@@ -214,7 +214,7 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   function rebuild(fresh){ if(fresh){ layout(true); } else { draw(); } if(sel && B.indexOf(sel) < 0) select(null); }
   var live = {}, ws = null, wsOk = false, lastDraw = 0;
   function applyLive(c, t){ c.p = t.last; if(t.open) c.ch['1d'] = (t.last / t.open - 1) * 100; Object.keys(c.ref).forEach(function(k){ c.ch[k] = (t.last / c.ref[k] - 1) * 100; }); }
-  function setStatus(){ var e = document.getElementById('live'); if(e){ e.textContent = mkt === 'au' ? (liveOk ? '◐ ASX · 20 min delay' : '○ delayed') : mkt === 'us' ? (liveOk ? '● near-live' : '○ delayed ~10 min') : wsOk ? '● LIVE' : '○ delayed'; e.style.color = (mkt === 'crypto' ? wsOk : (liveOk && mkt === 'us')) ? '#3fb97a' : liveOk ? '#dba118' : '#9a978f'; } }
+  function setStatus(){ var e = document.getElementById('live'); if(e){ e.textContent = mkt === 'au' ? (liveOk ? '◐ ASX · 20 min delay' : '○ delayed') : mkt === 'cx' ? (liveOk ? '◐ ~15 min delay' : '○ delayed') : mkt === 'us' ? (liveOk ? '● near-live' : '○ delayed ~10 min') : wsOk ? '● LIVE' : '○ delayed'; e.style.color = (mkt === 'crypto' ? wsOk : (liveOk && mkt === 'us')) ? '#3fb97a' : liveOk ? '#dba118' : '#9a978f'; } }
   function connect(){
     if(mkt !== 'crypto' || !window.WebSocket || ws) return;
     try{ ws = new WebSocket('wss://ws.okx.com:8443/ws/v5/public'); }catch(e){ return; }
@@ -246,7 +246,7 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
       var byS = {}; coins.forEach(function(c){ byS[c.s] = 1; }); var same = nc.length === coins.length && nc.every(function(c){ return byS[c.s]; });
       nc.sort(function(a, b){ return (b.m || b.v24 || 0) - (a.m || a.v24 || 0); }); nc.forEach(function(c, i){ c.rk = i; });
       coins = nc; if(first || !same) layout(true); else { var map = {}; nc.forEach(function(c){ map[c.s] = c; }); B.forEach(function(b){ b.c = map[b.c.s] || b.c; }); draw(); }
-      var t0 = j.generated_at ? new Date(j.generated_at) : null; document.getElementById('upd').textContent = nc.length + ' ' + (mkt === 'us' ? 'US' : 'ASX') + ' stocks · US prices refresh about every 30 seconds, ASX prices are delayed 20 minutes by the exchange · reference data ' + (t0 ? t0.toLocaleString() : 'recently') + (nc.length ? '' : ' · markets may be closed');
+      var t0 = j.generated_at ? new Date(j.generated_at) : null; document.getElementById('upd').textContent = nc.length + ' ' + (mkt === 'cx' ? 'commodities and indices · prices are delayed about 15 minutes, refreshed every 30 seconds · reference data ' : (mkt === 'us' ? 'US' : 'ASX') + ' stocks · US prices refresh about every 30 seconds, ASX prices are delayed 20 minutes by the exchange · reference data ') + (t0 ? t0.toLocaleString() : 'recently') + (nc.length ? '' : ' · markets may be closed');
       setStatus(); startLive();
     }).catch(function(){ if(mkt !== 'crypto') document.getElementById('upd').textContent = 'The stock data has not been built yet. It appears after the first data update (about 10 minutes after launch). Try again soon.'; });
   }
@@ -273,7 +273,7 @@ footer{padding:14px 18px 26px;color:var(--mute);font-size:12px;line-height:1.6}
   try{ if(!localStorage.getItem('ttm_pills_help') && !window.matchMedia('(display-mode: standalone)').matches) setTimeout(hOpen, 900); }catch(e){}
   try{ if('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js').catch(function(){}); }catch(e){}
 [].forEach.call(document.querySelectorAll('#mk .chip'), function(b){ b.onclick = function(){ var m = b.getAttribute('data-m'); if(m === mkt) return; mkt = m; liveOk = false; try{ localStorage.setItem('ttm_pills_mkt', m); }catch(e){} syncMk(); if(m !== 'crypto') setTimeout(pollLive, 4000); select(null); coins = []; B = []; view = 'all'; range = 'top'; [].forEach.call(document.querySelectorAll('#vw .chip'), function(c){ c.classList.toggle('on', c.getAttribute('data-v') === 'all'); }); [].forEach.call(document.querySelectorAll('#rg .chip'), function(c){ c.classList.toggle('on', c.getAttribute('data-g') === 'top'); }); var se = document.getElementById('sec'); while(se.options.length > 1) se.remove(1); se.value = ''; var qq = document.getElementById('q'); qq.value = ''; loadWL(); counts(); draw(); load(true); if(m === 'crypto') connect(); }; });
-  function syncMk(){ [].forEach.call(document.querySelectorAll('#mk .chip'), function(c){ c.classList.toggle('on', c.getAttribute('data-m') === mkt); }); document.getElementById('q').placeholder = mkt === 'crypto' ? 'Find a coin' : 'Find a stock'; document.getElementById('ftl').textContent = mkt === 'crypto' ? 'Prices stream live.' : 'US prices refresh about every 30 seconds; ASX prices are delayed about 20 minutes by the exchange. Moves outside trading hours show the last session.'; setStatus(); }
+  function syncMk(){ [].forEach.call(document.querySelectorAll('#mk .chip'), function(c){ c.classList.toggle('on', c.getAttribute('data-m') === mkt); }); document.getElementById('q').placeholder = mkt === 'crypto' ? 'Find a coin' : mkt === 'cx' ? 'Find gold, oil, an index…' : 'Find a stock'; document.getElementById('ftl').textContent = mkt === 'crypto' ? 'Prices stream live.' : mkt === 'cx' ? 'Futures and index prices are delayed about 15 minutes and refresh every 30 seconds. Moves outside trading hours show the last session.' : 'US prices refresh about every 30 seconds; ASX prices are delayed about 20 minutes by the exchange. Moves outside trading hours show the last session.'; setStatus(); }
   syncMk(); counts();
 if(window.ResizeObserver){ var ro = new ResizeObserver(function(){ resize(); }); ro.observe(wrap); } else window.addEventListener('resize', resize); resize(); load(true); setInterval(function(){ load(false); }, 90000);
 })();

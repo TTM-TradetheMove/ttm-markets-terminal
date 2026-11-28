@@ -10,6 +10,15 @@ from tf_common import getj, log, now_iso, ROOT
 import urllib.parse
 
 N = {"us": 250, "au": 250}
+# Commodities and indices: (Yahoo symbol, short code, name, group). List order sets bubble size (first = biggest).
+CX = [("^GSPC", "SPX", "S&P 500", "Index"), ("^IXIC", "NASDAQ", "Nasdaq Composite", "Index"), ("^DJI", "DOW", "Dow Jones", "Index"), ("^RUT", "RUT", "Russell 2000", "Index"),
+      ("^AXJO", "ASX200", "ASX 200", "Index"), ("^FTSE", "FTSE", "FTSE 100", "Index"), ("^GDAXI", "DAX", "DAX 40", "Index"), ("^N225", "N225", "Nikkei 225", "Index"),
+      ("^HSI", "HSI", "Hang Seng", "Index"), ("000001.SS", "SSE", "Shanghai Composite", "Index"), ("^STOXX50E", "SX5E", "Euro Stoxx 50", "Index"), ("^VIX", "VIX", "Volatility (VIX)", "Index"),
+      ("DX-Y.NYB", "DXY", "US Dollar Index", "Currency"), ("AUDUSD=X", "AUDUSD", "AUD / USD", "Currency"),
+      ("GC=F", "GOLD", "Gold", "Metals"), ("SI=F", "SILVER", "Silver", "Metals"), ("HG=F", "COPPER", "Copper", "Metals"), ("PL=F", "PLAT", "Platinum", "Metals"), ("PA=F", "PALL", "Palladium", "Metals"),
+      ("CL=F", "WTI", "Crude Oil (WTI)", "Energy"), ("BZ=F", "BRENT", "Brent Crude", "Energy"), ("NG=F", "NATGAS", "Natural Gas", "Energy"),
+      ("ZW=F", "WHEAT", "Wheat", "Agriculture"), ("ZC=F", "CORN", "Corn", "Agriculture"), ("ZS=F", "SOY", "Soybeans", "Agriculture"), ("KC=F", "COFFEE", "Coffee", "Agriculture"),
+      ("SB=F", "SUGAR", "Sugar", "Agriculture"), ("CC=F", "COCOA", "Cocoa", "Agriculture"), ("CT=F", "COTTON", "Cotton", "Agriculture")]
 Q = "https://{h}.finance.yahoo.com/v8/finance/chart/{s}?range={r}&interval={i}&includePrePost=false"
 
 
@@ -61,7 +70,10 @@ def one(item):
                 if len(cs) > back:
                     ch[k] = pct(px, cs[-1 - back])
         vol = ds[-1][2]
-        return {"s": code, "n": name, "p": round(px, 4), "m": mc, "v24": int(vol * px) if vol else 0, "cat": sec or "", "ch": ch}
+        o = {"s": code, "n": name, "p": round(px, 4), "m": mc, "v24": int(vol * px) if vol else 0, "cat": sec or "", "ch": ch}
+        if mkt == "cx":
+            o["y"] = sym
+        return o
     except Exception as e:  # noqa
         log(f"  {sym}: {type(e).__name__} {e}")
         return None
@@ -83,14 +95,24 @@ def build(mkt, lst):
     return out[: N[mkt]]
 
 
+def build_cx():
+    items = [("cx", y, code, name, (len(CX) - i) * 1e9, grp) for i, (y, code, name, grp) in enumerate(CX)]
+    out = []
+    with ThreadPoolExecutor(8) as ex:
+        for r in ex.map(one, items):
+            if r:
+                out.append(r)
+    return out
+
+
 def main():
     sl = json.load(open(os.path.join(ROOT, "stock_list.json")))
-    for mkt in ("us", "au"):
+    for mkt in ("us", "au", "cx"):
         t0 = time.time()
-        coins = build(mkt, sl.get(mkt) or [])
+        coins = build_cx() if mkt == "cx" else build(mkt, sl.get(mkt) or [])
         path = os.path.join(ROOT, f"pills_{mkt}.json")
-        log(f"{mkt}: {len(coins)} stocks in {time.time() - t0:.0f}s")
-        if len(coins) < 40:
+        log(f"{mkt}: {len(coins)} items in {time.time() - t0:.0f}s")
+        if len(coins) < (10 if mkt == "cx" else 40):
             log(f"{mkt}: too few stocks, keeping the last good file")
             continue
         json.dump({"generated_at": now_iso(), "source": "Yahoo Finance (delayed)", "coins": coins}, open(path, "w"), separators=(",", ":"))
