@@ -28,6 +28,7 @@ async function check(){ if(busy || document.hidden || !admin()) return; busy = t
       else { const part = JSON.parse(JSON.stringify(x)); part.id = uid(); part.name = x.name + ' (' + Math.round(f * 1000) / 10 + '% closed)'; part.status = 'closed'; ['units', 'notional', 'margin', 'riskUsd'].forEach(k => { part.snap[k] = sn[k] * f; sn[k] = sn[k] * (1 - f); }); part.res = {pnl: Math.round(pnl * 100) / 100, r: part.snap.margin ? pnl / part.snap.margin : 0, how: 'Part take profit at ' + tp.P, closed: Date.now()}; L.splice(L.indexOf(x) + 1, 0, part); x.booked = Math.round(((x.booked || 0) + pnl) * 100) / 100; ev('part', x, 'tfpart:' + part.id, Math.round(f * 1000) / 10); } }); });
   if(ch){ wr(L); try{ if(window.tfPanelRefresh) tfPanelRefresh(); else if(window.tfPublish) tfPublish(); }catch(e){} try{ if(window.ttmLensRefresh) ttmLensRefresh(); }catch(e){} }
 }catch(e){} busy = false; }
-window.tfWatch = {check, buy: x => ev('buy', x, 'tfopen:' + x.id)};
+function cbuy(x){ try{ if(!admin() || !window.ttmFeedPost || !x || !x.snap || x.snap.acc !== 'spot' || x.snap.mkt !== 'spot' || x.snap.long === false || x.quiet) return; ttmFeedPost({ukey: 'open:' + x.id, kind: 'buy', asset: x.snap.asset, title: 'TTM opened a Spot Long position on ' + x.snap.asset, body: '', pct: null}); }catch(e){} }
+window.tfWatch = {check, buy: x => { if(x && x.snap && x.snap.acc === 'spot') cbuy(x); else ev('buy', x, 'tfopen:' + x.id); }};
 setTimeout(check, 9000); setInterval(check, 45000);
 })();
