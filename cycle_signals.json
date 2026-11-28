@@ -1,13 +1,13 @@
 {
- "generated_at": "2026-11-27T23:43:56.991072+00:00",
- "as_of": "2026-11-27",
- "price": 59811.96,
- "realized": 53253.22,
+ "generated_at": "2026-11-28T12:20:40.083086+00:00",
+ "as_of": "2026-11-28",
+ "price": 59600.89,
+ "realized": 53180.6,
  "cycle_high": {
   "price": 124824.45,
   "date": "2025-10-06"
  },
- "months_since_halving": 31.2,
+ "months_since_halving": 31.3,
  "low": {
   "n": 3,
   "of": 6,
@@ -18,14 +18,14 @@
     "k": "lr",
     "name": "Below the −1σ regression band",
     "on": true,
-    "detail": "price $59,812 vs band $69,339",
+    "detail": "price $59,601 vs band $69,369",
     "short": "Regression Band"
    },
    {
     "k": "rp",
     "name": "Below realised price",
     "on": false,
-    "detail": "price $59,812 vs realised $53,253",
+    "detail": "price $59,601 vs realised $53,181",
     "short": "Realised Price"
    },
    {
@@ -39,7 +39,7 @@
     "k": "rk",
     "name": "TTM Bitcoin Risk below 0.20",
     "on": true,
-    "detail": "score 0.14",
+    "detail": "score 0.13",
     "short": "TTM Bitcoin Risk"
    },
    {
@@ -53,7 +53,7 @@
     "k": "bp",
     "name": "Price within 10% of, or below, the Balanced Price",
     "on": false,
-    "detail": "price $59,812 vs Balanced $38,648",
+    "detail": "price $59,601 vs Balanced $38,578",
     "short": "Balanced Price"
    }
   ]
@@ -68,7 +68,7 @@
     "k": "lr",
     "name": "Above the +1σ regression band",
     "on": false,
-    "detail": "price $59,812 vs band $267,227",
+    "detail": "price $59,601 vs band $267,359",
     "short": "Regression Band"
    },
    {
@@ -89,14 +89,14 @@
     "k": "rk",
     "name": "TTM Bitcoin Risk above 0.80",
     "on": false,
-    "detail": "score 0.14",
+    "detail": "score 0.13",
     "short": "TTM Bitcoin Risk"
    },
    {
     "k": "tm",
     "name": "12 to 18 months after a halving",
     "on": false,
-    "detail": "31.2 months since the halving",
+    "detail": "31.3 months since the halving",
     "short": "31 months after halving"
    },
    {
@@ -6674,7 +6674,7 @@
   "rates": {
    "low": {
     "Regression Band": [
-     144,
+     145,
      1772
     ],
     "Puell Multiple": [
@@ -6686,7 +6686,7 @@
      1547
     ],
     "Cycle timing": [
-     83,
+     84,
      1675
     ],
     "Balanced Price": [
