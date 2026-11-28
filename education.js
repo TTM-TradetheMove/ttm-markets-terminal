@@ -2,7 +2,7 @@
 (function(){
   var box = document.getElementById('eduBox'); if(!box) return;
   var TIERS = {free: 0, premium: 1, pro: 2}, TN = {free: 'Free', premium: 'Premium', pro: 'Pro'};
-  var L = [], cat = 'All', admin = false, editId = null, loaded = false, seen = {};
+  var L = [], view = 'lib', cat = 'All', admin = false, editId = null, loaded = false, seen = {};
   try{ seen = JSON.parse(localStorage.getItem('ttm_edu_seen') || '{}') || {}; }catch(_){ seen = {}; }
   var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); };
   var api = function(p, o){ return window.ttmApi ? window.ttmApi(p, o) : Promise.resolve({ok: false}); };
@@ -20,6 +20,12 @@
     '#eduBox .ed-ok{position:absolute;top:8px;left:8px;font-size:11px;font-weight:800;color:#3fb97a}' +
     '#eduBox .ed-bd{padding:12px 14px 14px;display:flex;flex-direction:column;gap:5px;flex:1}#eduBox .ed-bd b{font-size:15px;line-height:1.3}' +
     '#eduBox .ed-bd small{color:var(--mute,#8a8a90);font-size:12px}#eduBox .ed-bd p{margin:0;font-size:13px;color:var(--mute,#8a8a90);line-height:1.5}' +
+    '#eduBox .lp-bar{height:10px;border-radius:99px;background:#26262c;overflow:hidden;margin:8px 0 14px}#eduBox .lp-bar i{display:block;height:100%;background:linear-gradient(90deg,#e8b038,#3fb97a)}' +
+    '#eduBox .lp-st{margin:20px 0 6px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--gold2,#e8b038)}' +
+    '#eduBox .lp-step{display:flex;gap:12px;align-items:flex-start;padding:0 0 14px;position:relative;cursor:pointer}#eduBox .lp-step:before{content:"";position:absolute;left:15px;top:32px;bottom:0;width:2px;background:#2a2a31}#eduBox .lp-step:last-child:before{display:none}' +
+    '#eduBox .lp-n{flex:none;width:32px;height:32px;border-radius:50%;border:2px solid #3a3a42;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;background:#101013;z-index:1}' +
+    '#eduBox .lp-step.done .lp-n{background:#3fb97a;border-color:#3fb97a;color:#0b0b0c}#eduBox .lp-step.next .lp-n{border-color:var(--gold2,#e8b038);color:var(--gold2,#e8b038);box-shadow:0 0 0 4px rgba(232,176,56,.18)}' +
+    '#eduBox .lp-c{flex:1;background:var(--card,#16161a);border:1px solid var(--line,#2a2a2f);border-radius:12px;padding:10px 13px}#eduBox .lp-step.next .lp-c{border-color:rgba(232,176,56,.6)}#eduBox .lp-step:hover .lp-c{border-color:rgba(232,176,56,.6)}#eduBox .lp-c b{font-size:14.5px}#eduBox .lp-c small{color:var(--mute,#8a8a90);font-size:12px}#eduBox .lp-c p{margin:4px 0 0;font-size:12.5px;color:var(--mute,#8a8a90)}' +
     '#eduModal{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;padding:14px}' +
     '#eduModal .ed-in{width:min(960px,100%);background:#101013;border:1px solid rgba(232,176,56,.45);border-radius:14px;padding:12px 12px 14px}' +
     '#eduModal .ed-vid{position:relative;padding-top:56.25%;background:#000;border-radius:10px;overflow:hidden}#eduModal iframe{position:absolute;inset:0;width:100%;height:100%;border:0}' +
@@ -45,7 +51,8 @@
   function render(){
     var t = tier(), cats = ['All'].concat(L.map(function(x){ return x.category; }).filter(function(c, i, a){ return a.indexOf(c) === i; }));
     var vis = L.filter(function(x){ return (admin || x.published) && (cat === 'All' || x.category === cat); }), done = L.filter(function(x){ return seen[x.id] && x.published; }).length, total = L.filter(function(x){ return x.published; }).length;
-    var h = '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px"><div class="filter-row" id="edCats">' + cats.map(function(c){ return '<button class="filter-chip' + (c === cat ? ' active' : '') + '" data-cat="' + esc(c) + '">' + esc(c) + '</button>'; }).join('') + '</div>' +
+    if(view === 'path'){ box.innerHTML = viewBar() + pathHtml() + (admin ? adminHtml() : ''); wire(); if(admin) adminList(); return; }
+    var h = viewBar() + '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px"><div class="filter-row" id="edCats">' + cats.map(function(c){ return '<button class="filter-chip' + (c === cat ? ' active' : '') + '" data-cat="' + esc(c) + '">' + esc(c) + '</button>'; }).join('') + '</div>' +
       (total ? '<span class="calendar-note" style="margin:0">' + done + ' of ' + total + ' watched</span>' : '') + '</div>';
     h += vis.length ? '<div class="ed-grid">' + vis.map(function(x){ var need = TIERS[x.min_tier] || 0, locked = t < need;
       return '<div class="ed-card ' + esc(x.min_tier) + '" data-id="' + x.id + '"><div class="ed-th">' + (locked ? '🔒' : '▶️') + '<span class="ed-tier">' + TN[x.min_tier] + '</span>' + (seen[x.id] ? '<span class="ed-ok">✓ Watched</span>' : '') + (x.published ? '' : '<span class="ed-ok" style="color:#e0554d">Hidden</span>') + '</div>' +
@@ -54,6 +61,18 @@
     if(admin) h += adminHtml();
     box.innerHTML = h; wire(); if(admin) adminList();
   }
+
+  function viewBar(){ return '<div class="filter-row" style="margin-bottom:14px"><button class="filter-chip' + (view === 'lib' ? ' active' : '') + '" data-view="lib">All lessons</button><button class="filter-chip' + (view === 'path' ? ' active' : '') + '" data-view="path">🧭 Learning Path</button></div>'; }
+  function ordered(){ return L.filter(function(x){ return x.published; }).sort(function(a, b){ return (a.sort - b.sort) || (a.id - b.id); }); }
+  function nextAfter(id){ var o = ordered(), i = o.findIndex(function(z){ return String(z.id) === String(id); }), k; for(k = i + 1; k < o.length; k++) if(!seen[o[k].id]) return o[k]; for(k = 0; k < i; k++) if(!seen[o[k].id]) return o[k]; return null; }
+  function pathHtml(){
+    var o = ordered(); if(!o.length) return '<div class="rr-card" style="text-align:center;padding:26px 14px"><h3 style="margin:0 0 6px">Lessons are on the way</h3><p style="color:var(--mute);margin:0">Your learning path appears here as soon as lessons are published.</p></div>';
+    var t = tier(), done = o.filter(function(x){ return seen[x.id]; }).length, nx = o.filter(function(x){ return !seen[x.id]; })[0], pct = Math.round(done / o.length * 100);
+    var h = '<div class="rr-card" style="margin-bottom:6px"><h3 style="margin:0 0 4px">Your learning path</h3><p class="calendar-note" style="margin:0">Work through the lessons in order, from the basics up. Tick each one off as you finish. Your ticks are saved on this device.</p><div class="lp-bar"><i style="width:' + pct + '%"></i></div><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><b>' + done + ' of ' + o.length + ' done · ' + pct + '%</b>' + (nx ? '<button class="rr-btn sm" data-go="' + nx.id + '">' + (done ? 'Continue: ' : 'Start: ') + esc(nx.title) + '</button>' : '<span style="color:#3fb97a;font-weight:800">🎉 Path complete</span>') + '</div></div>';
+    var last = null; o.forEach(function(x, i){ if(x.category !== last){ last = x.category; h += '<div class="lp-st">' + esc(x.category) + '</div>'; }
+      var locked = t < (TIERS[x.min_tier] || 0), cls = seen[x.id] ? 'done' : (nx && nx.id === x.id ? 'next' : '');
+      h += '<div class="lp-step ' + cls + '" data-go="' + x.id + '"><div class="lp-n">' + (seen[x.id] ? '✓' : (i + 1)) + '</div><div class="lp-c"><b>' + esc(x.title) + '</b> <small>· ' + TN[x.min_tier] + (x.duration ? ' · ' + esc(x.duration) : '') + (locked ? ' · 🔒 upgrade to unlock' : '') + '</small>' + (x.descr ? '<p>' + esc(x.descr) + '</p>' : '') + '</div></div>'; });
+    return h; }
 
   async function open(id){
     var x = L.filter(function(z){ return String(z.id) === String(id); })[0]; if(!x) return; var w = who();
@@ -69,7 +88,7 @@
     if(v.provider === 'zoom'){ modal.innerHTML = '<div class="ed-in" style="max-width:460px"><h3 style="margin:4px 0 6px">' + esc(x.title) + '</h3>' + (x.descr ? '<p style="color:var(--mute);font-size:13px">' + esc(x.descr) + '</p>' : '') + '<p style="color:var(--mute);font-size:13px">This lesson opens in Zoom in a new tab. If Zoom asks for a passcode, ask TTM. Please do not share the link.</p><div class="rr-acts"><a class="rr-btn" href="' + esc(v.vid) + '" target="_blank" rel="noopener noreferrer" data-zoomgo="1">▶ Watch on Zoom</a><button class="rr-btn sm" data-seen="' + x.id + '">' + (seen[x.id] ? '✓ Watched (tap to undo)' : 'Mark as watched') + '</button><button class="rr-btn ghost sm" data-close="1">Close</button></div></div>'; modal.style.display = 'flex'; return; }
     var src = v.provider === 'stream' ? 'https://iframe.videodelivery.net/' + encodeURIComponent(v.vid) : 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(v.vid) + '?rel=0&modestbranding=1&playsinline=1';
     modal.innerHTML = '<div class="ed-in"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 2px 8px"><b style="font-size:15px">' + esc(x.title) + '</b><button class="rr-btn ghost sm" data-close="1">Close ✕</button></div><div class="ed-vid"><iframe src="' + src + '" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>' +
-      (x.descr ? '<p style="color:var(--mute);font-size:13px;margin:10px 4px 0">' + esc(x.descr) + '</p>' : '') + '<div class="rr-acts" style="margin-top:10px"><button class="rr-btn sm" data-seen="' + x.id + '">' + (seen[x.id] ? '✓ Watched (tap to undo)' : 'Mark as watched') + '</button></div></div>';
+      (x.descr ? '<p style="color:var(--mute);font-size:13px;margin:10px 4px 0">' + esc(x.descr) + '</p>' : '') + '<div class="rr-acts" style="margin-top:10px"><button class="rr-btn sm" data-seen="' + x.id + '">' + (seen[x.id] ? '✓ Watched (tap to undo)' : 'Mark as watched') + '</button>' + (nextAfter(x.id) && nextAfter(x.id).id !== x.id ? '<button class="rr-btn ghost sm" data-next="' + x.id + '">Next lesson →</button>' : '') + '</div></div>';
     modal.style.display = 'flex';
   }
 
@@ -97,6 +116,8 @@
   function wire(){
     if(box.dataset.w) return; box.dataset.w = '1';
     box.addEventListener('click', function(ev){ var t = ev.target;
+      var vw = t.closest('[data-view]'); if(vw){ view = vw.dataset.view; render(); return; }
+      var go = t.closest('[data-go]'); if(go){ open(go.dataset.go); return; }
       var c = t.closest('[data-cat]'); if(c){ cat = c.dataset.cat; render(); return; }
       if(t.closest('#edSign')){ if(window.ttmSignIn) window.ttmSignIn(); return; }
       if(t.closest('#edAdd')){ add(); return; } if(t.closest('#edCancel')){ reset(); var m = document.getElementById('edMsg'); if(m) m.textContent = ''; return; }
@@ -106,6 +127,7 @@
     modal.addEventListener('click', function(ev){ var t = ev.target;
       if(t === modal || t.closest('[data-close]')){ closeModal(); return; }
       var b = t.closest('[data-buy]'); if(b){ closeModal(); if(window.ttmBuy) window.ttmBuy(b.dataset.buy); return; }
+      var nt = t.closest('[data-next]'); if(nt){ var nn = nextAfter(nt.dataset.next); if(nn) open(nn.id); return; }
       var s = t.closest('[data-seen]'); if(s){ var id = s.dataset.seen; if(seen[id]) delete seen[id]; else seen[id] = 1; save(); s.textContent = seen[id] ? '✓ Watched (tap to undo)' : 'Mark as watched'; render(); } });
     document.addEventListener('keydown', function(ev){ if(ev.key === 'Escape') closeModal(); });
   }
