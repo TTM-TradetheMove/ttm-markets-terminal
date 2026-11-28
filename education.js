@@ -12,16 +12,16 @@
   var css = document.createElement('style');
   css.textContent = '#eduBox .ed-grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}' +
     '#eduBox .ed-card{border:1px solid var(--line,#2a2a2f);border-radius:14px;background:var(--card,#16161a);overflow:hidden;display:flex;flex-direction:column;cursor:pointer;transition:transform .15s,border-color .15s}' +
-    '#eduBox .ed-card:hover{transform:translateY(-2px);border-color:rgba(219,161,24,.6)}' +
+    '#eduBox .ed-card:hover{transform:translateY(-2px);border-color:rgba(232,176,56,.6)}' +
     '#eduBox .ed-th{height:120px;display:flex;align-items:center;justify-content:center;font-size:38px;position:relative;background:linear-gradient(135deg,#2a2210,#14110a)}' +
     '#eduBox .ed-card.pro .ed-th{background:linear-gradient(135deg,#3a2a06,#1a1305)}#eduBox .ed-card.free .ed-th{background:linear-gradient(135deg,#10261c,#0b1510)}' +
-    '#eduBox .ed-tier{position:absolute;top:8px;right:8px;font-size:10px;font-weight:800;letter-spacing:.06em;border-radius:99px;padding:2px 9px;background:rgba(0,0,0,.55);color:var(--gold2,#f0c14b);border:1px solid rgba(219,161,24,.5)}' +
+    '#eduBox .ed-tier{position:absolute;top:8px;right:8px;font-size:10px;font-weight:800;letter-spacing:.06em;border-radius:99px;padding:2px 9px;background:rgba(0,0,0,.55);color:var(--gold2,#f0c14b);border:1px solid rgba(232,176,56,.5)}' +
     '#eduBox .ed-card.free .ed-tier{color:#3fb97a;border-color:rgba(63,185,122,.5)}' +
     '#eduBox .ed-ok{position:absolute;top:8px;left:8px;font-size:11px;font-weight:800;color:#3fb97a}' +
     '#eduBox .ed-bd{padding:12px 14px 14px;display:flex;flex-direction:column;gap:5px;flex:1}#eduBox .ed-bd b{font-size:15px;line-height:1.3}' +
     '#eduBox .ed-bd small{color:var(--mute,#8a8a90);font-size:12px}#eduBox .ed-bd p{margin:0;font-size:13px;color:var(--mute,#8a8a90);line-height:1.5}' +
     '#eduModal{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;padding:14px}' +
-    '#eduModal .ed-in{width:min(960px,100%);background:#101013;border:1px solid rgba(219,161,24,.45);border-radius:14px;padding:12px 12px 14px}' +
+    '#eduModal .ed-in{width:min(960px,100%);background:#101013;border:1px solid rgba(232,176,56,.45);border-radius:14px;padding:12px 12px 14px}' +
     '#eduModal .ed-vid{position:relative;padding-top:56.25%;background:#000;border-radius:10px;overflow:hidden}#eduModal iframe{position:absolute;inset:0;width:100%;height:100%;border:0}' +
     '#eduBox .ed-f{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}#eduBox .ed-f input,#eduBox .ed-f select,#eduBox .ed-f textarea{background:rgba(255,255,255,.04);border:1px solid var(--line,#2a2a2f);color:var(--text,#eee);border-radius:8px;padding:9px 10px;font:inherit;width:100%;box-sizing:border-box}';
   document.head.appendChild(css);
